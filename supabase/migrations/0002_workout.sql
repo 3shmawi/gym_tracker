@@ -121,6 +121,11 @@ create table if not exists public.plan_exercises (
   target_reps int not null default 10 check (target_reps between 1 and 100),
   rest_seconds int not null default 90 check (rest_seconds between 0 and 900),
   weight_step_kg numeric(5, 2) not null default 2.5 check (weight_step_kg >= 0),
+  -- Exercises sharing a number in the same day are a superset (done back to
+  -- back, rest after the last one). Null = done on its own.
+  superset_group int check (superset_group >= 1),
+  notes_ar text not null default '',
+  notes_en text not null default '',
   unique (plan_day_id, position)
 );
 
