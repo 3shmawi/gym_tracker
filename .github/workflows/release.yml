@@ -1,0 +1,330 @@
+# Merge to main → version from Conventional Commits → Play + App Store.
+# Setup: docs/release.md · secrets: tool/setup_secrets.sh
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump
+        type: choice
+        default: auto
+        options: [auto, patch, minor, major]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+# Read-only token by default; a job that must write asks for it itself.
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml # zizmor: ignore[self-repository] nothing is cloned before it
+
+  version:
+    name: Decide version
+    needs: checks
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.next.outputs.release }}
+      version: ${{ steps.next.outputs.version }}
+      build: ${{ steps.next.outputs.build }}
+      android: ${{ steps.platforms.outputs.android }}
+      ios: ${{ steps.platforms.outputs.ios }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - id: next
+        env:
+          BUMP: ${{ inputs.bump || 'auto' }}
+          OFFSET: ${{ vars.BUILD_NUMBER_OFFSET || '0' }}
+        run: |
+          version="$(./scripts/next_version.sh "$BUMP")"
+          if [ "$version" = "skip" ]; then
+            echo "Only docs/chore/ci/test/style commits — nothing to release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          build=$(( GITHUB_RUN_NUMBER + OFFSET ))
+          echo "Releasing $version ($build)"
+          {
+            echo "release=true"
+            echo "version=$version"
+            echo "build=$build"
+          } >> "$GITHUB_OUTPUT"
+
+      # Secrets come from tool/setup_secrets.sh. A store whose secrets are
+      # missing is skipped instead of failing the release.
+      - id: platforms
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          PLAY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          ASC_KEY: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          IOS_CERT: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
+          ENABLE_ANDROID: ${{ vars.ENABLE_ANDROID }}
+          ENABLE_IOS: ${{ vars.ENABLE_IOS }}
+        run: |
+          android=false; ios=false
+          if [ -n "$KEYSTORE" ] && [ -n "$PLAY" ] && [ "$ENABLE_ANDROID" != false ]; then android=true; fi
+          if [ -n "$ASC_KEY" ] && [ -n "$IOS_CERT" ] && [ "$ENABLE_IOS" != false ]; then ios=true; fi
+          [ "$android" = true ] || echo "::warning::Android release skipped — run tool/setup_secrets.sh (keystore + Play JSON)."
+          [ "$ios" = true ] || echo "::warning::iOS release skipped — run tool/setup_secrets.sh (ASC key + .p12)."
+          echo "android=$android" >> "$GITHUB_OUTPUT"
+          echo "ios=$ios" >> "$GITHUB_OUTPUT"
+
+  android:
+    name: Android → Google Play
+    needs: version
+    if: needs.version.outputs.release == 'true' && needs.version.outputs.android == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      BUILD: ${{ needs.version.outputs.build }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Flutter version from .fvmrc
+        id: fvm
+        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ steps.fvm.outputs.version }}
+          cache: true
+
+      - name: Env file & signing
+        env:
+          ENV_PROD_JSON: ${{ secrets.ENV_PROD_JSON }}
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$ENV_PROD_JSON" ]; then printf '%s' "$ENV_PROD_JSON" > env/prod.json; else cp env/example.json env/prod.json; fi
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          {
+            echo "storeFile=upload-keystore.jks"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASSWORD"
+          } > android/key.properties
+
+      - name: Build app bundle
+        run: |
+          flutter pub get
+          flutter gen-l10n
+          flutter build appbundle --release --flavor prod \
+            --dart-define-from-file=env/prod.json \
+            --obfuscate --split-debug-info=build/symbols \
+            --build-name=$VERSION \
+            --build-number=$BUILD
+
+      - name: Release notes (Play "What's new")
+        run: |
+          mkdir -p distribution/whatsnew
+          ./scripts/release_notes.sh plain > distribution/whatsnew/whatsnew-en-US
+          cat distribution/whatsnew/whatsnew-en-US
+
+      # GitHub hides a stored secret only where its exact text is printed;
+      # the key inside the Play JSON is different text, so hide it too.
+      - name: Hide the Play key in logs
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          printf '%s' "$PLAY_JSON" > "$RUNNER_TEMP/play.json"
+          ./scripts/mask_secrets.sh "$RUNNER_TEMP/play.json"
+          rm -f "$RUNNER_TEMP/play.json"
+
+      - name: Upload to Google Play
+        id: play
+        env:
+          # Google's API libraries inside the action use two Node APIs that
+          # Node now warns about (punycode, url.parse); harmless, not ours.
+          NODE_OPTIONS: --disable-warning=DEP0040 --disable-warning=DEP0169
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.mohager.gymtracker
+          releaseFiles: build/app/outputs/bundle/prodRelease/app-prod-release.aab
+          tracks: ${{ vars.PLAY_TRACK || 'internal' }}
+          status: ${{ vars.PLAY_RELEASE_STATUS || 'completed' }}
+          whatsNewDirectory: distribution/whatsnew
+
+      # Google requires an app's very first AAB to be uploaded by hand, so the
+      # first automatic upload fails ("Package not found"). Keep the signed AAB
+      # so that one manual upload is a download away; later releases are automatic.
+      - name: Keep the AAB for a manual upload
+        if: failure() && steps.play.outcome == 'failure'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: play-aab-for-manual-upload
+          path: build/app/outputs/bundle/prodRelease/app-prod-release.aab
+          retention-days: 30
+
+      - name: How to finish the first Play release
+        if: failure() && steps.play.outcome == 'failure'
+        run: |
+          msg="Upload to Google Play failed. First release of this app? Google needs the first AAB uploaded by hand: download the 'play-aab-for-manual-upload' artifact of this run and upload it in Play Console (Test and release → Internal testing). Every later release uploads automatically."
+          echo "::error title=Google Play::$msg"
+          { echo "### Google Play"; echo; echo "$msg"; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload debug symbols to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: ./scripts/upload_symbols.sh
+
+      - name: Keep obfuscation symbols
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: symbols-android-${{ needs.version.outputs.version }}
+          path: build/symbols
+          retention-days: 90
+
+  ios:
+    name: iOS → App Store Connect
+    needs: version
+    if: needs.version.outputs.release == 'true' && needs.version.outputs.ios == 'true'
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.ASC_KEY_ID }}
+      VERSION: ${{ needs.version.outputs.version }}
+      BUILD: ${{ needs.version.outputs.build }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Flutter version from .fvmrc
+        id: fvm
+        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ steps.fvm.outputs.version }}
+          cache: true
+
+      # Apple only accepts uploads built with Xcode 26 or newer (since
+      # April 2026). Use the newest Xcode on the runner; fail clearly if
+      # the runner has none new enough.
+      - name: Xcode 26 or newer
+        run: |
+          major() { xcodebuild -version | awk 'NR==1 { split($2, v, "."); print v[1] }'; }
+          if [ "$(major)" -lt 26 ]; then
+            newest=$(find /Applications -maxdepth 1 -name 'Xcode_2[6-9]*.app' | sort -V | tail -n 1)
+            [ -n "$newest" ] || { echo "::error::App Store uploads need Xcode 26+; this runner has $(xcodebuild -version | head -n 1)."; exit 1; }
+            sudo xcode-select -s "$newest/Contents/Developer"
+          fi
+          xcodebuild -version
+
+      - name: Install Codemagic CLI tools
+        run: pipx install codemagic-cli-tools==0.70.2
+
+      - name: Env file & packages
+        env:
+          ENV_PROD_JSON: ${{ secrets.ENV_PROD_JSON }}
+        run: |
+          if [ -n "$ENV_PROD_JSON" ]; then printf '%s' "$ENV_PROD_JSON" > env/prod.json; else cp env/example.json env/prod.json; fi
+          flutter pub get
+          flutter gen-l10n
+
+      - name: Code signing (your .p12 + profile from App Store Connect)
+        env:
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+        run: |
+          signing="$RUNNER_TEMP/signing"; mkdir -p "$signing"
+          printf '%s' "$ASC_KEY_P8_BASE64" | base64 --decode > "$signing/asc.p8"
+          printf '%s' "$P12_BASE64" | base64 --decode > "$signing/dist.p12"
+          # The certificate's private key lets the CLI match your existing
+          # distribution certificate (no new certificate is created).
+          openssl pkcs12 -in "$signing/dist.p12" -nocerts -nodes -passin env:P12_PASSWORD -out "$signing/raw.pem" 2>/dev/null \
+            || openssl pkcs12 -legacy -in "$signing/dist.p12" -nocerts -nodes -passin env:P12_PASSWORD -out "$signing/raw.pem"
+          # Only the key: openssl adds "Bag Attributes" lines that the CLI
+          # rejects, and its error message would print the whole file.
+          openssl pkey -in "$signing/raw.pem" -out "$signing/key.pem" && rm -f "$signing/raw.pem"
+          # Never let a key appear in a log (this repo's logs may be public).
+          ./scripts/mask_secrets.sh "$signing/key.pem" "$signing/asc.p8"
+          export APP_STORE_CONNECT_PRIVATE_KEY="@file:$signing/asc.p8"
+          export CERTIFICATE_PRIVATE_KEY="@file:$signing/key.pem"
+          echo "APP_STORE_CONNECT_PRIVATE_KEY=@file:$signing/asc.p8" >> "$GITHUB_ENV"
+          keychain initialize
+          keychain add-certificates --certificate "$signing/dist.p12" --certificate-password "@env:P12_PASSWORD"
+          app-store-connect fetch-signing-files "com.mohager.gymtracker" --type IOS_APP_STORE --create
+          keychain add-certificates
+          xcode-project use-profiles
+
+      - name: Build IPA
+        run: |
+          flutter build ipa --release --flavor prod \
+            --dart-define-from-file=env/prod.json \
+            --obfuscate --split-debug-info=build/symbols \
+            --build-name=$VERSION \
+            --build-number=$BUILD \
+            --export-options-plist="$HOME/export_options.plist"
+
+      - name: Upload to App Store Connect
+        run: app-store-connect publish --path "$(find build/ios/ipa -name '*.ipa' | head -n 1)"
+
+      - name: Upload debug symbols to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: ./scripts/upload_symbols.sh
+
+      - name: Keep obfuscation symbols
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: symbols-ios-${{ needs.version.outputs.version }}
+          path: build/symbols
+          retention-days: 90
+
+  github-release:
+    name: Tag & GitHub release
+    permissions:
+      contents: write   # creates the tag and release
+    needs: [version, android, ios]
+    if: >-
+      always() && needs.version.outputs.release == 'true' &&
+      !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+          BUILD: ${{ needs.version.outputs.build }}
+        run: |
+          ./scripts/release_notes.sh markdown > "$RUNNER_TEMP/notes.md"
+          {
+            echo
+            echo "---"
+            echo "When the stores have approved this version, show it in the app:"
+            echo "Actions → **Announce update** → Run workflow (optional or force)."
+          } >> "$RUNNER_TEMP/notes.md"
+          gh release create "v$VERSION" --target "$GITHUB_SHA" \
+            --title "v$VERSION ($BUILD)" --notes-file "$RUNNER_TEMP/notes.md"

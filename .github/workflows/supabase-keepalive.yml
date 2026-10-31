@@ -1,0 +1,41 @@
+# Keeps the Supabase project awake: free projects are paused after 7 days
+# without activity. Every 3 days this makes one tiny read with the public
+# (publishable) key taken from the ENV_PROD_JSON secret.
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: '23 5 */3 * *'   # every 3 days, 05:23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping Supabase
+        env:
+          ENV_PROD_JSON: ${{ secrets.ENV_PROD_JSON }}
+        run: |
+          if [ -z "$ENV_PROD_JSON" ]; then
+            echo "::warning::ENV_PROD_JSON secret not set — nothing to ping (run tool/setup_secrets.sh)."
+            exit 0
+          fi
+          url=$(printf '%s' "$ENV_PROD_JSON" | jq -r '.SUPABASE_URL // empty')
+          key=$(printf '%s' "$ENV_PROD_JSON" | jq -r '.SUPABASE_PUBLISHABLE_KEY // .SUPABASE_ANON_KEY // empty')
+          if [ -z "$url" ] || [ -z "$key" ]; then
+            echo "::warning::SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY missing in ENV_PROD_JSON."
+            exit 0
+          fi
+          echo "::add-mask::$key"
+          code=$(curl -sS -o /dev/null -w '%{http_code}' \
+            "${url%/}/rest/v1/app_versions?select=platform&limit=1" \
+            -H "apikey: $key")
+          echo "Supabase answered HTTP $code"
+          case "$code" in
+            2*) echo "✓ project is awake" ;;
+            *) echo "::error::Unexpected HTTP $code — is the project paused or the key wrong?"; exit 1 ;;
+          esac

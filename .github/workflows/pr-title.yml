@@ -1,0 +1,30 @@
+# The PR title becomes the squash-merge commit, which decides the next
+# version (feat → minor, fix → patch, …). Enforce it on the server, since the
+# local commit-msg hook can be skipped.
+name: PR title
+
+# pull_request, not pull_request_target: checking a title needs no secrets
+# and no write access, so a fork PR gets neither.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  conventional:
+    name: PR title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Conventional Commit format
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          pattern='^(feat|fix|perf|refactor|docs|test|chore|ci|build|style|revert)(\([a-z0-9._/-]+\))?!?: .+'
+          if printf '%s' "$TITLE" | grep -Eq "$pattern"; then
+            echo "✓ $TITLE"
+          else
+            echo "::error::PR title must be a Conventional Commit, e.g. 'feat(search): suggest drinks' or 'fix: crash on empty menu'. Got: $TITLE"
+            exit 1
+          fi

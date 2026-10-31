@@ -1,0 +1,190 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_call:
+
+# Read-only token by default; a job that must write asks for it itself.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Format · analyze · test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Flutter version from .fvmrc
+        id: fvm
+        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ steps.fvm.outputs.version }}
+          cache: true
+
+      # Before pub get, so generated l10n files aren't checked.
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Install packages
+        run: |
+          flutter pub get
+          flutter gen-l10n
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Unit, widget & security tests
+        run: flutter test --coverage
+
+      - name: Coverage threshold
+        env:
+          COVERAGE_MIN: ${{ vars.COVERAGE_MIN || '60' }}
+        run: ./scripts/coverage_check.sh
+
+  security:
+    name: Security scan · secrets · dependencies · database
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Secrets in git history (gitleaks)
+        run: |
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.30.1 \
+            git --no-banner --redact -v /repo
+
+      - name: Vulnerable dependencies (OSV-Scanner)
+        run: |
+          docker run --rm -v "$PWD:/src" ghcr.io/google/osv-scanner:v2.7.0 \
+            scan source --lockfile=/src/pubspec.lock
+
+      # Workflow security: pinned actions, least-privilege tokens, no
+      # credentials left on disk, no untrusted text run as shell code.
+      # docs/security.md → "CI and secrets".
+      - name: Workflow security (zizmor)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: pipx run zizmor==1.31.1 --min-severity low --format github .github/workflows
+
+      # Runs once `supabase init` has created supabase/config.toml.
+      # RLS tests run when a PR touches supabase/ (or on manual runs).
+      - name: Supabase changes?
+        id: supabase
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ ! -f supabase/config.toml ]; then
+            echo "::notice::No supabase/config.toml — RLS tests skipped (run 'supabase init' once)."
+          elif [ -z "$BASE_REF" ] || git diff --name-only "origin/$BASE_REF...HEAD" | grep -q '^supabase/'; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No changes under supabase/ — RLS tests skipped."
+          fi
+
+      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
+        if: steps.supabase.outputs.present == 'true'
+        with:
+          # Pinned: "latest" asks the GitHub API on every run and gets rate-limited.
+          version: 2.120.0
+
+      - name: Database security tests (RLS, pgTAP)
+        if: steps.supabase.outputs.present == 'true'
+        run: |
+          supabase db start
+          supabase test db
+
+  # Every integration test, on an iPhone simulator with full Liquid Glass
+  # (Metal), like a real phone. Same runner as the demo videos.
+  integration-ios:
+    name: Integration tests (iOS simulator)
+    if: github.event_name == 'pull_request'
+    runs-on: macos-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Flutter version from .fvmrc
+        id: fvm
+        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ steps.fvm.outputs.version }}
+          cache: true
+
+      - name: Install packages
+        run: |
+          flutter pub get
+          flutter gen-l10n
+
+      - name: Run integration tests
+        run: |
+          udid=$(xcrun simctl list devices available -j | jq -r \
+            '[.devices | to_entries[] | select(.key | test("iOS")) | .value[] | select(.name | test("^iPhone [0-9]+( Pro)?$"))] | last | .udid')
+          if [ -z "$udid" ] || [ "$udid" = null ]; then echo "::error::No iPhone simulator on this runner."; exit 1; fi
+          xcrun simctl boot "$udid" 2>/dev/null || true
+          xcrun simctl bootstatus "$udid" -b > /dev/null
+          set -o pipefail
+          flutter test integration_test -d "$udid" --flavor staging --dart-define-from-file=env/example.json 2>&1 | tee integration.log
+
+      # The failing lines as annotations on the run, so you don't have to
+      # dig through the whole log.
+      - name: Why the integration tests failed
+        if: failure()
+        run: |
+          [ -f integration.log ] || exit 0
+          grep -n -E 'EXCEPTION CAUGHT|Expected:|Actual:|Which:|Test failed|\[E\]|Error:|was thrown|Timed out|not found|_test\.dart:[0-9]+' integration.log \
+            | head -n 100 > failures.txt || true
+          split -b 3500 -d failures.txt part_ 2>/dev/null || true
+          n=0; for part in part_*; do [ -f "$part" ] || continue; n=$((n+1)); [ "$n" -gt 8 ] && break
+            echo "::error title=integration failures ($n)::$(sed 's/%/%25/g' "$part" | awk '{printf "%s%%0A", $0}')"
+          done
+          echo "::error title=integration log (end)::$(grep -v -E 'Kotlin|KGP|plugin|^\s*$' integration.log | tail -n 40 | tail -c 3500 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+
+  # Android: the app must build. Flows are tested on the iOS simulator
+  # above: the CI Android emulator (software rendering) went offline at the
+  # end of every app run, losing the results, in every setup tried.
+  android-build:
+    name: Android build (debug APK)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Flutter version from .fvmrc
+        id: fvm
+        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ steps.fvm.outputs.version }}
+          cache: true
+
+      - name: Build
+        run: |
+          flutter pub get
+          flutter gen-l10n
+          flutter build apk --debug --flavor staging --dart-define-from-file=env/example.json

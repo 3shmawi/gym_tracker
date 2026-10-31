@@ -1,0 +1,175 @@
+# Social demo video, made automatically for every feature PR (one that adds or
+# changes an integration test or a feature doc) — no label, no manual step:
+#   1. record: the feature's integration test on an iOS Simulator (macOS
+#      runner, full Liquid Glass via Metal; the CI Android emulator has no GPU),
+#   2. compose: a 1080×1920 video (brand background, title, handle) + the post
+#      caption from the feature doc, linked in a comment on the PR.
+# Can also be run by hand (Actions → Demo video → Run workflow).
+name: Demo video
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'integration_test/**'
+      - 'docs/features/**'
+      # A change to how demos are made gets a demo too, to prove it.
+      - 'scripts/record_demo_ios.sh'
+      - 'scripts/compose_demo.sh'
+      - '.github/workflows/demo-video.yml'
+  workflow_dispatch:
+    inputs:
+      test:
+        description: Integration test to record
+        default: integration_test/app_test.dart
+      title:
+        description: Title on the video
+        default: ''
+
+# Read-only token by default; a job that must write asks for it itself.
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  record:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    runs-on: macos-latest
+    timeout-minutes: 45
+    outputs:
+      test: ${{ steps.what.outputs.test }}
+      doc: ${{ steps.what.outputs.doc }}
+      title: ${{ steps.what.outputs.title }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: What to record
+        id: what
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          IN_TEST: ${{ inputs.test }}
+          IN_TITLE: ${{ inputs.title }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          test=$IN_TEST; doc=""
+          if [ -n "$BASE_REF" ]; then
+            # Added or changed files only (a deleted test can't be recorded).
+            changed=$(git diff --diff-filter=AMR --name-only "origin/$BASE_REF...HEAD")
+            doc=$(printf '%s\n' "$changed" | grep -E '^docs/features/.+\.md$' | head -n 1 || true)
+            # The feature's own test (docs/features/<name>.md → <name>_test.dart)
+            # wins over other tests the PR touched.
+            feature=$(basename "${doc:-none}" .md)
+            if printf '%s\n' "$changed" | grep -qx "integration_test/${feature}_test.dart"; then
+              test="integration_test/${feature}_test.dart"
+            else
+              test=$(printf '%s\n' "$changed" | grep -E '^integration_test/[^/]+_test\.dart$' | head -n 1 || true)
+            fi
+          fi
+          [ -n "$test" ] || test=integration_test/app_test.dart
+          title=${IN_TITLE:-$PR_TITLE}
+          title=$(printf '%s' "$title" | sed -E 's/^[a-z]+(\([^)]*\))?!?: //')
+          title="$(printf '%s' "${title:0:1}" | tr '[:lower:]' '[:upper:]')${title:1}"
+          [ -n "$title" ] || title="Gym Tracker"
+          { echo "test=$test"; echo "doc=$doc"; echo "title=$title"; } >> "$GITHUB_OUTPUT"
+          echo "Recording $test — \"$title\""
+
+      - name: Flutter version from .fvmrc
+        id: fvm
+        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ steps.fvm.outputs.version }}
+          cache: true
+
+      - name: Install packages
+        run: |
+          flutter pub get
+          flutter gen-l10n
+          cp -n env/example.json "env/$(. ./.project-kit.env; echo "$DEFAULT_ENV").json" || true
+
+      - name: Record on an iPhone simulator (full glass)
+        env:
+          DEMO_TEST: ${{ steps.what.outputs.test }}
+        run: ./scripts/record_demo_ios.sh "$DEMO_TEST" build/demo/raw.mp4
+
+      - name: Keep the raw recording
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: demo-raw
+          path: |
+            build/demo/raw.mp4
+            build/demo/raw.start
+          if-no-files-found: ignore
+          retention-days: 7
+
+  compose:
+    permissions:
+      contents: read
+      pull-requests: write   # comments the video on the PR
+    needs: record
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: demo-raw
+          path: build/demo
+
+      - name: Compose 1080×1920 video + caption
+        env:
+          TITLE: ${{ needs.record.outputs.title }}
+          DOC: ${{ needs.record.outputs.doc }}
+        run: |
+          sudo apt-get install -y -qq ffmpeg >/dev/null
+          ./scripts/compose_demo.sh build/demo/raw.mp4 build/demo/demo.mp4 "$TITLE"
+          ./scripts/demo_caption.sh "$DOC" > build/demo/caption.md
+          cat build/demo/caption.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload video
+        id: upload
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: demo-video
+          path: |
+            build/demo/demo.mp4
+            build/demo/raw.mp4
+            build/demo/caption.md
+          retention-days: 30
+
+      - name: Link on the PR
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          URL: ${{ steps.upload.outputs.artifact-url }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          length=$(ffprobe -v error -show_entries format=duration -of csv=p=0 build/demo/demo.mp4 | cut -d. -f1)
+          if [ -s build/demo/raw.start ]; then
+            cut="first $(cat build/demo/raw.start)s of build and install cut"
+          else
+            cut="nothing cut (the test start wasn't detected)"
+          fi
+          {
+            echo "🎬 **Demo video ready** — [download (video + caption)]($URL)"
+            echo
+            echo "_${length}s · ${cut}_"
+            echo
+            sed -n '3,40p' build/demo/caption.md
+          } > comment.md
+          gh pr comment "$PR" --body-file comment.md

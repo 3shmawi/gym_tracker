@@ -1,0 +1,10 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["9RA43G2P63.com.mohager.gymtracker"],
+        "components": [{ "/": "/*" }]
+      }
+    ]
+  }
+}

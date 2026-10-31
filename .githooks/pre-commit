@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Formats check + static analysis before every commit.
+# Skip once (not recommended): git commit --no-verify
+set -euo pipefail
+
+FLUTTER="flutter"; DART="dart"
+if command -v fvm >/dev/null 2>&1; then FLUTTER="fvm flutter"; DART="fvm dart"; fi
+
+staged=$(git diff --cached --name-only --diff-filter=ACM -- '*.dart' | grep -v '^lib/l10n/gen/' || true)
+[ -z "$staged" ] && exit 0
+
+echo "› dart format (staged files)"
+# shellcheck disable=SC2086
+if ! $DART format --output=none --set-exit-if-changed $staged >/dev/null; then
+  echo "✗ Some files aren't formatted. Run: dart format . && git add -u"
+  exit 1
+fi
+
+echo "› flutter analyze"
+if ! $FLUTTER analyze --no-pub >/dev/null 2>&1; then
+  $FLUTTER analyze --no-pub || true
+  echo "✗ Fix the analyzer issues above (dart fix --apply helps)."
+  exit 1
+fi

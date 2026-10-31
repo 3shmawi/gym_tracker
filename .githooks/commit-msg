@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Enforces Conventional Commits — CI uses them to pick the next version:
+#   feat: …  → minor     fix:/perf:/refactor: … → patch
+#   feat!: … or "BREAKING CHANGE:" in the body → major
+#   docs:/chore:/ci:/test:/style: only → no store release
+set -euo pipefail
+
+subject=$(head -n 1 "$1")
+case "$subject" in
+  Merge*|Revert*|fixup!*|squash!*) exit 0 ;;
+esac
+pattern='^(feat|fix|perf|refactor|docs|test|chore|ci|build|style|revert)(\([a-z0-9._/-]+\))?!?: .+'
+if ! printf '%s' "$subject" | grep -Eq "$pattern"; then
+  cat >&2 <<MSG
+✗ Commit message must follow Conventional Commits:
+    <type>(optional-scope): <description>
+  types: feat fix perf refactor docs test chore ci build style revert
+  e.g.  feat(search): suggest drinks from favorites
+        fix: crash when the menu is empty
+MSG
+  exit 1
+fi

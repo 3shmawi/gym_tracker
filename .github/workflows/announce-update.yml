@@ -1,0 +1,89 @@
+# After a version is live in the stores: tell users about it in the app.
+# Updates the app_versions row in Supabase → the in-app dialog appears
+# (optional: "Update / Later"; force: "Update" only). No app release needed.
+name: Announce update
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        description: Optional (Update / Later) or force (Update only)
+        type: choice
+        default: optional
+        options: [optional, force]
+      platform:
+        description: Platform
+        type: choice
+        default: both
+        options: [both, android, ios]
+      version:
+        description: Version (empty = latest release tag)
+        required: false
+        type: string
+      changelog_en:
+        description: What's new in English (empty = from the release's commits)
+        required: false
+        type: string
+      changelog_ar:
+        description: What's new in Arabic (optional)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Update app_versions in Supabase
+        env:
+          ENV_PROD_JSON: ${{ secrets.ENV_PROD_JSON }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          TYPE: ${{ inputs.type }}
+          PLATFORM: ${{ inputs.platform }}
+          VERSION: ${{ inputs.version }}
+          CHANGELOG_EN: ${{ inputs.changelog_en }}
+          CHANGELOG_AR: ${{ inputs.changelog_ar }}
+        run: |
+          url=$(printf '%s' "$ENV_PROD_JSON" | jq -r '.SUPABASE_URL // empty')
+          if [ -z "$url" ] || [ -z "$SUPABASE_SECRET_KEY" ]; then
+            echo "::error::Needs secrets ENV_PROD_JSON (with SUPABASE_URL) and SUPABASE_SECRET_KEY — run tool/setup_secrets.sh."
+            exit 1
+          fi
+          echo "::add-mask::$SUPABASE_SECRET_KEY"
+
+          tag=${VERSION:+v${VERSION#v}}
+          [ -n "$tag" ] || tag=$(git describe --tags --abbrev=0 --match 'v[0-9]*')
+          version=${tag#v}
+          git rev-parse "$tag" >/dev/null 2>&1 || { echo "::error::Tag $tag not found."; exit 1; }
+          [ -n "$CHANGELOG_EN" ] || CHANGELOG_EN=$(./scripts/release_notes.sh plain "$tag")
+
+          body=$(jq -n --arg v "$version" --arg en "$CHANGELOG_EN" --arg ar "$CHANGELOG_AR" --arg type "$TYPE" '
+            {latest_version: $v, changelog_en: $en, changelog_ar: $ar, updated_at: (now | todate)}
+            + (if $type == "force" then {min_supported_version: $v} else {} end)')
+
+          case "$PLATFORM" in both) platforms="android ios" ;; *) platforms=$PLATFORM ;; esac
+          for p in $platforms; do
+            rows=$(curl -sS -X PATCH "${url%/}/rest/v1/app_versions?platform=eq.$p" \
+              -H "apikey: $SUPABASE_SECRET_KEY" \
+              -H "Content-Type: application/json" -H "Prefer: return=representation" \
+              -d "$body")
+            count=$(printf '%s' "$rows" | jq 'if type == "array" then length else 0 end')
+            if [ "$count" -ge 1 ]; then
+              echo "✓ $p → $version ($TYPE)"
+            else
+              echo "::error::No $p row updated: $rows"; exit 1
+            fi
+          done
+          {
+            echo "### 📣 $version announced ($TYPE) — $PLATFORM"
+            echo
+            echo "$CHANGELOG_EN"
+          } >> "$GITHUB_STEP_SUMMARY"

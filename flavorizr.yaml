@@ -1,0 +1,23 @@
+app:
+  android:
+    flavorDimensions: "flavor-type"
+
+flavors:
+  staging:
+    app:
+      name: "Gym Tracker Stg"
+    android:
+      applicationId: "com.mohager.gymtracker.stg"
+      icon: "assets/branding/icon_staging.png"
+    ios:
+      bundleId: "com.mohager.gymtracker.stg"
+      icon: "assets/branding/icon_staging.png"
+  prod:
+    app:
+      name: "Gym Tracker"
+    android:
+      applicationId: "com.mohager.gymtracker"
+      icon: "assets/branding/icon.png"
+    ios:
+      bundleId: "com.mohager.gymtracker"
+      icon: "assets/branding/icon.png"

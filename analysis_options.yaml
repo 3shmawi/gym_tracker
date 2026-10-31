@@ -1,0 +1,21 @@
+include: package:very_good_analysis/analysis_options.yaml
+
+analyzer:
+  exclude:
+    - lib/l10n/gen/**
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - build/**
+    - android/**
+    - ios/**
+  language:
+    strict-casts: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    # Doc comments are written where they add value, not on every member.
+    public_member_api_docs: false
+    # Namespaced constants (AppColors, AppRoutes, Env …) are intentional.
+    avoid_classes_with_only_static_members: false
+    sort_pub_dependencies: false

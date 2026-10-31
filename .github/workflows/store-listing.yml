@@ -1,0 +1,96 @@
+# Uploads store/ (texts + screenshots if present) to Google Play and the App
+# Store. Manual on purpose: run it when the listing is ready.
+name: Store listing
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Which store
+        type: choice
+        default: both
+        options: [both, android, ios]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check texts (limits + no placeholders)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Flutter version from .fvmrc
+        id: fvm
+        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ steps.fvm.outputs.version }}
+          cache: true
+      - run: flutter pub get && flutter gen-l10n
+      - run: flutter test test/store/listing_test.dart
+        env:
+          STORE_LISTING_RELEASE: 'true'
+
+  android:
+    needs: check
+    if: inputs.platform != 'ios'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: '3.3'
+      - run: gem install fastlane --no-document --version 2.241.2 # zizmor: ignore[adhoc-packages] pinned; one tool, no Gemfile
+      - name: Upload to Google Play
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          printf '%s' "$PLAY_JSON" > "$RUNNER_TEMP/play.json"
+          ./scripts/mask_secrets.sh "$RUNNER_TEMP/play.json"
+          shots=true
+          ls store/android/*/images/phoneScreenshots/*.png >/dev/null 2>&1 && shots=false
+          fastlane supply \
+            --package_name "com.mohager.gymtracker" \
+            --json_key "$RUNNER_TEMP/play.json" \
+            --metadata_path store/android \
+            --skip_upload_apk true --skip_upload_aab true \
+            --skip_upload_changelogs true \
+            --skip_upload_images true \
+            --skip_upload_screenshots "$shots"
+
+  ios:
+    needs: check
+    if: inputs.platform != 'android'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Upload to App Store Connect
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+        run: |
+          printf '%s' "$ASC_KEY_P8_BASE64" | base64 --decode > "$RUNNER_TEMP/asc.p8"
+          ./scripts/mask_secrets.sh "$RUNNER_TEMP/asc.p8"
+          jq -n --arg id "$ASC_KEY_ID" --arg issuer "$ASC_ISSUER_ID" --rawfile key "$RUNNER_TEMP/asc.p8" \
+            '{key_id: $id, issuer_id: $issuer, key: $key, in_house: false}' > "$RUNNER_TEMP/asc.json"
+          shots=true
+          ls store/ios/screenshots/*/*.png >/dev/null 2>&1 && shots=false
+          fastlane deliver \
+            --api_key_path "$RUNNER_TEMP/asc.json" \
+            --app_identifier "com.mohager.gymtracker" \
+            --metadata_path store/ios \
+            --screenshots_path store/ios/screenshots \
+            --skip_binary_upload true \
+            --skip_screenshots "$shots" \
+            --overwrite_screenshots true \
+            --submit_for_review false \
+            --run_precheck_before_submit false \
+            --force true

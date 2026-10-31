@@ -1,0 +1,7 @@
+Gym Tracker — Gym workout tracker: next session, last weight, quick logging
+
+• Feature one: what it does for you
+• Feature two: what it does for you
+• Works in Arabic and English, light and dark mode
+
+Privacy first: we only collect what the app needs. Privacy policy: https://3shmawi.github.io/gym_tracker/privacy.html
