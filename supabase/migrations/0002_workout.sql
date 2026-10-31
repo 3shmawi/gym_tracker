@@ -320,7 +320,7 @@ with last_session as (
   from public.set_logs l
   order by l.member_id, l.exercise_id, l.logged_at desc
 )
-select l.member_id, l.exercise_id, l.session_id, l.set_number, l.weight_kg, l.reps, l.logged_at
+select l.id, l.member_id, l.exercise_id, l.session_id, l.set_number, l.weight_kg, l.reps, l.logged_at
 from public.set_logs l
 join last_session ls
   on ls.member_id = l.member_id
