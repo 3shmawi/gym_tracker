@@ -5,8 +5,8 @@ built to match. Code never invents its own look.
 
 | Source | Link |
 |---|---|
-| Design System (tokens, components, guidelines) | <!-- claude.ai/artifact/… --> |
-| Screens (Design canvas) | <!-- claude.ai/artifact/… --> |
+| Design System (tokens, components, guidelines) | https://claude.ai/artifact/WUzyEppnEkcQXvVYec4m9H (source: `docs/design/workout_logging.html`) |
+| Screens: Today, active workout, rest timer, superset, finish, states | same artifact, section 3 |
 | App icon / store screenshots | <!-- claude.ai/artifact/… --> |
 
 ## Tokens → code

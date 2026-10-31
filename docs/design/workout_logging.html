@@ -1,0 +1,557 @@
+<title>Gym Tracker Design System</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: a long spec sheet — tokens, then components, then 375×812 phone boards in a wrapping row, each with its rationale beside it. Dark-first. */
+:root{
+  --bg:#0B0F0D; --fg:#E8EFEA; --muted:#9AA8A0; --line:#1F2A24; --panel:#121915; --accent:#22C55E;
+  --sans:"Inter","Cairo",system-ui,sans-serif; --ar:"Cairo","Inter",system-ui,sans-serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#F4F7F5;--fg:#0E1712;--muted:#56645C;--line:#D9E2DC;--panel:#FFFFFF;--accent:#15803D;color-scheme:light}}
+:root[data-theme="light"]{--bg:#F4F7F5;--fg:#0E1712;--muted:#56645C;--line:#D9E2DC;--panel:#FFFFFF;--accent:#15803D;color-scheme:light}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 80px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-size:clamp(30px,5vw,48px);line-height:1.05;margin:0;letter-spacing:-.02em;text-wrap:balance}
+h2{font-size:24px;margin:0 0 6px;letter-spacing:-.01em}
+h3{font-size:16px;margin:0 0 4px}
+p{margin:0;max-width:68ch}
+.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);font-weight:700}
+.muted{color:var(--muted)}
+section{display:flex;flex-direction:column;gap:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{text-align:start;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+.sw{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-inline-end:6px;border:1px solid #fff3}
+.note{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.boards{display:flex;flex-wrap:wrap;gap:36px 28px;align-items:flex-start}
+.board{display:flex;flex-direction:column;gap:12px;width:375px;max-width:100%}
+.board .why{font-size:13.5px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.board .why b{color:var(--fg)}
+.tag{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+/* ========== PHONE (own theme, independent of page) ========== */
+.ph{
+  --p:#22C55E; --on-p:#04210F; --g0:#07120C; --g1:#0E1F16;
+  --glass:rgba(22,34,28,.62); --glass-hi:rgba(255,255,255,.10); --glass-edge:rgba(255,255,255,.14);
+  --solid:#141E19; --t1:#F2F7F3; --t2:#A9B8AF; --t3:#7C8B83;
+  --up:#4ADE80; --keep:#93C5FD; --down:#FBBF24; --new:#C4B5FD; --err:#F87171; --warn:#FBBF24;
+  --chip:rgba(255,255,255,.07);
+  position:relative;width:375px;max-width:100%;height:812px;border-radius:44px;overflow:hidden;
+  font-family:var(--ar);color:var(--t1);
+  background:radial-gradient(120% 60% at 85% 0%,#14532D 0%,transparent 55%),radial-gradient(90% 50% at 0% 100%,#0B3B24 0%,transparent 60%),var(--g0);
+  box-shadow:0 0 0 10px #050706,0 0 0 11px #2a332e,0 30px 60px -20px #000a;
+  display:flex;flex-direction:column;
+}
+.ph.light{
+  --on-p:#04210F; --g0:#EEF4F0; --glass:rgba(255,255,255,.66); --glass-hi:rgba(255,255,255,.7); --glass-edge:rgba(255,255,255,.9);
+  --solid:#FFFFFF; --t1:#0C1610; --t2:#46554C; --t3:#5F6E66;
+  --up:#15803D; --keep:#1D4ED8; --down:#B45309; --new:#6D28D9; --err:#B91C1C; --warn:#B45309; --chip:rgba(12,22,16,.06);
+  background:radial-gradient(120% 60% at 85% 0%,#BBF7D0 0%,transparent 55%),radial-gradient(90% 50% at 0% 100%,#D1FAE5 0%,transparent 60%),var(--g0);
+  box-shadow:0 0 0 10px #d7ddd9,0 0 0 11px #bfc8c2,0 30px 60px -20px #0003;
+}
+.ph[dir=ltr]{font-family:"Inter","Cairo",sans-serif}
+.ph.lite{--glass:var(--solid);}
+.ph.lite .gl{backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none}
+.status{height:44px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font:600 15px "Inter";direction:ltr}
+.gl{background:var(--glass);backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);border:1px solid var(--glass-edge);box-shadow:inset 0 1px 0 var(--glass-hi),0 10px 30px -12px #0008}
+.solid{background:var(--solid);border:1px solid var(--glass-edge)}
+.body{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:6px 16px 0}
+.num{font-family:"Inter",sans-serif;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.hdr{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ib{width:48px;height:48px;border-radius:24px;display:grid;place-items:center;flex:none;color:var(--t1);font-size:20px}
+.t-xs{font-size:12px;color:var(--t2)} .t-s{font-size:14px} .t-m{font-size:17px;font-weight:700} .t-l{font-size:24px;font-weight:800;line-height:1.2}
+.card{border-radius:24px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:center;gap:10px}
+.sp{flex:1;min-width:0}
+.badge{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border-radius:12px;font:700 12px var(--ar);white-space:nowrap}
+.b-up{color:var(--up);background:color-mix(in srgb,var(--up) 16%,transparent)}
+.b-keep{color:var(--keep);background:color-mix(in srgb,var(--keep) 16%,transparent)}
+.b-down{color:var(--down);background:color-mix(in srgb,var(--down) 16%,transparent)}
+.b-new{color:var(--new);background:color-mix(in srgb,var(--new) 16%,transparent)}
+.cta{height:60px;border-radius:30px;background:var(--p);color:var(--on-p);font:800 18px var(--ar);display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 12px 30px -10px #22C55E99;flex:none}
+.cta.sec{background:var(--chip);color:var(--t1);box-shadow:none;border:1px solid var(--glass-edge);height:52px;font-size:16px}
+.ex{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--chip)}
+.ex:last-child{border:0}
+.idx{width:28px;height:28px;border-radius:14px;background:var(--chip);display:grid;place-items:center;font:700 13px "Inter";flex:none;color:var(--t2)}
+.ex .nm{font-weight:700;font-size:15px;line-height:1.25}
+.ex .meta{font-size:12px;color:var(--t2)}
+.sugg{font:800 17px "Inter";font-variant-numeric:tabular-nums}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.sc{height:30px;padding:0 10px;border-radius:10px;background:var(--chip);display:inline-flex;align-items:center;gap:5px;font:600 13px "Inter";font-variant-numeric:tabular-nums;direction:ltr;color:var(--t2)}
+.sc.done{background:color-mix(in srgb,var(--p) 20%,transparent);color:var(--t1)}
+.sc.now{outline:2px solid var(--p);color:var(--t1);background:transparent}
+.prog{display:flex;gap:4px}
+.prog i{flex:1;height:6px;border-radius:3px;background:var(--chip)}
+.prog i.on{background:var(--p)} .prog i.half{background:linear-gradient(to left,var(--p) 50%,var(--chip) 50%)}
+[dir=ltr] .prog i.half{background:linear-gradient(to right,var(--p) 50%,var(--chip) 50%)}
+.dock{margin:auto 0 0;border-radius:32px 32px 0 0;padding:16px 16px 30px;display:flex;flex-direction:column;gap:12px}
+.step{display:grid;grid-template-columns:56px 1fr 56px;align-items:center;gap:8px;border-radius:20px;padding:6px;background:var(--chip)}
+.step b{width:56px;height:56px;border-radius:16px;background:var(--glass-hi);display:grid;place-items:center;font:700 26px "Inter";color:var(--t1)}
+.ph.light .step b{background:#fff}
+.step .v{text-align:center;display:flex;flex-direction:column;align-items:center;line-height:1}
+.step .v .n{font:800 44px "Inter";font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.step .v .u{font-size:12px;color:var(--t2);margin-top:4px}
+.two{display:grid;grid-template-columns:1.25fr 1fr;gap:8px}
+.pill{position:absolute;inset-inline:16px;bottom:30px;height:60px;border-radius:30px;display:flex;align-items:center;gap:10px;padding:0 8px 0 8px}
+.ring{width:44px;height:44px;border-radius:22px;background:conic-gradient(var(--p) 0 62%,var(--chip) 0);display:grid;place-items:center;flex:none}
+.ring::after{content:"";width:36px;height:36px;border-radius:18px;background:var(--solid)}
+.small-btn{height:48px;min-width:56px;padding:0 14px;border-radius:24px;background:var(--chip);display:grid;place-items:center;font:700 15px "Inter";color:var(--t1)}
+.ss{border-radius:24px;padding:12px;display:flex;flex-direction:column;gap:10px;position:relative}
+.ss .lab{font:800 11px var(--ar);letter-spacing:.06em;color:var(--p);display:flex;align-items:center;gap:6px}
+.ss .bar{position:absolute;inset-block:44px 16px;inset-inline-start:22px;width:3px;border-radius:2px;background:var(--p);opacity:.6}
+.ss .it{display:flex;gap:12px;align-items:center;padding-inline-start:28px}
+.ss .it .ab{position:absolute;inset-inline-start:11px;width:24px;height:24px;border-radius:12px;background:var(--p);color:var(--on-p);display:grid;place-items:center;font:800 12px "Inter"}
+.ss .it{position:relative}
+.ss .it .ab{inset-inline-start:-17px;position:absolute}
+.banner{border-radius:18px;padding:10px 14px;display:flex;gap:10px;align-items:center;font-size:13.5px}
+.skel{background:linear-gradient(90deg,var(--chip),color-mix(in srgb,var(--chip) 40%,var(--glass-hi)),var(--chip));background-size:200% 100%;border-radius:12px;animation:sh 1.4s infinite linear}
+@keyframes sh{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skel{animation:none}}
+.big{font:800 64px "Inter";font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1}
+.tabbar{margin:auto 16px 26px;height:64px;border-radius:32px;display:flex;justify-content:space-around;align-items:center;flex:none}
+.tabbar span{display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--t2);gap:2px;min-width:64px}
+.tabbar span.on{color:var(--p)}
+.tabbar span i{font-style:normal;font-size:20px}
+.dim{position:absolute;inset:0;background:#000a}
+.sheet{position:absolute;inset-inline:0;bottom:0;border-radius:32px 32px 0 0;padding:18px 16px 30px;display:flex;flex-direction:column;gap:12px}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--t3);align-self:center;opacity:.6}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi div{border-radius:18px;background:var(--chip);padding:12px;display:flex;flex-direction:column;gap:2px}
+.kpi b{font:800 22px "Inter";font-variant-numeric:tabular-nums}
+.mirror{display:inline-block} [dir=rtl] .mirror{transform:scaleX(-1)}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:14px">
+  <span class="eyebrow">Gym Tracker · Design System v1 · Oct 2026</span>
+  <h1>Log a set in one tap, between breaths.</h1>
+  <p class="muted">Design system and core screens for the workout-logging flow. Dark + Arabic RTL first, English/LTR and light shown for the key screens. Every spec below maps to <code>AppColors</code>, <code>AppTextStyles</code>, <code>AppDimens</code> and widgets in <code>lib/core/ui/app_ui.dart</code>.</p>
+  <div class="note">
+    <h3>The one decision that shapes everything</h3>
+    <p class="muted">The active workout is a <b style="color:var(--fg)">scrolling list with the current exercise expanded, plus a fixed logging dock in the thumb zone</b>. I rejected one-exercise-per-page swipe (Fitbod style): swipe direction is ambiguous in RTL, it hides what's next, it splits supersets across pages, and an accidental swipe with a sweaty thumb loses your place. Strong and Hevy's full spreadsheet of every set is the other extreme: tiny cells, and the user has to hunt for the next empty row. The hybrid keeps the overview of a list and the focus of a single card. The dock always holds the next unlogged set, so the user never has to find it.</p>
+  </div>
+</header>
+
+<!-- ================= TOKENS ================= -->
+<section>
+  <span class="eyebrow">1 · Foundations</span>
+  <h2>Color tokens</h2>
+  <p class="muted">Dark is the reference theme. Glass is a tint over the brand gradient (<code>AppBackground</code>). Critical numbers never sit on raw glass: they go on <code>surfaceSolid</code> or a glass layer with ≥ 62% opacity, which keeps contrast predictable. Every text pair below passes 4.5:1 on its surface.</p>
+  <div class="tbl"><table>
+    <tr><th>Token</th><th>Dark</th><th>Light</th><th>Use</th></tr>
+    <tr><td><code>primary</code></td><td><span class="sw" style="background:#22C55E"></span>#22C55E</td><td><span class="sw" style="background:#22C55E"></span>#22C55E (fill) · #15803D (text)</td><td>Log button, active set, progress. Text on primary uses <code>onPrimary</code> #04210F (9.6:1)</td></tr>
+    <tr><td><code>bgBase</code></td><td><span class="sw" style="background:#07120C"></span>#07120C</td><td><span class="sw" style="background:#EEF4F0"></span>#EEF4F0</td><td>Behind the brand gradient</td></tr>
+    <tr><td><code>bgGlow1 / bgGlow2</code></td><td><span class="sw" style="background:#14532D"></span>#14532D · <span class="sw" style="background:#0B3B24"></span>#0B3B24</td><td><span class="sw" style="background:#BBF7D0"></span>#BBF7D0 · <span class="sw" style="background:#D1FAE5"></span>#D1FAE5</td><td>Radial glows top-end / bottom-start (gives glass something to refract)</td></tr>
+    <tr><td><code>glassFill</code></td><td>rgba(22,34,28,.62)</td><td>rgba(255,255,255,.66)</td><td>Cards, dock, timer pill. Blur 24, saturation 1.6</td></tr>
+    <tr><td><code>glassEdge / glassHighlight</code></td><td>white 14% / 10%</td><td>white 90% / 70%</td><td>1 px border + inner top highlight</td></tr>
+    <tr><td><code>surfaceSolid</code></td><td><span class="sw" style="background:#141E19"></span>#141E19</td><td><span class="sw" style="background:#FFFFFF"></span>#FFFFFF</td><td>Lite mode replaces every glassFill with this</td></tr>
+    <tr><td><code>textPrimary</code></td><td><span class="sw" style="background:#F2F7F3"></span>#F2F7F3 (15.8:1)</td><td><span class="sw" style="background:#0C1610"></span>#0C1610 (17:1)</td><td>Numbers, names</td></tr>
+    <tr><td><code>textSecondary</code></td><td><span class="sw" style="background:#A9B8AF"></span>#A9B8AF (8.3:1)</td><td><span class="sw" style="background:#46554C"></span>#46554C (7.4:1)</td><td>Meta, "last time"</td></tr>
+    <tr><td><code>textTertiary</code></td><td><span class="sw" style="background:#7C8B83"></span>#7C8B83 (4.8:1)</td><td><span class="sw" style="background:#5F6E66"></span>#5F6E66 (5.2:1)</td><td>Hints only, never numbers</td></tr>
+    <tr><td><code>fillSubtle</code></td><td>white 7%</td><td>ink 6%</td><td>Stepper track, chips, secondary buttons</td></tr>
+    <tr><td><code>trendUp</code></td><td><span class="sw" style="background:#4ADE80"></span>#4ADE80</td><td><span class="sw" style="background:#15803D"></span>#15803D</td><td>↑ increase weight</td></tr>
+    <tr><td><code>trendKeep</code></td><td><span class="sw" style="background:#93C5FD"></span>#93C5FD</td><td><span class="sw" style="background:#1D4ED8"></span>#1D4ED8</td><td>→ keep (calm blue, not grey: "keep" is still good news)</td></tr>
+    <tr><td><code>trendDown</code></td><td><span class="sw" style="background:#FBBF24"></span>#FBBF24</td><td><span class="sw" style="background:#B45309"></span>#B45309</td><td>↓ decrease (amber, never red: dropping weight is not a failure)</td></tr>
+    <tr><td><code>trendNew</code></td><td><span class="sw" style="background:#C4B5FD"></span>#C4B5FD</td><td><span class="sw" style="background:#6D28D9"></span>#6D28D9</td><td>First time</td></tr>
+    <tr><td><code>success / warning / error</code></td><td>#4ADE80 / #FBBF24 / #F87171</td><td>#15803D / #B45309 / #B91C1C</td><td>Replace the current Material defaults in <code>AppColors</code></td></tr>
+  </table></div>
+  <p class="muted">Trend badges always pair color with an arrow and a word ("زوّد ↑"), so they never rely on color alone.</p>
+
+  <h2>Type</h2>
+  <p class="muted">Inter for every number (tabular figures, <code>FontFeature.tabularFigures()</code>), Cairo for Arabic words. Numbers stay Western digits: weight plates, machines and gym whiteboards in Egypt use them, and Inter's digits are wider and easier to read from 50 cm than Arabic-Indic digits at the same size. Numbers are wrapped in an LTR isolate so "22.5 × 12" never reorders in RTL.</p>
+  <div class="tbl"><table>
+    <tr><th>Token</th><th>Size / weight / height</th><th>Font</th><th>Use</th></tr>
+    <tr><td><code>numHero</code></td><td>64 / 800 / 1.0, tracking −3%</td><td>Inter tnum</td><td>Rest timer countdown</td></tr>
+    <tr><td><code>numXL</code></td><td>44 / 800 / 1.0</td><td>Inter tnum</td><td>Stepper value (weight, reps)</td></tr>
+    <tr><td><code>numL</code></td><td>22 / 800 / 1.1</td><td>Inter tnum</td><td>Summary figures</td></tr>
+    <tr><td><code>numM</code></td><td>17 / 800 / 1.2</td><td>Inter tnum</td><td>Suggested weight in lists</td></tr>
+    <tr><td><code>display</code></td><td>28 / 800 / 1.2</td><td>Cairo / Inter</td><td>Day name on Today</td></tr>
+    <tr><td><code>headline</code></td><td>24 / 800 / 1.2</td><td>Cairo / Inter</td><td>Current exercise name</td></tr>
+    <tr><td><code>title</code></td><td>17 / 700 / 1.3</td><td>Cairo / Inter</td><td>Section, sheet titles</td></tr>
+    <tr><td><code>body</code></td><td>15 / 600 / 1.35</td><td>Cairo / Inter</td><td>Exercise rows (Cairo needs 600 to match Inter's color)</td></tr>
+    <tr><td><code>label</code></td><td>18 / 800</td><td>Cairo / Inter</td><td>Primary button</td></tr>
+    <tr><td><code>caption</code></td><td>12–13 / 500 / 1.4</td><td>Cairo / Inter</td><td>Meta, "last time"</td></tr>
+  </table></div>
+  <p class="muted">At font scale 1.3+: the stepper value is capped at 1.15× (it is already 44), the dock grows upward and the list scrolls under it. Rows wrap the exercise name onto two lines rather than truncating.</p>
+
+  <h2>Spacing, radii, glass layers, motion</h2>
+  <div class="grid">
+    <div class="note"><h3>Spacing (×.w)</h3><p class="muted num">4 · 8 · 12 · 16 · 24 · 32. Screen gutter 16. Card padding 14/16. Dock padding 16, bottom 30 + safe area. Add <code>sm2 = 12</code> to <code>AppDimens</code>.</p></div>
+    <div class="note"><h3>Radii (×.r)</h3><p class="muted num">chip 10 · stepper key 16 · banner 18 · stepper 20 · card 24 · button/pill 30 (full) · dock/sheet 32 top. Add <code>radiusXl = 24</code>, <code>radiusFull = 999</code>.</p></div>
+    <div class="note"><h3>Touch targets</h3><p class="muted num">Logging controls 56 (± keys, log button 60 high). Everything else 48 (icon buttons, chips row height 48 hit area). Add <code>targetLog = 56</code>, <code>ctaHeight = 60</code>.</p></div>
+    <div class="note"><h3>Glass layers</h3><p class="muted">L0 brand gradient · L1 cards (GlassQuality.minimal in lists) · L2 dock, timer pill, sheets (standard). Never more than 2 stacked. Lite: solidSurface + 1 px edge, no shadow.</p></div>
+    <div class="note"><h3>Motion</h3><p class="muted num">Tap feedback 120 ms · state change 200 ms <code>easeOutCubic</code> · expand/collapse card 260 ms <code>Curves.easeInOutCubicEmphasized</code> · sheet 300 ms spring (damping 0.86) · timer pill in 220 ms slide-up + fade. Reduce motion: crossfade 150 ms, no slide, no scale.</p></div>
+    <div class="note"><h3>Haptics</h3><p class="muted">± step: selectionClick · Log set: lightImpact · Exercise complete: mediumImpact · Rest over: notification success (heavy ×2 + sound if in background) · Finish: success · Delete: warning.</p></div>
+  </div>
+</section>
+
+<!-- ================= COMPONENTS ================= -->
+<section>
+  <span class="eyebrow">2 · Components</span>
+  <h2>Building blocks</h2>
+  <div class="boards">
+    <div class="board">
+      <div class="ph" dir="rtl" style="height:auto;padding:20px 16px 24px;gap:16px">
+        <div class="tag" style="color:var(--t2)">Big primary button · stepper</div>
+        <div class="cta">✓ سجّل المجموعة</div>
+        <div class="cta sec">تخطّى</div>
+        <div class="step"><b>−</b><div class="v"><span class="n num">22.5</span><span class="u">كجم</span></div><b>+</b></div>
+        <div class="tag" style="color:var(--t2)">Trend badges</div>
+        <div class="chips"><span class="badge b-up">↑ زوّد</span><span class="badge b-keep">→ ثبّت</span><span class="badge b-down">↓ قلّل</span><span class="badge b-new">✦ أول مرة</span></div>
+        <div class="tag" style="color:var(--t2)">Set chips: done · current · pending</div>
+        <div class="chips"><span class="sc done">✓ 22.5×12</span><span class="sc now">22.5×12</span><span class="sc">—</span></div>
+        <div class="tag" style="color:var(--t2)">Progress (exercises, fills from start edge)</div>
+        <div class="prog"><i class="on"></i><i class="on"></i><i class="half"></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="why"><p><b>Stepper.</b> − is always on the end side and + on the start side in reading order, so in RTL + sits on the right where the thumb rests. Labels: "زوّد 2.5 كيلو" / "قلّل 2.5 كيلو". Long-press repeats every 120 ms. Tapping the number opens the numeric keypad.</p></div>
+    </div>
+    <div class="board">
+      <div class="ph" dir="rtl" style="height:auto;padding:20px 16px 24px;gap:16px">
+        <div class="tag" style="color:var(--t2)">Superset group</div>
+        <div class="ss gl">
+          <div class="lab">⇅ سوبر سيت · راحة بعد الاتنين 90 ث</div>
+          <div class="bar"></div>
+          <div class="it"><span class="ab">A</span><div class="sp"><div style="font-weight:700">تبادل دمبل</div><div class="t-xs">Alternating DB Curl · 3×12</div></div><span class="sugg">12.5</span></div>
+          <div class="it"><span class="ab">B</span><div class="sp"><div style="font-weight:700">رفس كابل</div><div class="t-xs">Cable Kickback · 3×12</div></div><span class="sugg">15</span></div>
+        </div>
+        <div class="tag" style="color:var(--t2)">Rest-timer pill</div>
+        <div style="position:relative;height:60px"><div class="pill gl" style="bottom:0;inset-inline:0"><div class="ring"></div><div class="sp"><div class="num" style="font:800 22px Inter">1:12</div><div class="t-xs">التالي: سحب عالي · 52.5×12</div></div><span class="small-btn num">+15</span><span class="small-btn">تخطّى</span></div></div>
+        <div class="tag" style="color:var(--t2)">Status banners</div>
+        <div class="banner solid"><span>☁︎</span><span class="sp">محفوظ على موبايلك · هيتزامن لما النت يرجع</span></div>
+        <div class="banner solid" style="color:var(--err)"><span>!</span><span class="sp" style="color:var(--t1)">مقدرناش نحمّل الخطة.</span><span class="small-btn" style="color:var(--t1)">جرّب تاني</span></div>
+      </div>
+      <div class="why"><p><b>Superset.</b> One shared glass container, a primary-colored rail and A/B letters. Rest is shown once for the pair. In the dock the two exercises alternate: A set 1 → B set 1 → rest → A set 2…</p><p><b>Offline.</b> A cloud glyph with neutral text, never the error color. It reads as a fact, not a problem.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SCREENS ================= -->
+<section>
+  <span class="eyebrow">3 · Screens</span>
+  <h2>Core flow, Day 1 بنش وضهر</h2>
+  <div class="boards">
+
+  <!-- TODAY -->
+  <div class="board">
+    <div class="tag">3.1 Today · RTL · dark</div>
+    <div class="ph" dir="rtl">
+      <div class="status"><span>9:41</span><span>●●● ▮</span></div>
+      <div class="body">
+        <div class="hdr"><div><div class="t-xs">التمرين الجاي</div></div><span class="ib gl" aria-label="الإعدادات">⚙︎</span></div>
+        <div class="banner gl" style="border-color:color-mix(in srgb,var(--warn) 45%,transparent)"><span style="color:var(--warn)">⏸</span><span class="sp">التمرين ده مستنيك من <b>يوم الإتنين</b>، الخطة بتمشي بالتمرين مش بالأيام.</span></div>
+        <div>
+          <div class="t-xs num" style="direction:rtl">اليوم 1 من 5</div>
+          <div style="font:800 30px var(--ar);line-height:1.2">بنش وضهر</div>
+          <div class="t-xs">7 تمارين · 21 مجموعة · حوالي 55 دقيقة</div>
+        </div>
+        <div class="prog" aria-label="اليوم 1 من 5"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+        <div class="card gl" style="padding-block:4px;gap:0">
+          <div class="ex"><span class="idx">1</span><div class="sp"><div class="nm">دفع دمبل مستوي</div><div class="meta">3×12 · آخر مرة <span class="num">22.5×12, 12, 11</span></div></div><div style="text-align:end"><div class="sugg">22.5</div><span class="badge b-keep">→ ثبّت</span></div></div>
+          <div class="ex"><span class="idx">2</span><div class="sp"><div class="nm">سحب عالي واسع</div><div class="meta">3×12 · آخر مرة <span class="num">50×12 ×3</span></div></div><div style="text-align:end"><div class="sugg">52.5</div><span class="badge b-up">↑ زوّد</span></div></div>
+          <div class="ex"><span class="idx">3</span><div class="sp"><div class="nm">دفع جهاز عالي</div><div class="meta">3×12</div></div><div style="text-align:end"><div class="sugg">—</div><span class="badge b-new">✦ أول مرة</span></div></div>
+          <div class="ex"><span class="idx">4</span><div class="sp"><div class="nm">سحب أرضي ضيق</div><div class="meta">3×12 · آخر مرة <span class="num">45×12 ×3</span></div></div><div style="text-align:end"><div class="sugg">47.5</div><span class="badge b-up">↑ زوّد</span></div></div>
+          <div class="ex"><span class="idx">5</span><div class="sp"><div class="nm">فراشة</div><div class="meta">3×12</div></div><div class="t-xs">+3 تمارين</div></div>
+        </div>
+      </div>
+      <div style="padding:12px 16px 30px;display:flex;flex-direction:column;gap:8px">
+        <div class="cta">ابدأ التمرين <span class="mirror">←</span></div>
+      </div>
+    </div>
+    <div class="why"><p><b>Why.</b> One question answered: what do I do today. The day name is the hero, the CTA is in the thumb zone. The missed-day banner is amber, not red, and explains the rule once. Each row shows the suggested weight as the big number and last time as small text, which is all the user needs to load the bar while walking over.</p><p><b>Rejected:</b> a calendar strip (the plan isn't calendar-based) and a tab bar during a workout (the workout is a mode, not a tab).</p></div>
+  </div>
+
+  <!-- ACTIVE -->
+  <div class="board">
+    <div class="tag">3.2 Active workout · RTL · dark</div>
+    <div class="ph" dir="rtl">
+      <div class="status"><span>9:58</span><span>●●● ▮</span></div>
+      <div class="body" style="gap:10px">
+        <div class="hdr"><span class="ib gl" aria-label="إغلاق، التمرين محفوظ">✕</span><div class="sp" style="text-align:center"><div class="t-xs">بنش وضهر · <span class="num">17:04</span></div><div class="prog" style="margin-top:6px"><i class="on"></i><i class="half"></i><i></i><i></i><i></i><i></i><i></i></div></div><span class="ib gl" aria-label="القائمة">⋯</span></div>
+        <div class="row t-xs" style="padding:0 6px"><span class="idx" style="background:var(--p);color:var(--on-p)">✓</span><span class="sp">دفع دمبل مستوي</span><span class="num">22.5×12 · 12 · 12</span></div>
+        <div class="card gl" style="gap:10px">
+          <div class="row"><span class="idx">2</span><div class="sp"><div style="font:800 22px var(--ar);line-height:1.2">سحب عالي واسع</div><div class="t-xs">Wide Lat Pulldown · راحة 90 ث</div></div><span class="badge b-up">↑ زوّد</span></div>
+          <div class="t-xs">آخر مرة: <span class="num">50×12, 50×12, 50×12</span> · خلّصت كل العدات</div>
+          <div class="chips"><span class="sc done">✓ 52.5×12</span><span class="sc now">مجموعة 2</span><span class="sc">3</span></div>
+        </div>
+        <div class="row t-s" style="padding:0 6px;color:var(--t2)"><span class="idx">3</span><span class="sp">دفع جهاز عالي</span><span class="badge b-new">أول مرة</span></div>
+        <div class="row t-s" style="padding:0 6px;color:var(--t2)"><span class="idx">4</span><span class="sp">سحب أرضي ضيق</span><span class="num">47.5</span></div>
+      </div>
+      <div class="dock gl">
+        <div class="row"><div class="t-m sp">مجموعة <span class="num">2</span> من <span class="num">3</span></div><span class="t-xs">الهدف 12</span></div>
+        <div class="two">
+          <div class="step"><b aria-label="قلّل 2.5 كيلو">−</b><div class="v"><span class="n num">52.5</span><span class="u">كجم</span></div><b aria-label="زوّد 2.5 كيلو">+</b></div>
+          <div class="step"><b>−</b><div class="v"><span class="n num">12</span><span class="u">عدة</span></div><b>+</b></div>
+        </div>
+        <div class="cta">✓ سجّل <span class="num">52.5 × 12</span></div>
+      </div>
+    </div>
+    <div class="why"><p><b>Why.</b> The dock is the whole interaction: it's prefilled with the suggestion, so the common case is one tap on a 60 pt button. The steppers are 56 pt. The list above is for orientation only: done exercises collapse to one line, the current one is expanded, the next one is visible.</p><p><b>Editing a logged set:</b> tap a ✓ chip and the dock switches to "تعديل مجموعة 1" with the same steppers plus Save / Delete (next board). Swiping the dock is disabled on purpose.</p><p><b>Rejected:</b> inline per-set rows with small text fields (Strong): they need precise taps and the keyboard covers the list.</p></div>
+  </div>
+
+  <!-- EDIT -->
+  <div class="board">
+    <div class="tag">3.2b Editing a logged set · RTL · dark</div>
+    <div class="ph" dir="rtl">
+      <div class="status"><span>9:59</span><span>●●● ▮</span></div>
+      <div class="body" style="gap:10px">
+        <div class="hdr"><span class="ib gl">✕</span><div class="sp" style="text-align:center"><div class="t-xs">بنش وضهر · <span class="num">17:40</span></div><div class="prog" style="margin-top:6px"><i class="on"></i><i class="half"></i><i></i><i></i><i></i><i></i><i></i></div></div><span class="ib gl">⋯</span></div>
+        <div class="card gl" style="gap:10px">
+          <div class="row"><span class="idx">2</span><div class="sp"><div style="font:800 22px var(--ar);line-height:1.2">سحب عالي واسع</div></div></div>
+          <div class="chips"><span class="sc now">✎ 52.5×12</span><span class="sc">مجموعة 2</span><span class="sc">3</span></div>
+        </div>
+      </div>
+      <div class="dim"></div>
+      <div class="sheet gl">
+        <div class="grab"></div>
+        <div class="row"><div class="t-m sp">تعديل مجموعة <span class="num">1</span></div><span class="ib" style="color:var(--err)" aria-label="امسح المجموعة">🗑</span></div>
+        <div class="two">
+          <div class="step"><b>−</b><div class="v"><span class="n num">52.5</span><span class="u">كجم</span></div><b>+</b></div>
+          <div class="step"><b>−</b><div class="v"><span class="n num">10</span><span class="u">عدة</span></div><b>+</b></div>
+        </div>
+        <div class="cta">احفظ التعديل</div>
+        <div class="cta sec">إلغاء</div>
+      </div>
+    </div>
+    <div class="why"><p><b>Why.</b> The edit is a sheet over the dock with the same steppers, so the user doesn't learn a second control. The rest timer keeps running behind it. Delete needs a second tap ("اضغط تاني للمسح") instead of a dialog. Changing reps here also updates tomorrow's suggestion.</p></div>
+  </div>
+
+  <!-- REST -->
+  <div class="board">
+    <div class="tag">3.3 Rest timer · in context · RTL · dark</div>
+    <div class="ph" dir="rtl">
+      <div class="status"><span>10:01</span><span>●●● ▮</span></div>
+      <div class="body" style="gap:10px">
+        <div class="hdr"><span class="ib gl">✕</span><div class="sp" style="text-align:center"><div class="t-xs">بنش وضهر · <span class="num">19:22</span></div><div class="prog" style="margin-top:6px"><i class="on"></i><i class="half"></i><i></i><i></i><i></i><i></i><i></i></div></div><span class="ib gl">⋯</span></div>
+        <div class="card gl" style="gap:10px">
+          <div class="row"><span class="idx">2</span><div class="sp"><div style="font:800 22px var(--ar);line-height:1.2">سحب عالي واسع</div></div><span class="badge b-up">↑ زوّد</span></div>
+          <div class="chips"><span class="sc done">✓ 52.5×12</span><span class="sc done">✓ 52.5×11</span><span class="sc now">مجموعة 3</span></div>
+        </div>
+      </div>
+      <div class="dock gl" style="align-items:center;gap:14px">
+        <div class="t-xs">راحة</div>
+        <div class="big num" role="timer" aria-label="باقي دقيقة و12 ثانية">1:12</div>
+        <div style="width:100%;height:6px;border-radius:3px;background:var(--chip);overflow:hidden"><div style="width:62%;height:100%;background:var(--p);margin-inline-start:0"></div></div>
+        <div class="t-s" style="color:var(--t2)">التالي: مجموعة 3 · <span class="num">52.5 × 12</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%">
+          <div class="cta sec num" style="height:56px">+15 ث</div>
+          <div class="cta sec" style="height:56px">تخطّى الراحة</div>
+        </div>
+      </div>
+    </div>
+    <div class="why"><p><b>Why.</b> After "سجّل", the dock turns into the timer in place (200 ms crossfade). No new screen and no modal. The countdown is the biggest thing on the screen, and below it is the next set's prefilled values, so the user can load the weight while resting. At 0:00 the dock flips back to logging with a success haptic.</p><p><b>Background:</b> an ongoing notification / iOS Live Activity shows "1:12 · سحب عالي · مجموعة 3" with +15 and Skip actions. The timer is stored as an end timestamp, so it survives the app being killed.</p></div>
+  </div>
+
+  <!-- PILL ELSEWHERE -->
+  <div class="board">
+    <div class="tag">3.3b Timer pill from anywhere · LTR · light</div>
+    <div class="ph light" dir="ltr">
+      <div class="status"><span>10:01</span><span>●●● ▮</span></div>
+      <div class="body">
+        <div class="hdr"><span class="ib gl" aria-label="Back"><span class="mirror">←</span></span><div class="sp t-m">Wide Lat Pulldown</div></div>
+        <div class="card gl">
+          <div class="t-xs">History</div>
+          <div class="ex"><div class="sp"><div class="nm">Today</div><div class="meta num">52.5×12 · 52.5×11</div></div><span class="badge b-up">↑ +2.5</span></div>
+          <div class="ex"><div class="sp"><div class="nm">Mon, Oct 20</div><div class="meta num">50×12 · 50×12 · 50×12</div></div></div>
+          <div class="ex"><div class="sp"><div class="nm">Thu, Oct 16</div><div class="meta num">50×12 · 50×11 · 50×10</div></div></div>
+        </div>
+      </div>
+      <div class="pill gl"><div class="ring"></div><div class="sp"><div class="num" style="font:800 22px Inter">1:12</div><div class="t-xs">Next: set 3 · 52.5×12</div></div><span class="small-btn num">+15</span><span class="small-btn">Skip</span></div>
+    </div>
+    <div class="why"><p><b>Why.</b> When the user leaves the workout (history, settings), the timer becomes a floating glass pill above the bottom safe area. Tapping it returns to the workout. In LTR the ring sits on the left; it mirrors with the layout. The back arrow mirrors; the timer ring direction does not (clocks run clockwise everywhere).</p></div>
+  </div>
+
+  <!-- SUPERSET -->
+  <div class="board">
+    <div class="tag">3.4 Superset · Day 2 كتف ودراع · RTL · dark</div>
+    <div class="ph" dir="rtl">
+      <div class="status"><span>18:20</span><span>●●● ▮</span></div>
+      <div class="body" style="gap:10px">
+        <div class="hdr"><span class="ib gl">✕</span><div class="sp" style="text-align:center"><div class="t-xs">كتف ودراع · <span class="num">31:10</span></div><div class="prog" style="margin-top:6px"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="half"></i><i></i><i></i></div></div><span class="ib gl">⋯</span></div>
+        <div class="ss gl">
+          <div class="lab">⇅ سوبر سيت · راحة بعد الاتنين 90 ث</div>
+          <div class="bar"></div>
+          <div class="it"><span class="ab">A</span><div class="sp"><div style="font:800 20px var(--ar)">تبادل دمبل</div><div class="chips" style="margin-top:6px"><span class="sc done">✓ 12.5×12</span><span class="sc done">✓ 12.5×12</span><span class="sc">3</span></div></div></div>
+          <div class="it"><span class="ab">B</span><div class="sp"><div style="font:800 20px var(--ar)">رفس كابل</div><div class="chips" style="margin-top:6px"><span class="sc done">✓ 15×12</span><span class="sc">2</span><span class="sc">3</span></div></div></div>
+        </div>
+        <div class="row t-s" style="padding:0 6px;color:var(--t2)"><span class="idx">⇅</span><span class="sp">شاكوش دمبل + حبل خلفي</span><span class="t-xs">سوبر سيت</span></div>
+      </div>
+      <div class="dock gl">
+        <div class="row"><span class="ab" style="width:28px;height:28px;border-radius:14px;background:var(--p);color:var(--on-p);display:grid;place-items:center;font:800 13px Inter">B</span><div class="t-m sp">رفس كابل · مجموعة <span class="num">2</span></div><span class="t-xs">من غير راحة</span></div>
+        <div class="two">
+          <div class="step"><b>−</b><div class="v"><span class="n num">15</span><span class="u">كجم</span></div><b>+</b></div>
+          <div class="step"><b>−</b><div class="v"><span class="n num">12</span><span class="u">عدة</span></div><b>+</b></div>
+        </div>
+        <div class="cta">✓ سجّل وارتاح <span class="num">90</span> ث</div>
+      </div>
+    </div>
+    <div class="why"><p><b>Why.</b> Both exercises sit in one expanded group, so the user sees the pair. The dock alternates A → B. After logging A, no timer starts; the label says "من غير راحة" and the dock jumps to B with a medium haptic. After B, the button itself says the rest is coming ("سجّل وارتاح 90 ث"). No surprises.</p></div>
+  </div>
+
+  <!-- ACTIVE LTR LIGHT -->
+  <div class="board">
+    <div class="tag">3.2 Active workout · LTR · light</div>
+    <div class="ph light" dir="ltr">
+      <div class="status"><span>9:58</span><span>●●● ▮</span></div>
+      <div class="body" style="gap:10px">
+        <div class="hdr"><span class="ib gl" aria-label="Close, workout is saved">✕</span><div class="sp" style="text-align:center"><div class="t-xs">Chest &amp; Back · <span class="num">17:04</span></div><div class="prog" style="margin-top:6px"><i class="on"></i><i class="half"></i><i></i><i></i><i></i><i></i><i></i></div></div><span class="ib gl">⋯</span></div>
+        <div class="row t-xs" style="padding:0 6px"><span class="idx" style="background:var(--p);color:var(--on-p)">✓</span><span class="sp">Flat Dumbbell Press</span><span class="num">22.5×12 · 12 · 12</span></div>
+        <div class="card gl" style="gap:10px">
+          <div class="row"><span class="idx">2</span><div class="sp"><div style="font:800 22px Inter;line-height:1.2">Wide Lat Pulldown</div><div class="t-xs">سحب عالي واسع · Rest 90 s</div></div><span class="badge b-up">↑ Increase</span></div>
+          <div class="t-xs">Last time: <span class="num">50×12, 50×12, 50×12</span> · all reps hit</div>
+          <div class="chips"><span class="sc done">✓ 52.5×12</span><span class="sc now">Set 2</span><span class="sc">3</span></div>
+        </div>
+        <div class="row t-s" style="padding:0 6px;color:var(--t2)"><span class="idx">3</span><span class="sp">Incline Machine Press</span><span class="badge b-new">First time</span></div>
+      </div>
+      <div class="dock gl">
+        <div class="row"><div class="t-m sp">Set <span class="num">2</span> of <span class="num">3</span></div><span class="t-xs">Target 12</span></div>
+        <div class="two">
+          <div class="step"><b>−</b><div class="v"><span class="n num">52.5</span><span class="u">kg</span></div><b>+</b></div>
+          <div class="step"><b>−</b><div class="v"><span class="n num">12</span><span class="u">reps</span></div><b>+</b></div>
+        </div>
+        <div class="cta">✓ Log <span class="num">52.5 × 12</span></div>
+      </div>
+    </div>
+    <div class="why"><p><b>Mirroring.</b> In LTR the progress bar fills left→right, the close button moves to the left, and the stepper keeps − before +. Digits, × and the check mark never mirror. The secondary name always shows the other language in small text, because many members know a machine by either name.</p></div>
+  </div>
+
+  <!-- FINISH -->
+  <div class="board">
+    <div class="tag">3.5 Finish workout · RTL · dark</div>
+    <div class="ph" dir="rtl">
+      <div class="status"><span>10:44</span><span>●●● ▮</span></div>
+      <div class="body" style="opacity:.35">
+        <div class="card gl"><div class="t-m">بطن</div><div class="chips"><span class="sc done">✓ 15</span><span class="sc done">✓ 15</span><span class="sc done">✓ 15</span></div></div>
+      </div>
+      <div class="sheet gl" style="gap:14px">
+        <div class="grab"></div>
+        <div style="text-align:center"><div style="font:800 26px var(--ar)">عاش! خلّصت بنش وضهر</div><div class="t-xs">اليوم 1 من 5 · <span class="num">58</span> دقيقة</div></div>
+        <div class="kpi">
+          <div><span class="t-xs">مجموعات</span><b>21/21</b></div>
+          <div><span class="t-xs">الحجم</span><b>9,840</b><span class="t-xs">كجم</span></div>
+          <div><span class="t-xs">أرقام جديدة</span><b style="color:var(--up)">2</b></div>
+        </div>
+        <div class="card solid" style="gap:6px">
+          <div class="row"><span class="badge b-up">رقم جديد</span><span class="sp">سحب عالي واسع</span><span class="num" style="font-weight:800">52.5×12</span></div>
+          <div class="row"><span class="badge b-up">رقم جديد</span><span class="sp">سحب أرضي ضيق</span><span class="num" style="font-weight:800">47.5×12</span></div>
+        </div>
+        <div class="t-xs" style="text-align:center">الجاي: <b style="color:var(--t1)">كتف ودراع</b> · اليوم 2</div>
+        <div class="cta">خلّص التمرين</div>
+        <div class="cta sec">رجوع</div>
+      </div>
+    </div>
+    <div class="why"><p><b>Why.</b> Confirmation and summary in one sheet, which saves a step. The numbers are the reward; no confetti, no streak guilt. One subtle 300 ms scale-in on the PR badges with a success haptic, crossfade under reduce motion. "خلّص التمرين" advances the plan. If sets are missing, the title becomes "فاضل 3 مجموعات" and the CTA reads "خلّص برضه".</p></div>
+  </div>
+
+  <!-- STATES -->
+  <div class="board">
+    <div class="tag">3.6a First launch loading · RTL · dark</div>
+    <div class="ph" dir="rtl">
+      <div class="status"><span>9:41</span><span>●●● ▮</span></div>
+      <div class="body" aria-busy="true" aria-label="بنحمّل خطتك">
+        <div class="skel" style="height:14px;width:30%"></div>
+        <div class="skel" style="height:34px;width:60%"></div>
+        <div class="skel" style="height:6px"></div>
+        <div class="card gl" style="gap:14px">
+          <div class="skel" style="height:40px"></div><div class="skel" style="height:40px"></div><div class="skel" style="height:40px"></div><div class="skel" style="height:40px"></div>
+        </div>
+      </div>
+      <div style="padding:12px 16px 30px"><div class="skel" style="height:60px;border-radius:30px"></div></div>
+    </div>
+    <div class="why"><p><b>Why.</b> A skeleton shaped like the real Today screen, so nothing jumps when data arrives. Cached plans render immediately; the skeleton appears only on the very first launch. Shimmer stops under reduce motion.</p></div>
+  </div>
+
+  <div class="board">
+    <div class="tag">3.6b No plan yet · RTL · dark</div>
+    <div class="ph" dir="rtl">
+      <div class="status"><span>9:41</span><span>●●● ▮</span></div>
+      <div class="body" style="justify-content:center;align-items:center;text-align:center;gap:14px">
+        <div style="width:96px;height:96px;border-radius:48px;display:grid;place-items:center;font-size:40px" class="gl">🏋︎</div>
+        <div style="font:800 24px var(--ar)">لسه مفيش خطة</div>
+        <p class="t-s" style="color:var(--t2);max-width:28ch">اكتب أيام خطتك والتمارين مرة واحدة، والتطبيق هيمشي معاك تمرين بتمرين.</p>
+      </div>
+      <div style="padding:12px 16px 30px;display:flex;flex-direction:column;gap:8px">
+        <div class="cta">اعمل خطتك</div>
+        <div class="cta sec">ابدأ بخطة جاهزة (5 أيام)</div>
+      </div>
+    </div>
+    <div class="why"><p><b>Why.</b> An empty state with a way out: build a plan, or start from the 5-day template used in these mockups. Both actions sit in the thumb zone.</p></div>
+  </div>
+
+  <div class="board">
+    <div class="tag">3.6c Offline, pending sync · RTL · dark</div>
+    <div class="ph" dir="rtl">
+      <div class="status"><span>10:03</span><span>✈︎ ▮</span></div>
+      <div class="body" style="gap:10px">
+        <div class="hdr"><span class="ib gl">✕</span><div class="sp" style="text-align:center"><div class="t-xs">بنش وضهر · <span class="num">21:50</span></div><div class="prog" style="margin-top:6px"><i class="on"></i><i class="on"></i><i class="half"></i><i></i><i></i><i></i><i></i></div></div><span class="ib gl">⋯</span></div>
+        <div class="banner gl"><span>☁︎</span><span class="sp">مفيش نت. <span class="num">7</span> مجموعات محفوظة على موبايلك وهتتزامن لوحدها.</span></div>
+        <div class="card gl" style="gap:10px">
+          <div class="row"><span class="idx">3</span><div class="sp"><div style="font:800 22px var(--ar);line-height:1.2">دفع جهاز عالي</div><div class="t-xs">أول مرة · ابدأ بوزن خفيف</div></div><span class="badge b-new">✦ أول مرة</span></div>
+          <div class="chips"><span class="sc now">مجموعة 1</span><span class="sc">2</span><span class="sc">3</span></div>
+        </div>
+      </div>
+      <div class="dock gl">
+        <div class="row"><div class="t-m sp">مجموعة <span class="num">1</span> من <span class="num">3</span></div><span class="t-xs">اختار الوزن</span></div>
+        <div class="two">
+          <div class="step"><b>−</b><div class="v"><span class="n num">20</span><span class="u">كجم</span></div><b>+</b></div>
+          <div class="step"><b>−</b><div class="v"><span class="n num">12</span><span class="u">عدة</span></div><b>+</b></div>
+        </div>
+        <div class="cta">✓ سجّل <span class="num">20 × 12</span></div>
+      </div>
+    </div>
+    <div class="why"><p><b>Why.</b> Logging never waits on the network. The banner is neutral glass, shown once, and collapses to a small cloud icon in the header after 4 s. Synced confirmation is silent. Also shown: the first-time exercise. The dock starts at the machine's minimum (or the last value used on a similar exercise) and says "اختار الوزن" instead of pretending to have a suggestion.</p></div>
+  </div>
+
+  <div class="board">
+    <div class="tag">3.6d Error with retry · LTR · light · lite</div>
+    <div class="ph light lite" dir="ltr">
+      <div class="status"><span>9:41</span><span>●●● ▮</span></div>
+      <div class="body" style="justify-content:center;align-items:center;text-align:center;gap:14px">
+        <div style="width:96px;height:96px;border-radius:48px;display:grid;place-items:center;font-size:38px;color:var(--err)" class="solid">!</div>
+        <div style="font:800 24px Inter">Couldn't load your plan</div>
+        <p class="t-s" style="color:var(--t2);max-width:30ch">The server didn't respond. Your logged sets are safe on this phone.</p>
+      </div>
+      <div style="padding:12px 16px 30px;display:flex;flex-direction:column;gap:8px">
+        <div class="cta">Try again</div>
+      </div>
+    </div>
+    <div class="why"><p><b>Why.</b> Says what failed and that no data is lost. Retry is in the thumb zone. This board also shows <b>lite mode</b>: solid surfaces, no blur and no shadow, the same layout. Used for Reduce Transparency, Increase Contrast, tests and weak GPUs.</p></div>
+  </div>
+
+  </div>
+</section>
+
+<!-- ================= INVENTORY ================= -->
+<section>
+  <span class="eyebrow">4 · Implementation</span>
+  <h2>Component inventory → Flutter</h2>
+  <p class="muted">New shared widgets go in <code>lib/core/ui/app_ui.dart</code> (each with a lite branch). Workout-specific widgets live in <code>lib/features/workout/presentation/widgets/</code> and are built only from the shared ones.</p>
+  <div class="tbl"><table>
+    <tr><th>Component</th><th>Widget</th><th>Tokens</th><th>Behavior / semantics</th></tr>
+    <tr><td>Glass card</td><td><code>AppCard</code> (exists)</td><td>glassFill, glassEdge, glassHighlight, radiusXl 24, pad 14/16, GlassQuality.minimal in lists</td><td>Lite → surfaceSolid</td></tr>
+    <tr><td>Primary button</td><td><code>AppPrimaryButton</code> (new)</td><td>primary, onPrimary, ctaHeight 60, radiusFull, label 18/800, shadow primary 60% blur 30</td><td>Press scale .97 120 ms; lightImpact; full-width</td></tr>
+    <tr><td>Secondary button</td><td><code>AppSecondaryButton</code> (new)</td><td>fillSubtle, glassEdge, height 52 (56 in dock), title 16/800</td><td>selectionClick</td></tr>
+    <tr><td>Icon button</td><td><code>AppIconButton</code> (exists)</td><td>48×48, glassFill, radiusFull</td><td>Tooltip + semantics label required</td></tr>
+    <tr><td>± Stepper</td><td><code>AppStepper</code> (new)</td><td>fillSubtle track radius 20, keys 56×56 radius 16 glassHighlight, numXL 44 tnum, caption unit</td><td>step = exercise.weightStep (2.5) / 1 rep; long-press repeat 120 ms; tap value → numeric keypad; Semantics: adjustable, increase/decrease labels "Add 2.5 kg"</td></tr>
+    <tr><td>Set chip</td><td><code>SetChip</code> (feature)</td><td>h30 (48 hit), radius 10, done = primary 20% fill, current = 2 px primary outline, pending = fillSubtle; numM 13/600 tnum</td><td>Tap done chip → edit sheet. Label "Set 1, 52.5 kg, 12 reps, logged"</td></tr>
+    <tr><td>Trend badge</td><td><code>TrendBadge</code> (feature)</td><td>trendUp/Keep/Down/New text, same color 16% fill, h24 radius 12, caption 12/700</td><td>Always arrow + word</td></tr>
+    <tr><td>Exercise row</td><td><code>ExerciseRow</code> (feature)</td><td>body 15/600, caption, numM 17/800, index dot 28 fillSubtle, divider fillSubtle</td><td>Collapsed (done), expanded (current, 260 ms), upcoming</td></tr>
+    <tr><td>Superset group</td><td><code>SupersetGroup</code> (feature)</td><td>AppCard + rail 3 px primary 60%, A/B dot 24 primary/onPrimary, label 11/800 primary</td><td>Rest shown once; dock alternates A/B</td></tr>
+    <tr><td>Logging dock</td><td><code>LogDock</code> (feature)</td><td>glass L2, radius 32 top, pad 16 / bottom 30+safe, gap 12</td><td>Modes: log · edit · rest. Crossfade 200 ms. Grows upward at large text</td></tr>
+    <tr><td>Rest timer (full)</td><td><code>RestTimerPanel</code> (feature)</td><td>numHero 64 tnum, 6 px track primary, two 56 secondary buttons</td><td>role timer, announces at 30 s / 10 s / 0; end timestamp persisted; notification + Live Activity</td></tr>
+    <tr><td>Rest timer pill</td><td><code>AppFloatingPill</code> (new) + <code>RestTimerPill</code></td><td>glass L2, h60 radiusFull, ring 44 primary conic, numL 22, buttons 48</td><td>Shown above every route while resting; tap → workout</td></tr>
+    <tr><td>Progress</td><td><code>AppSegmentedProgress</code> (new)</td><td>6 px, radius 3, gap 4, primary / fillSubtle, half = partial</td><td>Fills from start edge (Directionality). Label "Exercise 2 of 7"</td></tr>
+    <tr><td>Bottom sheet</td><td><code>AppSheet</code> (new)</td><td>glass L2, radius 32 top, grabber 40×5 textTertiary, scrim black 66%</td><td>300 ms spring; reduce motion → fade</td></tr>
+    <tr><td>Summary tiles</td><td><code>StatTile</code> (feature)</td><td>fillSubtle, radius 18, caption + numL 22/800</td><td>PR value in trendUp</td></tr>
+    <tr><td>Banner</td><td><code>AppBanner</code> (new)</td><td>glass or surfaceSolid, radius 18, caption 13.5; warning variant edge = warning 45%</td><td>Offline variant auto-collapses after 4 s; liveRegion</td></tr>
+    <tr><td>Loading / Empty / Error</td><td><code>LoadingView</code>, <code>EmptyView</code>, <code>ErrorView</code> (exist)</td><td>Skeleton fillSubtle shimmer 1.4 s; icon disc 96; display 24/800; CTA 60</td><td>ErrorView(failure, onRetry); shimmer off under reduce motion</td></tr>
+  </table></div>
+  <div class="note"><h3>Token changes to make in code</h3><p class="muted">AppColors: add bgBase, bgGlow1/2, glassFill, glassEdge, surfaceSolid, textPrimary/Secondary/Tertiary, fillSubtle, onPrimary, trendUp/Keep/Down/New (dark + light), replace success/warning/error. AppTextStyles: add numHero, numXL, numL, numM with tabular figures and Inter as family. AppDimens: add sm2 12, radiusXl 24, radiusFull, targetLog 56, ctaHeight 60, dockRadius 32. New ARB keys for every string shown, in both files.</p></div>
+</section>
+
+</div>
