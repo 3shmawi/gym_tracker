@@ -12,3 +12,4 @@ Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 ## Features
 - [App update gate](features/app_update.md)
 - [Settings (language & theme)](features/settings.md)
+- [Workout (next session, last weight, logging)](features/workout.md)
