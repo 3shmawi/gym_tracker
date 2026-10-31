@@ -7,6 +7,7 @@ import 'package:gym_tracker/core/widgets/offline_banner.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
 
 import '../../helpers/pump_app.dart';
+import '../../helpers/ui_check.dart';
 
 void main() {
   group(ErrorView, () {
@@ -67,4 +68,15 @@ void main() {
       expect(find.text(l10nEn.offlineBanner), findsNothing);
     });
   });
+
+  screenUiTests(
+    'error_view',
+    () => Scaffold(
+      body: ErrorView(failure: const NetworkFailure(), onRetry: () {}),
+    ),
+  );
+  screenUiTests(
+    'empty_view',
+    () => const Scaffold(body: EmptyView(message: 'Nothing here yet')),
+  );
 }

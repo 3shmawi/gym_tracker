@@ -4,6 +4,7 @@ import 'package:gym_tracker/features/settings/domain/entities/app_settings.dart'
 import 'package:gym_tracker/features/settings/presentation/settings_view.dart';
 
 import '../../../helpers/pump_app.dart';
+import '../../../helpers/ui_check.dart';
 
 void main() {
   group(SettingsView, () {
@@ -55,4 +56,13 @@ void main() {
       expect(dark.selected, isFalse);
     });
   });
+
+  screenUiTests(
+    'settings',
+    () => SettingsView(
+      settings: const AppSettings(),
+      onLocaleChanged: (_) {},
+      onThemeModeChanged: (_) {},
+    ),
+  );
 }

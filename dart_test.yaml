@@ -1,0 +1,5 @@
+tags:
+  # Screenshot (golden) tests. Pixels differ slightly between operating
+  # systems, so goldens are generated and compared on Linux (CI and
+  # scripts/ui_review.sh). On macOS/Windows run: flutter test -x golden
+  golden:

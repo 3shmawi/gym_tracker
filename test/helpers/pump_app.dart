@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_theme.dart';
@@ -18,9 +17,8 @@ extension PumpApp on WidgetTester {
     addTearDown(view.reset);
     return pumpWidget(
       AppUi.testWrap(
-        ScreenUtilInit(
-          designSize: AppDimens.designSize,
-          builder: (context, _) => MaterialApp(
+        AppScreenScale(
+          builder: (context) => MaterialApp(
             locale: locale,
             theme: AppTheme.light,
             localizationsDelegates: AppLocalizations.localizationsDelegates,

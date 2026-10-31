@@ -100,8 +100,8 @@ leaks").
 **Every feature ships with**
 1. Unit tests (repositories, use cases, state holders).
 2. Widget tests (screens and non-trivial widgets) using `tester.pumpApp`;
-   every screen test also calls `await tester.expectAccessible()` (tap
-   targets, labels, text contrast).
+   every screen test ends with `screenUiTests(...)` (layout, sizes, fonts,
+   accessibility and golden screenshots on 32 variants).
 3. An integration test for its main flow in `integration_test/`.
 4. `docs/features/<feature>.md` (start from `./scripts/new_feature.sh`), linked
    in `docs/README.md`. Update it whenever the feature changes.
@@ -117,8 +117,13 @@ leaks").
   `context.l10n.key`.
 - No hard-coded colors, text styles or sizes: use `Theme.of(context)`,
   `AppTextStyles`, `AppDimens`, `AppColors`. New tokens go in those files.
-- Sizes scale with flutter_screenutil (`.w`, `.h`, `.sp`, `.r`) — design frame
-  375×812.
+- Sizes go through `AppDimens.scaled()` / `AppTextStyles` (screen scale
+  clamped 0.9–1.15, design frame 375×812). Never `.w/.sp` directly: they
+  zoom tablets 2×.
+- Every screen's widget test ends with `screenUiTests(...)` (32 variants:
+  overflow, cut-off text, font sizes, app fonts, a11y + golden screenshots).
+  Before committing UI, run `./scripts/ui_review.sh` and look at the
+  screenshots (docs/design.md → "UI testing").
 - RTL-safe layout: `EdgeInsetsDirectional`, `AlignmentDirectional`,
   `start`/`end` — never `left`/`right`.
 - Screens are built from `lib/core/ui/app_ui.dart` (`AppScaffold`, `AppCard`,
@@ -245,7 +250,7 @@ Store texts: `store/` → Actions → **Store listing**.
 - [ ] Unit + widget + integration tests added and passing
 - [ ] Security tests added for new routes, tables and user input
 - [ ] Strings in both ARB files; works in Arabic (RTL) and dark mode
-- [ ] Matches the design (docs/design.md); looks right on a small phone, a large phone and a tablet
+- [ ] Matches the design (docs/design.md); `screenUiTests` green and screenshots reviewed (`./scripts/ui_review.sh`) on small phone, large phone and tablet
 - [ ] Loading / empty / error / offline states; accessible (contrast, large text, labels)
 - [ ] Feature doc written/updated; analytics events listed
 - [ ] Setup, CI or secrets changed → `docs/release.md` / `docs/security.md` updated; zizmor and `test/security/` green

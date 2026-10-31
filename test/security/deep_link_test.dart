@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/router/app_router.dart';
 import 'package:gym_tracker/core/router/not_found_page.dart';
@@ -18,9 +17,8 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
       AppUi.testWrap(
-        ScreenUtilInit(
-          designSize: AppDimens.designSize,
-          builder: (context, _) => MaterialApp.router(
+        AppScreenScale(
+          builder: (context) => MaterialApp.router(
             routerConfig: appRouter,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,

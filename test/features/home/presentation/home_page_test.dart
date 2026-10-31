@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/features/home/presentation/home_page.dart';
 
 import '../../../helpers/pump_app.dart';
+import '../../../helpers/ui_check.dart';
 
 void main() {
   group(HomePage, () {
@@ -29,4 +30,6 @@ void main() {
       expect(direction, TextDirection.rtl);
     });
   });
+
+  screenUiTests('home', () => const HomePage());
 }

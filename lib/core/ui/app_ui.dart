@@ -77,6 +77,14 @@ class AppBackground extends StatelessWidget {
   }
 }
 
+/// Centers [child] at most [AppDimens.maxContentWidth] wide (tablets).
+Widget _constrained(Widget child) => Center(
+  child: ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: AppDimens.maxContentWidth),
+    child: child,
+  ),
+);
+
 class AppScaffold extends StatelessWidget {
   const new({
     required this.body,
@@ -130,7 +138,7 @@ class AppScaffold extends StatelessWidget {
       // GlassScaffold (unlike Scaffold) doesn't provide it.
       body: Material(
         type: MaterialType.transparency,
-        child: SafeArea(child: body),
+        child: SafeArea(child: _constrained(body)),
       ),
     );
   }
@@ -188,7 +196,7 @@ extension on AppScaffold {
                       ],
                     ),
                   ),
-                Expanded(child: body),
+                Expanded(child: _constrained(body)),
               ],
             ),
           ),

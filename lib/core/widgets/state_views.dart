@@ -71,7 +71,7 @@ class _CenteredMessage extends StatelessWidget {
             SizedBox(height: AppDimens.md),
             Text(
               message,
-              style: AppTextStyles.body,
+              style: AppTextStyles.title,
               textAlign: TextAlign.center,
             ),
             if (action != null) ...[SizedBox(height: AppDimens.lg), action!],

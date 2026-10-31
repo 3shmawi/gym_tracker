@@ -24,6 +24,7 @@ abstract final class AppTheme {
       textTheme: TextTheme(
         displaySmall: AppTextStyles.display,
         headlineSmall: AppTextStyles.headline,
+        titleLarge: AppTextStyles.title,
         titleMedium: AppTextStyles.title,
         bodyMedium: AppTextStyles.body,
         labelLarge: AppTextStyles.label,
