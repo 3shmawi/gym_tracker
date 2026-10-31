@@ -30,17 +30,28 @@ abstract final class AppDimens {
   static double get sm => scaled(8);
   static double get md => scaled(16);
   static double get lg => scaled(24);
+  static double get sm2 => scaled(12);
   static double get xl => scaled(32);
 
   static double get radiusSm => scaled(8);
   static double get radiusMd => scaled(12);
   static double get radiusLg => scaled(20);
+  static double get radiusXl => scaled(24);
+  static double get radiusSheet => scaled(32);
+  static const radiusFull = 999.0;
 
   static double get iconMd => scaled(24);
 
   /// Content never gets wider than this: on a tablet the screen is centered
   /// instead of stretched edge to edge.
   static const maxContentWidth = 600.0;
+
+  /// Logging controls (stepper keys): bigger than [minTouchTarget] for a
+  /// sweaty thumb between sets.
+  static double get targetLog => math.max(56, scaled(56));
+
+  /// Height of the big primary button (log a set, start workout).
+  static double get ctaHeight => math.max(56, scaled(60));
 
   /// Never below [minTouchTarget], even on the smallest phone.
   static double get buttonHeight => math.max(minTouchTarget, scaled(48));

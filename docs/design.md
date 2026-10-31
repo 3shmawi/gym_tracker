@@ -12,10 +12,10 @@ built to match. Code never invents its own look.
 ## Tokens → code
 | Design System token | Code |
 |---|---|
-| Colors (light + dark) | `lib/core/theme/app_colors.dart` → `AppTheme` |
+| Colors (light + dark) | `app_colors.dart` (raw tokens) → `app_palette.dart` (`context.palette`: trends, fills, text levels) + `AppTheme` ColorScheme |
 | Type scale, font family | `lib/core/theme/app_text_styles.dart` |
 | Spacing, radius, sizes | `lib/core/theme/app_dimens.dart` |
-| Components (buttons, cards, inputs…) | `lib/core/widgets/` (create as needed) |
+| Components | `lib/core/ui/app_controls.dart` (exported by `app_ui.dart`): `AppPrimaryButton`, `AppSecondaryButton`, `AppStepper`, `AppBadge` (`AppTone`), `AppSetChip` (`AppSetState`). Showcase + tests: `test/core/ui/app_controls_test.dart` |
 
 When the Design System changes, update these files first, then screens.
 
@@ -97,6 +97,12 @@ Three layers, all automatic except the last look:
 
 The iOS simulator run is the integration test in CI (`integration` job) and
 the **Demo video** workflow, which records it with full Liquid Glass.
+
+Light-theme trend colors were darkened from the first design draft
+(up `#166534`, down `#92400E`): the draft values only reached 3.6:1 on
+their badge tint. Small text (≤ 14) never shrinks below its design size.
+Contrast is checked on the English variants; the test font has no Arabic
+glyphs, and Arabic uses the same colors.
 
 Sizes: everything goes through `AppDimens.scaled()` / `AppTextStyles`. The
 scale follows the screen width but is clamped to 0.9–1.15, touch targets

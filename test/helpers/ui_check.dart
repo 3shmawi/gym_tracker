@@ -262,7 +262,9 @@ void screenUiTests(
     for (final variant in variants ?? uiMatrix) {
       testWidgets('accessibility · $variant', (tester) async {
         await tester.pumpVariant(build(), variant);
-        await tester.expectAccessible();
+        await tester.expectAccessible(
+          checkContrast: variant.locale.languageCode != 'ar',
+        );
       });
     }
     // Then layout and screenshots with the real fonts, so widths, wrapping
