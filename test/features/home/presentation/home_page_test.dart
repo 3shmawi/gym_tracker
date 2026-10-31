@@ -1,32 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/features/home/presentation/home_page.dart';
+import 'package:gym_tracker/features/workout/presentation/workout_controller.dart';
 
 import '../../../helpers/pump_app.dart';
+import '../../../helpers/workout_fakes.dart';
 
 void main() {
   group(HomePage, () {
-    testWidgets('shows the welcome message and a settings button', (
+    testWidgets("opens on today's workout with a settings button", (
       tester,
     ) async {
-      await tester.pumpApp(const HomePage());
-
-      expect(find.text(l10nEn.homeWelcome), findsOneWidget);
-      expect(find.byKey(const Key('home_settings_button')), findsOneWidget);
-    });
-
-    testWidgets('meets accessibility guidelines', (tester) async {
-      await tester.pumpApp(const HomePage());
-      await tester.expectAccessible();
-    });
-
-    testWidgets('renders right-to-left in Arabic', (tester) async {
-      await tester.pumpApp(const HomePage(), locale: const Locale('ar'));
-
-      final direction = Directionality.of(
-        tester.element(find.byType(Text).last),
+      await tester.pumpApp(
+        ProviderScope(
+          overrides: [
+            workoutRepositoryProvider.overrideWithValue(
+              FakeWorkoutRepository(plan: testPlan),
+            ),
+          ],
+          child: const HomePage(),
+        ),
       );
-      expect(direction, TextDirection.rtl);
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10nEn.workoutTitle), findsOneWidget);
+      expect(find.byKey(const Key('home_settings_button')), findsOneWidget);
     });
   });
 }

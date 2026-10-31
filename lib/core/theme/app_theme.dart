@@ -33,7 +33,12 @@ abstract final class AppTheme {
         style: FilledButton.styleFrom(
           minimumSize: Size.fromHeight(AppDimens.buttonHeight),
           shape: RoundedRectangleBorder(borderRadius: radius),
-          textStyle: AppTextStyles.label,
+          // A button's textStyle replaces the theme font, so set it again
+          // (otherwise buttons fall back to Roboto, without Arabic glyphs).
+          textStyle: AppTextStyles.label.copyWith(
+            fontFamily: AppFonts.latin,
+            fontFamilyFallback: const [AppFonts.arabic],
+          ),
         ),
       ),
       cupertinoOverrideTheme: CupertinoThemeData(

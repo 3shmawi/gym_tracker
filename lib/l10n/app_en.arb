@@ -4,7 +4,6 @@
   "@appTitle": {
     "description": "App name shown in the app bar and task switcher."
   },
-  "homeWelcome": "Welcome to Gym Tracker",
   "settingsTitle": "Settings",
   "settingsLanguage": "Language",
   "settingsLanguageSystem": "System default",
@@ -40,5 +39,106 @@
   "errorUnauthorized": "You don't have access to this. Please sign in again.",
   "errorNotFound": "We couldn't find what you were looking for.",
   "errorValidation": "Something in the data isn't right. Please check and try again.",
-  "errorUnknown": "Something went wrong. Please try again."
+  "errorUnknown": "Something went wrong. Please try again.",
+  "workoutTitle": "Today's workout",
+  "workoutDayOf": "Day {day} of {total}",
+  "@workoutDayOf": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutStart": "Start workout",
+  "workoutComplete": "Finish workout",
+  "workoutCompleteTitle": "Finish this workout?",
+  "workoutCompleteBody": "Your plan moves on to the next day.",
+  "workoutCompleteBodyMissing": "Some sets aren't logged yet. Your plan moves on to the next day anyway.",
+  "cancel": "Cancel",
+  "workoutCompleted": "Well done! Next time: {day}",
+  "@workoutCompleted": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutNoPlan": "No plan yet. Ask your coach to assign one, then pull to refresh.",
+  "workoutLast": "Last time: {sets}",
+  "@workoutLast": {
+    "placeholders": {
+      "sets": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutFirstTime": "First time: start with a comfortable weight",
+  "workoutSuggested": "Suggested: {weight}",
+  "@workoutSuggested": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutTarget": "{sets} sets × {reps} reps",
+  "@workoutTarget": {
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      },
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutSuperset": "Superset",
+  "workoutWeight": "Weight",
+  "workoutReps": "Reps",
+  "workoutKg": "{weight} kg",
+  "@workoutKg": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutLogSet": "Log set {number}",
+  "@workoutLogSet": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutExtraSet": "Log extra set",
+  "workoutIncrease": "Increase {label}",
+  "@workoutIncrease": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutDecrease": "Decrease {label}",
+  "@workoutDecrease": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutDeleteSet": "Delete set {number}",
+  "@workoutDeleteSet": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutPendingSync": "Saved on this phone. Syncs when you're online.",
+  "workoutRefresh": "Refresh"
 }

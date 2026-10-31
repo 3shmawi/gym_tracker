@@ -6,6 +6,29 @@ never skips a workout. The next day only moves when the member marks a
 session Complete. Each exercise shows the last weight/reps and a suggested
 next weight; sets are logged with one tap; a rest timer starts after each set.
 
+## Screen (`/`, `WorkoutPage`)
+- Header: today's day name, "Day x of n", and "saved on this phone" while
+  writes are waiting to sync. Pull to refresh.
+- One card per exercise: target sets × reps, last time, suggested weight
+  (arrow up / flat / down), superset badge.
+- Start workout → each card gets big − / + steppers for weight and reps
+  (prefilled with the suggestion) and one big "Log set N" button. Logged
+  sets show as chips (tap × to delete).
+- Finish workout → confirm → the plan moves to the next day; a "well done,
+  next time: <day>" message replaces the session.
+- States: loading, error with retry (first launch offline), empty (no plan).
+- `WorkoutView` is pure UI; `WorkoutPage` connects it to
+  `WorkoutController` (Riverpod `AsyncNotifier`).
+
+## Sign-in (trial)
+Anonymous Supabase sign-in (`lib/core/auth/app_auth.dart`), done silently
+before the first sync. `ensure_trial_plan()` gives every new user the
+default plan (`plans.is_default`, migration 0003). **Enable it on the hosted
+project:** Supabase dashboard → Authentication → Sign In / Providers →
+"Allow anonymous sign-ins" (local `supabase/config.toml` already has it).
+Uninstalling the app loses an anonymous account; linking an email comes
+later.
+
 ## Backend (Supabase) — `supabase/migrations/0002_workout.sql`
 | Table | Purpose |
 |---|---|
@@ -52,11 +75,14 @@ Double progression on the heaviest weight of the last session:
 - otherwise → same weight; no history → no suggestion
 
 ## Tests
-- RLS + RPC: `supabase/tests/workout_rls.test.sql` (`supabase test db`)
+- RLS + RPC: `supabase/tests/workout_rls.test.sql`, `trial_plan.test.sql`
+  (`supabase test db`)
+- Controller + screen (a11y, RTL, offline error):
+  `test/features/workout/presentation/`
 - Use case: `test/features/workout/domain/`
 - Repository (offline queue, sync order, wrap-around, history):
   `test/features/workout/data/`
 
-## Local data
-`supabase/seed.sql` has the coach's 5-day plan. Sets/reps default to 3 x 12
-until the coach confirms them.
+## The plan
+The coach's 5-day plan is in `supabase/migrations/0003_trial_plan.sql`
+(default plan). Sets/reps default to 3 x 12 until the coach confirms them.

@@ -66,7 +66,7 @@ class OfflineWorkoutRepository implements WorkoutRepository {
 
   @override
   Future<Result<AssignedPlan?>> refreshPlan() async {
-    if (!_remote.isReady) return Success(await cachedPlan());
+    if (!await _remote.ensureReady()) return Success(await cachedPlan());
     // Push local changes first, so the server's next day already includes
     // sessions completed offline.
     final pushed = await sync();
@@ -279,10 +279,11 @@ class OfflineWorkoutRepository implements WorkoutRepository {
 
   @override
   Future<Result<int>> sync() async {
-    if (_syncing || !_remote.isReady) return const Success(0);
+    if (_syncing) return const Success(0);
     _syncing = true;
     var pushed = 0;
     try {
+      if (!await _remote.ensureReady()) return const Success(0);
       final pending = await (_db.select(
         _db.outbox,
       )..orderBy([(t) => OrderingTerm.asc(t.seq)])).get();

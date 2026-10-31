@@ -1,13 +1,15 @@
+import 'package:gym_tracker/core/auth/app_auth.dart';
 import 'package:gym_tracker/features/workout/data/models/workout_json.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Server side of the workout feature. Faked in tests.
 abstract interface class WorkoutRemote {
-  /// False when the backend isn't configured or nobody is signed in: writes
-  /// stay queued on the device.
-  bool get isReady;
+  /// Signs in if needed. False when the backend isn't configured or the
+  /// device is offline: writes stay queued on the device.
+  Future<bool> ensureReady();
 
+  /// The member's active plan; a new member gets the trial plan first.
   Future<AssignedPlan?> fetchActivePlan();
 
   /// Sets of the member's last session for every exercise.
@@ -25,9 +27,10 @@ abstract interface class WorkoutRemote {
 }
 
 class SupabaseWorkoutRemote implements WorkoutRemote {
-  new(this._client);
+  new(this._client, {this._ensureSignedIn = AppAuth.ensureSignedIn});
 
   final SupabaseClient? _client;
+  final Future<bool> Function() _ensureSignedIn;
 
   static const planSelect =
       'next_day_order, plans(id, name, plan_days(id, day_order, name_en, '
@@ -37,10 +40,12 @@ class SupabaseWorkoutRemote implements WorkoutRemote {
   SupabaseClient get _db => _client!;
 
   @override
-  bool get isReady => _client?.auth.currentUser != null;
+  Future<bool> ensureReady() async =>
+      _client != null && await _ensureSignedIn();
 
   @override
   Future<AssignedPlan?> fetchActivePlan() async {
+    await _db.rpc<dynamic>('ensure_trial_plan');
     final row = await _db
         .from('plan_assignments')
         .select(planSelect)

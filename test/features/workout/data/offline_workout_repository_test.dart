@@ -1,104 +1,12 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/workout/data/datasources/workout_database.dart';
-import 'package:gym_tracker/features/workout/data/datasources/workout_remote.dart';
 import 'package:gym_tracker/features/workout/data/repositories/offline_workout_repository.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout.dart';
 
-PlanExercise _exercise(String id, int position) => PlanExercise(
-  exerciseId: id,
-  nameEn: id,
-  nameAr: id,
-  position: position,
-  sets: 3,
-  targetReps: 10,
-  restSeconds: 90,
-  weightStepKg: 2.5,
-);
-
-final _plan = AssignedPlan(
-  planId: 'plan',
-  name: '5-day split',
-  nextDayOrder: 1,
-  days: [
-    PlanDay(
-      id: 'd1',
-      planId: 'plan',
-      dayOrder: 1,
-      nameEn: 'Chest & Back',
-      nameAr: 'بنش وضهر',
-      exercises: [_exercise('bench', 1), _exercise('row', 2)],
-    ),
-    PlanDay(
-      id: 'd2',
-      planId: 'plan',
-      dayOrder: 2,
-      nameEn: 'Legs',
-      nameAr: 'رجل',
-      exercises: [_exercise('squat', 1)],
-    ),
-  ],
-);
-
-/// In-memory server. `offline = true` makes every call fail like no network.
-class FakeRemote implements WorkoutRemote {
-  bool offline = false;
-  bool ready = true;
-  AssignedPlan? plan = _plan;
-  List<LoggedSet> history = [];
-  final calls = <String>[];
-  final sets = <String, Map<String, dynamic>>{};
-
-  @override
-  bool get isReady => ready;
-
-  void _check() {
-    if (offline) throw const SocketException('offline');
-  }
-
-  @override
-  Future<AssignedPlan?> fetchActivePlan() async {
-    _check();
-    return plan;
-  }
-
-  @override
-  Future<List<LoggedSet>> fetchLastSets() async {
-    _check();
-    return history;
-  }
-
-  @override
-  Future<void> insertSession(Map<String, dynamic> row) async {
-    _check();
-    calls.add('insert_session ${row['id']}');
-  }
-
-  @override
-  Future<void> upsertSet(Map<String, dynamic> row) async {
-    _check();
-    calls.add('upsert_set ${row['id']}');
-    sets[row['id'] as String] = row;
-  }
-
-  @override
-  Future<void> deleteSet(String id) async {
-    _check();
-    calls.add('delete_set $id');
-    sets.remove(id);
-  }
-
-  @override
-  Future<int?> completeSession(String sessionId) async {
-    _check();
-    calls.add('complete_session $sessionId');
-    return 2;
-  }
-}
+import '../../../helpers/workout_fakes.dart';
 
 void main() {
   late WorkoutDatabase db;
@@ -149,7 +57,7 @@ void main() {
     await repo.refreshPlan();
     remote.offline = true;
 
-    final session = await repo.startSession(_plan.days.first);
+    final session = await repo.startSession(testPlan.days.first);
     final set1 = await repo.logSet(
       sessionId: session.id,
       exerciseId: 'bench',
@@ -179,7 +87,7 @@ void main() {
 
   test('completing twice moves the plan only once', () async {
     await repo.refreshPlan();
-    final session = await repo.startSession(_plan.days.first);
+    final session = await repo.startSession(testPlan.days.first);
 
     await repo.completeSession(session.id);
     final again = await repo.completeSession(session.id);
@@ -188,9 +96,9 @@ void main() {
   });
 
   test('after the last day the plan wraps to day 1', () async {
-    remote.plan = _plan.copyWith(nextDayOrder: 2);
+    remote.plan = testPlan.copyWith(nextDayOrder: 2);
     await repo.refreshPlan();
-    final session = await repo.startSession(_plan.days.last);
+    final session = await repo.startSession(testPlan.days.last);
 
     final next = await repo.completeSession(session.id);
 
@@ -206,7 +114,7 @@ void main() {
 
   test('lastSets returns the newest completed session per exercise', () async {
     await repo.refreshPlan();
-    final old = await repo.startSession(_plan.days.first);
+    final old = await repo.startSession(testPlan.days.first);
     await repo.logSet(
       sessionId: old.id,
       exerciseId: 'bench',
@@ -216,7 +124,7 @@ void main() {
     );
     await repo.completeSession(old.id);
 
-    final recent = await repo.startSession(_plan.days.first);
+    final recent = await repo.startSession(testPlan.days.first);
     await repo.logSet(
       sessionId: recent.id,
       exerciseId: 'bench',
@@ -268,7 +176,7 @@ void main() {
 
   test('editing and deleting a set are synced too', () async {
     await repo.refreshPlan();
-    final session = await repo.startSession(_plan.days.first);
+    final session = await repo.startSession(testPlan.days.first);
     final set = await repo.logSet(
       sessionId: session.id,
       exerciseId: 'bench',
@@ -306,7 +214,7 @@ void main() {
         remote: rejecting,
         newId: () => 'id${ids++}',
       );
-      await repo.startSession(_plan.days.first);
+      await repo.startSession(testPlan.days.first);
 
       for (var i = 1; i < OfflineWorkoutRepository.maxAttempts; i++) {
         expect(await repo.sync(), isA<Failed<int>>());
@@ -319,7 +227,7 @@ void main() {
 
   test('nothing is pushed until the user is signed in', () async {
     remote.ready = false;
-    final session = await repo.startSession(_plan.days.first);
+    final session = await repo.startSession(testPlan.days.first);
 
     expect(await repo.sync(), const TypeMatcher<Success<int>>());
     expect(remote.calls, isEmpty);
