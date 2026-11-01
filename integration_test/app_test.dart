@@ -57,12 +57,6 @@ void main() {
     await beat(tester);
 
     // Tomorrow is legs: choose day 3.
-    debugPrint(
-      'home pages: ${find.byType(NextWorkoutPage).evaluate().length}, '
-      'settings: ${find.byType(SettingsView).evaluate().length}, '
-      'change day buttons: '
-      '${find.byKey(const Key('change_day_button')).evaluate().length}',
-    );
     await tester.tap(find.byKey(const Key('change_day_button')).hitTestable());
     await tester.pumpAndSettle();
     await beat(tester);

@@ -112,6 +112,10 @@ class AppScaffold extends StatelessWidget {
     }
     return GlassScaffold(
       background: background ?? const AppBackground(),
+      // The body sits below the bar, not behind it: our screens don't add a
+      // spacer for the bar, so their top row (e.g. "change day") was under
+      // the glass bar and could not be tapped.
+      extendBody: false,
       appBar: hasBar
           ? GlassAppBar(
               // Back, title and actions share the title slot (no flex: the
@@ -140,7 +144,9 @@ class AppScaffold extends StatelessWidget {
       // GlassScaffold (unlike Scaffold) doesn't provide it.
       body: Material(
         type: MaterialType.transparency,
-        child: SafeArea(child: _constrained(body)),
+        // With a bar, the scaffold already places the body below the
+        // status bar and the bar.
+        child: SafeArea(top: !hasBar, child: _constrained(body)),
       ),
     );
   }

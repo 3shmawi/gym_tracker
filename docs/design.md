@@ -35,6 +35,9 @@ Screens use `lib/core/ui/app_ui.dart` (`AppScaffold`, `AppCard`,
   widget tests, or `--dart-define=GLASS_LITE=true` for GPU-less devices)
   draws plain surfaces: no shader, no blur, no blurred shadow, no screen
   capture. New glass widgets in `app_ui.dart` need the same lite branch.
+- `AppScaffold` places the body **below** the glass bar
+  (`GlassScaffold(extendBody: false)`), not behind it: screens don't add a
+  spacer for the bar, and their top row was hidden and untappable under it.
 - When Flutter ships official Cupertino Liquid Glass, swap the
   implementation inside `app_ui.dart` only.
 
