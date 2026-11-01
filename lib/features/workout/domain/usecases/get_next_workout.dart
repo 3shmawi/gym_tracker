@@ -23,6 +23,7 @@ class GetNextWorkout {
     List<WorkoutSession> history, {
     required DateTime now,
     int? chosenDay,
+    bool workoutInProgress = false,
     LevelProgress level = LevelProgress.start,
   }) {
     if (plan.days.isEmpty) {
@@ -44,6 +45,7 @@ class GetNextWorkout {
       days: plan.days,
       day: day,
       waitingSince: chosen == null ? _waitingSince(last, now) : null,
+      trainedToday: !workoutInProgress && _sameDay(last?.finishedAt, now),
       level: level,
       exercises: [
         for (final exercise in day.exercises)
@@ -71,6 +73,12 @@ class GetNextWorkout {
 
   /// The next workout was due the day after the last one. If today is past
   /// that, it has been waiting since then.
+  static bool _sameDay(DateTime? finished, DateTime now) {
+    if (finished == null) return false;
+    final f = finished.toLocal();
+    return f.year == now.year && f.month == now.month && f.day == now.day;
+  }
+
   DateTime? _waitingSince(WorkoutSession? last, DateTime now) {
     if (last == null) return null;
     final finished = last.finishedAt.toLocal();

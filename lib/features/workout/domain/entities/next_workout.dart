@@ -62,6 +62,7 @@ class NextWorkout {
     required this.day,
     required this.exercises,
     this.waitingSince,
+    this.trainedToday = false,
     this.level = LevelProgress.start,
   });
 
@@ -77,6 +78,10 @@ class NextWorkout {
   /// Set when a day was skipped: the date this workout was first due. The
   /// plan doesn't move on by itself, so the screen says it waited.
   final DateTime? waitingSince;
+
+  /// A workout was already finished today (and none is in progress):
+  /// starting another asks first.
+  final bool trainedToday;
 
   /// The member's level, shown above the workout.
   final LevelProgress level;

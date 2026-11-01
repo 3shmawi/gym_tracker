@@ -112,5 +112,8 @@
   "progressToday": "النهارده",
   "progressNeverDone": "اعمل التمرين ده في تمرينة، وكل مرة هتظهر هنا.",
   "progressNotInPlan": "التمرين ده مش في خطتك.",
-  "progressOpenHint": "بيعرض كل مرة عملته فيها"
+  "progressOpenHint": "بيعرض كل مرة عملته فيها",
+  "todayAgainTitle": "اتمرّنت النهارده خلاص",
+  "todayAgainBody": "تبدأ تمرين كمان؟ هيتحسب اليوم اللي بعده في خطتك.",
+  "todayAgainStart": "ابدأ تمرين كمان"
 }

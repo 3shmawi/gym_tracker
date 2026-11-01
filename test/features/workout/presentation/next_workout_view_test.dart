@@ -140,6 +140,55 @@ void main() {
       expect(started, 1);
     });
 
+    group('a second workout today', () {
+      NextWorkout trainedToday() =>
+          const GetNextWorkout()(PlanTemplates.fiveDaySplit, [
+            WorkoutSession(
+              dayIndex: 0,
+              finishedAt: DateTime(2026, 11, 3, 7),
+              sets: const [],
+            ),
+          ], now: DateTime(2026, 11, 3, 19));
+
+      testWidgets('asks first; Start another goes on', (tester) async {
+        var started = 0;
+        await tester.pumpApp(
+          view(AsyncData(trainedToday()), onStart: () => started++),
+        );
+        await tester.tap(find.text('Start workout'));
+        await tester.pumpAndSettle();
+        expect(find.text('You already trained today'), findsOneWidget);
+        expect(started, 0);
+        await tester.tap(find.byKey(const Key('start_again_confirm')));
+        await tester.pumpAndSettle();
+        expect(started, 1);
+      });
+
+      testWidgets('Cancel starts nothing', (tester) async {
+        var started = 0;
+        await tester.pumpApp(
+          view(AsyncData(trainedToday()), onStart: () => started++),
+        );
+        await tester.tap(find.text('Start workout'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('start_again_cancel')));
+        await tester.pumpAndSettle();
+        expect(started, 0);
+        expect(find.text('You already trained today'), findsNothing);
+      });
+
+      testWidgets('Arabic', (tester) async {
+        await tester.pumpApp(
+          view(AsyncData(trainedToday()), onStart: () {}),
+          locale: const Locale('ar'),
+        );
+        await tester.tap(find.text('ابدأ التمرين'));
+        await tester.pumpAndSettle();
+        expect(find.text('اتمرّنت النهارده خلاص'), findsOneWidget);
+        expect(find.text('ابدأ تمرين كمان'), findsOneWidget);
+      });
+    });
+
     testWidgets('change day: pick legs for tomorrow', (tester) async {
       int? chosen;
       await tester.pumpApp(

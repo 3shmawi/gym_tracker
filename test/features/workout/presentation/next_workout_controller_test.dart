@@ -158,6 +158,32 @@ void main() {
     expect(next!.dayIndex, 3);
   });
 
+  test('trained today, unless a workout is in progress', () async {
+    // The clock says 5 Nov 2026.
+    ok(await repo.savePlan(PlanTemplates.fiveDaySplit));
+    ok(
+      await repo.saveSession(
+        WorkoutSession(
+          dayIndex: 0,
+          finishedAt: DateTime(2026, 11, 5, 7),
+          sets: const [],
+        ),
+      ),
+    );
+    final before = await container(repo)
+        .read(nextWorkoutControllerProvider.future);
+    expect(before!.trainedToday, isTrue);
+
+    ok(
+      await repo.saveDraft(
+        WorkoutDraft(dayIndex: 1, startedAt: DateTime(2026, 11, 5, 18)),
+      ),
+    );
+    final during = await container(repo)
+        .read(nextWorkoutControllerProvider.future);
+    expect(during!.trainedToday, isFalse);
+  });
+
   group('level', () {
     /// Three workouts a week for [weeks] weeks, ending the week before the
     /// clock (5 Nov 2026).

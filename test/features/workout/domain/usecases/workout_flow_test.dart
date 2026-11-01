@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
-import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/workout_flow.dart';
 
@@ -28,21 +27,32 @@ void main() {
     expect(order, [(4, 1), (5, 1), (4, 2), (5, 2), (4, 3), (5, 3)]);
   });
 
-  test(
-    'starts with set 1 of the first exercise, prefilled from suggestion',
-    () {
-      final c = flow.next(day1, const [], {
-        'flat_db_press': const WeightSuggestion(
-          weight: 22.5,
-          trend: Trend.keep,
-        ),
-      })!;
-      expect((c.exerciseIndex, c.setNumber), (0, 1));
-      expect((c.weight, c.reps), (22.5, 12));
-      expect(c.restAfter, 90);
-      expect(c.supersetPartner, isNull);
-    },
-  );
+  test("starts with set 1, at last time's second set (15, 20, 25 → 20)", () {
+    final c = flow.next(day1, const [], {
+      'flat_db_press': [
+        set('flat_db_press', 15),
+        set('flat_db_press'),
+        set('flat_db_press', 25),
+      ],
+    })!;
+    expect((c.exerciseIndex, c.setNumber), (0, 1));
+    expect((c.weight, c.reps), (20, 12));
+    expect(c.restAfter, 90);
+    expect(c.supersetPartner, isNull);
+  });
+
+  test('start weight: one set last time → that set; 0-rep sets ignored', () {
+    expect(WorkoutFlow.startWeight([set('pec_deck', 30)]), 30);
+    expect(
+      WorkoutFlow.startWeight([
+        set('pec_deck', 30),
+        set('pec_deck', 35, 0),
+        set('pec_deck', 32.5),
+      ]),
+      32.5,
+    );
+    expect(WorkoutFlow.startWeight(const []), 0);
+  });
 
   test('next set repeats what was just done today', () {
     final c = flow.next(day1, [set('flat_db_press', 25, 10)], const {})!;

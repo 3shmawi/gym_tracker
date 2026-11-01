@@ -49,6 +49,11 @@ class NextWorkoutController extends AsyncNotifier<NextWorkout?> {
       history,
       now: now,
       chosenDay: chosen,
+      // Resuming a workout started today isn't "another workout".
+      workoutInProgress: switch (await _repo.loadDraft()) {
+        Success(:final value) => value != null,
+        Failed() => false,
+      },
       level: await _level(history, now),
     );
   }
