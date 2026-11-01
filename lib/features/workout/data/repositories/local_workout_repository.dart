@@ -18,6 +18,7 @@ class LocalWorkoutRepository implements WorkoutRepository {
 
   static const planKey = 'workout.plan';
   static const historyKey = 'workout.history';
+  static const chosenDayKey = 'workout.chosen_day';
 
   /// Oldest sessions are dropped beyond this; suggestions only need the
   /// latest one per exercise.
@@ -50,7 +51,20 @@ class LocalWorkoutRepository implements WorkoutRepository {
       historyKey,
       jsonEncode([for (final s in kept) s.toJson()]),
     );
+    await _prefs.remove(chosenDayKey);
   }, retries: 0);
+
+  @override
+  Future<Result<int?>> loadChosenDay() =>
+      guard(() async => _prefs.getInt(chosenDayKey), retries: 0);
+
+  @override
+  Future<Result<void>> saveChosenDay(int? dayIndex) => guard(
+    () => dayIndex == null
+        ? _prefs.remove(chosenDayKey)
+        : _prefs.setInt(chosenDayKey, dayIndex),
+    retries: 0,
+  );
 
   List<WorkoutSession> _readHistory() {
     final raw = _prefs.getString(historyKey);

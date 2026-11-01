@@ -480,3 +480,96 @@ class AppSegmentedProgress extends StatelessWidget {
     );
   }
 }
+
+/// Opens a bottom sheet in the app style: solid surface, top radius 32,
+/// drag handle, safe area. Returns what the sheet pops.
+Future<T?> showAppSheet<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+}) {
+  final palette = context.palette;
+  return showModalBottomSheet<T>(
+    context: context,
+    useSafeArea: true,
+    isScrollControlled: true,
+    showDragHandle: true,
+    backgroundColor: palette.surfaceSolid,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppDimens.radiusSheet),
+      ),
+    ),
+    builder: builder,
+  );
+}
+
+/// A choice in a list (sheet or card): label, optional detail, check mark
+/// when selected. At least 56 high.
+class AppChoiceRow extends StatelessWidget {
+  const new({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.detail,
+    super.key,
+  });
+
+  final String label;
+  final String? detail;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: AppDimens.targetLog),
+          child: Padding(
+            padding: EdgeInsetsDirectional.symmetric(
+              horizontal: AppDimens.md,
+              vertical: AppDimens.sm,
+            ),
+            child: Row(
+              spacing: AppDimens.sm2,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        label,
+                        style: AppTextStyles.body.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: palette.textPrimary,
+                        ),
+                      ),
+                      if (detail != null)
+                        Text(
+                          detail!,
+                          style: AppTextStyles.caption.copyWith(
+                            color: palette.textSecondary,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                if (selected)
+                  Icon(
+                    Icons.check,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -13,5 +13,11 @@ abstract interface class WorkoutRepository {
   /// Finished workouts, oldest first.
   Future<Result<List<WorkoutSession>>> loadHistory();
 
+  /// Saves a finished workout and clears the chosen day.
   Future<Result<void>> saveSession(WorkoutSession session);
+
+  /// The day the member picked as next (0-based), or null to follow the plan.
+  Future<Result<int?>> loadChosenDay();
+
+  Future<Result<void>> saveChosenDay(int? dayIndex);
 }

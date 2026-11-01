@@ -20,6 +20,7 @@ class NextWorkoutView extends StatelessWidget {
     required this.onRetry,
     required this.onUseTemplate,
     required this.onOpenSettings,
+    required this.onChooseDay,
     this.onStart,
     super.key,
   });
@@ -29,6 +30,9 @@ class NextWorkoutView extends StatelessWidget {
   final VoidCallback onRetry;
   final VoidCallback onUseTemplate;
   final VoidCallback onOpenSettings;
+
+  /// The member picked which plan day (0-based) is next.
+  final ValueChanged<int> onChooseDay;
 
   /// Hidden while null (the active workout isn't available yet).
   final VoidCallback? onStart;
@@ -47,7 +51,11 @@ class NextWorkoutView extends StatelessWidget {
         ),
       ],
       body: switch (state) {
-        AsyncData(value: final next?) => _Workout(next: next, onStart: onStart),
+        AsyncData(value: final next?) => _Workout(
+          next: next,
+          onStart: onStart,
+          onChooseDay: onChooseDay,
+        ),
         AsyncData() => EmptyView(
           icon: Icons.fitness_center,
           message: l10n.todayNoPlan,
@@ -68,10 +76,62 @@ class NextWorkoutView extends StatelessWidget {
 }
 
 class _Workout extends StatelessWidget {
-  const new({required this.next, required this.onStart});
+  const new({
+    required this.next,
+    required this.onStart,
+    required this.onChooseDay,
+  });
 
   final NextWorkout next;
   final VoidCallback? onStart;
+  final ValueChanged<int> onChooseDay;
+
+  Future<void> _pickDay(BuildContext context) async {
+    final l10n = context.l10n;
+    final lang = Localizations.localeOf(context).languageCode;
+    final picked = await showAppSheet<int>(
+      context: context,
+      builder: (sheet) => SingleChildScrollView(
+        padding: EdgeInsetsDirectional.fromSTEB(
+          AppDimens.md,
+          0,
+          AppDimens.md,
+          AppDimens.lg,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Semantics(
+              header: true,
+              child: Text(
+                l10n.todayChooseDay,
+                style: AppTextStyles.title.copyWith(
+                  color: sheet.palette.textPrimary,
+                ),
+              ),
+            ),
+            SizedBox(height: AppDimens.xs),
+            Text(
+              l10n.todayChooseDayHint,
+              style: AppTextStyles.caption.copyWith(
+                color: sheet.palette.textSecondary,
+              ),
+            ),
+            SizedBox(height: AppDimens.sm),
+            for (final (i, day) in next.days.indexed)
+              AppChoiceRow(
+                key: Key('choose_day_$i'),
+                label: l10n.todayDayN(i + 1),
+                detail: day.name.of(lang),
+                selected: i == next.dayIndex,
+                onTap: () => Navigator.of(sheet).pop(i),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked != null && picked != next.dayIndex) onChooseDay(picked);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,13 +170,31 @@ class _Workout extends StatelessWidget {
                 ),
                 SizedBox(height: AppDimens.md),
               ],
-              Text(
-                dayOf,
-                style: AppTextStyles.label.copyWith(
-                  color: palette.textSecondary,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      dayOf,
+                      style: AppTextStyles.label.copyWith(
+                        color: palette.textSecondary,
+                      ),
+                    ),
+                  ),
+                  TextButton.icon(
+                    key: const Key('change_day_button'),
+                    onPressed: () => _pickDay(context),
+                    icon: const Icon(Icons.swap_horiz),
+                    label: Text(l10n.todayChangeDay),
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(
+                        AppDimens.minTouchTarget,
+                        AppDimens.minTouchTarget,
+                      ),
+                      textStyle: AppTextStyles.label,
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(height: AppDimens.xs),
               Semantics(
                 header: true,
                 child: Text(

@@ -20,10 +20,15 @@ Status: slice 1 of 3.
 2. Open the app → next workout with suggestions → **Start workout** (behind
    the `active_workout` flag until slice 2).
 3. Skip a day → the same workout is shown with "waiting since <day>".
+4. **Change day** → pick which plan day is next (e.g. joining mid-plan).
+   The choice holds until a workout is finished, then the plan carries on
+   from there.
 
 ## Rules
 - **Next day** = the day after the last *finished* session, wrapping around
   (`GetNextWorkout`). No history → day 1.
+- **Chosen day** (`saveChosenDay`) wins over the computed day; out-of-range
+  values are ignored; finishing a workout clears it. No waiting banner then.
 - **Waiting** = today is after the day following the last finished session.
 - **Suggested weight** (`SuggestWeight`), from the latest session that has
   the exercise (day 4 uses day 1's sets for the same exercise):
@@ -55,6 +60,7 @@ Status: slice 1 of 3.
 | Event | When | Properties |
 |---|---|---|
 | `plan_created` | Member picks the template | `source: template`, `days` |
+| `next_day_chosen` | Member picks the next day | `day` (1-based) |
 | `workout_started` | Start workout tapped (flag on) | `day` (1-based) |
 
 ## Feature flags

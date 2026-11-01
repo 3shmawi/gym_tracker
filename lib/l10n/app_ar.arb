@@ -41,5 +41,9 @@
   "trendUp": "↑ زوّد",
   "trendKeep": "→ ثبّت",
   "trendDown": "↓ قلّل",
-  "trendFirstTime": "أول مرة"
+  "trendFirstTime": "أول مرة",
+  "todayChangeDay": "غيّر اليوم",
+  "todayChooseDay": "أنهي تمرين الجاي؟",
+  "todayChooseDayHint": "الخطة هتكمّل من اليوم اللي تختاره.",
+  "todayDayN": "اليوم {day}"
 }

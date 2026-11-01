@@ -57,7 +57,7 @@ class ExercisePreview {
 class NextWorkout {
   const new({
     required this.dayIndex,
-    required this.totalDays,
+    required this.days,
     required this.day,
     required this.exercises,
     this.waitingSince,
@@ -65,7 +65,10 @@ class NextWorkout {
 
   /// 0-based; shown as "Day dayIndex+1 of totalDays".
   final int dayIndex;
-  final int totalDays;
+
+  /// Every day of the plan, for "choose another day".
+  final List<WorkoutDay> days;
+  int get totalDays => days.length;
   final WorkoutDay day;
   final List<ExercisePreview> exercises;
 

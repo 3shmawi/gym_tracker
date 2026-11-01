@@ -43,7 +43,13 @@ class NextWorkoutController extends AsyncNotifier<NextWorkout?> {
     final plan = _unwrap(await _repo.loadPlan());
     if (plan == null || plan.days.isEmpty) return null;
     final history = _unwrap(await _repo.loadHistory());
-    return _getNext(plan, history, now: ref.read(clockProvider)());
+    final chosen = _unwrap(await _repo.loadChosenDay());
+    return _getNext(
+      plan,
+      history,
+      now: ref.read(clockProvider)(),
+      chosenDay: chosen,
+    );
   }
 
   Future<void> retry() async {
@@ -62,6 +68,15 @@ class NextWorkoutController extends AsyncNotifier<NextWorkout?> {
           'days': PlanTemplates.fiveDaySplit.days.length,
         }),
       );
+      return await build();
+    });
+  }
+
+  /// Makes [dayIndex] the next workout (until a workout is finished).
+  Future<void> chooseDay(int dayIndex) async {
+    state = await AsyncValue.guard(() async {
+      _unwrap(await _repo.saveChosenDay(dayIndex));
+      unawaited(Analytics.capture('next_day_chosen', {'day': dayIndex + 1}));
       return await build();
     });
   }

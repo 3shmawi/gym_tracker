@@ -33,6 +33,12 @@ class _FlakyRepo implements WorkoutRepository {
 
   @override
   Future<Result<void>> saveSession(WorkoutSession s) => _inner.saveSession(s);
+
+  @override
+  Future<Result<int?>> loadChosenDay() => _inner.loadChosenDay();
+
+  @override
+  Future<Result<void>> saveChosenDay(int? d) => _inner.saveChosenDay(d);
 }
 
 void main() {
@@ -113,5 +119,26 @@ void main() {
         .read(nextWorkoutControllerProvider.future);
     expect(next!.day.name.en, 'B');
     expect(next.waitingSince, DateTime(2026, 11, 3));
+  });
+
+  test('choosing a day makes it next until a workout is finished', () async {
+    final c = container(repo);
+    await c.read(nextWorkoutControllerProvider.future);
+    final controller = c.read(nextWorkoutControllerProvider.notifier);
+    await controller.useTemplate();
+    await controller.chooseDay(2);
+    expect(c.read(nextWorkoutControllerProvider).value!.day.name.en, 'Legs');
+
+    // Finishing day 3 clears the choice; the plan continues with day 4.
+    await repo.saveSession(
+      WorkoutSession(
+        dayIndex: 2,
+        finishedAt: DateTime(2026, 11, 2),
+        sets: const [],
+      ),
+    );
+    c.invalidate(nextWorkoutControllerProvider);
+    final next = await c.read(nextWorkoutControllerProvider.future);
+    expect(next!.dayIndex, 3);
   });
 }

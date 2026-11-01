@@ -21,6 +21,7 @@ class NextWorkoutPage extends ConsumerWidget {
       onRetry: () => unawaited(controller.retry()),
       onUseTemplate: () => unawaited(controller.useTemplate()),
       onOpenSettings: () => unawaited(context.push<void>(AppRoutes.settings)),
+      onChooseDay: (day) => unawaited(controller.chooseDay(day)),
       onStart: canStart && next.value != null
           ? () => unawaited(
               Analytics.capture('workout_started', {

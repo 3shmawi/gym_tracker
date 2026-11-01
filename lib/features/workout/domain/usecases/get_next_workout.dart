@@ -8,6 +8,10 @@ import 'package:gym_tracker/features/workout/domain/usecases/suggest_weight.dart
 /// The plan advances only when a workout is finished: the day after the
 /// last finished one, wrapping around. If the member skipped a day, the
 /// same workout waits ([NextWorkout.waitingSince] is set).
+///
+/// The member can pick the next day themselves (`chosenDay`, e.g. joining
+/// mid-plan); that wins until the next finished workout.
+/// Out-of-range choices are ignored.
 class GetNextWorkout {
   const new({this.suggestWeight = const SuggestWeight()});
 
@@ -17,6 +21,7 @@ class GetNextWorkout {
     WorkoutPlan plan,
     List<WorkoutSession> history, {
     required DateTime now,
+    int? chosenDay,
   }) {
     if (plan.days.isEmpty) {
       throw ArgumentError.value(plan, 'plan', 'has no days');
@@ -24,14 +29,19 @@ class GetNextWorkout {
     final sorted = [...history]
       ..sort((a, b) => a.finishedAt.compareTo(b.finishedAt));
     final last = sorted.isEmpty ? null : sorted.last;
-    final dayIndex = last == null ? 0 : (last.dayIndex + 1) % plan.days.length;
+    final chosen =
+        chosenDay != null && chosenDay >= 0 && chosenDay < plan.days.length
+        ? chosenDay
+        : null;
+    final dayIndex =
+        chosen ?? (last == null ? 0 : (last.dayIndex + 1) % plan.days.length);
     final day = plan.days[dayIndex];
 
     return NextWorkout(
       dayIndex: dayIndex,
-      totalDays: plan.days.length,
+      days: plan.days,
       day: day,
-      waitingSince: _waitingSince(last, now),
+      waitingSince: chosen == null ? _waitingSince(last, now) : null,
       exercises: [
         for (final exercise in day.exercises)
           () {

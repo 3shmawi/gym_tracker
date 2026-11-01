@@ -117,4 +117,24 @@ void main() {
     );
     expect(ok(await r.loadHistory()).single.sets.single.exerciseId, long);
   });
+
+  test(
+    'chosen day is saved and cleared by the next finished workout',
+    () async {
+      final r = await repo();
+      expect(ok(await r.loadChosenDay()), isNull);
+      ok(await r.saveChosenDay(2));
+      expect(ok(await r.loadChosenDay()), 2);
+      ok(
+        await r.saveSession(
+          WorkoutSession(
+            dayIndex: 2,
+            finishedAt: DateTime.utc(2026),
+            sets: const [],
+          ),
+        ),
+      );
+      expect(ok(await r.loadChosenDay()), isNull);
+    },
+  );
 }

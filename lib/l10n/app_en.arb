@@ -95,5 +95,16 @@
   "trendUp": "↑ Increase",
   "trendKeep": "→ Keep",
   "trendDown": "↓ Decrease",
-  "trendFirstTime": "First time"
+  "trendFirstTime": "First time",
+  "todayChangeDay": "Change day",
+  "todayChooseDay": "Which workout is next?",
+  "todayChooseDayHint": "The plan carries on from the day you pick.",
+  "todayDayN": "Day {day}",
+  "@todayDayN": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  }
 }

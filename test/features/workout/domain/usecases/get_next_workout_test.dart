@@ -84,4 +84,25 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test('a chosen day wins and hides the waiting banner', () {
+    final next = get(
+      plan,
+      [session(0, DateTime(2026, 11, 2))],
+      now: DateTime(2026, 11, 9),
+      chosenDay: 2,
+    );
+    expect(next.dayIndex, 2);
+    expect(next.waitingSince, isNull);
+  });
+
+  test('an out-of-range chosen day is ignored', () {
+    for (final bad in [-1, 5, 999]) {
+      expect(
+        get(plan, const [], now: DateTime(2026), chosenDay: bad).dayIndex,
+        0,
+        reason: '$bad',
+      );
+    }
+  });
 }

@@ -46,11 +46,13 @@ Widget view(
   VoidCallback? onStart,
   VoidCallback? onRetry,
   VoidCallback? onUseTemplate,
+  ValueChanged<int>? onChooseDay,
 }) => NextWorkoutView(
   state: state,
   onRetry: onRetry ?? () {},
   onUseTemplate: onUseTemplate ?? () {},
   onOpenSettings: () {},
+  onChooseDay: onChooseDay ?? (_) {},
   onStart: onStart,
 );
 
@@ -104,6 +106,35 @@ void main() {
       await tester.pumpApp(view(AsyncData(day2()), onStart: () => started++));
       await tester.tap(find.text('Start workout'));
       expect(started, 1);
+    });
+
+    testWidgets('change day: pick legs for tomorrow', (tester) async {
+      int? chosen;
+      await tester.pumpApp(
+        view(AsyncData(day2()), onChooseDay: (d) => chosen = d),
+      );
+      await tester.tap(find.byKey(const Key('change_day_button')));
+      await tester.pumpAndSettle();
+      expect(find.text('Which workout is next?'), findsOneWidget);
+      expect(find.text('Day 3'), findsOneWidget);
+      expect(find.text('Legs'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('choose_day_2')));
+      await tester.pumpAndSettle();
+      expect(chosen, 2);
+      expect(find.text('Which workout is next?'), findsNothing);
+    });
+
+    testWidgets('picking the current day changes nothing', (tester) async {
+      int? chosen;
+      await tester.pumpApp(
+        view(AsyncData(day2()), onChooseDay: (d) => chosen = d),
+      );
+      await tester.tap(find.byKey(const Key('change_day_button')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('choose_day_1')));
+      await tester.pumpAndSettle();
+      expect(chosen, isNull);
     });
 
     testWidgets('no plan: offers the 5-day template', (tester) async {
