@@ -17,7 +17,7 @@ void main() {
     tester,
   ) async {
     // A fresh install: no plan, no history.
-    await (await SharedPreferences.getInstance()).clear();
+    await freshInstall(tester);
 
     await app.main();
     await tester.pumpAndSettle();
@@ -45,7 +45,7 @@ void main() {
   });
 
   testWidgets('leg day: pick day 3, log sets, rest, finish', (tester) async {
-    await (await SharedPreferences.getInstance()).clear();
+    await freshInstall(tester);
     await app.main();
     await tester.pumpAndSettle();
     await beat(tester);
@@ -103,4 +103,12 @@ void main() {
     expect(find.text('Day 4 of 5'), findsOneWidget);
     await beat(tester, 1500);
   });
+}
+
+/// A fresh install for each test: unmount the previous test's app (runApp
+/// with the same root widget would keep its state, e.g. the ProviderScope)
+/// and clear everything saved on the device.
+Future<void> freshInstall(WidgetTester tester) async {
+  await tester.pumpWidget(const SizedBox.shrink());
+  await (await SharedPreferences.getInstance()).clear();
 }
