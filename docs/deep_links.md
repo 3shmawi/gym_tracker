@@ -12,6 +12,8 @@ also a deep link.
 | `/settings` | Settings |
 
 ## Custom scheme (works now)
+Registered in `AndroidManifest.xml` and `ios/Runner/Info.plist`
+(`CFBundleURLTypes`, `FlutterDeepLinkingEnabled`).
 `gymtracker://settings` — test with:
 ```bash
 adb shell am start -a android.intent.action.VIEW -d "gymtracker://settings"
