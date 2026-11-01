@@ -4,6 +4,10 @@
   "@appTitle": {
     "description": "App name shown in the app bar and task switcher."
   },
+  "loading": "Loading",
+  "@loading": {
+    "description": "Screen-reader label of the animated Azm logo shown while something loads."
+  },
   "homeWelcome": "Welcome to Azm",
   "settingsTitle": "Settings",
   "settingsLanguage": "Language",

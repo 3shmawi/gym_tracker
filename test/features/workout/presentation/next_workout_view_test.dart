@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
+import 'package:gym_tracker/core/ui/app_ui.dart';
+import 'package:gym_tracker/core/widgets/state_views.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
@@ -167,9 +169,13 @@ void main() {
       expect(find.text(l10nEn.errorUnknown), findsOneWidget);
     });
 
-    testWidgets('loading shows a spinner', (tester) async {
+    testWidgets('loading shows the looping logo animation', (tester) async {
+      final semantics = tester.ensureSemantics();
       await tester.pumpApp(view(const AsyncLoading()));
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(LoadingView), findsOneWidget);
+      expect(find.byType(AzmLogoAnimation), findsOneWidget);
+      expect(find.bySemanticsLabel(l10nEn.loading), findsOneWidget);
+      semantics.dispose();
     });
 
     testWidgets('Arabic shows Arabic names first', (tester) async {

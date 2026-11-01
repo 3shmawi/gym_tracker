@@ -55,6 +55,14 @@ abstract final class AppDimens {
 
   /// Never below [minTouchTarget], even on the smallest phone.
   static double get buttonHeight => math.max(minTouchTarget, scaled(48));
+
+  /// The looping logo in `LoadingView` (`AzmLogoAnimation`, figures only):
+  /// inline in a row or list item, inside a card, and a whole screen. The
+  /// screen size is the native splash mark's size, so a screen that loads
+  /// right after start-up looks like the splash.
+  static double get loadingInline => scaled(48);
+  static double get loadingCard => scaled(96);
+  static double get loadingScreen => scaled(166);
 }
 
 /// Sets up screen scaling for the app (and for tests, so they measure the

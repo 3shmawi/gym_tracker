@@ -24,3 +24,11 @@ CSS keyframes. Port them 1:1; do not redesign.
 
 Gradients: glass = white 60 % → 20 % → 10 %, edge = white 95 % → 15 % → 55 %,
 green glass = #86EFAC → #22C55E → #15803D.
+
+## In the app
+Ported 1:1 in `lib/core/ui/azm_logo_painter.dart` (`AzmLogoAnimation`):
+the splash (`lib/core/splash/`) and `LoadingView`. Nothing in the design
+changed. `scripts/motion_reference.js` renders reference frames from
+`splash_animation.dc.html` (Chromium) into `test/core/ui/motion_reference/`,
+and `test/core/ui/azm_logo_reference_test.dart` fails if the Flutter frames
+drift from them. Re-run the script whenever this file changes.

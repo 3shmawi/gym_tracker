@@ -3,13 +3,68 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
+import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/core/widgets/offline_banner.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
 
 import '../../helpers/pump_app.dart';
 import '../../helpers/ui_check.dart';
 
+/// Loading screens loop forever; screenshots and layout checks need a
+/// still frame, so they run with Reduce Motion (the static logo).
+Widget _still(Widget child) => Builder(
+  builder: (context) => MediaQuery(
+    data: MediaQuery.of(context).copyWith(disableAnimations: true),
+    child: child,
+  ),
+);
+
 void main() {
+  group(LoadingView, () {
+    testWidgets('loops the logo animation with one label, no text', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpApp(const Scaffold(body: LoadingView()));
+      final logo = tester.widget<AzmLogoAnimation>(
+        find.byType(AzmLogoAnimation),
+      );
+      expect(logo.loop, isTrue);
+      expect(find.bySemanticsLabel(l10nEn.loading), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byType(LoadingView),
+          matching: find.byType(RichText),
+        ),
+        findsNothing,
+      );
+      await tester.pump(const Duration(seconds: 3));
+      expect(tester.hasRunningAnimations, isTrue);
+      semantics.dispose();
+    });
+
+    testWidgets('sizes: inline < card < screen', (tester) async {
+      double sideOf(LoadingSize size) {
+        return tester.getSize(find.byType(AzmLogoAnimation)).width;
+      }
+
+      final sides = <double>[];
+      for (final size in LoadingSize.values) {
+        await tester.pumpApp(Scaffold(body: LoadingView(size: size)));
+        sides.add(sideOf(size));
+      }
+      expect(sides, [48, 96, 166]);
+    });
+
+    testWidgets('Reduce Motion: the static logo, no motion', (tester) async {
+      await tester.pumpApp(_still(const Scaffold(body: LoadingView())));
+      await tester.pump();
+      expect(tester.hasRunningAnimations, isFalse);
+      await tester.expectAccessible();
+    });
+  });
+
   group(ErrorView, () {
     testWidgets('shows a friendly message and retries', (tester) async {
       var retried = false;
@@ -70,6 +125,30 @@ void main() {
   });
 
   screensUiTests({
+    'loading_view_screen': () => _still(const Scaffold(body: LoadingView())),
+    'loading_view_card': () => _still(
+      const Scaffold(
+        body: Padding(
+          padding: EdgeInsets.all(24),
+          child: Card(
+            child: SizedBox(
+              height: 160,
+              child: LoadingView(size: LoadingSize.card),
+            ),
+          ),
+        ),
+      ),
+    ),
+    'loading_view_inline': () => _still(
+      const Scaffold(
+        body: Center(
+          child: SizedBox(
+            height: 64,
+            child: LoadingView(size: LoadingSize.inline),
+          ),
+        ),
+      ),
+    ),
     'error_view': () => Scaffold(
       body: ErrorView(failure: const NetworkFailure(), onRetry: () {}),
     ),

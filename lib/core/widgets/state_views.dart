@@ -3,16 +3,46 @@ import 'package:gym_tracker/core/adaptive/adaptive.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
+import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 
 /// Loading / empty / error views every screen uses, so the states look the
 /// same across the app (CLAUDE.md → every screen has all states).
+/// How big [LoadingView] is, by where it shows.
+enum LoadingSize {
+  /// In a row, a list item or next to text.
+  inline,
+
+  /// Inside a card or a section of a screen.
+  card,
+
+  /// The whole screen (the default).
+  screen,
+}
+
+/// The looping Azm logo animation (figures only, no text), with one
+/// "Loading" label for screen readers. Reduce Motion shows the static logo.
+/// The background is transparent: it shows whatever is behind it.
 class LoadingView extends StatelessWidget {
-  const new({super.key});
+  const new({this.size = LoadingSize.screen, super.key});
+
+  final LoadingSize size;
 
   @override
-  Widget build(BuildContext context) =>
-      const Center(child: CircularProgressIndicator.adaptive());
+  Widget build(BuildContext context) {
+    final side = switch (size) {
+      LoadingSize.inline => AppDimens.loadingInline,
+      LoadingSize.card => AppDimens.loadingCard,
+      LoadingSize.screen => AppDimens.loadingScreen,
+    };
+    return Center(
+      child: AzmLogoAnimation(
+        size: side,
+        loop: true,
+        brightness: Theme.of(context).brightness,
+      ),
+    );
+  }
 }
 
 class EmptyView extends StatelessWidget {
