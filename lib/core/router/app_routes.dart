@@ -8,4 +8,11 @@ abstract final class AppRoutes {
 
   /// The workout in progress (logging sets).
   static const workout = '/workout';
+
+  /// Every exercise with its progress since the first time.
+  static const progress = '/progress';
+
+  /// One exercise's history. [exerciseId] is encoded, so any id is safe.
+  static String exerciseHistory(String exerciseId) =>
+      '$progress/${Uri.encodeComponent(exerciseId)}';
 }

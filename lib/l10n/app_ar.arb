@@ -86,5 +86,19 @@
   "workoutNone": "مفيش تمرين شغال دلوقتي.",
   "workoutGoHome": "روح للتمرين الجاي",
   "workoutExercisesDone": "خلّصت {done} من {total} تمارين",
-  "workoutSupersetLabel": "سوبر سيت: من غير راحة بين الاتنين"
+  "workoutSupersetLabel": "سوبر سيت: من غير راحة بين الاتنين",
+  "progressTitle": "تقدّمك",
+  "progressEmpty": "خلّص تمرين عشان تشوف تقدّمك هنا.",
+  "progressNoPlan": "اختار خطة الأول، وبعدها تقدّمك هيظهر هنا.",
+  "progressNotDone": "لسه ماتعملش",
+  "progressFromTo": "{from} ← {to}",
+  "progressWorkouts": "{count, plural, =1{تمرين واحد} =2{تمرينين} few{{count} تمارين} other{{count} تمرين}}",
+  "progressSame": "ثابت",
+  "progressSince": "من {date}",
+  "progressBest": "أحسن مجموعة: {set}",
+  "progressHistory": "السجل",
+  "progressToday": "النهارده",
+  "progressNeverDone": "اعمل التمرين ده في تمرينة، وكل مرة هتظهر هنا.",
+  "progressNotInPlan": "التمرين ده مش في خطتك.",
+  "progressOpenHint": "بيعرض كل مرة عملته فيها"
 }

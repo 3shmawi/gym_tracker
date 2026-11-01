@@ -10,10 +10,18 @@ import 'package:gym_tracker/l10n/l10n.dart';
 /// One exercise on the next-workout list: number, name (both languages),
 /// target and last time; the suggested weight and its trend at the end.
 class ExercisePreviewRow extends StatelessWidget {
-  const new({required this.number, required this.preview, super.key});
+  const new({
+    required this.number,
+    required this.preview,
+    this.onTap,
+    super.key,
+  });
 
   final int number;
   final ExercisePreview preview;
+
+  /// Opens the exercise's history; null: not tappable.
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +40,7 @@ class ExercisePreviewRow extends StatelessWidget {
         ),
     ].join(' · ');
 
-    return MergeSemantics(
+    final row = MergeSemantics(
       child: Padding(
         padding: EdgeInsetsDirectional.symmetric(vertical: AppDimens.sm2),
         child: Row(
@@ -132,6 +140,16 @@ class ExercisePreviewRow extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+    if (onTap == null) return row;
+    return Semantics(
+      button: true,
+      hint: l10n.progressOpenHint,
+      child: InkWell(
+        key: Key('exercise_row_${exercise.id}'),
+        onTap: onTap,
+        child: row,
       ),
     );
   }

@@ -10,8 +10,11 @@ import 'package:gym_tracker/features/settings/presentation/settings_controller.d
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_page.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_view.dart';
+import 'package:gym_tracker/features/workout/presentation/exercise_history_page.dart';
+import 'package:gym_tracker/features/workout/presentation/exercise_history_view.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_page.dart';
+import 'package:gym_tracker/features/workout/presentation/progress_page.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -100,5 +103,41 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(NextWorkoutPage), findsOneWidget);
     expect(find.byType(ActiveWorkoutView), findsNothing);
+  });
+
+  testWidgets('/progress opens with no plan and no history', (tester) async {
+    await pumpRouter(tester);
+    appRouter.go('/progress?redirect=https://evil.example.com');
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.byType(ProgressPage), findsOneWidget);
+  });
+
+  testWidgets('/progress/<id>: unknown or crafted ids are safe', (
+    tester,
+  ) async {
+    await pumpRouter(tester);
+    for (final id in [
+      'not_an_exercise',
+      '%3Cscript%3Ealert(1)%3C%2Fscript%3E',
+      "x'%3B%20DROP%20TABLE%20s%3B--",
+      'a' * 2000,
+      '%F0%9F%92%A5',
+    ]) {
+      appRouter.go('/progress/$id');
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: id);
+      expect(find.byType(ExerciseHistoryPage), findsOneWidget, reason: id);
+      expect(find.byType(ExerciseHistoryView), findsOneWidget, reason: id);
+    }
+  });
+
+  testWidgets('/progress/<id> with extra segments is not found', (
+    tester,
+  ) async {
+    await pumpRouter(tester);
+    appRouter.go('/progress/flat_db_press/../../settings/x');
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
   });
 }

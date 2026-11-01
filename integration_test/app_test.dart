@@ -6,7 +6,9 @@ import 'package:gym_tracker/core/splash/animated_splash.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_view.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_view.dart';
+import 'package:gym_tracker/features/workout/presentation/exercise_history_view.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_page.dart';
+import 'package:gym_tracker/features/workout/presentation/progress_view.dart';
 import 'package:gym_tracker/features/workout/presentation/widgets/exercise_preview_row.dart';
 import 'package:gym_tracker/main.dart' as app;
 import 'package:integration_test/integration_test.dart';
@@ -113,6 +115,24 @@ void main() {
     // Back home: the plan moved on to day 4.
     expect(find.text('Day 4 of 5'), findsOneWidget);
     await beat(tester, 1500);
+
+    // Progress: the squat now has today's two sets.
+    await tester.tap(find.byKey(const Key('home_progress_button')));
+    await tester.pumpAndSettle();
+    expect(find.byType(ProgressView), findsOneWidget);
+    await beat(tester);
+    final squat = find.byKey(const Key('progress_barbell_squat'));
+    await tester.scrollUntilVisible(
+      squat,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await beat(tester);
+    await tester.tap(squat);
+    await tester.pumpAndSettle();
+    expect(find.byType(ExerciseHistoryView), findsOneWidget);
+    expect(find.text('Today'), findsOneWidget);
+    await beat(tester, 2000);
   });
 }
 

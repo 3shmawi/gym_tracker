@@ -20,6 +20,9 @@ class NextWorkoutPage extends ConsumerWidget {
       onRetry: () => unawaited(controller.retry()),
       onUseTemplate: () => unawaited(controller.useTemplate()),
       onOpenSettings: () => unawaited(context.push<void>(AppRoutes.settings)),
+      onOpenProgress: () => unawaited(context.push<void>(AppRoutes.progress)),
+      onOpenExercise: (id) =>
+          unawaited(context.push<void>(AppRoutes.exerciseHistory(id))),
       onChooseDay: (day) => unawaited(controller.chooseDay(day)),
       onStart: next.value == null
           ? null
