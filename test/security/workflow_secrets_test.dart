@@ -7,14 +7,17 @@ import 'package:flutter_test/flutter_test.dart';
 /// text, not a key decoded from it. CI also runs zizmor (pinned actions,
 /// token permissions, injection) — see docs/security.md → "CI and secrets".
 void main() {
+  bool isYaml(File f) => f.path.endsWith('.yml') || f.path.endsWith('.yaml');
   final workflowDir = Directory('.github/workflows');
-  final workflows = workflowDir.existsSync()
-      ? workflowDir
-            .listSync()
-            .whereType<File>()
-            .where((f) => f.path.endsWith('.yml') || f.path.endsWith('.yaml'))
-            .toList()
-      : <File>[];
+  final actionsDir = Directory('.github/actions');
+  // Workflows plus the repo's own composite actions (setup-flutter, …):
+  // their steps run in the same jobs, so the same rules apply.
+  final workflows = [
+    if (workflowDir.existsSync())
+      ...workflowDir.listSync().whereType<File>().where(isYaml),
+    if (actionsDir.existsSync())
+      ...actionsDir.listSync(recursive: true).whereType<File>().where(isYaml),
+  ];
 
   /// The `run:` scripts of a workflow, each as (first line number, text).
   List<(int, String)> runScripts(String workflow) {
