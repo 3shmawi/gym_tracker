@@ -38,6 +38,16 @@ Screens use `lib/core/ui/app_ui.dart` (`AppScaffold`, `AppCard`,
 - `AppScaffold` places the body **below** the glass bar
   (`GlassScaffold(extendBody: false)`), not behind it: screens don't add a
   spacer for the bar, and their top row was hidden and untappable under it.
+- The bar: `leading` at the start edge (default: back when the page can
+  pop; the workout screen passes close instead), the title after it, and
+  `actions` at the end edge. Icon buttons are 48×48 (`.ib` in the design);
+  `test/core/ui/app_scaffold_test.dart` checks the glass bar in English and
+  Arabic for overlaps, because screen tests only draw the lite bar.
+- A screen that ends in a dock passes `padBottom: false` and pads the dock
+  itself (`SafeArea(top: false)`), so the dock reaches the bottom edge
+  instead of stopping above a strip of background.
+- iOS icons come from `CupertinoIcons` (`core/adaptive/`), whose font is
+  the `cupertino_icons` package: without it every iOS icon was a "?" box.
 - When Flutter ships official Cupertino Liquid Glass, swap the
   implementation inside `app_ui.dart` only.
 
