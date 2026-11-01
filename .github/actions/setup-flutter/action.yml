@@ -1,0 +1,62 @@
+# One Flutter setup for every workflow: the version pinned in .fvmrc, the SDK
+# and pub packages cached between runs, and optionally Java + Gradle for
+# Android builds. Change caching or versions here, not in each workflow.
+# Call it after actions/checkout: `uses: $/.github/actions/setup-flutter`
+# ($/ = this repo at the running commit; GitHub runner 2.336.0+).
+name: Set up Flutter
+description: Flutter from .fvmrc (SDK + pub cache), optional Java/Gradle, pub get + gen-l10n.
+
+inputs:
+  java:
+    description: "'true' to also install Java 17 (Android builds)."
+    default: 'false'
+  gradle-cache:
+    description: >-
+      'true' to cache Gradle dependencies and the wrapper (needs java).
+      Only for PR / check builds: release builds start from a clean Gradle
+      cache so a poisoned cache can't reach a signed store build.
+    default: 'false'
+  packages:
+    description: "'true' to run flutter pub get + flutter gen-l10n."
+    default: 'true'
+
+outputs:
+  version:
+    description: The Flutter version from .fvmrc.
+    value: ${{ steps.fvm.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Flutter version from .fvmrc
+      id: fvm
+      shell: bash
+      run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
+
+    - name: Java 17 + Gradle cache
+      if: inputs.java == 'true' && inputs.gradle-cache == 'true'
+      uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+      with:
+        distribution: temurin
+        java-version: '17'
+        cache: gradle
+
+    - name: Java 17
+      if: inputs.java == 'true' && inputs.gradle-cache != 'true'
+      uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    # cache: true keeps the SDK and ~/.pub-cache between runs.
+    - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+      with:
+        flutter-version: ${{ steps.fvm.outputs.version }}
+        cache: true
+
+    - name: Install packages
+      if: inputs.packages == 'true'
+      shell: bash
+      run: |
+        flutter pub get
+        flutter gen-l10n

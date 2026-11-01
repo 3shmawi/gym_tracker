@@ -27,11 +27,19 @@ A manual run (Actions → Release → Run workflow) can force patch/minor/major.
    a change is Android-specific.
    The iOS integration job is the slow one, so it runs only when the PR
    changes something the app is built from (`lib/`, `ios/`,
-   `integration_test/`, `assets/`, `env/`, pubspec, `.fvmrc`, `ci.yml`);
+   `integration_test/`, `assets/`, `env/`, pubspec, `.fvmrc`, `ci.yml`,
+   `.github/actions/`);
    otherwise it is skipped (a skipped job counts as passed). It caches Swift
    packages, DerivedData and `build/ios` (`actions/cache` v6.1.0, checked
    2026-11-01; saved after green runs only), so later builds are
    incremental.
+   Every job sets up Flutter through one shared action,
+   `.github/actions/setup-flutter`: the version from `.fvmrc`, the SDK and
+   pub packages cached (`subosito/flutter-action` v2.23.0), and for Android
+   Java 17. PR builds also cache Gradle (`actions/setup-java` v6.1.0
+   `cache: gradle`, checked 2026-11-01). Release and staging builds don't
+   (see `docs/security.md` → "CI and secrets"). Change caching or versions in
+   that one file; it reaches other projects through `kit_sync.sh`.
 2. **Android** — signed release AAB (prod) → Play track `PLAY_TRACK`
    (default `internal`).
 3. **iOS** — signing files fetched from App Store Connect with the API key →

@@ -22,14 +22,9 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Flutter version from .fvmrc
-        id: fvm
-        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
-
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+      - uses: $/.github/actions/setup-flutter
         with:
-          flutter-version: ${{ steps.fvm.outputs.version }}
-          cache: true
+          packages: 'false'
 
       # Before pub get, so generated l10n files aren't checked.
       - name: Check formatting
@@ -89,7 +84,7 @@ jobs:
       - name: Workflow security (zizmor)
         env:
           GH_TOKEN: ${{ github.token }}
-        run: pipx run zizmor==1.31.1 --min-severity low --format github .github/workflows
+        run: pipx run zizmor==1.31.1 --min-severity low --format github .github/workflows .github/actions
 
       # Runs once `supabase init` has created supabase/config.toml.
       # RLS tests run when a PR touches supabase/ (or on manual runs).
@@ -139,7 +134,7 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: |
           if git diff --name-only "origin/$BASE_REF...HEAD" \
-            | grep -qE '^(lib/|ios/|integration_test/|assets/|env/|l10n\.yaml$|pubspec\.(yaml|lock)$|\.fvmrc$|\.github/workflows/ci\.yml$)'; then
+            | grep -qE '^(lib/|ios/|integration_test/|assets/|env/|l10n\.yaml$|pubspec\.(yaml|lock)$|\.fvmrc$|\.github/workflows/ci\.yml$|\.github/actions/)'; then
             echo "app=true" >> "$GITHUB_OUTPUT"
           else
             echo "app=false" >> "$GITHUB_OUTPUT"
@@ -159,19 +154,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Flutter version from .fvmrc
-        id: fvm
-        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
-
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
-        with:
-          flutter-version: ${{ steps.fvm.outputs.version }}
-          cache: true
-
-      - name: Install packages
-        run: |
-          flutter pub get
-          flutter gen-l10n
+      - uses: $/.github/actions/setup-flutter
+        id: flutter
 
       # The Xcode build is most of this job's time: keep Swift packages,
       # DerivedData and Flutter's iOS build between runs (actions/cache saves
@@ -183,9 +167,9 @@ jobs:
             ~/Library/Caches/org.swift.swiftpm
             ~/Library/Developer/Xcode/DerivedData
             build/ios
-          key: ios-build-${{ runner.os }}-${{ steps.fvm.outputs.version }}-${{ hashFiles('pubspec.lock', 'ios/**/Package.resolved', 'ios/Podfile.lock', 'ios/**/project.pbxproj') }}
+          key: ios-build-${{ runner.os }}-${{ steps.flutter.outputs.version }}-${{ hashFiles('pubspec.lock', 'ios/**/Package.resolved', 'ios/Podfile.lock', 'ios/**/project.pbxproj') }}
           restore-keys: |
-            ios-build-${{ runner.os }}-${{ steps.fvm.outputs.version }}-
+            ios-build-${{ runner.os }}-${{ steps.flutter.outputs.version }}-
 
       - name: Run integration tests
         run: |
@@ -224,19 +208,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+      - uses: $/.github/actions/setup-flutter
         with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Flutter version from .fvmrc
-        id: fvm
-        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
-
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
-        with:
-          flutter-version: ${{ steps.fvm.outputs.version }}
-          cache: true
+          java: 'true'
+          gradle-cache: 'true'
+          packages: 'false'
 
       - name: Build
         run: |

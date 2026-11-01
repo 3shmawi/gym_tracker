@@ -53,6 +53,11 @@ would be printed in full by any tool that echoes it in an error.
   comment (Dependabot updates both). Tools installed in CI are pinned to a
   version: Codemagic CLI, fastlane, zizmor, gitleaks, OSV-Scanner (see
   `docs/release.md` → "Pinned tools").
+- Caches: release and staging builds (signed, uploaded to the stores) don't
+  restore a Gradle cache, so a cache written by a PR run can't change what
+  ships. Only PR / check jobs use `gradle-cache: 'true'` in
+  `.github/actions/setup-flutter`. The repo's composite actions follow the
+  same rules as workflows (pinned SHAs, zizmor, `workflow_secrets_test`).
 - No `pull_request_target`. Anything a PR can control (titles, branch or
   file names, step outputs) goes through `env:` and is quoted.
 

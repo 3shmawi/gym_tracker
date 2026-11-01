@@ -94,19 +94,10 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+      - uses: $/.github/actions/setup-flutter
         with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Flutter version from .fvmrc
-        id: fvm
-        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
-
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
-        with:
-          flutter-version: ${{ steps.fvm.outputs.version }}
-          cache: true
+          java: 'true'
+          packages: 'false'
 
       - name: Env file & signing
         env:
@@ -214,14 +205,9 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Flutter version from .fvmrc
-        id: fvm
-        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
-
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+      - uses: $/.github/actions/setup-flutter
         with:
-          flutter-version: ${{ steps.fvm.outputs.version }}
-          cache: true
+          packages: 'false'
 
       # Apple only accepts uploads built with Xcode 26 or newer (since
       # April 2026). Use the newest Xcode on the runner; fail clearly if

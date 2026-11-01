@@ -79,19 +79,10 @@ jobs:
           { echo "test=$test"; echo "doc=$doc"; echo "title=$title"; } >> "$GITHUB_OUTPUT"
           echo "Recording $test — \"$title\""
 
-      - name: Flutter version from .fvmrc
-        id: fvm
-        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
+      - uses: $/.github/actions/setup-flutter
 
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
-        with:
-          flutter-version: ${{ steps.fvm.outputs.version }}
-          cache: true
-
-      - name: Install packages
+      - name: Env file for the demo
         run: |
-          flutter pub get
-          flutter gen-l10n
           cp -n env/example.json "env/$(. ./.project-kit.env; echo "$DEFAULT_ENV").json" || true
 
       - name: Record on an iPhone simulator (full glass)
