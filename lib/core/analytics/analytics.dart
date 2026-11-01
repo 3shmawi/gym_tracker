@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:gym_tracker/core/config/app_flavor.dart';
 import 'package:gym_tracker/core/config/env.dart';
@@ -25,6 +27,32 @@ abstract final class Analytics {
       ..debug = !AppFlavor.current.isProd;
     await Posthog().setup(config);
     _enabled = true;
+    await _tag(tagsFor(AppFlavor.current));
+  }
+
+  /// This app's name in PostHog. One PostHog project can hold every app:
+  /// the [tagsFor] properties keep their data apart.
+  static const appName = 'gym_tracker';
+
+  /// Sent with every event (`app`, `environment`) and set on the person, so
+  /// insights, cohorts and feature flags can filter by app and environment
+  /// (e.g. a flag released only where app = gym_tracker
+  /// and environment = prod).
+  @visibleForTesting
+  static Map<String, String> tagsFor(AppFlavor flavor) => {
+    'app': appName,
+    'environment': flavor.name,
+  };
+
+  static Future<void> _tag(Map<String, String> tags) async {
+    final posthog = Posthog();
+    for (final MapEntry(:key, :value) in tags.entries) {
+      await posthog.register(key, value);
+    }
+    await posthog.setPersonProperties(userPropertiesToSet: tags);
+    // Flags are evaluated with these at once (no wait for the person
+    // update); the reload runs in the background, start-up doesn't wait.
+    unawaited(posthog.setPersonPropertiesForFlags(tags));
   }
 
   /// Why PostHog can't receive events with this [apiKey] and [host], or
@@ -62,6 +90,8 @@ abstract final class Analytics {
   static Future<void> reset() async {
     if (!_enabled) return;
     await Posthog().reset();
+    // reset() also clears the app/environment tags.
+    await _tag(tagsFor(AppFlavor.current));
   }
 
   /// Records screen views automatically.

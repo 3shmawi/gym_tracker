@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
+import 'package:gym_tracker/core/config/app_flavor.dart';
 
 void main() {
   group('Analytics.configProblem', () {
@@ -47,6 +48,21 @@ void main() {
         Analytics.configProblem('phx_secret_value', eu),
         isNot(contains('secret_value')),
       );
+    });
+  });
+
+  group('Analytics.tagsFor', () {
+    test('tags every event with this app and its environment', () {
+      expect(Analytics.tagsFor(AppFlavor.staging), {
+        'app': Analytics.appName,
+        'environment': 'staging',
+      });
+      expect(Analytics.tagsFor(AppFlavor.prod)['environment'], 'prod');
+    });
+
+    test('the app name is the project name, not empty', () {
+      expect(Analytics.appName, isNotEmpty);
+      expect(Analytics.appName, isNot(contains('__')));
     });
   });
 }

@@ -24,6 +24,17 @@ re-running `tool/setup_secrets.sh`, then building again: the key is baked
 into the app at build time. Events show up in PostHog → Activity within a
 minute (the SDK sends every 30 s or every 20 events).
 
+**One PostHog project for all your apps.** Every event carries `app` (the
+project name, `Analytics.appName`) and `environment` (the flavor:
+`staging` / `prod`), and both are set on the person too. In PostHog:
+- Insights / dashboards: add the filter `app = <name>` and
+  `environment = prod` (save it on the dashboard: Filter → Save).
+- Feature flags: flag keys are shared by every app in the project, so
+  prefix them with the app (`<name>_new_onboarding`) and add the release
+  condition `app = <name>` (+ `environment = prod` when it is ready).
+- Internal users: Settings → Project → *Filter out internal and test
+  users* → add `environment = staging` to hide all test builds at once.
+
 ## 2. Supabase
 After `tool/setup_secrets.sh` has uploaded the Supabase secrets, run Actions →
 **Supabase deploy** once (`gh workflow run supabase.yml`); later changes under
