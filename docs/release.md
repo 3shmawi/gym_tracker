@@ -45,9 +45,26 @@ Arabic) to `app_versions` in Supabase; the in-app dialog does the rest.
 Needs the `SUPABASE_SECRET_KEY` secret.
 
 ## Staging builds
-Push to `develop` → `staging.yml`: Android APK attached to a `staging-…`
-pre-release (last 3 kept) and iOS to TestFlight of `com.mohager.azm.stg`
-(create that app record in App Store Connect once). Uses `ENV_STAGING_JSON`.
+Push to `develop` → `staging.yml`:
+- **Android** — signed APK attached to a `staging-…` pre-release (last 3
+  kept), and a signed AAB uploaded to the Play track `PLAY_STAGING_TRACK`
+  (default `internal`) of the separate staging app `com.mohager.azm.stg`
+  ("Azm Stg", installs next to the store app).
+- **iOS** — TestFlight of `com.mohager.azm.stg`.
+
+Uses `ENV_STAGING_JSON` and the same keystore and `PLAY_SERVICE_ACCOUNT_JSON`
+as prod. One-time setup for the Play upload:
+1. Play Console → **Create app** with package `com.mohager.azm.stg`.
+2. Play Console → **Users and permissions** → give the Play service account
+   release access to that app too.
+3. Upload its first AAB by hand (Google only accepts API uploads after
+   that): the first run fails and keeps it as the
+   `play-staging-aab-for-manual-upload` artifact → Test and release →
+   Internal testing → create release → upload it → roll out. Add your
+   testers to the internal testing list.
+
+Without `PLAY_SERVICE_ACCOUNT_JSON` the Play step is skipped (APK only).
+`ENABLE_PLAY_STAGING=false` turns it off.
 
 ## Backend deploys
 Changes under `supabase/` merged to `main` → `supabase.yml` runs
@@ -136,6 +153,9 @@ provisioning profile with the API key — no new certificate is created.
 Repository variables: `PLAY_TRACK` (default `internal`), `PLAY_RELEASE_STATUS`
 (`draft` until the first review, then `completed`), optional
 `ENABLE_ANDROID=false` / `ENABLE_IOS=false`, `BUILD_NUMBER_OFFSET`.
+Staging (Play): `PLAY_STAGING_TRACK` (default `internal`),
+`PLAY_STAGING_RELEASE_STATUS` (default `completed`), `ENABLE_PLAY_STAGING=false`
+to skip it.
 
 ### Codemagic
 Fully automated through the Codemagic API — nothing to click in the UI:
