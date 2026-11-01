@@ -132,6 +132,11 @@ what the next level needs. Worked out by itself from the history
 | `exercise_history_opened` | An exercise's history opened | none (the id comes from a link) |
 | `level_reached` | A new best level (once per level) | `level` (`intermediate` / `pro`) |
 
+Every event also carries `app` (`gym_tracker`) and `environment`
+(`staging` / `prod`). Screen views (`$screen`) use the route names: `home`,
+`workout`, `progress`, `exercise_history`, `settings`. PostHog dashboard:
+**Azm – workouts** (filtered to bundle `com.mohager.azm`).
+
 ## Feature flags
 None. (`active_workout` was removed when the workout screen shipped.)
 

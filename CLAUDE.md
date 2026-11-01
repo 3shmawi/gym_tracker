@@ -138,6 +138,8 @@ leaks").
 **Navigation & deep links**
 - Paths live in `AppRoutes`; register routes in `app_router.dart`; document
   each path in `docs/deep_links.md`. Navigate with `context.go/push`.
+- Every `GoRoute` has a unique snake_case `name:` (the screen name in
+  analytics and monitoring; checked by `test/core/router/app_router_test.dart`).
 
 **Data & errors (lib/core/network/)**
 - Repositories never throw to the UI: wrap every call in `guard(() => …)` and
