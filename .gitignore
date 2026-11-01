@@ -71,3 +71,4 @@ supabase/.temp/
 supabase/.branches/
 # FVM (the pinned version lives in .fvmrc, which is committed)
 .fvm/
+test/**/failures/

@@ -55,7 +55,7 @@ jobs:
           shots=true
           ls store/android/*/images/phoneScreenshots/*.png >/dev/null 2>&1 && shots=false
           fastlane supply \
-            --package_name "com.mohager.gymtracker" \
+            --package_name "com.mohager.azm" \
             --json_key "$RUNNER_TEMP/play.json" \
             --metadata_path store/android \
             --skip_upload_apk true --skip_upload_aab true \
@@ -85,7 +85,7 @@ jobs:
           ls store/ios/screenshots/*/*.png >/dev/null 2>&1 && shots=false
           fastlane deliver \
             --api_key_path "$RUNNER_TEMP/asc.json" \
-            --app_identifier "com.mohager.gymtracker" \
+            --app_identifier "com.mohager.azm" \
             --metadata_path store/ios \
             --screenshots_path store/ios/screenshots \
             --skip_binary_upload true \

@@ -8,7 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// (Supabase, HTTP, platform). Repositories return these inside a `Result`
 /// instead of throwing.
 @immutable
-sealed class AppFailure {
+sealed class AppFailure implements Exception {
   const new([this.cause]);
 
   /// The original error, for logs and monitoring — never shown to users.

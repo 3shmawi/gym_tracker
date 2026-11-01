@@ -5,4 +5,7 @@
 abstract final class AppRoutes {
   static const home = '/';
   static const settings = '/settings';
+
+  /// The workout in progress (logging sets).
+  static const workout = '/workout';
 }

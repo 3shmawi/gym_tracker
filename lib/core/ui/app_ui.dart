@@ -5,6 +5,8 @@ import 'package:gym_tracker/core/theme/app_colors.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
+export 'app_controls.dart';
+
 /// The app's UI style: Liquid Glass (iOS 26/27 look) on every platform,
 /// via liquid_glass_widgets. Screens use these wrappers, never a glass
 /// widget directly, so the style can change in this one file — e.g. to
@@ -77,6 +79,14 @@ class AppBackground extends StatelessWidget {
   }
 }
 
+/// Centers [child] at most [AppDimens.maxContentWidth] wide (tablets).
+Widget _constrained(Widget child) => Center(
+  child: ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: AppDimens.maxContentWidth),
+    child: child,
+  ),
+);
+
 class AppScaffold extends StatelessWidget {
   const new({
     required this.body,
@@ -102,6 +112,10 @@ class AppScaffold extends StatelessWidget {
     }
     return GlassScaffold(
       background: background ?? const AppBackground(),
+      // The body sits below the bar, not behind it: our screens don't add a
+      // spacer for the bar, so their top row (e.g. "change day") was under
+      // the glass bar and could not be tapped.
+      extendBody: false,
       appBar: hasBar
           ? GlassAppBar(
               // Back, title and actions share the title slot (no flex: the
@@ -130,7 +144,9 @@ class AppScaffold extends StatelessWidget {
       // GlassScaffold (unlike Scaffold) doesn't provide it.
       body: Material(
         type: MaterialType.transparency,
-        child: SafeArea(child: body),
+        // With a bar, the scaffold already places the body below the
+        // status bar and the bar.
+        child: SafeArea(top: !hasBar, child: _constrained(body)),
       ),
     );
   }
@@ -188,7 +204,7 @@ extension on AppScaffold {
                       ],
                     ),
                   ),
-                Expanded(child: body),
+                Expanded(child: _constrained(body)),
               ],
             ),
           ),

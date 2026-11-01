@@ -1,10 +1,10 @@
 {
   "@@locale": "en",
-  "appTitle": "Gym Tracker",
+  "appTitle": "Azm",
   "@appTitle": {
     "description": "App name shown in the app bar and task switcher."
   },
-  "homeWelcome": "Welcome to Gym Tracker",
+  "homeWelcome": "Welcome to Azm",
   "settingsTitle": "Settings",
   "settingsLanguage": "Language",
   "settingsLanguageSystem": "System default",
@@ -40,5 +40,246 @@
   "errorUnauthorized": "You don't have access to this. Please sign in again.",
   "errorNotFound": "We couldn't find what you were looking for.",
   "errorValidation": "Something in the data isn't right. Please check and try again.",
-  "errorUnknown": "Something went wrong. Please try again."
+  "errorUnknown": "Something went wrong. Please try again.",
+  "todayTitle": "Next workout",
+  "todayDayOf": "Day {day} of {total}",
+  "@todayDayOf": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "todaySummary": "{exercises} exercises · {sets} sets",
+  "@todaySummary": {
+    "placeholders": {
+      "exercises": {
+        "type": "int"
+      },
+      "sets": {
+        "type": "int"
+      }
+    }
+  },
+  "todayWaiting": "This workout has been waiting since {day}. The plan moves on when you finish a workout, not by date.",
+  "@todayWaiting": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "todayStart": "Start workout",
+  "todayNoPlan": "No plan yet. Start with a ready 5-day plan and change it later.",
+  "todayUseTemplate": "Start with the 5-day plan",
+  "exerciseLast": "Last: {sets}",
+  "@exerciseLast": {
+    "placeholders": {
+      "sets": {
+        "type": "String"
+      }
+    }
+  },
+  "exerciseSuperset": "Superset with the next exercise",
+  "weightKg": "{weight} kg",
+  "@weightKg": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "trendUp": "↑ Increase",
+  "trendKeep": "→ Keep",
+  "trendDown": "↓ Decrease",
+  "trendFirstTime": "First time",
+  "todayChangeDay": "Change day",
+  "todayChooseDay": "Which workout is next?",
+  "todayChooseDayHint": "The plan carries on from the day you pick.",
+  "todayDayN": "Day {day}",
+  "@todayDayN": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutSetOf": "Set {set} of {total}",
+  "@workoutSetOf": {
+    "placeholders": {
+      "set": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutTarget": "Target {reps}",
+  "@workoutTarget": {
+    "placeholders": {
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "unitKg": "kg",
+  "unitReps": "reps",
+  "workoutAddWeight": "Add {step} kg",
+  "@workoutAddWeight": {
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutRemoveWeight": "Remove {step} kg",
+  "@workoutRemoveWeight": {
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutAddRep": "One more rep",
+  "workoutRemoveRep": "One rep less",
+  "workoutLog": "Log {set}",
+  "@workoutLog": {
+    "description": "Log button; set is weight × reps, e.g. 52.5 × 12",
+    "placeholders": {
+      "set": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutThenPartner": "Then straight to {name}, no rest",
+  "@workoutThenPartner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutRest": "Rest",
+  "workoutRestLeft": "{seconds} seconds of rest left",
+  "@workoutRestLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutNext": "Next: {name} · {set}",
+  "@workoutNext": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "set": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutAdd15": "+15 s",
+  "workoutSkipRest": "Skip rest",
+  "workoutAllDone": "All sets done",
+  "workoutFinish": "Finish workout",
+  "workoutFinishAnyway": "Finish anyway",
+  "workoutKeepGoing": "Keep going",
+  "workoutDoneTitle": "Done: {day}",
+  "@workoutDoneTitle": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutSetsLeft": "{count} sets left",
+  "@workoutSetsLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutMinutes": "{minutes} min",
+  "@workoutMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutStatSets": "Sets",
+  "workoutStatVolume": "Volume (kg)",
+  "workoutStatRecords": "Records",
+  "workoutRecord": "New record",
+  "workoutEditSet": "Edit set {set}",
+  "@workoutEditSet": {
+    "placeholders": {
+      "set": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutSave": "Save",
+  "workoutDeleteSet": "Delete set",
+  "workoutDeleteConfirm": "Tap again to delete",
+  "workoutCancel": "Cancel",
+  "workoutSetDoneLabel": "Set {set}, {weight} kg, {reps} reps, logged. Tap to edit",
+  "@workoutSetDoneLabel": {
+    "placeholders": {
+      "set": {
+        "type": "int"
+      },
+      "weight": {
+        "type": "String"
+      },
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutSetNowLabel": "Set {set}, now",
+  "@workoutSetNowLabel": {
+    "placeholders": {
+      "set": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutSetLaterLabel": "Set {set}, to do",
+  "@workoutSetLaterLabel": {
+    "placeholders": {
+      "set": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutSetChip": "Set {set}",
+  "@workoutSetChip": {
+    "placeholders": {
+      "set": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutClose": "Close, the workout is saved",
+  "workoutNone": "No workout in progress.",
+  "workoutGoHome": "Go to the next workout",
+  "workoutExercisesDone": "{done} of {total} exercises done",
+  "@workoutExercisesDone": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutSupersetLabel": "Superset: no rest between the two"
 }

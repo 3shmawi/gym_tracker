@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_theme.dart';
@@ -18,9 +17,8 @@ extension PumpApp on WidgetTester {
     addTearDown(view.reset);
     return pumpWidget(
       AppUi.testWrap(
-        ScreenUtilInit(
-          designSize: AppDimens.designSize,
-          builder: (context, _) => MaterialApp(
+        AppScreenScale(
+          builder: (context) => MaterialApp(
             locale: locale,
             theme: AppTheme.light,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -37,13 +35,19 @@ extension AccessibilityChecks on WidgetTester {
   /// Fails when the current screen breaks Android/iOS tap-target sizes,
   /// leaves a tappable element without a label, or has low text contrast.
   /// Call it in every screen's widget test (CLAUDE.md → UI rules).
-  Future<void> expectAccessible() async {
+  ///
+  /// [checkContrast] is off only for Arabic: the test font has no Arabic
+  /// glyphs (it draws hollow boxes), so the contrast check would sample the
+  /// background. Arabic uses the same colors, checked on the English run.
+  Future<void> expectAccessible({bool checkContrast = true}) async {
     final handle = ensureSemantics();
     await pumpAndSettle();
     await expectLater(this, meetsGuideline(androidTapTargetGuideline));
     await expectLater(this, meetsGuideline(iOSTapTargetGuideline));
     await expectLater(this, meetsGuideline(labeledTapTargetGuideline));
-    await expectLater(this, meetsGuideline(textContrastGuideline));
+    if (checkContrast) {
+      await expectLater(this, meetsGuideline(textContrastGuideline));
+    }
     handle.dispose();
   }
 }

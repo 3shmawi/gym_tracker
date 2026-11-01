@@ -1,7 +1,7 @@
 # Staging builds for testers on every push to `develop`:
 #   Android → APK attached to a "staging" pre-release (install from the link)
-#   iOS     → TestFlight of the staging app (com.mohager.gymtracker.stg)
-# One-time: create the app record for com.mohager.gymtracker.stg in App Store
+#   iOS     → TestFlight of the staging app (com.mohager.azm.stg)
+# One-time: create the app record for com.mohager.azm.stg in App Store
 # Connect, and `gh secret set ENV_STAGING_JSON < env/staging.json`
 # (tool/setup_secrets.sh does it).
 name: Staging
@@ -125,7 +125,6 @@ jobs:
     env:
       APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.ASC_KEY_ID }}
-    env:
       VERSION: ${{ needs.version.outputs.version }}
       BUILD: ${{ needs.version.outputs.build }}
     steps:
@@ -182,7 +181,7 @@ jobs:
           echo "APP_STORE_CONNECT_PRIVATE_KEY=@file:$signing/asc.p8" >> "$GITHUB_ENV"
           keychain initialize
           keychain add-certificates --certificate "$signing/dist.p12" --certificate-password "@env:P12_PASSWORD"
-          app-store-connect fetch-signing-files "com.mohager.gymtracker.stg" --type IOS_APP_STORE --create
+          app-store-connect fetch-signing-files "com.mohager.azm.stg" --type IOS_APP_STORE --create
           keychain add-certificates
           xcode-project use-profiles
       - name: Build IPA

@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/router/not_found_page.dart';
 
 import '../../helpers/pump_app.dart';
+import '../../helpers/ui_check.dart';
 
 void main() {
   group(NotFoundPage, () {
@@ -17,4 +18,6 @@ void main() {
       await tester.expectAccessible();
     });
   });
+
+  screenUiTests('not_found', () => const NotFoundPage());
 }

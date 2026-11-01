@@ -8,13 +8,13 @@ android.apply {
     productFlavors {
         create("staging") {
             dimension = "flavor-type"
-            applicationId = "com.mohager.gymtracker.stg"
-            resValue(type = "string", name = "app_name", value = "Gym Tracker Stg")
+            applicationId = "com.mohager.azm.stg"
+            resValue(type = "string", name = "app_name", value = "Azm Stg")
         }
         create("prod") {
             dimension = "flavor-type"
-            applicationId = "com.mohager.gymtracker"
-            resValue(type = "string", name = "app_name", value = "Gym Tracker")
+            applicationId = "com.mohager.azm"
+            resValue(type = "string", name = "app_name", value = "Azm")
         }
     }
 

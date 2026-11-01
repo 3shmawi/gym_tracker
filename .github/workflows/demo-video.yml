@@ -79,7 +79,7 @@ jobs:
           title=${IN_TITLE:-$PR_TITLE}
           title=$(printf '%s' "$title" | sed -E 's/^[a-z]+(\([^)]*\))?!?: //')
           title="$(printf '%s' "${title:0:1}" | tr '[:lower:]' '[:upper:]')${title:1}"
-          [ -n "$title" ] || title="Gym Tracker"
+          [ -n "$title" ] || title="Azm"
           { echo "test=$test"; echo "doc=$doc"; echo "title=$title"; } >> "$GITHUB_OUTPUT"
           echo "Recording $test — \"$title\""
 
