@@ -326,5 +326,51 @@
   },
   "levelFigureIntermediate": "Intermediate: a fitter figure with broader shoulders pressing a heavy bar",
   "levelFigurePro": "Pro: a bodybuilder in a double-biceps pose",
-  "levelComeback": "Coming back is twice as fast."
+  "levelComeback": "Coming back is twice as fast.",
+  "progressTitle": "Progress",
+  "progressEmpty": "Finish a workout to see your progress here.",
+  "progressNoPlan": "Pick a plan first, then your progress shows up here.",
+  "progressNotDone": "Not done yet",
+  "progressFromTo": "{from} → {to}",
+  "@progressFromTo": {
+    "description": "First and latest heaviest weight, e.g. '40 kg → 52.5 kg'.",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "progressWorkouts": "{count, plural, =1{1 workout} other{{count} workouts}}",
+  "@progressWorkouts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "progressSame": "Same",
+  "progressSince": "Since {date}",
+  "@progressSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "progressBest": "Best: {set}",
+  "@progressBest": {
+    "placeholders": {
+      "set": {
+        "type": "String"
+      }
+    }
+  },
+  "progressHistory": "History",
+  "progressToday": "Today",
+  "progressNeverDone": "Do this exercise in a workout and every time shows up here.",
+  "progressNotInPlan": "This exercise isn't in your plan.",
+  "progressOpenHint": "Shows every time you did it"
 }

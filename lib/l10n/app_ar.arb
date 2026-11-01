@@ -98,5 +98,19 @@
   "levelFigureBeginner": "مبتدئ: شخص بيرفع بار خفيف",
   "levelFigureIntermediate": "متوسط: شخص أفرد بأكتاف أعرض بيرفع بار تقيل",
   "levelFigurePro": "محترف: لاعب كمال أجسام بيستعرض العضلتين",
-  "levelComeback": "الرجوع أسرع بالنص."
+  "levelComeback": "الرجوع أسرع بالنص.",
+  "progressTitle": "تقدّمك",
+  "progressEmpty": "خلّص تمرين عشان تشوف تقدّمك هنا.",
+  "progressNoPlan": "اختار خطة الأول، وبعدها تقدّمك هيظهر هنا.",
+  "progressNotDone": "لسه ماتعملش",
+  "progressFromTo": "{from} ← {to}",
+  "progressWorkouts": "{count, plural, =1{تمرين واحد} =2{تمرينين} few{{count} تمارين} other{{count} تمرين}}",
+  "progressSame": "ثابت",
+  "progressSince": "من {date}",
+  "progressBest": "أحسن مجموعة: {set}",
+  "progressHistory": "السجل",
+  "progressToday": "النهارده",
+  "progressNeverDone": "اعمل التمرين ده في تمرينة، وكل مرة هتظهر هنا.",
+  "progressNotInPlan": "التمرين ده مش في خطتك.",
+  "progressOpenHint": "بيعرض كل مرة عملته فيها"
 }

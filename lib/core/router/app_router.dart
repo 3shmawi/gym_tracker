@@ -6,7 +6,9 @@ import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/router/not_found_page.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_page.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_page.dart';
+import 'package:gym_tracker/features/workout/presentation/exercise_history_page.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_page.dart';
+import 'package:gym_tracker/features/workout/presentation/progress_page.dart';
 
 /// Root navigator, used to show app-wide dialogs (e.g. the update dialog).
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -27,6 +29,18 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.workout,
       builder: (context, state) => const ActiveWorkoutPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.progress,
+      builder: (context, state) => const ProgressPage(),
+      routes: [
+        GoRoute(
+          path: ':exerciseId',
+          builder: (context, state) => ExerciseHistoryPage(
+            exerciseId: state.pathParameters['exerciseId']!,
+          ),
+        ),
+      ],
     ),
     GoRoute(
       path: AppRoutes.settings,

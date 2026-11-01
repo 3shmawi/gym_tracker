@@ -23,6 +23,8 @@ class NextWorkoutView extends StatelessWidget {
     required this.onOpenSettings,
     required this.onChooseDay,
     this.onStart,
+    this.onOpenProgress,
+    this.onOpenExercise,
     super.key,
   });
 
@@ -31,6 +33,12 @@ class NextWorkoutView extends StatelessWidget {
   final VoidCallback onRetry;
   final VoidCallback onUseTemplate;
   final VoidCallback onOpenSettings;
+
+  /// Opens the progress screen.
+  final VoidCallback? onOpenProgress;
+
+  /// Opens one exercise's history (its id).
+  final ValueChanged<String>? onOpenExercise;
 
   /// The member picked which plan day (0-based) is next.
   final ValueChanged<int> onChooseDay;
@@ -44,6 +52,13 @@ class NextWorkoutView extends StatelessWidget {
     return AppScaffold(
       title: l10n.todayTitle,
       actions: [
+        if (onOpenProgress != null)
+          AppIconButton(
+            key: const Key('home_progress_button'),
+            tooltip: l10n.progressTitle,
+            icon: Icons.show_chart,
+            onPressed: onOpenProgress!,
+          ),
         AppIconButton(
           key: const Key('home_settings_button'),
           tooltip: l10n.settingsTitle,
@@ -56,6 +71,7 @@ class NextWorkoutView extends StatelessWidget {
           next: next,
           onStart: onStart,
           onChooseDay: onChooseDay,
+          onOpenExercise: onOpenExercise,
         ),
         AsyncData() => EmptyView(
           icon: Icons.fitness_center,
@@ -81,9 +97,11 @@ class _Workout extends StatelessWidget {
     required this.next,
     required this.onStart,
     required this.onChooseDay,
+    this.onOpenExercise,
   });
 
   final NextWorkout next;
+  final ValueChanged<String>? onOpenExercise;
   final VoidCallback? onStart;
   final ValueChanged<int> onChooseDay;
 
@@ -224,7 +242,13 @@ class _Workout extends StatelessWidget {
                   children: [
                     for (final (i, preview) in next.exercises.indexed) ...[
                       if (i > 0) Divider(height: 1, color: palette.fillSubtle),
-                      ExercisePreviewRow(number: i + 1, preview: preview),
+                      ExercisePreviewRow(
+                        number: i + 1,
+                        preview: preview,
+                        onTap: onOpenExercise == null
+                            ? null
+                            : () => onOpenExercise!(preview.exercise.id),
+                      ),
                     ],
                   ],
                 ),

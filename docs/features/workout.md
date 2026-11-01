@@ -52,6 +52,23 @@ Status: slice 2 of 3, plus levels.
   are not records).
 - Inputs are clamped: weight 0–1000 kg (NaN/∞ → 0), reps 0–999.
 
+## Progress (history per exercise)
+How each exercise moved since the member started (design: board 3.3b,
+"History").
+- **Progress** (`/progress`, the chart button on the home bar): every plan
+  exercise once, in plan order: first → latest heaviest weight, number of
+  workouts, and the gain badge (↑ +7.5 / ↓ −2.5 / Same). Not done yet: says
+  so. Tap a row for its history.
+- **Exercise history** (`/progress/<exerciseId>`, also by tapping an
+  exercise on the home screen): "Since <first date>", first → latest, the
+  best set and the number of workouts; then every time, newest first
+  ("Today", "Tue, Oct 27"), its sets and the change from the time before.
+- Matched by exercise id, so an exercise on two plan days (or renamed)
+  keeps one history. Sets with 0 reps are left out. Dates use Western
+  digits in Arabic too.
+- Unknown ids (old or crafted links) show "This exercise isn't in your
+  plan"; never done: an empty state. History is capped at the last 200
+  workouts (`LocalWorkoutRepository.maxHistory`).
 ## Levels
 Shown on the home screen in a card under today's exercises: the level
 figure (`AzmLevelFigure`), "Your level · Beginner", the weeks in a row and
@@ -92,7 +109,8 @@ what the next level needs. Worked out by itself from the history
 - Data sources: on-device only for now. Nothing leaves the phone except the
   analytics events below.
 - Routes: `/` (home) shows `NextWorkoutPage`; `/workout` the workout in
-  progress (with none: an empty state with a way home).
+  progress (with none: an empty state with a way home); `/progress` and
+  `/progress/<exerciseId>`.
 
 ## Analytics events
 | Event | When | Properties |
@@ -101,6 +119,8 @@ what the next level needs. Worked out by itself from the history
 | `next_day_chosen` | Member picks the next day | `day` (1-based) |
 | `workout_started` | A new workout starts | `day` (1-based) |
 | `workout_finished` | Finish confirmed | `day`, `sets`, `planned_sets`, `minutes`, `records` |
+| `progress_opened` | Progress screen opened | none |
+| `exercise_history_opened` | An exercise's history opened | none (the id comes from a link) |
 | `level_reached` | A new best level (once per level) | `level` (`intermediate` / `pro`) |
 
 ## Feature flags
@@ -114,6 +134,11 @@ None. (`active_workout` was removed when the workout screen shipped.)
 - Widget: `next_workout_view_test.dart`: content, missed-day banner,
   supersets, Start gating, empty / error / loading, Arabic; plus
   `screensUiTests` for 4 states × 32 variants with screenshots.
+- Progress: `get_exercise_history_test.dart` (order, changes, 0-rep sets,
+  hostile ids), `progress_controller_test.dart`, `progress_view_test.dart`
+  and `exercise_history_view_test.dart` (`screensUiTests` for every state),
+  `test/security/deep_link_test.dart` (`/progress`, crafted ids); the
+  leg-day integration test ends on the squat's history.
 - Integration: `integration_test/app_test.dart`, first launch → template →
   next workout → settings; leg day; a month of training → Intermediate.
 - Levels: `get_level_test.dart` (up, down, comeback, Saturday weeks, UTC),

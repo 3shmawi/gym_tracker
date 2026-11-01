@@ -9,7 +9,9 @@ import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dar
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_view.dart';
+import 'package:gym_tracker/features/workout/presentation/exercise_history_view.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_page.dart';
+import 'package:gym_tracker/features/workout/presentation/progress_view.dart';
 import 'package:gym_tracker/features/workout/presentation/widgets/exercise_preview_row.dart';
 import 'package:gym_tracker/features/workout/presentation/widgets/level_card.dart';
 import 'package:gym_tracker/main.dart' as app;
@@ -117,6 +119,31 @@ void main() {
     // Back home: the plan moved on to day 4.
     expect(find.text('Day 4 of 5'), findsOneWidget);
     await beat(tester, 1500);
+
+    // Progress: the squat now has today's two sets.
+    await tester.tap(find.byKey(const Key('home_progress_button')));
+    await tester.pumpAndSettle();
+    expect(find.byType(ProgressView), findsOneWidget);
+    await beat(tester);
+    // Home is still mounted under Progress: scroll Progress's own list.
+    final squat = find.byKey(const Key('progress_barbell_squat'));
+    await tester.scrollUntilVisible(
+      squat,
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(ProgressView),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.pumpAndSettle();
+    await beat(tester);
+    await tester.tap(squat.hitTestable());
+    await tester.pumpAndSettle();
+    expect(find.byType(ExerciseHistoryView), findsOneWidget);
+    expect(find.text('Today'), findsOneWidget);
+    await beat(tester, 2000);
   });
 
   testWidgets('a month of training: the home screen shows Intermediate', (

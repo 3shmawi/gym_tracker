@@ -7,6 +7,8 @@ also a deep link.
 |---|---|
 | `/` | Next workout (home): the workout waiting for the member |
 | `/workout` | The workout in progress; with none, an empty state with a way home |
+| `/progress` | Progress: every exercise, first → latest weight |
+| `/progress/<exerciseId>` | One exercise's history (unknown ids: "not in your plan") |
 | `/settings` | Settings |
 
 ## Custom scheme (works now)
