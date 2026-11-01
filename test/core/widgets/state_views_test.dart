@@ -69,14 +69,11 @@ void main() {
     });
   });
 
-  screenUiTests(
-    'error_view',
-    () => Scaffold(
+  screensUiTests({
+    'error_view': () => Scaffold(
       body: ErrorView(failure: const NetworkFailure(), onRetry: () {}),
     ),
-  );
-  screenUiTests(
-    'empty_view',
-    () => const Scaffold(body: EmptyView(message: 'Nothing here yet')),
-  );
+    'empty_view': () =>
+        const Scaffold(body: EmptyView(message: 'Nothing here yet')),
+  });
 }

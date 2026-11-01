@@ -5,7 +5,7 @@ also a deep link.
 
 | Path | Screen |
 |---|---|
-| `/` | Home |
+| `/` | Next workout (home): the workout waiting for the member |
 | `/settings` | Settings |
 
 ## Custom scheme (works now)

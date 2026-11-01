@@ -27,5 +27,19 @@
   "errorUnauthorized": "ليس لديك صلاحية لهذا. سجّل الدخول مرة أخرى.",
   "errorNotFound": "لم نجد ما تبحث عنه.",
   "errorValidation": "هناك خطأ في البيانات. راجعها وحاول مرة أخرى.",
-  "errorUnknown": "حدث خطأ ما. حاول مرة أخرى."
+  "errorUnknown": "حدث خطأ ما. حاول مرة أخرى.",
+  "todayTitle": "التمرين الجاي",
+  "todayDayOf": "اليوم {day} من {total}",
+  "todaySummary": "{exercises} تمارين · {sets} مجموعة",
+  "todayWaiting": "التمرين ده مستنيك من يوم {day}. الخطة بتمشي لما تخلّص التمرين، مش بالأيام.",
+  "todayStart": "ابدأ التمرين",
+  "todayNoPlan": "لسه مفيش خطة. ابدأ بخطة جاهزة 5 أيام وعدّلها بعدين.",
+  "todayUseTemplate": "ابدأ بخطة الـ 5 أيام",
+  "exerciseLast": "آخر مرة: {sets}",
+  "exerciseSuperset": "سوبر سيت مع التمرين اللي بعده",
+  "weightKg": "{weight} كجم",
+  "trendUp": "↑ زوّد",
+  "trendKeep": "→ ثبّت",
+  "trendDown": "↓ قلّل",
+  "trendFirstTime": "أول مرة"
 }

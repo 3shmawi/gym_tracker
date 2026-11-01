@@ -19,15 +19,19 @@ class EmptyView extends StatelessWidget {
   const new({
     required this.message,
     this.icon = Icons.inbox_outlined,
+    this.action,
     super.key,
   });
 
   final String message;
   final IconData icon;
 
+  /// The way out of the empty state, e.g. "Start with the 5-day plan".
+  final Widget? action;
+
   @override
   Widget build(BuildContext context) {
-    return _CenteredMessage(icon: icon, message: message);
+    return _CenteredMessage(icon: icon, message: message, action: action);
   }
 }
 

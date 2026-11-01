@@ -432,3 +432,51 @@ class AppSetChip extends StatelessWidget {
     );
   }
 }
+
+/// Progress through steps as segments (plan days, exercises). Fills from
+/// the start edge, so it mirrors in RTL. [current] may be fractional: 1.5
+/// fills one segment and half the next.
+class AppSegmentedProgress extends StatelessWidget {
+  const new({
+    required this.total,
+    required this.current,
+    required this.semanticLabel,
+    super.key,
+  });
+
+  final int total;
+  final double current;
+
+  /// e.g. "Day 1 of 5".
+  final String semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    return Semantics(
+      label: semanticLabel,
+      child: ExcludeSemantics(
+        child: Row(
+          spacing: AppDimens.xs,
+          children: [
+            for (var i = 0; i < total; i++)
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: SizedBox(
+                    height: 6,
+                    child: LinearProgressIndicator(
+                      value: (current - i).clamp(0, 1).toDouble(),
+                      backgroundColor: palette.fillSubtle,
+                      color: AppColors.primary,
+                      minHeight: 6,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}

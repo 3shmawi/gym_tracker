@@ -55,6 +55,9 @@ Future<void> loadAppFonts() async {
 
 bool _fontsLoaded = false;
 
+/// Whether [loadAppFonts] ran in this test file.
+bool get appFontsLoaded => _fontsLoaded;
+
 class _TolerantComparator extends LocalFileComparator {
   new(super.testFile);
 

@@ -4,8 +4,8 @@ import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/monitoring/monitoring.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/router/not_found_page.dart';
-import 'package:gym_tracker/features/home/presentation/home_page.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_page.dart';
+import 'package:gym_tracker/features/workout/presentation/next_workout_page.dart';
 
 /// Root navigator, used to show app-wide dialogs (e.g. the update dialog).
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -21,7 +21,7 @@ final appRouter = GoRouter(
   routes: [
     GoRoute(
       path: AppRoutes.home,
-      builder: (context, state) => const HomePage(),
+      builder: (context, state) => const NextWorkoutPage(),
     ),
     GoRoute(
       path: AppRoutes.settings,

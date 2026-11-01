@@ -40,5 +40,60 @@
   "errorUnauthorized": "You don't have access to this. Please sign in again.",
   "errorNotFound": "We couldn't find what you were looking for.",
   "errorValidation": "Something in the data isn't right. Please check and try again.",
-  "errorUnknown": "Something went wrong. Please try again."
+  "errorUnknown": "Something went wrong. Please try again.",
+  "todayTitle": "Next workout",
+  "todayDayOf": "Day {day} of {total}",
+  "@todayDayOf": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "todaySummary": "{exercises} exercises · {sets} sets",
+  "@todaySummary": {
+    "placeholders": {
+      "exercises": {
+        "type": "int"
+      },
+      "sets": {
+        "type": "int"
+      }
+    }
+  },
+  "todayWaiting": "This workout has been waiting since {day}. The plan moves on when you finish a workout, not by date.",
+  "@todayWaiting": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "todayStart": "Start workout",
+  "todayNoPlan": "No plan yet. Start with a ready 5-day plan and change it later.",
+  "todayUseTemplate": "Start with the 5-day plan",
+  "exerciseLast": "Last: {sets}",
+  "@exerciseLast": {
+    "placeholders": {
+      "sets": {
+        "type": "String"
+      }
+    }
+  },
+  "exerciseSuperset": "Superset with the next exercise",
+  "weightKg": "{weight} kg",
+  "@weightKg": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "trendUp": "↑ Increase",
+  "trendKeep": "→ Keep",
+  "trendDown": "↓ Decrease",
+  "trendFirstTime": "First time"
 }

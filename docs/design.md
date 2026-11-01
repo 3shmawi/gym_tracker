@@ -72,8 +72,8 @@ dart run flutter_flavorizr -p android:icons,ios:icons   # projects with flavors
 ## UI testing (every screen, before every commit)
 Three layers, all automatic except the last look:
 
-1. **`screenUiTests('<name>', () => MyView(...))`**, the last call in the
-   screen's widget test (`test/helpers/ui_check.dart`). It runs the screen
+1. **`screensUiTests({'<name>': () => MyView(...), ...})`**, called once,
+   last, in the screen's widget test with every screen/state of the file (`test/helpers/ui_check.dart`). It runs the screen
    on 4 devices (320×568, 375×812, 430×932, 820×1180) × English/Arabic ×
    light/dark × text size 1.0/1.3 (32 variants) and fails when:
    - a RenderFlex overflows or a box sticks out of the screen,

@@ -237,58 +237,81 @@ extension UiCheck on WidgetTester {
   }
 }
 
-/// The full UI test for a screen. Use it in every screen's widget test:
-///
-/// ```dart
-/// screenUiTests('home', () => const HomePage());
-/// ```
-///
-/// For each of the 32 [uiMatrix] variants: no overflow, nothing off screen,
-/// no cut-off text, readable text sizes, no zoomed UI on tablets,
-/// tap targets, labels and contrast ([AccessibilityChecks.expectAccessible]).
-/// Call it last in `main()`: layout tests load the real fonts for the rest
-/// of the file.
-/// For [uiGoldenVariants]: a golden screenshot in `goldens/<name>/`, so any
-/// visual change shows up in the PR diff and in `scripts/ui_review.sh`.
+/// The full UI test for one screen; see [screensUiTests].
 void screenUiTests(
   String name,
   Widget Function() build, {
   List<UiVariant>? variants,
   bool goldens = true,
+}) => screensUiTests({name: build}, variants: variants, goldens: goldens);
+
+/// The full UI test for the screens (or states of one screen) in a test
+/// file. Call it once, last in `main()`:
+///
+/// ```dart
+/// screensUiTests({
+///   'next_workout': () => view(AsyncData(next)),
+///   'next_workout_error': () => view(AsyncError(...)),
+/// });
+/// ```
+///
+/// For each of the 32 [uiMatrix] variants: no overflow, nothing off screen,
+/// no cut-off text, readable text sizes, no zoomed UI on tablets, app fonts,
+/// tap targets, labels and contrast ([AccessibilityChecks.expectAccessible]).
+/// For [uiGoldenVariants]: a golden screenshot in `goldens/<name>/`.
+///
+/// Accessibility runs first for every screen, with the test font (Flutter's
+/// contrast check is built for it); layout and screenshots then load the
+/// real fonts, which stay loaded for the rest of the file.
+void screensUiTests(
+  Map<String, Widget Function()> screens, {
+  List<UiVariant>? variants,
+  bool goldens = true,
 }) {
-  group('$name UI', () {
-    // Accessibility first, with the test font: Flutter's contrast check
-    // is built for it.
-    for (final variant in variants ?? uiMatrix) {
-      testWidgets('accessibility · $variant', (tester) async {
-        await tester.pumpVariant(build(), variant);
-        await tester.expectAccessible(
-          checkContrast: variant.locale.languageCode != 'ar',
-        );
-      });
-    }
-    // Then layout and screenshots with the real fonts, so widths, wrapping
-    // and cut-off text are measured as on a phone.
-    for (final variant in variants ?? uiMatrix) {
-      testWidgets('layout · $variant', (tester) async {
-        await tester.runAsync(loadAppFonts);
-        await tester.pumpVariant(build(), variant);
-        tester
-          ..expectSaneLayout(variant)
-          ..expectNotZoomed(variant);
-      });
-    }
-    if (goldens) {
-      for (final variant in uiGoldenVariants) {
-        testWidgets('screenshot · $variant', tags: ['golden'], (tester) async {
-          await tester.runAsync(loadAppFonts);
+  for (final MapEntry(key: name, value: build) in screens.entries) {
+    group('$name UI', () {
+      for (final variant in variants ?? uiMatrix) {
+        testWidgets('accessibility · $variant', (tester) async {
+          if (appFontsLoaded) {
+            fail(
+              'Real fonts are already loaded in this file, so the contrast '
+              'check would be wrong. Call screensUiTests once per file with '
+              'every screen.',
+            );
+          }
           await tester.pumpVariant(build(), variant);
-          await expectLater(
-            find.byType(MaterialApp),
-            matchesGoldenFile('goldens/$name/${variant.id}.png'),
+          await tester.expectAccessible(
+            checkContrast: variant.locale.languageCode != 'ar',
           );
         });
       }
-    }
-  });
+    });
+  }
+  for (final MapEntry(key: name, value: build) in screens.entries) {
+    group('$name UI', () {
+      for (final variant in variants ?? uiMatrix) {
+        testWidgets('layout · $variant', (tester) async {
+          await tester.runAsync(loadAppFonts);
+          await tester.pumpVariant(build(), variant);
+          tester
+            ..expectSaneLayout(variant)
+            ..expectNotZoomed(variant);
+        });
+      }
+      if (goldens) {
+        for (final variant in uiGoldenVariants) {
+          testWidgets('screenshot · $variant', tags: ['golden'], (
+            tester,
+          ) async {
+            await tester.runAsync(loadAppFonts);
+            await tester.pumpVariant(build(), variant);
+            await expectLater(
+              find.byType(MaterialApp),
+              matchesGoldenFile('goldens/$name/${variant.id}.png'),
+            );
+          });
+        }
+      }
+    });
+  }
 }

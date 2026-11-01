@@ -100,7 +100,7 @@ leaks").
 **Every feature ships with**
 1. Unit tests (repositories, use cases, state holders).
 2. Widget tests (screens and non-trivial widgets) using `tester.pumpApp`;
-   every screen test ends with `screenUiTests(...)` (layout, sizes, fonts,
+   every screen test ends with `screensUiTests({...})` (once per file) (layout, sizes, fonts,
    accessibility and golden screenshots on 32 variants).
 3. An integration test for its main flow in `integration_test/`.
 4. `docs/features/<feature>.md` (start from `./scripts/new_feature.sh`), linked
@@ -120,7 +120,8 @@ leaks").
 - Sizes go through `AppDimens.scaled()` / `AppTextStyles` (screen scale
   clamped 0.9–1.15, design frame 375×812). Never `.w/.sp` directly: they
   zoom tablets 2×.
-- Every screen's widget test ends with `screenUiTests(...)` (32 variants:
+- Every screen's widget test ends with one `screensUiTests({...})` call
+  listing all its screens/states (32 variants:
   overflow, cut-off text, font sizes, app fonts, a11y + golden screenshots).
   Before committing UI, run `./scripts/ui_review.sh` and look at the
   screenshots (docs/design.md → "UI testing").
