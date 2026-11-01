@@ -214,6 +214,58 @@ void main() {
     });
   }
 
+  // Changing the language on a pushed page (settings) rebuilds the page
+  // below it too; it must not take a back button it doesn't have.
+  for (final lite in [false, true]) {
+    final mode = lite ? 'lite' : 'glass';
+    testWidgets('$mode: the first page keeps its title and no back button '
+        'after the language changes on a pushed page', (tester) async {
+      final locale = ValueNotifier(const Locale('en'));
+      addTearDown(locale.dispose);
+      final navigator = GlobalKey<NavigatorState>();
+      tester.view
+        ..physicalSize = const Size(1125, 2436)
+        ..devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      Widget wrap(Widget child) => lite ? AppUi.testWrap(child) : child;
+      await tester.pumpWidget(
+        wrap(
+          AppScreenScale(
+            builder: (context) => ValueListenableBuilder(
+              valueListenable: locale,
+              builder: (context, value, _) => MaterialApp(
+                navigatorKey: navigator,
+                locale: value,
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: Builder(
+                  builder: (context) => AppScaffold(
+                    title: context.l10n.todayTitle,
+                    body: const SizedBox(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      navigator.currentState!.push(
+        MaterialPageRoute<void>(
+          builder: (_) =>
+              const AppScaffold(title: 'Settings', body: SizedBox()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      locale.value = const Locale('ar');
+      await tester.pumpAndSettle();
+      navigator.currentState!.pop();
+      await tester.pumpAndSettle();
+
+      expect(find.text('التمرين الجاي'), findsOneWidget);
+      expect(find.byType(AppIconButton), findsNothing, reason: 'no back');
+    });
+  }
+
   test('every adaptive icon font ships with the app', () async {
     // CupertinoIcons draws from the cupertino_icons package's font. Without
     // the package every iOS settings / back / check icon was a "?" box.
