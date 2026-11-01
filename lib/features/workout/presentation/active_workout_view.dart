@@ -65,13 +65,17 @@ class ActiveWorkoutView extends StatelessWidget {
     final workout = state.value;
     return AppScaffold(
       title: workout?.day.name.of(lang),
+      // Close (the workout stays saved) replaces back, as in the design:
+      // two buttons doing the same thing crowded the bar.
+      leading: AppIconButton(
+        key: const Key('workout_close'),
+        tooltip: l10n.workoutClose,
+        icon: Icons.close,
+        onPressed: actions.onClose,
+      ),
+      // The dock pads itself, so its surface reaches the bottom edge.
+      padBottom: !(state is AsyncData && workout != null),
       actions: [
-        AppIconButton(
-          key: const Key('workout_close'),
-          tooltip: l10n.workoutClose,
-          icon: Icons.close,
-          onPressed: actions.onClose,
-        ),
         if (workout != null)
           AppIconButton(
             key: const Key('workout_finish_menu'),
