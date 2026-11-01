@@ -9,6 +9,7 @@ import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
 import 'package:gym_tracker/features/workout/presentation/widgets/exercise_preview_row.dart';
+import 'package:gym_tracker/features/workout/presentation/widgets/level_card.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 import 'package:intl/intl.dart';
 
@@ -228,6 +229,8 @@ class _Workout extends StatelessWidget {
                   ],
                 ),
               ),
+              SizedBox(height: AppDimens.md),
+              LevelCard(progress: next.level),
             ],
           ),
         ),

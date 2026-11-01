@@ -3,6 +3,7 @@ import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
+import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -137,4 +138,25 @@ void main() {
       expect(ok(await r.loadChosenDay()), isNull);
     },
   );
+
+  group('best level', () {
+    test('beginner until saved, then round-trips', () async {
+      final r = await repo();
+      expect(ok(await r.loadBestLevel()), Level.beginner);
+      ok(await r.saveBestLevel(Level.pro));
+      expect(ok(await r.loadBestLevel()), Level.pro);
+    });
+
+    for (final (name, Object raw) in [
+      ('unknown name', 'legend'),
+      ('injection-like text', "pro'; DROP TABLE levels;--"),
+      ('wrong type', 3),
+      ('huge text', 'pro' * 100000),
+    ]) {
+      test('$name is a beginner, never a crash', () async {
+        final r = await repo({LocalWorkoutRepository.levelKey: raw});
+        expect(ok(await r.loadBestLevel()), Level.beginner);
+      });
+    }
+  });
 }
