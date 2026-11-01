@@ -124,7 +124,10 @@ class AppScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final canPop = Navigator.of(context).canPop();
+    // This page's own route, not the whole navigator: Navigator.canPop()
+    // is true for the home page too while settings is on top, and a rebuild
+    // then (e.g. a language change) left home with a back button.
+    final canPop = ModalRoute.of(context)?.impliesAppBarDismissal ?? false;
     final start =
         leading ??
         (canPop
