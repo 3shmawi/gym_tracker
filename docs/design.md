@@ -84,8 +84,7 @@ Frames are checked against the .dc.html rendered in Chromium
   the native mark. Full on the first launch of the day, static after that;
   never waits longer than start-up; 250 ms cross-fade into the app.
 - **Loading:** `LoadingView` loops it (no spinner): `LoadingSize.inline`
-  (48), `card` (96), `screen` (166, default). In the light theme it sits on
-  a dark brand tile so the white glass shows.
+  (48), `card` (96), `screen` (166, default). Transparent background.
 - Reduce Motion: the static logo. Screen readers: one "Loading" /
   "جاري التحميل" label, the parts are excluded.
 - Never mirrored in Arabic (it is the logo).

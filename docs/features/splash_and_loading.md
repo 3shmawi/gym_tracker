@@ -63,8 +63,8 @@ None.
   so the hand-off has no jump).
 - The play-log read times out after 300 ms (then: short) so it can never
   delay start-up.
-- In the light theme `LoadingView` puts the white-glass figures on a dark
-  brand tile (like the app icon), otherwise they are invisible.
+- `AzmLogoAnimation` and `LoadingView` have a transparent background; only
+  the splash screen fills `#07120C` (to match the native splash).
 - The logo is never mirrored in Arabic.
 
 ## Demo & post

@@ -12,9 +12,7 @@ import 'package:gym_tracker/l10n/l10n.dart';
 /// reader it is one element with one label ([semanticsLabel], by default
 /// "Loading").
 ///
-/// The figures are white glass, made for a dark background (the splash and
-/// the dark theme); on light surfaces put it on a dark tile, as
-/// `LoadingView` does.
+/// The background is transparent.
 class AzmLogoAnimation extends StatefulWidget {
   const new({
     required this.size,

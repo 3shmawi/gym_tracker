@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gym_tracker/core/adaptive/adaptive.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
-import 'package:gym_tracker/core/theme/app_colors.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
@@ -23,10 +22,7 @@ enum LoadingSize {
 
 /// The looping Azm logo animation (figures only, no text), with one
 /// "Loading" label for screen readers. Reduce Motion shows the static logo.
-///
-/// The figures are white glass, designed on the dark brand background; in
-/// the light theme they sit on a dark brand tile (like the app icon) so
-/// they stay visible.
+/// The background is transparent: it shows whatever is behind it.
 class LoadingView extends StatelessWidget {
   const new({this.size = LoadingSize.screen, super.key});
 
@@ -39,18 +35,7 @@ class LoadingView extends StatelessWidget {
       LoadingSize.card => AppDimens.loadingCard,
       LoadingSize.screen => AppDimens.loadingScreen,
     };
-    final logo = AzmLogoAnimation(size: side, loop: true);
-    return Center(
-      child: Theme.of(context).brightness == Brightness.dark
-          ? logo
-          : DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.darkBg,
-                borderRadius: BorderRadius.circular(side * .22),
-              ),
-              child: logo,
-            ),
-    );
+    return Center(child: AzmLogoAnimation(size: side, loop: true));
   }
 }
 
