@@ -89,7 +89,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Set 2 of 3'), findsOneWidget);
-    expect(find.text('Log ⁦20 × 12⁩'), findsOneWidget);
+    expect(find.text('Log \u206620 × 12\u2069'), findsOneWidget);
     await tester.tap(find.byKey(const Key('log_set_button')));
     await tester.pumpAndSettle();
 
