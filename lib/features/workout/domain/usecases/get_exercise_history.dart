@@ -22,6 +22,11 @@ class GetExerciseHistory {
     return ExerciseHistory(
       progress: _progress(exercise.first, oldestFirst),
       entries: oldestFirst.reversed.toList(),
+      days: [
+        for (final (i, day) in plan.days.indexed)
+          if (day.exercises.any((e) => e.id == exerciseId))
+            (number: i + 1, name: day.name),
+      ],
     );
   }
 

@@ -108,6 +108,7 @@
   "progressSame": "ثابت",
   "progressSince": "من {date}",
   "progressBest": "أحسن مجموعة: {set}",
+  "progressPlanDays": "{count, plural, =1{اليوم {days}} other{الأيام {days}}}",
   "progressHistory": "السجل",
   "progressToday": "النهارده",
   "progressNeverDone": "اعمل التمرين ده في تمرينة، وكل مرة هتظهر هنا.",
