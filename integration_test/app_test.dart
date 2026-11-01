@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gym_tracker/core/router/app_router.dart';
+import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_view.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_view.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_page.dart';
@@ -106,9 +108,11 @@ void main() {
 }
 
 /// A fresh install for each test: unmount the previous test's app (runApp
-/// with the same root widget would keep its state, e.g. the ProviderScope)
-/// and clear everything saved on the device.
+/// with the same root widget would keep its state, e.g. the ProviderScope),
+/// send the app-wide router back home and clear everything saved on the
+/// device.
 Future<void> freshInstall(WidgetTester tester) async {
   await tester.pumpWidget(const SizedBox.shrink());
+  appRouter.go(AppRoutes.home);
   await (await SharedPreferences.getInstance()).clear();
 }
