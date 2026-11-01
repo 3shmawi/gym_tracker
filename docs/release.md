@@ -96,6 +96,15 @@ are pinned by hand — bump them here and in the kit together:
   `com.mohager.azm`).
 - Google Play only accepts API uploads after the **first AAB is uploaded
   manually**. Build it once: `flutter build appbundle --flavor prod --dart-define-from-file=env/prod.json`.
+- **Export compliance (iOS):** `ios/Runner/Info.plist` sets
+  `ITSAppUsesNonExemptEncryption` to `NO`, so App Store Connect no longer
+  asks "App Encryption Documentation" for each build (staging and prod share
+  the plist). The app only uses HTTPS/TLS, which Apple treats as exempt
+  ("Complying with Encryption Export Regulations", checked 2026-11-01). If
+  the app ever adds its own encryption (e.g. end-to-end encrypted data), set
+  it to `YES` and follow Apple's documentation steps. Apple notes that exempt
+  encryption may still need the yearly U.S. self-classification report.
+  `test/security/platform_config_test.dart` keeps the key in place.
 - Keep `PLAY_RELEASE_STATUS=draft` until the app has passed its first review,
   then set it to `completed`.
 - Secrets: see the section for your CI below.
