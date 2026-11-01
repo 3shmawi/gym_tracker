@@ -7,7 +7,7 @@ built to match. Code never invents its own look.
 |---|---|
 | Design System (tokens, components, guidelines) | https://claude.ai/artifact/WUzyEppnEkcQXvVYec4m9H (source: `docs/design/workout_logging.html`) |
 | Screens: Today, active workout, rest timer, superset, finish, states | same artifact, section 3 |
-| App icon / store screenshots | <!-- claude.ai/artifact/… --> |
+| App icon (logo directions, 1b chosen) | https://claude.ai/artifact/26UTiBL3xuXEB8pKjCjn3L |
 
 ## Tokens → code
 | Design System token | Code |
@@ -47,16 +47,25 @@ automatically. To change fonts: run
 update the `fonts:` section in pubspec.yaml and the two constants.
 
 ## App icon & splash
-`assets/branding/` holds a placeholder generated in the primary color.
-Export the real icon from Claude Design and overwrite (same names/sizes):
+The icon is **1b · Lifter + sets** from the logo canvas
+(https://claude.ai/artifact/26UTiBL3xuXEB8pKjCjn3L): a glass figure pressing a
+green barbell, then two rising bars (the tallest green) on the dark brand
+gradient. `assets/branding/` holds the exports (made from the same SVG):
 `icon.png` (1024, no transparency), `icon_foreground.png` (1024, transparent,
-mark inside the middle 66%), `icon_dev.png` / `icon_staging.png` (flavors),
-`splash.png` (768, transparent). Then:
+mark inside the middle 66%), `icon_staging.png` / `icon_dev.png` (STG / DEV
+band), `splash.png` (768, transparent). The splash background is `#07120C`.
+Android 8+ prod uses an adaptive icon
+(`android/app/src/prod/res/mipmap-anydpi-v26/ic_launcher.xml`: background
+`#0B3B24`, foreground and themed-icon monochrome from `icon_foreground.png`
+in `drawable-*dpi/`); staging keeps the square icon so its STG band shows.
+After changing the exports:
 ```bash
 dart run flutter_native_splash:create
-dart run flutter_launcher_icons            # single-flavor projects
-dart run flutter_flavorizr -p android:icons,ios:icons   # projects with flavors
+dart run flutter_flavorizr -f -p android:icons,ios:icons
 ```
+then resize `icon_foreground.png` into the prod `drawable-*dpi/ic_launcher_foreground.png`
+(108/162/216/324/432 px). For the full iOS 26 Liquid Glass look, rebuild the
+icon in Apple's Icon Composer from the same layers (background, figure, bars).
 
 ## Screen checklist (each screen in the design → code)
 - Matches the design at 375×812, and still works on a small phone (320 wide),

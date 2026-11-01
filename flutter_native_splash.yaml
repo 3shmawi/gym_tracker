@@ -1,8 +1,8 @@
 # Native splash — regenerate after changing assets/branding/splash.png:
 #   dart run flutter_native_splash:create
 flutter_native_splash:
-  color: "#22C55E"
+  color: "#07120C"
   image: assets/branding/splash.png
   android_12:
-    color: "#22C55E"
+    color: "#07120C"
     image: assets/branding/splash.png
