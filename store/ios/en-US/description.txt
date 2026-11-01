@@ -1,4 +1,4 @@
-Gym Tracker — Gym workout tracker: next session, last weight, quick logging
+Azm — Gym workout tracker: next session, last weight, quick logging
 
 • Feature one: what it does for you
 • Feature two: what it does for you

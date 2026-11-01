@@ -1,4 +1,4 @@
-# Gym Tracker — documentation
+# Azm — documentation
 
 Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 

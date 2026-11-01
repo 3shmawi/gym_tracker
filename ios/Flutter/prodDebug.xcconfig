@@ -2,5 +2,5 @@
 #include "Generated.xcconfig"
 
 ASSET_PREFIX=prod
-BUNDLE_NAME=Gym Tracker
-BUNDLE_DISPLAY_NAME=Gym Tracker
+BUNDLE_NAME=Azm
+BUNDLE_DISPLAY_NAME=Azm

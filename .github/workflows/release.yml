@@ -160,7 +160,7 @@ jobs:
         uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: com.mohager.gymtracker
+          packageName: com.mohager.azm
           releaseFiles: build/app/outputs/bundle/prodRelease/app-prod-release.aab
           tracks: ${{ vars.PLAY_TRACK || 'internal' }}
           status: ${{ vars.PLAY_RELEASE_STATUS || 'completed' }}
@@ -270,7 +270,7 @@ jobs:
           echo "APP_STORE_CONNECT_PRIVATE_KEY=@file:$signing/asc.p8" >> "$GITHUB_ENV"
           keychain initialize
           keychain add-certificates --certificate "$signing/dist.p12" --certificate-password "@env:P12_PASSWORD"
-          app-store-connect fetch-signing-files "com.mohager.gymtracker" --type IOS_APP_STORE --create
+          app-store-connect fetch-signing-files "com.mohager.azm" --type IOS_APP_STORE --create
           keychain add-certificates
           xcode-project use-profiles
 

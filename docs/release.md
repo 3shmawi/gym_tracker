@@ -39,7 +39,7 @@ Needs the `SUPABASE_SECRET_KEY` secret.
 
 ## Staging builds
 Push to `develop` → `staging.yml`: Android APK attached to a `staging-…`
-pre-release (last 3 kept) and iOS to TestFlight of `com.mohager.gymtracker.stg`
+pre-release (last 3 kept) and iOS to TestFlight of `com.mohager.azm.stg`
 (create that app record in App Store Connect once). Uses `ENV_STAGING_JSON`.
 
 ## Backend deploys
@@ -86,7 +86,7 @@ are pinned by hand — bump them here and in the kit together:
 
 ## One-time setup
 - Create the app in Play Console and App Store Connect (bundle id
-  `com.mohager.gymtracker`).
+  `com.mohager.azm`).
 - Google Play only accepts API uploads after the **first AAB is uploaded
   manually**. Build it once: `flutter build appbundle --flavor prod --dart-define-from-file=env/prod.json`.
 - Keep `PLAY_RELEASE_STATUS=draft` until the app has passed its first review,

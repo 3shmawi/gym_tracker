@@ -11,13 +11,13 @@ section() { # heading
 post=$(section "Demo & post")
 what=$(section "What it does")
 {
-  echo "# Gym Tracker — post"
+  echo "# Azm — post"
   echo
   if [ -n "$(printf '%s' "$post" | tr -d '[:space:]')" ]; then
     printf '%s\n' "$post"
   else
     echo "## Caption"
-    printf '%s\n' "${what:-New in Gym Tracker.}"
+    printf '%s\n' "${what:-New in Azm.}"
     echo
     echo "#flutter #buildinpublic #مصر #تطبيقات"
   fi

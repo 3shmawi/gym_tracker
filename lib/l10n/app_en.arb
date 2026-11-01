@@ -1,10 +1,10 @@
 {
   "@@locale": "en",
-  "appTitle": "Gym Tracker",
+  "appTitle": "Azm",
   "@appTitle": {
     "description": "App name shown in the app bar and task switcher."
   },
-  "homeWelcome": "Welcome to Gym Tracker",
+  "homeWelcome": "Welcome to Azm",
   "settingsTitle": "Settings",
   "settingsLanguage": "Language",
   "settingsLanguageSystem": "System default",

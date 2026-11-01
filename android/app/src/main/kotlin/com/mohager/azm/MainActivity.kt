@@ -1,4 +1,4 @@
-package com.mohager.gymtracker
+package com.mohager.azm
 
 import io.flutter.embedding.android.FlutterActivity
 

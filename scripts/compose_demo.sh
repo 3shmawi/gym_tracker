@@ -7,7 +7,7 @@
 # before the test), that part is cut.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-in=$1; out=$2; title=${3:-Gym Tracker}; handle=${4:-@3shmawi}
+in=$1; out=$2; title=${3:-Azm}; handle=${4:-@3shmawi}
 color="#22C55E"
 font=$(ls assets/fonts/*/*-700.ttf assets/fonts/*/*-600.ttf assets/fonts/*/*.ttf 2>/dev/null | head -n 1 || true)
 fontopt=""; [ -n "$font" ] && fontopt=":fontfile=$font"

@@ -24,7 +24,7 @@ Host: `example.com`. Needs, once:
 2. `assetlinks.json`: replace the SHA-256 with Play Console → Setup →
    App signing → "App signing key certificate" fingerprint.
 3. `apple-app-site-association`: check the Team ID (`9RA43G2P63`).
-4. Apple Developer → Identifiers → `com.mohager.gymtracker` → enable
+4. Apple Developer → Identifiers → `com.mohager.azm` → enable
    **Associated Domains** (then CI regenerates the profile).
 
 If no domain was chosen at creation, add later: intent filter in

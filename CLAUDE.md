@@ -1,4 +1,4 @@
-# Gym Tracker
+# Azm
 
 Gym workout tracker: next session, last weight, quick logging
 
@@ -11,7 +11,7 @@ this project. Read it fully before changing code. Feature details live in
 | Area | Choice |
 |---|---|
 | Flutter | pinned in `.fvmrc` (FVM) — CI and Codemagic use the same version |
-| Package / bundle ID | `com.mohager.gymtracker` |
+| Package / bundle ID | `com.mohager.azm` |
 | Environments | staging, prod (`env/<name>.json`, flavors when > 1) |
 | Architecture | Layered clean architecture (data + domain + presentation, use cases) |
 | State management | Riverpod (Notifier) |

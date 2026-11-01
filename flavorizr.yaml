@@ -5,19 +5,19 @@ app:
 flavors:
   staging:
     app:
-      name: "Gym Tracker Stg"
+      name: "Azm Stg"
     android:
-      applicationId: "com.mohager.gymtracker.stg"
+      applicationId: "com.mohager.azm.stg"
       icon: "assets/branding/icon_staging.png"
     ios:
-      bundleId: "com.mohager.gymtracker.stg"
+      bundleId: "com.mohager.azm.stg"
       icon: "assets/branding/icon_staging.png"
   prod:
     app:
-      name: "Gym Tracker"
+      name: "Azm"
     android:
-      applicationId: "com.mohager.gymtracker"
+      applicationId: "com.mohager.azm"
       icon: "assets/branding/icon.png"
     ios:
-      bundleId: "com.mohager.gymtracker"
+      bundleId: "com.mohager.azm"
       icon: "assets/branding/icon.png"
