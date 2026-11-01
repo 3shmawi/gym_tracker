@@ -1,22 +1,16 @@
-# Social demo video, made automatically for every feature PR (one that adds or
-# changes an integration test or a feature doc) — no label, no manual step:
+# Social demo video, made on demand (it takes a second macOS run, ~20 min,
+# so it doesn't run on every PR): add the `demo` label to a PR, or run it by
+# hand (Actions → Demo video → Run workflow). Then:
 #   1. record: the feature's integration test on an iOS Simulator (macOS
 #      runner, full Liquid Glass via Metal; the CI Android emulator has no GPU),
 #   2. compose: a 1080×1920 video (brand background, title, handle) + the post
 #      caption from the feature doc, linked in a comment on the PR.
-# Can also be run by hand (Actions → Demo video → Run workflow).
 name: Demo video
 
 on:
+  # Only when the `demo` label is added (again to re-record), never on push.
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-    paths:
-      - 'integration_test/**'
-      - 'docs/features/**'
-      # A change to how demos are made gets a demo too, to prove it.
-      - 'scripts/record_demo_ios.sh'
-      - 'scripts/compose_demo.sh'
-      - '.github/workflows/demo-video.yml'
+    types: [labeled]
   workflow_dispatch:
     inputs:
       test:
@@ -40,7 +34,9 @@ defaults:
 
 jobs:
   record:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.label.name == 'demo' && github.event.pull_request.draft == false)
     runs-on: macos-latest
     timeout-minutes: 45
     outputs:
