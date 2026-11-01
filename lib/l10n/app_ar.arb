@@ -1,6 +1,7 @@
 {
   "@@locale": "ar",
   "appTitle": "Azm",
+  "loading": "جاري التحميل",
   "homeWelcome": "أهلاً بك في Azm",
   "settingsTitle": "الإعدادات",
   "settingsLanguage": "اللغة",

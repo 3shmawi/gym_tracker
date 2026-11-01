@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/router/app_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
+import 'package:gym_tracker/core/splash/animated_splash.dart';
+import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_view.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_view.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_page.dart';
@@ -21,8 +23,15 @@ void main() {
     // A fresh install: no plan, no history.
     await freshInstall(tester);
 
-    await app.main();
+    // The animated splash opens the demo: the first launch of the day plays
+    // the full logo animation while start-up runs, then hands off.
+    final started = app.main();
+    await tester.pump();
+    expect(find.byType(AnimatedSplash), findsOneWidget);
+    expect(find.byType(AzmLogoAnimation), findsOneWidget);
+    await started;
     await tester.pumpAndSettle();
+    expect(find.byType(AzmLogoAnimation), findsNothing);
     await beat(tester, 1500);
 
     expect(find.byType(NextWorkoutPage), findsOneWidget);

@@ -70,10 +70,30 @@ then resize `icon_foreground.png` into the prod `drawable-*dpi/ic_launcher_foreg
 (108/162/216/324/432 px). For the full iOS 26 Liquid Glass look, rebuild the
 icon in Apple's Icon Composer from the same layers (background, figure, bars).
 
+## Motion: splash and loading
+The approved logo animation is in `docs/design/motion/` (source of truth:
+`splash_animation.dc.html`, 2.6 s). The app draws it with
+`AzmLogoAnimation` (`lib/core/ui/`, exported from `app_ui.dart`), a 1:1
+port: same shapes in the 100-unit box, gradients, keyframes, easing and
+transform origins. Figures only: **no wordmark** in the splash or loading.
+Frames are checked against the .dc.html rendered in Chromium
+(`test/core/ui/azm_logo_reference_test.dart`).
+- **Splash:** the native splash (static mark on `#07120C`) hands off to
+  `AnimatedSplash`, which plays the animation once at
+  `AzmLogoAnimation.nativeSplashSize` (166) so the end frame sits exactly on
+  the native mark. Full on the first launch of the day, static after that;
+  never waits longer than start-up; 250 ms cross-fade into the app.
+- **Loading:** `LoadingView` loops it (no spinner): `LoadingSize.inline`
+  (48), `card` (96), `screen` (166, default). In the light theme it sits on
+  a dark brand tile so the white glass shows.
+- Reduce Motion: the static logo. Screen readers: one "Loading" /
+  "جاري التحميل" label, the parts are excluded.
+- Never mirrored in Arabic (it is the logo).
+
 ## Screen checklist (each screen in the design → code)
 - Matches the design at 375×812, and still works on a small phone (320 wide),
   a large phone and a tablet.
-- Has all states: loading (skeleton/adaptive spinner), empty, error with
+- Has all states: loading (`LoadingView`, the looping logo), empty, error with
   retry, success, offline.
 - Arabic RTL and dark mode checked.
 - Touch targets ≥ 48×48, text contrast ≥ 4.5:1, works with large text

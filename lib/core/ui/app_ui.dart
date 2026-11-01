@@ -6,6 +6,7 @@ import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 export 'app_controls.dart';
+export 'azm_logo_animation.dart';
 
 /// The app's UI style: Liquid Glass (iOS 26/27 look) on every platform,
 /// via liquid_glass_widgets. Screens use these wrappers, never a glass
