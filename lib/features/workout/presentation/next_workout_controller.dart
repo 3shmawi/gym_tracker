@@ -5,9 +5,12 @@ import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
+import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/domain/repositories/workout_repository.dart';
+import 'package:gym_tracker/features/workout/domain/usecases/get_level.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/get_next_workout.dart';
 
 /// Override in tests: `workoutRepositoryProvider.overrideWithValue(fake)`.
@@ -30,6 +33,7 @@ final nextWorkoutControllerProvider =
 /// Errors carry an `AppFailure`, for `ErrorView`.
 class NextWorkoutController extends AsyncNotifier<NextWorkout?> {
   static const _getNext = GetNextWorkout();
+  static const _getLevel = GetLevel();
 
   WorkoutRepository get _repo => ref.read(workoutRepositoryProvider);
 
@@ -39,12 +43,35 @@ class NextWorkoutController extends AsyncNotifier<NextWorkout?> {
     if (plan == null || plan.days.isEmpty) return null;
     final history = _unwrap(await _repo.loadHistory());
     final chosen = _unwrap(await _repo.loadChosenDay());
+    final now = ref.read(clockProvider)();
     return _getNext(
       plan,
       history,
-      now: ref.read(clockProvider)(),
+      now: now,
       chosenDay: chosen,
+      level: await _level(history, now),
     );
+  }
+
+  /// The level from the history. A new best level is saved (so a comeback
+  /// stays fast after old history is trimmed) and counted once; if saving
+  /// fails it is worked out again next time.
+  Future<LevelProgress> _level(
+    List<WorkoutSession> history,
+    DateTime now,
+  ) async {
+    final stored = switch (await _repo.loadBestLevel()) {
+      Success(:final value) => value,
+      Failed() => Level.beginner,
+    };
+    final progress = _getLevel(history, now: now, best: stored);
+    if (progress.best.index > stored.index &&
+        await _repo.saveBestLevel(progress.best) is Success<void>) {
+      unawaited(
+        Analytics.capture('level_reached', {'level': progress.best.name}),
+      );
+    }
+    return progress;
   }
 
   Future<void> retry() async {

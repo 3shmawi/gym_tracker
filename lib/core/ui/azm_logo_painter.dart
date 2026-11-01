@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/animation.dart';
 import 'package:flutter/rendering.dart';
 
+part 'azm_level_painter.dart';
+
 /// Paints one frame of the approved Azm logo animation.
 ///
 /// A 1:1 port of `docs/design/motion/splash_animation.dc.html`: the same SVG

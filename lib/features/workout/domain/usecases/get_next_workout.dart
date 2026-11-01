@@ -1,3 +1,4 @@
+import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
@@ -22,6 +23,7 @@ class GetNextWorkout {
     List<WorkoutSession> history, {
     required DateTime now,
     int? chosenDay,
+    LevelProgress level = LevelProgress.start,
   }) {
     if (plan.days.isEmpty) {
       throw ArgumentError.value(plan, 'plan', 'has no days');
@@ -42,6 +44,7 @@ class GetNextWorkout {
       days: plan.days,
       day: day,
       waitingSince: chosen == null ? _waitingSince(last, now) : null,
+      level: level,
       exercises: [
         for (final exercise in day.exercises)
           () {

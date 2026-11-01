@@ -12,5 +12,5 @@ Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 ## Features
 - [App update gate](features/app_update.md)
 - [Settings (language & theme)](features/settings.md)
-- [Workout (plan, next workout, weight suggestions)](features/workout.md)
+- [Workout (plan, next workout, weight suggestions, levels)](features/workout.md)
 - [Splash and loading animation](features/splash_and_loading.md)

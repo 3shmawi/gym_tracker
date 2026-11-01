@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/core/network/result.dart';
+import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
+import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
@@ -37,6 +39,13 @@ class _FlakyRepo implements WorkoutRepository {
 
   @override
   Future<Result<int?>> loadChosenDay() => _inner.loadChosenDay();
+
+  @override
+  Future<Result<Level>> loadBestLevel() => _inner.loadBestLevel();
+
+  @override
+  Future<Result<void>> saveBestLevel(Level level) =>
+      _inner.saveBestLevel(level);
 
   @override
   Future<Result<WorkoutDraft?>> loadDraft() => _inner.loadDraft();
@@ -148,4 +157,59 @@ void main() {
     final next = await c.read(nextWorkoutControllerProvider.future);
     expect(next!.dayIndex, 3);
   });
+
+  group('level', () {
+    /// Three workouts a week for [weeks] weeks, ending the week before the
+    /// clock (5 Nov 2026).
+    Future<void> train(int weeks) async {
+      ok(await repo.savePlan(PlanTemplates.fiveDaySplit));
+      final start = DateTime(2026, 10, 31).subtract(Duration(days: weeks * 7));
+      for (var w = 0; w < weeks; w++) {
+        for (var d = 0; d < 3; d++) {
+          ok(
+            await repo.saveSession(
+              WorkoutSession(
+                dayIndex: d,
+                finishedAt: start.add(Duration(days: w * 7 + d, hours: 18)),
+                sets: const [],
+              ),
+            ),
+          );
+        }
+      }
+    }
+
+    test('starts as a beginner', () async {
+      ok(await repo.savePlan(PlanTemplates.fiveDaySplit));
+      final next = await container(repo)
+          .read(nextWorkoutControllerProvider.future);
+      expect(next!.level.level, Level.beginner);
+      expect(ok(await repo.loadBestLevel()), Level.beginner);
+    });
+
+    test('a new best level is saved', () async {
+      await train(4);
+      final next = await container(repo)
+          .read(nextWorkoutControllerProvider.future);
+      expect(next!.level.level, Level.intermediate);
+      expect(next.level.streakWeeks, 4);
+      expect(ok(await repo.loadBestLevel()), Level.intermediate);
+    });
+
+    test('the stored best level makes the comeback fast', () async {
+      await train(1);
+      ok(await repo.saveBestLevel(Level.pro));
+      final next = await container(repo)
+          .read(nextWorkoutControllerProvider.future);
+      expect(next!.level.level, Level.beginner);
+      expect(next.level.comeback, isTrue);
+      expect(next.level.weeksToNext, 1);
+      expect(ok(await repo.loadBestLevel()), Level.pro);
+    });
+  });
 }
+
+T ok<T>(Result<T> r) => switch (r) {
+  Success(:final value) => value,
+  Failed(:final failure) => fail('expected success, got $failure'),
+};

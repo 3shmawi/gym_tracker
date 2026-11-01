@@ -86,5 +86,17 @@
   "workoutNone": "مفيش تمرين شغال دلوقتي.",
   "workoutGoHome": "روح للتمرين الجاي",
   "workoutExercisesDone": "خلّصت {done} من {total} تمارين",
-  "workoutSupersetLabel": "سوبر سيت: من غير راحة بين الاتنين"
+  "workoutSupersetLabel": "سوبر سيت: من غير راحة بين الاتنين",
+  "levelTitle": "مستواك",
+  "levelBeginner": "مبتدئ",
+  "levelIntermediate": "متوسط",
+  "levelPro": "محترف",
+  "levelStreak": "{weeks, plural, =0{لسه مفيش أسابيع ورا بعض} =1{أسبوع واحد ورا بعض} =2{أسبوعين ورا بعض} few{{weeks} أسابيع ورا بعض} other{{weeks} أسبوع ورا بعض}}",
+  "levelNext": "{weeks, plural, =1{فاضل أسبوع واحد على {level}} =2{فاضل أسبوعين على {level}} few{فاضل {weeks} أسابيع على {level}} other{فاضل {weeks} أسبوع على {level}}}",
+  "levelTop": "أعلى مستوى. كمّل كده.",
+  "levelWeekRule": "الأسبوع بيتحسب بـ {count} تمارين أو أكتر.",
+  "levelFigureBeginner": "مبتدئ: شخص بيرفع بار خفيف",
+  "levelFigureIntermediate": "متوسط: شخص أفرد بأكتاف أعرض بيرفع بار تقيل",
+  "levelFigurePro": "محترف: لاعب كمال أجسام بيستعرض العضلتين",
+  "levelComeback": "الرجوع أسرع بالنص."
 }

@@ -1,3 +1,4 @@
+import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:meta/meta.dart';
@@ -61,6 +62,7 @@ class NextWorkout {
     required this.day,
     required this.exercises,
     this.waitingSince,
+    this.level = LevelProgress.start,
   });
 
   /// 0-based; shown as "Day dayIndex+1 of totalDays".
@@ -75,4 +77,7 @@ class NextWorkout {
   /// Set when a day was skipped: the date this workout was first due. The
   /// plan doesn't move on by itself, so the screen says it waited.
   final DateTime? waitingSince;
+
+  /// The member's level, shown above the workout.
+  final LevelProgress level;
 }
