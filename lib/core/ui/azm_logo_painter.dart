@@ -13,9 +13,13 @@ import 'package:flutter/rendering.dart';
 ///
 /// [progress] runs 0 → 1 over the animation; 1 is the static logo.
 class AzmLogoPainter extends CustomPainter {
-  const new(this.progress);
+  const new(this.progress, {this.light = false});
 
   final double progress;
+
+  /// On a light background: the white glass edges are drawn dark instead
+  /// (the only change), so the figures stay visible with no backdrop.
+  final bool light;
 
   /// Units across the painted square. The square is centred on the static
   /// logo's centre ([_centre]), so the end frame sits exactly where the
@@ -42,11 +46,11 @@ class AzmLogoPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(AzmLogoPainter oldDelegate) =>
-      oldDelegate.progress != progress;
+      oldDelegate.progress != progress || oldDelegate.light != light;
 
   // ── Figure 1: light lift ──────────────────────────────────────────────
 
-  static void _paintFigure1(Canvas canvas, double t) {
+  void _paintFigure1(Canvas canvas, double t) {
     canvas
       ..save()
       ..translate(_Motion.sideL.at(t), 0);
@@ -54,7 +58,7 @@ class AzmLogoPainter extends CustomPainter {
       canvas
         ..save()
         ..translate(0, _Motion.f1loadY.at(t));
-      _Shapes.f1load.paint(canvas);
+      _Shapes.f1load.paint(canvas, light: light);
       canvas.restore();
     });
     _layer(canvas, _Motion.f1loadOpacity.at(t), () {
@@ -66,24 +70,28 @@ class AzmLogoPainter extends CustomPainter {
         _Motion.f1armsScale.at(t),
       );
     });
-    _Shapes.f1body.paint(canvas);
+    _Shapes.f1body.paint(canvas, light: light);
     canvas.restore();
   }
 
   // ── Figure 2: heavy lift, inside the middle bar ───────────────────────
 
-  static void _paintMiddle(Canvas canvas, double t) {
+  void _paintMiddle(Canvas canvas, double t) {
     canvas
       ..save()
       ..translate(_Motion.midL.at(t), 0);
-    _layer(canvas, _Motion.b2fade.at(t), () => _Shapes.midBar.paint(canvas));
+    _layer(
+      canvas,
+      _Motion.b2fade.at(t),
+      () => _Shapes.midBar.paint(canvas, light: light),
+    );
     _layer(canvas, _Motion.f2appear.at(t), () {
       canvas
         ..save()
         ..translate(_Motion.f2barX.at(t), _Motion.f2barY.at(t));
-      _Shapes.f2bar.paint(canvas);
+      _Shapes.f2bar.paint(canvas, light: light);
       canvas.restore();
-      _Shapes.f2body.paint(canvas);
+      _Shapes.f2body.paint(canvas, light: light);
       _scaled(
         canvas,
         _Shapes.f2arms,
@@ -97,15 +105,19 @@ class AzmLogoPainter extends CustomPainter {
 
   // ── The green bar, which becomes figure 3 ─────────────────────────────
 
-  static void _paintGreenBar(Canvas canvas, double t) {
+  void _paintGreenBar(Canvas canvas, double t) {
     canvas
       ..save()
       ..translate(_Motion.sideR.at(t), 0);
-    _layer(canvas, _Motion.b3fade.at(t), () => _Shapes.greenBar.paint(canvas));
+    _layer(
+      canvas,
+      _Motion.b3fade.at(t),
+      () => _Shapes.greenBar.paint(canvas, light: light),
+    );
     canvas.restore();
   }
 
-  static void _paintFigure3(Canvas canvas, double t) {
+  void _paintFigure3(Canvas canvas, double t) {
     _layer(canvas, _Motion.f3appear.at(t), () {
       canvas
         ..save()
@@ -117,7 +129,7 @@ class AzmLogoPainter extends CustomPainter {
         ..translate(origin.dx, origin.dy)
         ..scale(_Motion.f3growX.at(t), _Motion.f3growY.at(t))
         ..translate(-origin.dx, -origin.dy);
-      _Shapes.f3body.paint(canvas);
+      _Shapes.f3body.paint(canvas, light: light);
       final pump = _Motion.pump.at(t);
       _scaled(canvas, _Shapes.pumpL, const Offset(.95, .6), pump, pump);
       _scaled(canvas, _Shapes.pumpR, const Offset(.05, .6), pump, pump);
@@ -126,7 +138,7 @@ class AzmLogoPainter extends CustomPainter {
   }
 
   /// CSS `scale()` with `transform-box: fill-box` and a % origin.
-  static void _scaled(
+  void _scaled(
     Canvas canvas,
     _Group group,
     Offset origin,
@@ -143,7 +155,7 @@ class AzmLogoPainter extends CustomPainter {
       ..translate(o.dx, o.dy)
       ..scale(sx, sy)
       ..translate(-o.dx, -o.dy);
-    group.paint(canvas);
+    group.paint(canvas, light: light);
     canvas.restore();
   }
 
@@ -352,6 +364,19 @@ enum _Grad {
     ],
     [0, .5, 1],
   ),
+
+  /// [edge] for light backgrounds: the same stops in the dark text colour
+  /// (#0C1610), lighter so it reads as an outline.
+  edgeLight(
+    Offset.zero,
+    Offset(1, 1),
+    [
+      Color.fromRGBO(0x0C, 0x16, 0x10, .55),
+      Color.fromRGBO(0x0C, 0x16, 0x10, .2),
+      Color.fromRGBO(0x0C, 0x16, 0x10, .4),
+    ],
+    [0, .5, 1],
+  ),
   greenGlass(
     Offset.zero,
     Offset(.3, 1),
@@ -398,9 +423,10 @@ class _Ink {
   final _Grad? grad;
   final Color? color;
 
-  void apply(Paint paint, Rect box) {
+  void apply(Paint paint, Rect box, {required bool light}) {
     if (grad != null) {
-      paint.shader = grad!.shader(box);
+      final g = light && grad == _Grad.edge ? _Grad.edgeLight : grad!;
+      paint.shader = g.shader(box);
     } else {
       paint.color = color!;
     }
@@ -487,10 +513,10 @@ class _Shape {
   /// transform origins are relative to.
   final Rect bounds;
 
-  void paint(Canvas canvas) {
+  void paint(Canvas canvas, {required bool light}) {
     if (fill != null) {
       final p = Paint()..isAntiAlias = true;
-      fill!.apply(p, bounds);
+      fill!.apply(p, bounds, light: light);
       canvas.drawPath(path, p);
     }
     if (stroke != null) {
@@ -500,7 +526,7 @@ class _Shape {
         ..strokeWidth = strokeWidth
         ..strokeCap = cap
         ..strokeJoin = join;
-      stroke!.apply(p, bounds);
+      stroke!.apply(p, bounds, light: light);
       canvas.drawPath(path, p);
     }
   }
@@ -515,9 +541,9 @@ class _Group {
   final List<_Shape> shapes;
   final Rect bounds;
 
-  void paint(Canvas canvas) {
+  void paint(Canvas canvas, {required bool light}) {
     for (final s in shapes) {
-      s.paint(canvas);
+      s.paint(canvas, light: light);
     }
   }
 }

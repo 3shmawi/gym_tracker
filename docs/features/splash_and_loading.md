@@ -64,7 +64,9 @@ None.
 - The play-log read times out after 300 ms (then: short) so it can never
   delay start-up.
 - `AzmLogoAnimation` and `LoadingView` have a transparent background; only
-  the splash screen fills `#07120C` (to match the native splash).
+  the splash screen fills `#07120C` (to match the native splash). In the
+  light theme the white glass edges are drawn dark (`#0C1610`, same stops)
+  so the figures stay visible; nothing else changes.
 - The logo is never mirrored in Arabic.
 
 ## Demo & post

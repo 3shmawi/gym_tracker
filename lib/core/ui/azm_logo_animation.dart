@@ -21,6 +21,7 @@ class AzmLogoAnimation extends StatefulWidget {
     this.progress,
     this.semanticsLabel,
     this.onCompleted,
+    this.brightness = Brightness.dark,
     super.key,
   });
 
@@ -42,6 +43,10 @@ class AzmLogoAnimation extends StatefulWidget {
   /// Called once when a non-looping animation reaches the static logo (at
   /// once with Reduce Motion or a fixed [progress]).
   final VoidCallback? onCompleted;
+
+  /// The background it sits on (transparent). [Brightness.light] draws the
+  /// glass edges dark so the white figures stay visible.
+  final Brightness brightness;
 
   static const defaultDuration = Duration(milliseconds: 2600);
 
@@ -106,6 +111,8 @@ class _AzmLogoAnimationState extends State<AzmLogoAnimation>
     super.dispose();
   }
 
+  bool get _light => widget.brightness == Brightness.light;
+
   @override
   Widget build(BuildContext context) {
     final label =
@@ -120,11 +127,14 @@ class _AzmLogoAnimationState extends State<AzmLogoAnimation>
       child: SizedBox.square(
         dimension: widget.size,
         child: _static
-            ? CustomPaint(painter: AzmLogoPainter(widget.progress ?? 1))
+            ? CustomPaint(
+                painter: AzmLogoPainter(widget.progress ?? 1, light: _light),
+              )
             : AnimatedBuilder(
                 animation: _controller,
-                builder: (context, _) =>
-                    CustomPaint(painter: AzmLogoPainter(_controller.value)),
+                builder: (context, _) => CustomPaint(
+                  painter: AzmLogoPainter(_controller.value, light: _light),
+                ),
               ),
       ),
     );

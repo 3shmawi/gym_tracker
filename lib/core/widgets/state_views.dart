@@ -35,7 +35,13 @@ class LoadingView extends StatelessWidget {
       LoadingSize.card => AppDimens.loadingCard,
       LoadingSize.screen => AppDimens.loadingScreen,
     };
-    return Center(child: AzmLogoAnimation(size: side, loop: true));
+    return Center(
+      child: AzmLogoAnimation(
+        size: side,
+        loop: true,
+        brightness: Theme.of(context).brightness,
+      ),
+    );
   }
 }
 
