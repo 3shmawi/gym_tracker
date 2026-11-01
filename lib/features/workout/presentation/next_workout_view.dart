@@ -152,6 +152,58 @@ class _Workout extends StatelessWidget {
     if (picked != null && picked != next.dayIndex) onChooseDay(picked);
   }
 
+  /// Starts right away, or asks first when a workout was already finished
+  /// today (a second session is allowed, never blocked).
+  Future<void> _start(BuildContext context) async {
+    if (!next.trainedToday) return onStart?.call();
+    final l10n = context.l10n;
+    final go = await showAppSheet<bool>(
+      context: context,
+      builder: (sheet) => Padding(
+        padding: EdgeInsetsDirectional.fromSTEB(
+          AppDimens.md,
+          0,
+          AppDimens.md,
+          AppDimens.lg,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: AppDimens.sm2,
+          children: [
+            Semantics(
+              header: true,
+              child: Text(
+                l10n.todayAgainTitle,
+                style: AppTextStyles.title.copyWith(
+                  color: sheet.palette.textPrimary,
+                ),
+              ),
+            ),
+            Text(
+              l10n.todayAgainBody,
+              style: AppTextStyles.body.copyWith(
+                color: sheet.palette.textSecondary,
+              ),
+            ),
+            AppPrimaryButton(
+              key: const Key('start_again_confirm'),
+              icon: Icons.play_arrow_rounded,
+              label: l10n.todayAgainStart,
+              onPressed: () => Navigator.of(sheet).pop(true),
+            ),
+            AppSecondaryButton(
+              key: const Key('start_again_cancel'),
+              label: l10n.workoutCancel,
+              onPressed: () => Navigator.of(sheet).pop(false),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (go ?? false) onStart?.call();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -269,7 +321,7 @@ class _Workout extends StatelessWidget {
             child: AppPrimaryButton(
               label: l10n.todayStart,
               icon: Icons.play_arrow_rounded,
-              onPressed: onStart,
+              onPressed: () => _start(context),
             ),
           ),
       ],

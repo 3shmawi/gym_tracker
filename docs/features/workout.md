@@ -19,8 +19,8 @@ Status: slice 3 started (rest notification), plus levels.
 ## User flows
 1. First launch → "No plan yet" → **Start with the 5-day plan** → Day 1 (بنش وضهر).
 2. Open the app → next workout with suggestions → **Start workout** →
-   `/workout`: the dock is prefilled (today's last set, else the suggestion,
-   else 0 kg and target reps) → **Log** (one tap) → rest timer → next set.
+   `/workout`: the dock is prefilled (today's last set; else last time's second set,
+   e.g. 15, 20, 25 → 20, or its only set; else 0 kg; target reps) → **Log** (one tap) → rest timer → next set.
    Supersets alternate A → B with no rest between, rest after B. Tap a
    logged set to edit or delete it (delete needs a second tap).
    **Finish** (flag icon, or the dock when every set is done) → summary
@@ -46,6 +46,15 @@ Status: slice 3 started (rest notification), plus levels.
   - no sets → first time, no number.
   Lighter warm-up sets don't count against the increase.
 
+- **Start weight** (`WorkoutFlow.startWeight`): an exercise's first set
+  today starts at last time's *second* set (15, 20, 25 → 20; one set → that
+  one; 0-rep sets ignored), so the member adjusts from a working weight
+  instead of from 0. The home screen still shows the suggestion (↑ / → / ↓)
+  next to each exercise; the dock doesn't jump to it.
+- **A second workout the same day** is allowed, never blocked: after a
+  workout was finished today, Start first asks "You already trained today"
+  (Start another / Cancel). Resuming a workout in progress doesn't ask. The
+  plan moves on as usual.
 - **Rest** starts after each set with the exercise's rest time; none inside
   a superset round or after the last set of the day. Stored as an end time,
   so it is right after the app was in the background or killed.

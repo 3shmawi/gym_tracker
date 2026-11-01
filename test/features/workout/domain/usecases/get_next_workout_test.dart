@@ -105,4 +105,37 @@ void main() {
       );
     }
   });
+
+  group('trained today', () {
+    test('a workout finished earlier today', () {
+      final next = get(plan, [
+        session(0, DateTime(2026, 11, 2, 7)),
+      ], now: DateTime(2026, 11, 2, 19));
+      expect(next.trainedToday, isTrue);
+      expect(next.dayIndex, 1, reason: 'the plan still moves on');
+    });
+
+    test('yesterday or never: no', () {
+      expect(
+        get(plan, [
+          session(0, DateTime(2026, 11, 1, 23)),
+        ], now: DateTime(2026, 11, 2, 7)).trainedToday,
+        isFalse,
+      );
+      expect(
+        get(plan, const [], now: DateTime(2026, 11, 2)).trainedToday,
+        isFalse,
+      );
+    });
+
+    test('resuming a workout in progress is not "another"', () {
+      final next = get(
+        plan,
+        [session(0, DateTime(2026, 11, 2, 7))],
+        now: DateTime(2026, 11, 2, 19),
+        workoutInProgress: true,
+      );
+      expect(next.trainedToday, isFalse);
+    });
+  });
 }
