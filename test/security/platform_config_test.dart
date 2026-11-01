@@ -20,6 +20,41 @@ void main() {
       final exported = RegExp('android:exported="true"').allMatches(manifest);
       expect(exported.length, 1);
     });
+
+    // "Rest over" (flutter_local_notifications): least privilege.
+    test('rest notification: exact alarms the user grants, nothing more', () {
+      expect(manifest, contains('android.permission.SCHEDULE_EXACT_ALARM'));
+      // Google Play only allows USE_EXACT_ALARM for alarm-clock and
+      // calendar apps; full-screen intents and boot receivers aren't needed.
+      for (final p in [
+        'USE_EXACT_ALARM',
+        'USE_FULL_SCREEN_INTENT',
+        'RECEIVE_BOOT_COMPLETED',
+      ]) {
+        expect(manifest, isNot(contains('permission.$p"')), reason: p);
+      }
+      expect(
+        RegExp(
+          r'<receiver android:exported="false" android:name="com\.dexterous'
+          r'\.flutterlocalnotifications\.ScheduledNotificationReceiver"',
+        ).hasMatch(manifest),
+        isTrue,
+      );
+    });
+
+    test('the notification icon survives R8 in release builds', () {
+      final keep = File('android/app/src/main/res/raw/keep.xml')
+          .readAsStringSync();
+      expect(keep, contains('@drawable/ic_stat_rest'));
+      for (final dpi in ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']) {
+        expect(
+          File('android/app/src/main/res/drawable-$dpi/ic_stat_rest.png')
+              .existsSync(),
+          isTrue,
+          reason: dpi,
+        );
+      }
+    });
   });
 
   group('iOS', () {
@@ -57,6 +92,11 @@ void main() {
         ).hasMatch(plist),
         isTrue,
       );
+    });
+
+    test('notification taps reach the app (delegate set)', () {
+      final delegate = File('ios/Runner/AppDelegate.swift').readAsStringSync();
+      expect(delegate, contains('UNUserNotificationCenter.current().delegate'));
     });
 
     test('PostHog starts from Dart only, not by itself', () {

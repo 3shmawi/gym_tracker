@@ -373,6 +373,24 @@
   "progressNeverDone": "Do this exercise in a workout and every time shows up here.",
   "progressNotInPlan": "This exercise isn't in your plan.",
   "progressOpenHint": "Shows every time you did it",
+  "restOverTitle": "Rest over",
+  "restOverBody": "{exercise} · set {set}",
+  "@restOverBody": {
+    "description": "Notification when a rest ends: the set to do next.",
+    "placeholders": {
+      "exercise": {
+        "type": "String"
+      },
+      "set": {
+        "type": "int"
+      }
+    }
+  },
+  "restChannelName": "Rest timer",
+  "restOnTimeTitle": "Ring when your rest is over?",
+  "restOnTimeBody": "Android needs your OK to ring right on time. Turn on Alarms & reminders for Azm.",
+  "restOnTimeOpen": "Open settings",
+  "restOnTimeLater": "Not now",
   "todayAgainTitle": "You already trained today",
   "todayAgainBody": "Start another workout anyway? It counts as the next day of your plan.",
   "todayAgainStart": "Start another workout"

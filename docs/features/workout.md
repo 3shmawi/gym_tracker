@@ -10,10 +10,11 @@ exercise with last time's sets and a suggested weight (↑ increase, → keep,
 finished: if a day is skipped, the same workout waits and the screen says
 since when.
 
-Status: slice 2 of 3, plus levels.
+Status: slice 3 started (rest notification), plus levels.
 1. **Done:** plan, history, weight suggestions, next-workout screen, offline storage, choose the next day.
 2. **Done:** active workout: one-tap logging, edit/delete a set, rest timer (+15 s, skip), supersets, finish with summary and records. Saved after every change.
-3. Next: rest notification when the app is in the background, sync to Supabase (needs accounts), edit the plan and targets.
+3. **Done:** "Rest over" notification when the phone is locked or the app is in the background.
+   Next: edit the plan and targets, sync to Supabase (needs accounts).
 
 ## User flows
 1. First launch → "No plan yet" → **Start with the 5-day plan** → Day 1 (بنش وضهر).
@@ -57,6 +58,29 @@ Status: slice 2 of 3, plus levels.
 - **Rest** starts after each set with the exercise's rest time; none inside
   a superset round or after the last set of the day. Stored as an end time,
   so it is right after the app was in the background or killed.
+- **Rest over notification** (`RestAlarmSync` → `RestAlarm`): while a
+  rest runs and the app is **not in front** (locked, background, app
+  switcher), a local notification waits for the rest's end time:
+  "Rest over" / "Barbell Back Squat · set 2" (the set after the rest, in
+  the app's language). In front, nothing is scheduled: the screen counts
+  down and buzzes itself. It is removed when the member comes back, and
+  rescheduled or removed on +15 s, skip, log, edit, delete, finish and
+  close. The first update after a launch always cancels, so a notification
+  left by a killed app never rings over the screen.
+  - **Permission** is asked once, at the member's **first rest**, never at
+    launch (Apple: ask "in a context that helps people understand why").
+    Remembered in `rest_alarm.asked`; later rests don't ask again.
+  - **Android 14+**: exact alarms ("Alarms & reminders") are off for new
+    installs, and an inexact alarm can be 10 minutes to an hour late. So
+    when notifications are allowed but exact alarms aren't, a sheet
+    explains and opens the setting (**Open settings** / **Not now**).
+    Without it no notification is scheduled (a late "Rest over" is worse
+    than none). Android 12–13 grant it by default.
+  - **Tap** the notification: if the app was killed, it opens on
+    `/workout`; otherwise it is already there. The payload is never read.
+  - Closing the workout screen mid-rest removes the notification (until the
+    design's "timer pill from anywhere", board 3.3b, exists; then keep it
+    while the pill shows).
 - **Records** = heavier than any earlier set of that exercise (first times
   are not records).
 - Inputs are clamped: weight 0–1000 kg (NaN/∞ → 0), reps 0–999.
@@ -108,6 +132,13 @@ what the next level needs. Worked out by itself from the history
     crash), `PlanTemplates.fiveDaySplit`.
   - `domain/`, workout in progress: `WorkoutDraft`, `WorkoutFlow` (set order
     and supersets, prefill, rest), `SummarizeWorkout` (volume, records).
+  - Rest notification: `domain/services/rest_alarm.dart` (`RestAlarm`,
+    `RestAlarmNotice`, `RestAlarmAccess`), `data/services/notification_rest_alarm.dart`
+    on `core/notifications/local_notifications.dart` (the plugin wrapper),
+    `presentation/rest_alarm_sync.dart` (when to schedule; owned by
+    `ActiveWorkoutPage`, which watches the app lifecycle),
+    `widgets/rest_on_time_sheet.dart`. Wired in `Dependencies.restAlarm`;
+    `bootstrap.dart` opens `/workout` when the notification launched the app.
   - `presentation/`: `ActiveWorkoutController` → `ActiveWorkoutPage` →
     `ActiveWorkoutView` (list with the current exercise scrolled to the top,
     `LogPanel` / `RestPanel` dock, edit and finish sheets); `NextWorkoutController` (AsyncNotifier, no automatic
@@ -116,7 +147,35 @@ what the next level needs. Worked out by itself from the history
     Arabic so "22.5×12, 12, 11" is never reordered).
 - State: Riverpod; `clockProvider` makes dates testable.
 - Data sources: on-device only for now. Nothing leaves the phone except the
-  analytics events below.
+  analytics events below. The rest notification is local (no push token).
+
+## Rest notification setup
+Package: `flutter_local_notifications` **22.3.3** + `timezone` **0.11.2**
+(pub.dev and changelogs checked 2026-11-01; 22.3.2 fixed iOS 27 exceptions
+when permission is denied). Docs read the same day: Apple "Asking
+permission to use notifications"; Android "Schedule alarms" and "Behavior
+changes: Android 14 — schedule exact alarms are denied by default"; the
+plugin README.
+- **Android:** `SCHEDULE_EXACT_ALARM` only (user-granted). Not
+  `USE_EXACT_ALARM`: Google Play allows it only for alarm-clock and calendar
+  apps. `POST_NOTIFICATIONS` (Android 13+ prompt) and `VIBRATE` come from the
+  plugin. One receiver, `ScheduledNotificationReceiver`, not exported; no
+  boot receiver (a rest doesn't survive a reboot). Core library desugaring
+  on (`desugar_jdk_libs` 2.1.4, as the plugin). Small icon:
+  `drawable-*/ic_stat_rest.png` (white logo silhouette from
+  `assets/branding/icon_foreground.png`), kept from R8 by `res/raw/keep.xml`.
+  Channel `rest_timer` ("Rest timer" / "مؤقت الراحة"), high importance,
+  schedule mode `exactAllowWhileIdle`. Some OEMs (Xiaomi, Huawei…) kill
+  background alarms: see dontkillmyapp.com.
+- **iOS:** no capability or Info.plist key needed. `AppDelegate` sets the
+  `UNUserNotificationCenter` delegate. Alert + sound, interruption level
+  `active` (time-sensitive would need a new entitlement and profile).
+- **Both flavors** share this (main manifest, one AppDelegate).
+- **On a phone** (CI can't: the simulator would stop on the permission
+  prompt, so tests fake `RestAlarm`): start a workout, log a set, allow,
+  lock the phone → "Rest over" at 0:00 with sound; unlock early → nothing
+  rings; Android 14: Not now → nothing rings; turn on Alarms & reminders →
+  it rings.
 - Routes: `/` (home) shows `NextWorkoutPage`; `/workout` the workout in
   progress (with none: an empty state with a way home); `/progress` and
   `/progress/<exerciseId>`.
@@ -131,6 +190,7 @@ what the next level needs. Worked out by itself from the history
 | `progress_opened` | Progress screen opened | none |
 | `exercise_history_opened` | An exercise's history opened | none (the id comes from a link) |
 | `level_reached` | A new best level (once per level) | `level` (`intermediate` / `pro`) |
+| `rest_alarm_answered` | The first rest's permission question was answered | `allowed` (notifications on), `on_time` (and exact alarms on) |
 
 ## Feature flags
 None. (`active_workout` was removed when the workout screen shipped.)
@@ -149,7 +209,17 @@ None. (`active_workout` was removed when the workout screen shipped.)
   `test/security/deep_link_test.dart` (`/progress`, crafted ids); the
   leg-day integration test ends on the squat's history.
 - Integration: `integration_test/app_test.dart`, first launch → template →
-  next workout → settings; leg day; a month of training → Intermediate.
+  next workout → settings; leg day; a month of training → Intermediate;
+  rest notification (lock and unlock during a rest, +15 s, skip, close).
+- Rest notification: `rest_alarm_sync_test.dart` (front/background,
+  +15 s, skip, edit, close, killed app, errors), `active_workout_page_test.dart`
+  (real screen and lifecycle: first-rest ask, text in English and Arabic,
+  finish/close, the Android 14 sheet), `notification_rest_alarm_test.dart`
+  (asked once, hostile stored value), `core/notifications/local_notifications_test.dart`
+  (the plugin's channel on Android and iOS: no prompt at start-up, exact
+  mode, skipped without exact alarms or in the past),
+  `widgets/rest_on_time_sheet_test.dart` (`screenUiTests`), and
+  `test/security/` (manifest permissions, notification tap → `/workout` only).
 - Levels: `get_level_test.dart` (up, down, comeback, Saturday weeks, UTC),
   repository (round trip, hostile stored values), controller (best level
   saved), `next_workout_view_test.dart` (card texts in English and Arabic),
@@ -176,6 +246,13 @@ None. (`active_workout` was removed when the workout screen shipped.)
 **Caption (English):** Pick a plan once. Every time you open the app, it shows today's workout and the weight to use. Skip a day and the workout waits for you.
 **Caption (Egyptian Arabic):** اختار خطتك مرة واحدة، وكل ما تفتح التطبيق هيقولك تمرين النهارده والوزن اللي تشيله. لو فوّت يوم، التمرين بيستناك.
 **Hashtags:** #flutter #buildinpublic #gym #fitness
+
+**Rest notification (fourth test):** start legs, log the squat, the rest
+starts; lock the phone → "Rest over · Barbell Back Squat · set 2" waits
+for 2:00; unlock → gone; +15 s moves it; skip removes it; close the
+workout mid-rest → nothing rings.
+**Caption (English):** Lock your phone between sets. Azm tells you when the rest is over, and which set is next.
+**Caption (Egyptian Arabic):** اقفل موبايلك بين المجموعات، وعزم هيقولك لما الراحة تخلص والمجموعة الجاية إيه.
 
 **Levels (third test):** a month of training → the home screen shows the
 intermediate figure.

@@ -6,9 +6,9 @@ Security is tested, not assumed. Three layers run on every pull request.
 | Test | Guards against |
 |---|---|
 | `secrets_test.dart` | private keys, Supabase secret/service-role keys, AWS/Stripe/GitHub/Google keys or hard-coded keystore passwords in `lib/`, `android/`, `ios/`, `website/`, `supabase/`, `env/`; non-empty `env/example.json`; `.gitignore` missing env/signing entries |
-| `platform_config_test.dart` | cleartext HTTP, debuggable releases, extra exported Android activities, disabled iOS App Transport Security |
+| `platform_config_test.dart` | cleartext HTTP, debuggable releases, extra exported Android activities, disabled iOS App Transport Security; notifications: only `SCHEDULE_EXACT_ALARM` (no `USE_EXACT_ALARM`, full-screen intent or boot receiver), the receiver not exported, the icon kept from R8, the iOS delegate set |
 | `workflow_secrets_test.dart` | secrets pasted into CI scripts, a key written to a file without `scripts/mask_secrets.sh`, `set -x`, actions not pinned to a commit |
-| `deep_link_test.dart` | crafted/unknown deep links crashing the app or reaching unexpected screens; open redirects via query parameters |
+| `deep_link_test.dart` | crafted/unknown deep links crashing the app or reaching unexpected screens; open redirects via query parameters; a tapped notification opens only `/workout` (its payload is never read) |
 
 ## 2. CI `security` job
 - **gitleaks** — scans the whole git history for committed secrets.
@@ -25,6 +25,10 @@ Security is tested, not assumed. Three layers run on every pull request.
 - New table → RLS on + `supabase/tests/<table>_rls.test.sql`.
 - New input → tests for empty, huge, injection-like and malformed values.
 - Auth → signed-out redirect tests + "user A can't touch user B's rows" RLS tests.
+- Notifications are local only (no push token, nothing sent). Ask for a
+  permission at the moment it is needed, never at launch; declare the
+  least Android permission that works and test it in
+  `platform_config_test.dart`. Never route on a notification's payload.
 - Only publishable keys in the app. Server secrets live in Supabase
   (Edge Function secrets / Vault).
 
