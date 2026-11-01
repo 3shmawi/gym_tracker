@@ -24,6 +24,13 @@ abstract final class AppUi {
   /// solid surfaces instead and skips the shader preload.
   static const lite = bool.fromEnvironment('GLASS_LITE');
 
+  /// Cards sit in scrolling lists, so they always use the lightweight
+  /// shader. Premium (the iOS default) captures the screen behind every
+  /// card; with a list of cards that used too much memory and iOS killed
+  /// the app while scrolling (Sentry GYM_TRACKER-12). The package docs say
+  /// premium is for static, non-scrolling surfaces only.
+  static const GlassQuality cardQuality = GlassQuality.standard;
+
   static Future<void> initialize() => lite
       ? LiquidGlassWidgets.initialize(warmUpMode: GlassWarmUpMode.never)
       : LiquidGlassWidgets.initialize();
@@ -237,13 +244,29 @@ extension on AppScaffold {
 }
 
 class AppCard extends StatelessWidget {
-  const new({required this.child, super.key});
+  const new({required this.child, this.tall = false, super.key});
 
   final Widget child;
 
+  /// For a card that can grow taller than the screen, like a whole history
+  /// list: drawn as a flat card (how iOS draws long list cards) with no
+  /// glass. Glass samples the screen behind its whole area, so one very tall
+  /// glass card used too much memory while scrolling and iOS killed the app
+  /// (Sentry GYM_TRACKER-12).
+  final bool tall;
+
   @override
   Widget build(BuildContext context) {
-    if (!AppUi.isLite(context)) return GlassContainer.card(child: child);
+    if (!AppUi.isLite(context)) {
+      if (tall) {
+        return GlassContainer.card(
+          surfaceStyle: GlassSurfaceStyle.solid,
+          shape: LiquidRoundedSuperellipse(borderRadius: AppDimens.radiusMd),
+          child: child,
+        );
+      }
+      return GlassContainer.card(quality: AppUi.cardQuality, child: child);
+    }
     // Lite: a near-solid fill, no blur and no blurred shadow (cheap to draw,
     // even in software). Material, so ListTile / InkWell ink stays visible.
     return Material(

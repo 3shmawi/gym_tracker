@@ -120,6 +120,8 @@ class _History extends StatelessWidget {
         ),
         SizedBox(height: AppDimens.md),
         AppCard(
+          key: const Key('history_list'),
+          tall: true,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

@@ -25,8 +25,13 @@ Screens use `lib/core/ui/app_ui.dart` (`AppScaffold`, `AppCard`,
 `liquid_glass_widgets`):
 - Glass needs content behind it: give image-rich screens a photo
   `background:`; others get the brand gradient (`AppBackground`).
-- At most two glass layers on top of each other; lists of many cards use
-  `GlassQuality.minimal` to keep scrolling smooth on mid-range Android.
+- At most two glass layers on top of each other. Premium quality (the iOS
+  default) is for bars and buttons only — it captures the screen behind
+  each surface. `AppCard` always uses the lightweight `standard` shader
+  (`AppUi.cardQuality`), and a card that can grow taller than the screen
+  (a whole history list) is `AppCard(tall: true)`: a flat card, no glass.
+  One tall premium glass card on the history page used so much memory
+  that iOS killed the app while scrolling (Sentry GYM_TRACKER-12).
 - Text on glass must stay ≥ 4.5:1 — test on the busiest photo, in light and
   dark, and with iOS 27's transparency slider at "clear".
 - Accessibility: Reduce Motion and Increase Contrast are respected
