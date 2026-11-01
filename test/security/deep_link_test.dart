@@ -1,13 +1,19 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gym_tracker/bootstrap.dart';
+import 'package:gym_tracker/core/di/dependencies.dart';
 import 'package:gym_tracker/core/router/app_router.dart';
+import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/router/not_found_page.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/features/settings/data/repositories/shared_prefs_settings_repository.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_controller.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
+import 'package:gym_tracker/features/workout/domain/services/rest_alarm.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_page.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_view.dart';
 import 'package:gym_tracker/features/workout/presentation/exercise_history_page.dart';
@@ -17,6 +23,8 @@ import 'package:gym_tracker/features/workout/presentation/next_workout_page.dart
 import 'package:gym_tracker/features/workout/presentation/progress_page.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../helpers/fake_rest_alarm.dart';
 
 /// Deep links are untrusted input: unknown or crafted paths must land on a
 /// safe screen, never crash or open something unexpected.
@@ -139,5 +147,43 @@ void main() {
     appRouter.go('/progress/flat_db_press/../../settings/x');
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+  });
+
+  group('"Rest over" notification tapped after the app was killed', () {
+    tearDown(() => Dependencies.restAlarm = const SilentRestAlarm());
+
+    testWidgets('opens /workout only, and safely with no workout', (
+      tester,
+    ) async {
+      await pumpRouter(tester);
+      appRouter.go(AppRoutes.home);
+      Dependencies.restAlarm = FakeRestAlarm()..opened = true;
+      await openWorkoutFromRestAlarm();
+      await tester.pumpAndSettle();
+      expect(
+        appRouter.routerDelegate.currentConfiguration.uri.path,
+        AppRoutes.workout,
+      );
+      expect(find.byType(ActiveWorkoutView), findsOneWidget);
+      expect(find.byKey(const Key('workout_go_home')), findsOneWidget);
+    });
+
+    testWidgets('a normal launch stays home', (tester) async {
+      await pumpRouter(tester);
+      appRouter.go(AppRoutes.home);
+      Dependencies.restAlarm = FakeRestAlarm();
+      await openWorkoutFromRestAlarm();
+      await tester.pumpAndSettle();
+      expect(find.byType(NextWorkoutPage), findsOneWidget);
+    });
+
+    test('the payload is never read', () {
+      // The notification can't carry a route: LocalNotifications only asks
+      // "did a notification open the app", and bootstrap goes to one route.
+      final source = File('lib/core/notifications/local_notifications.dart')
+          .readAsStringSync();
+      expect(source, isNot(contains('.payload')));
+      expect(source, isNot(contains('notificationResponse')));
+    });
   });
 }

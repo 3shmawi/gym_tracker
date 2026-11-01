@@ -112,5 +112,12 @@
   "progressToday": "النهارده",
   "progressNeverDone": "اعمل التمرين ده في تمرينة، وكل مرة هتظهر هنا.",
   "progressNotInPlan": "التمرين ده مش في خطتك.",
-  "progressOpenHint": "بيعرض كل مرة عملته فيها"
+  "progressOpenHint": "بيعرض كل مرة عملته فيها",
+  "restOverTitle": "الراحة خلصت",
+  "restOverBody": "{exercise} · مجموعة {set}",
+  "restChannelName": "مؤقت الراحة",
+  "restOnTimeTitle": "نرنّلك لما الراحة تخلص؟",
+  "restOnTimeBody": "أندرويد محتاج موافقتك عشان نرنّ في الوقت بالظبط. فعّل «المنبّهات والتذكيرات» لعزم.",
+  "restOnTimeOpen": "افتح الإعدادات",
+  "restOnTimeLater": "مش دلوقتي"
 }

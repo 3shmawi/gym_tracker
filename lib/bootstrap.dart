@@ -5,6 +5,8 @@ import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/backend/backend.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
 import 'package:gym_tracker/core/monitoring/monitoring.dart';
+import 'package:gym_tracker/core/router/app_router.dart';
+import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/splash/animated_splash.dart';
 import 'package:gym_tracker/core/theme/app_fonts.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
@@ -32,6 +34,7 @@ Future<void> _startServices() async {
     Backend.init,
     Analytics.init,
     Dependencies.init,
+    openWorkoutFromRestAlarm,
     AppUi.initialize,
   ]) {
     try {
@@ -40,4 +43,11 @@ Future<void> _startServices() async {
       await Monitoring.captureException(error, stackTrace);
     }
   }
+}
+
+/// Tapping "Rest over" after the app was killed opens the workout, not
+/// home. Only this one route: the notification's payload is never read.
+@visibleForTesting
+Future<void> openWorkoutFromRestAlarm() async {
+  if (await Dependencies.restAlarm.openedApp()) appRouter.go(AppRoutes.workout);
 }

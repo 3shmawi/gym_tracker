@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gym_tracker/core/di/dependencies.dart';
 import 'package:gym_tracker/core/router/app_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/splash/animated_splash.dart';
@@ -8,6 +9,7 @@ import 'package:gym_tracker/features/settings/presentation/settings_view.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
+import 'package:gym_tracker/features/workout/domain/services/rest_alarm.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_view.dart';
 import 'package:gym_tracker/features/workout/presentation/exercise_history_view.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_page.dart';
@@ -18,6 +20,7 @@ import 'package:gym_tracker/main.dart' as app;
 import 'package:integration_test/integration_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../test/helpers/fake_rest_alarm.dart';
 import 'helpers/demo.dart';
 
 void main() {
@@ -36,6 +39,7 @@ void main() {
     expect(find.byType(AnimatedSplash), findsOneWidget);
     expect(find.byType(AzmLogoAnimation), findsOneWidget);
     await started;
+    useFakeRestAlarm();
     await tester.pumpAndSettle();
     expect(find.byType(AzmLogoAnimation), findsNothing);
     await beat(tester, 1500);
@@ -64,6 +68,7 @@ void main() {
   testWidgets('leg day: pick day 3, log sets, rest, finish', (tester) async {
     await freshInstall(tester);
     await app.main();
+    useFakeRestAlarm();
     await tester.pumpAndSettle();
     await beat(tester);
 
@@ -179,6 +184,7 @@ void main() {
     }
 
     await app.main();
+    useFakeRestAlarm();
     await tester.pumpAndSettle();
     await beat(tester);
 
@@ -197,6 +203,77 @@ void main() {
     expect(find.text('Your level · Intermediate'), findsOneWidget);
     await beat(tester, 2000);
   });
+  testWidgets('rest notification: lock the phone during a rest', (
+    tester,
+  ) async {
+    await freshInstall(tester);
+    await app.main();
+    final alarm = useFakeRestAlarm();
+    await tester.pumpAndSettle();
+    await beat(tester);
+
+    await tester.tap(find.byKey(const Key('use_template_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('change_day_button')).hitTestable());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('choose_day_2')).hitTestable());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Start workout'));
+    await tester.pumpAndSettle();
+    await beat(tester);
+
+    // Never asked at launch: the question comes with the first rest.
+    expect(alarm.asked, 0);
+    for (var i = 0; i < 4; i++) {
+      await tester.tap(find.bySemanticsLabel('Add 5 kg'));
+      await tester.pump(const Duration(milliseconds: 250));
+    }
+    await tester.tap(find.byKey(const Key('log_set_button')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('rest_countdown')), findsOneWidget);
+    expect(alarm.asked, 1);
+    expect(alarm.scheduled, isNull, reason: 'on screen: the timer rings');
+    await beat(tester, 1500);
+
+    // Lock the phone: "Rest over · Barbell Back Squat · set 2" waits for
+    // the end of the 2-minute rest.
+    final before = DateTime.now();
+    await lockPhone(tester);
+    final notice = alarm.scheduled!;
+    expect(notice.title, 'Rest over');
+    expect(notice.body, 'Barbell Back Squat · set 2');
+    expect(notice.at.difference(before).inSeconds, inInclusiveRange(100, 120));
+
+    // Unlock: the countdown is back and the notification is gone.
+    await unlockPhone(tester);
+    expect(alarm.scheduled, isNull);
+    await beat(tester);
+
+    // +15 s moves it.
+    await tester.tap(find.byKey(const Key('rest_add_15')));
+    await tester.pumpAndSettle();
+    await lockPhone(tester);
+    expect(alarm.scheduled!.at, notice.at.add(const Duration(seconds: 15)));
+    await unlockPhone(tester);
+
+    // Skip: nothing left to ring.
+    await tester.tap(find.byKey(const Key('rest_skip')));
+    await tester.pumpAndSettle();
+    await lockPhone(tester);
+    expect(alarm.scheduled, isNull);
+    await unlockPhone(tester);
+    await beat(tester);
+
+    // Log set 2, then close the workout mid-rest: nothing rings later.
+    await tester.tap(find.byKey(const Key('log_set_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('workout_close')));
+    await tester.pumpAndSettle();
+    await lockPhone(tester);
+    expect(alarm.scheduled, isNull);
+    await unlockPhone(tester);
+    await beat(tester, 1500);
+  });
 }
 
 /// A fresh install for each test: unmount the previous test's app (runApp
@@ -210,4 +287,32 @@ Future<void> freshInstall(WidgetTester tester) async {
   await tester.pumpAndSettle();
   await tester.pumpWidget(const SizedBox.shrink());
   await (await SharedPreferences.getInstance()).clear();
+}
+
+/// The phone's notification center can't be driven from a test (and iOS
+/// would stop on its permission prompt), so the app's [RestAlarm] is
+/// swapped after start-up; what it receives is checked instead.
+FakeRestAlarm useFakeRestAlarm() {
+  final alarm = FakeRestAlarm();
+  Dependencies.restAlarm = alarm;
+  return alarm;
+}
+
+/// What iOS reports when the side button is pressed, and back.
+Future<void> lockPhone(WidgetTester tester) async {
+  [
+    AppLifecycleState.inactive,
+    AppLifecycleState.hidden,
+    AppLifecycleState.paused,
+  ].forEach(tester.binding.handleAppLifecycleStateChanged);
+  await tester.pumpAndSettle();
+}
+
+Future<void> unlockPhone(WidgetTester tester) async {
+  [
+    AppLifecycleState.hidden,
+    AppLifecycleState.inactive,
+    AppLifecycleState.resumed,
+  ].forEach(tester.binding.handleAppLifecycleStateChanged);
+  await tester.pumpAndSettle();
 }

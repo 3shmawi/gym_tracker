@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- R8 can't see that the notification icon is used (it is named from
+     Dart), so keep it, or "Rest over" silently never shows in release. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_rest" />
