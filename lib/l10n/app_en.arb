@@ -390,7 +390,7 @@
   "restOnTimeTitle": "Ring when your rest is over?",
   "restOnTimeBody": "Android needs your OK to ring right on time. Turn on Alarms & reminders for Azm.",
   "restOnTimeOpen": "Open settings",
-  "restOnTimeLater": "Not now"
+  "restOnTimeLater": "Not now",
   "todayAgainTitle": "You already trained today",
   "todayAgainBody": "Start another workout anyway? It counts as the next day of your plan.",
   "todayAgainStart": "Start another workout"
