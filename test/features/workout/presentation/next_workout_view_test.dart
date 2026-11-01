@@ -5,6 +5,7 @@ import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
+import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/get_next_workout.dart';
@@ -42,6 +43,35 @@ NextWorkout day2() => const GetNextWorkout()(PlanTemplates.fiveDaySplit, [
     sets: const [],
   ),
 ], now: DateTime(2026, 11, 3));
+
+/// Day 2 with [level].
+NextWorkout withLevel(LevelProgress level) => const GetNextWorkout()(
+  PlanTemplates.fiveDaySplit,
+  [
+    WorkoutSession(
+      dayIndex: 0,
+      finishedAt: DateTime(2026, 11, 2),
+      sets: const [],
+    ),
+  ],
+  now: DateTime(2026, 11, 3),
+  level: level,
+);
+
+const intermediate = LevelProgress(
+  level: Level.intermediate,
+  streakWeeks: 6,
+  weeksToNext: 6,
+  best: Level.intermediate,
+);
+const proComeback = LevelProgress(
+  level: Level.intermediate,
+  streakWeeks: 1,
+  weeksToNext: 3,
+  comeback: true,
+  best: Level.pro,
+);
+const pro = LevelProgress(level: Level.pro, streakWeeks: 14, best: Level.pro);
 
 Widget view(
   AsyncValue<NextWorkout?> state, {
@@ -195,7 +225,101 @@ void main() {
     });
   });
 
+  group('level card', () {
+    /// The card is under the exercises: scroll to it.
+    Future<void> showLevel(
+      WidgetTester tester,
+      Widget screen, {
+      Locale locale = const Locale('en'),
+    }) async {
+      await tester.pumpApp(screen, locale: locale);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('level_card')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+    }
+
+    testWidgets('a new member: beginner, how a week counts', (tester) async {
+      await showLevel(tester, view(AsyncData(day2())));
+      expect(find.text('Your level · Beginner'), findsOneWidget);
+      expect(
+        find.text(
+          'No weeks in a row yet · 4 more weeks to Intermediate · '
+          'A week counts with 3 workouts or more.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.widget<AzmLevelFigure>(find.byType(AzmLevelFigure)).figure,
+        LevelFigure.beginner,
+      );
+    });
+
+    testWidgets('intermediate: streak and weeks to pro', (tester) async {
+      await showLevel(tester, view(AsyncData(withLevel(intermediate))));
+      expect(find.text('Your level · Intermediate'), findsOneWidget);
+      expect(
+        find.text('6 weeks in a row · 6 more weeks to Pro'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('after a break: says the comeback is faster', (tester) async {
+      await showLevel(tester, view(AsyncData(withLevel(proComeback))));
+      expect(
+        find.text(
+          '1 week in a row · 3 more weeks to Pro · '
+          'Coming back is twice as fast.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('pro: top level and the pro figure', (tester) async {
+      await showLevel(tester, view(AsyncData(withLevel(pro))));
+      expect(find.text('Your level · Pro'), findsOneWidget);
+      expect(
+        find.text('14 weeks in a row · Top level. Keep it going.'),
+        findsOneWidget,
+      );
+      expect(
+        tester.widget<AzmLevelFigure>(find.byType(AzmLevelFigure)).figure,
+        LevelFigure.pro,
+      );
+    });
+
+    testWidgets('the figure is one labelled image', (tester) async {
+      final handle = tester.ensureSemantics();
+      await showLevel(tester, view(AsyncData(withLevel(pro))));
+      expect(
+        find.bySemanticsLabel('Pro: a bodybuilder in a double-biceps pose'),
+        findsOneWidget,
+      );
+      handle.dispose();
+    });
+
+    testWidgets('Arabic', (tester) async {
+      await showLevel(
+        tester,
+        view(AsyncData(withLevel(proComeback))),
+        locale: const Locale('ar'),
+      );
+      expect(find.text('مستواك · متوسط'), findsOneWidget);
+      expect(
+        find.text(
+          'أسبوع واحد ورا بعض · فاضل 3 أسابيع على محترف · الرجوع أسرع بالنص.',
+        ),
+        findsOneWidget,
+      );
+    });
+  });
+
   screensUiTests({
+    'next_workout_intermediate': () =>
+        view(AsyncData(withLevel(intermediate)), onStart: () {}),
+    'next_workout_comeback': () => view(AsyncData(withLevel(proComeback))),
+    'next_workout_pro': () => view(AsyncData(withLevel(pro))),
     'next_workout': () => view(AsyncData(day1Waiting()), onStart: () {}),
     'next_workout_supersets': () => view(AsyncData(day2())),
     'next_workout_no_plan': () => view(const AsyncData(null)),

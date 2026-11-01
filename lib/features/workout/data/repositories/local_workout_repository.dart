@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:gym_tracker/core/network/result.dart';
+import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
@@ -21,6 +22,7 @@ class LocalWorkoutRepository implements WorkoutRepository {
   static const historyKey = 'workout.history';
   static const chosenDayKey = 'workout.chosen_day';
   static const draftKey = 'workout.draft';
+  static const levelKey = 'workout.level';
 
   /// Oldest sessions are dropped beyond this; suggestions only need the
   /// latest one per exercise.
@@ -82,6 +84,17 @@ class LocalWorkoutRepository implements WorkoutRepository {
         : _prefs.setInt(chosenDayKey, dayIndex),
     retries: 0,
   );
+
+  @override
+  Future<Result<Level>> loadBestLevel() => guard(
+    // Anything unexpected (another type, an unknown name) is a beginner.
+    () async => Level.fromName(_prefs.get(levelKey)?.toString()),
+    retries: 0,
+  );
+
+  @override
+  Future<Result<void>> saveBestLevel(Level level) =>
+      guard(() => _prefs.setString(levelKey, level.name), retries: 0);
 
   List<WorkoutSession> _readHistory() {
     final raw = _prefs.getString(historyKey);

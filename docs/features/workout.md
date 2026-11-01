@@ -10,7 +10,7 @@ exercise with last time's sets and a suggested weight (↑ increase, → keep,
 finished: if a day is skipped, the same workout waits and the screen says
 since when.
 
-Status: slice 2 of 3.
+Status: slice 2 of 3, plus levels.
 1. **Done:** plan, history, weight suggestions, next-workout screen, offline storage, choose the next day.
 2. **Done:** active workout: one-tap logging, edit/delete a set, rest timer (+15 s, skip), supersets, finish with summary and records. Saved after every change.
 3. Next: rest notification when the app is in the background, sync to Supabase (needs accounts), edit the plan and targets.
@@ -69,6 +69,25 @@ How each exercise moved since the member started (design: board 3.3b,
 - Unknown ids (old or crafted links) show "This exercise isn't in your
   plan"; never done: an empty state. History is capped at the last 200
   workouts (`LocalWorkoutRepository.maxHistory`).
+## Levels
+Shown on the home screen in a card under today's exercises: the level
+figure (`AzmLevelFigure`), "Your level · Beginner", the weeks in a row and
+what the next level needs. Worked out by itself from the history
+(`GetLevel`); the member never picks it.
+- A **week** runs Saturday → Friday and is **active** with 3+ finished
+  workouts.
+- **Up:** 4 active weeks in a row → intermediate (at least 12 workouts);
+  8 more → pro (about 3 months in all).
+- **Down:** a break (one or more finished weeks in a row that aren't
+  active) drops one level: pro → intermediate → beginner. The week in
+  progress never counts as a break.
+- **Comeback:** a level reached before comes back in half the weeks
+  (2 for intermediate, 4 for pro); the card says so.
+- The best level ever reached is stored (`workout.level`), so the comeback
+  stays fast after old history is trimmed. Unknown or hostile stored values
+  read as beginner.
+- The numbers are `GetLevel`'s constructor defaults (`workoutsPerWeek`,
+  `intermediateWeeks`, `proWeeks`): change them there and in this list.
 
 ## Architecture
 - Layered: `lib/features/workout/`
@@ -102,6 +121,7 @@ How each exercise moved since the member started (design: board 3.3b,
 | `workout_finished` | Finish confirmed | `day`, `sets`, `planned_sets`, `minutes`, `records` |
 | `progress_opened` | Progress screen opened | none |
 | `exercise_history_opened` | An exercise's history opened | none (the id comes from a link) |
+| `level_reached` | A new best level (once per level) | `level` (`intermediate` / `pro`) |
 
 ## Feature flags
 None. (`active_workout` was removed when the workout screen shipped.)
@@ -120,7 +140,12 @@ None. (`active_workout` was removed when the workout screen shipped.)
   `test/security/deep_link_test.dart` (`/progress`, crafted ids); the
   leg-day integration test ends on the squat's history.
 - Integration: `integration_test/app_test.dart`, first launch → template →
-  next workout → settings.
+  next workout → settings; leg day; a month of training → Intermediate.
+- Levels: `get_level_test.dart` (up, down, comeback, Saturday weeks, UTC),
+  repository (round trip, hostile stored values), controller (best level
+  saved), `next_workout_view_test.dart` (card texts in English and Arabic),
+  `widgets/level_card_test.dart` (`screenUiTests` for every level state),
+  `test/core/ui/azm_level_*_test.dart` (figure vs. the design).
 
 ## Decisions & edge cases
 - The template is the member's real plan (`plan_templates_test.dart` pins
@@ -142,3 +167,8 @@ None. (`active_workout` was removed when the workout screen shipped.)
 **Caption (English):** Pick a plan once. Every time you open the app, it shows today's workout and the weight to use. Skip a day and the workout waits for you.
 **Caption (Egyptian Arabic):** اختار خطتك مرة واحدة، وكل ما تفتح التطبيق هيقولك تمرين النهارده والوزن اللي تشيله. لو فوّت يوم، التمرين بيستناك.
 **Hashtags:** #flutter #buildinpublic #gym #fitness
+
+**Levels (third test):** a month of training → the home screen shows the
+intermediate figure.
+**Caption (English):** Train 3 times a week and your level climbs. Take a break and it drops, but coming back is twice as fast.
+**Caption (Egyptian Arabic):** اتمرّن 3 مرات في الأسبوع ومستواك يطلع. لو وقفت بينزل، بس الرجوع أسرع بالنص.

@@ -32,3 +32,9 @@ changed. `scripts/motion_reference.js` renders reference frames from
 `splash_animation.dc.html` (Chromium) into `test/core/ui/motion_reference/`,
 and `test/core/ui/azm_logo_reference_test.dart` fails if the Flutter frames
 drift from them. Re-run the script whenever this file changes.
+
+The level figures are ported in `lib/core/ui/azm_level_painter.dart`
+(`AzmLevelFigure`); `scripts/level_reference.js` renders `lv1`–`lv3` from
+`level_figures.dc.html` into `test/core/ui/level_reference/`, checked by
+`test/core/ui/azm_level_reference_test.dart`. The `pumpL` / `pumpR` classes
+have no keyframes in that file, so the figures are static.

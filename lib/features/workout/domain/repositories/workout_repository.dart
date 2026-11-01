@@ -1,4 +1,5 @@
 import 'package:gym_tracker/core/network/result.dart';
+import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
@@ -27,4 +28,9 @@ abstract interface class WorkoutRepository {
 
   /// Saves (or with null, discards) the workout in progress.
   Future<Result<void>> saveDraft(WorkoutDraft? draft);
+
+  /// The highest level ever reached: climbing back to it is faster.
+  Future<Result<Level>> loadBestLevel();
+
+  Future<Result<void>> saveBestLevel(Level level);
 }

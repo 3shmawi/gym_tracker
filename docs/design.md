@@ -101,6 +101,18 @@ Frames are checked against the .dc.html rendered in Chromium
   "جاري التحميل" label, the parts are excluded.
 - Never mirrored in Arabic (it is the logo).
 
+## Level figures
+The beginner / intermediate / pro figures come from
+`docs/design/motion/level_figures.dc.html` (symbols `lv1`, `lv2`, `lv3`,
+60×70 box), ported 1:1 in `AzmLevelPainter` (`lib/core/ui/azm_level_painter.dart`,
+a part of `azm_logo_painter.dart`: `lv2` and `lv3` are the logo's heavy-lift
+and flex figures, painted from the same shapes). `AzmLevelFigure` (exported
+from `app_ui.dart`) is static, transparent, never mirrored, one image to
+screen readers with the design's description, and draws its white lines dark
+on light backgrounds (`brightness:`). `test/core/ui/azm_level_reference_test.dart`
+compares it with Chromium renders of the .dc.html (`scripts/level_reference.js`).
+The home screen's `LevelCard` shows it at `AppDimens.levelFigure` (48).
+
 ## Screen checklist (each screen in the design → code)
 - Matches the design at 375×812, and still works on a small phone (320 wide),
   a large phone and a tablet.

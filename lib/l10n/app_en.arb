@@ -286,6 +286,47 @@
     }
   },
   "workoutSupersetLabel": "Superset: no rest between the two",
+  "levelTitle": "Your level",
+  "levelBeginner": "Beginner",
+  "levelIntermediate": "Intermediate",
+  "levelPro": "Pro",
+  "levelStreak": "{weeks, plural, =0{No weeks in a row yet} =1{1 week in a row} other{{weeks} weeks in a row}}",
+  "@levelStreak": {
+    "description": "Active training weeks in a row (a week with enough workouts).",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "levelNext": "{weeks, plural, =1{1 more week to {level}} other{{weeks} more weeks to {level}}}",
+  "@levelNext": {
+    "description": "Active weeks in a row still needed for the next level.",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      },
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "levelTop": "Top level. Keep it going.",
+  "levelWeekRule": "A week counts with {count} workouts or more.",
+  "@levelWeekRule": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "levelFigureBeginner": "Beginner: a figure lifting a light bar",
+  "@levelFigureBeginner": {
+    "description": "Screen-reader description of the beginner level figure (from the design)."
+  },
+  "levelFigureIntermediate": "Intermediate: a fitter figure with broader shoulders pressing a heavy bar",
+  "levelFigurePro": "Pro: a bodybuilder in a double-biceps pose",
+  "levelComeback": "Coming back is twice as fast.",
   "progressTitle": "Progress",
   "progressEmpty": "Finish a workout to see your progress here.",
   "progressNoPlan": "Pick a plan first, then your progress shows up here.",

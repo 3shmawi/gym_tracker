@@ -5,11 +5,15 @@ import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/splash/animated_splash.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_view.dart';
+import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
+import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_view.dart';
 import 'package:gym_tracker/features/workout/presentation/exercise_history_view.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_page.dart';
 import 'package:gym_tracker/features/workout/presentation/progress_view.dart';
 import 'package:gym_tracker/features/workout/presentation/widgets/exercise_preview_row.dart';
+import 'package:gym_tracker/features/workout/presentation/widgets/level_card.dart';
 import 'package:gym_tracker/main.dart' as app;
 import 'package:integration_test/integration_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -132,6 +136,58 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ExerciseHistoryView), findsOneWidget);
     expect(find.text('Today'), findsOneWidget);
+    await beat(tester, 2000);
+  });
+
+  testWidgets('a month of training: the home screen shows Intermediate', (
+    tester,
+  ) async {
+    await freshInstall(tester);
+    // Four weeks in a row with three workouts each, the last one a week ago.
+    final repo = LocalWorkoutRepository(await SharedPreferences.getInstance());
+    await repo.savePlan(PlanTemplates.fiveDaySplit);
+    // Weeks run Saturday → Friday: train Sat, Sun and Mon of each week.
+    final today = DateTime.now();
+    final saturday = DateTime(
+      today.year,
+      today.month,
+      today.day - (today.weekday - DateTime.saturday) % 7,
+      18,
+    );
+    for (var week = 4; week >= 1; week--) {
+      for (var d = 0; d < 3; d++) {
+        await repo.saveSession(
+          WorkoutSession(
+            dayIndex: d,
+            finishedAt: DateTime(
+              saturday.year,
+              saturday.month,
+              saturday.day - week * 7 + d,
+              18,
+            ),
+            sets: const [],
+          ),
+        );
+      }
+    }
+
+    await app.main();
+    await tester.pumpAndSettle();
+    await beat(tester);
+
+    // The level card sits under today's exercises.
+    await tester.scrollUntilVisible(
+      find.byType(LevelCard),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(AzmLevelFigure), findsOneWidget);
+    expect(
+      tester.widget<AzmLevelFigure>(find.byType(AzmLevelFigure)).figure,
+      LevelFigure.intermediate,
+    );
+    expect(find.text('Your level · Intermediate'), findsOneWidget);
     await beat(tester, 2000);
   });
 }
