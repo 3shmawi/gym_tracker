@@ -64,7 +64,7 @@
   "workoutSkipRest": "تخطّى الراحة",
   "workoutAllDone": "خلّصت كل المجموعات",
   "workoutFinish": "خلّص التمرين",
-  "workoutFinishAnyway": "خلّص برضه",
+  "workoutFinishAnyway": "إنهاء التمرين دلوقتي",
   "workoutKeepGoing": "كمّل",
   "workoutDoneTitle": "عاش! خلّصت {day}",
   "workoutSetsLeft": "فاضل {count} مجموعات",
