@@ -372,5 +372,8 @@
   "progressToday": "Today",
   "progressNeverDone": "Do this exercise in a workout and every time shows up here.",
   "progressNotInPlan": "This exercise isn't in your plan.",
-  "progressOpenHint": "Shows every time you did it"
+  "progressOpenHint": "Shows every time you did it",
+  "todayAgainTitle": "You already trained today",
+  "todayAgainBody": "Start another workout anyway? It counts as the next day of your plan.",
+  "todayAgainStart": "Start another workout"
 }

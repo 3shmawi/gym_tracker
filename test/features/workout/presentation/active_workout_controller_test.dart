@@ -87,14 +87,17 @@ void main() {
     expect(ok(await repo.loadDraft())!.sets, hasLength(1));
   });
 
-  test('the second exercise is prefilled with the suggestion', () async {
+  test("the second exercise starts at last time's second set", () async {
     final c = await start(0);
     for (var i = 0; i < 3; i++) {
       await ctl(c).logSet(weight: 22.5, reps: 12);
     }
     final cursor = state(c).cursor!;
     expect(cursor.exerciseIndex, 1);
-    expect(cursor.weight, 52.5, reason: '50×12 ×3 last time → 52.5');
+    // Last time 50×12 ×3: the home screen suggests 52.5 (↑), the dock
+    // starts at 50 and the member adds the step if they want it.
+    expect(cursor.weight, 50);
+    expect(state(c).previews[1].suggestion.weight, 52.5);
   });
 
   test('+15 s and skip change the rest', () async {

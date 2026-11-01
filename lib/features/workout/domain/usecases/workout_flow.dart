@@ -1,4 +1,3 @@
-import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:meta/meta.dart';
@@ -21,8 +20,9 @@ class SetCursor {
   /// 1-based.
   final int setNumber;
 
-  /// Prefilled: today's last set of this exercise, else the suggestion,
-  /// else 0 (first time: the member picks).
+  /// Prefilled: today's last set of this exercise; else last time's second
+  /// set (its first when there was one), a weight to adjust from rather
+  /// than the heaviest; else 0 (first time: the member picks).
   final double weight;
   final int reps;
 
@@ -69,11 +69,23 @@ class WorkoutFlow {
           if (set <= day.exercises[i].targetSets) (i, set),
   ];
 
+  /// The first set's weight today from last time's sets: the second set
+  /// (15, 20, 25 → 20), or the only one; 0 with none. Sets with 0 reps
+  /// (logged by mistake) don't count.
+  static double startWeight(List<LoggedSet> lastSets) {
+    final done = [
+      for (final s in lastSets)
+        if (s.reps > 0) s,
+    ];
+    if (done.isEmpty) return 0;
+    return done.length >= 2 ? done[1].weight : done.first.weight;
+  }
+
   /// The next set to do, or null when every planned set is logged.
   SetCursor? next(
     WorkoutDay day,
     List<LoggedSet> logged,
-    Map<String, WeightSuggestion> suggestions,
+    Map<String, List<LoggedSet>> lastTime,
   ) {
     final count = <String, int>{};
     for (final s in logged) {
@@ -92,13 +104,12 @@ class WorkoutFlow {
         for (final s in logged)
           if (s.exerciseId == exercise.id) s,
       ];
-      final suggestion = suggestions[exercise.id];
       return SetCursor(
         exerciseIndex: index,
         setNumber: setNumber,
         weight: today.isNotEmpty
             ? today.last.weight
-            : (suggestion?.weight ?? 0),
+            : startWeight(lastTime[exercise.id] ?? const []),
         reps: today.isNotEmpty ? today.last.reps : exercise.targetReps,
         restAfter: index == lastInRound ? exercise.restSeconds : 0,
         supersetPartner: group.length > 1

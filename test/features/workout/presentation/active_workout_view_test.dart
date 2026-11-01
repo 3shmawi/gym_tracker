@@ -52,7 +52,7 @@ ActiveWorkout workout(int day, List<LoggedSet> sets, {DateTime? restEndsAt}) {
     draft: draft,
     previews: next.exercises,
     cursor: const WorkoutFlow().next(next.day, sets, {
-      for (final p in next.exercises) p.exercise.id: p.suggestion,
+      for (final p in next.exercises) p.exercise.id: p.lastSets,
     }),
     summary: const SummarizeWorkout()(
       sets,

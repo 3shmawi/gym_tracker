@@ -94,7 +94,7 @@ class ActiveWorkoutController extends AsyncNotifier<ActiveWorkout?> {
       draft: draft,
       previews: next.exercises,
       cursor: _flow.next(next.day, draft.sets, {
-        for (final p in next.exercises) p.exercise.id: p.suggestion,
+        for (final p in next.exercises) p.exercise.id: p.lastSets,
       }),
       summary: _summarize(
         draft.sets,
