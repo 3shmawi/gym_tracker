@@ -39,6 +39,24 @@ void main() {
       expect(plain('Best: 52.5×12 · 4 workouts'), findsOneWidget);
     });
 
+    testWidgets('shows the workout it belongs to, a repeated day once', (
+      tester,
+    ) async {
+      await tester.pumpApp(
+        view(AsyncData(exerciseHistory('wide_lat_pulldown'))),
+      );
+      expect(find.text('Chest & Back · Days 1, 4'), findsOneWidget);
+    });
+
+    testWidgets('the workout it belongs to, in Arabic', (tester) async {
+      await tester.pumpApp(
+        view(AsyncData(exerciseHistory('wide_lat_pulldown'))),
+        locale: const Locale('ar'),
+      );
+      // Arabic comma, so the day numbers read in order right to left.
+      expect(find.text('بنش وضهر · الأيام 1، 4'), findsOneWidget);
+    });
+
     testWidgets('every time, newest first, with the change (design 3.3b)', (
       tester,
     ) async {

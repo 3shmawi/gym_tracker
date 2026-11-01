@@ -50,12 +50,23 @@ class ExerciseProgress {
       first == null ? null : latest!.topWeight - first!.topWeight;
 }
 
+/// A plan day an exercise is on: "Day 1 · Chest & Back".
+typedef PlanDayRef = ({int number, LocalizedName name});
+
 /// Every time one exercise was done, newest first, and the progress.
 @immutable
 class ExerciseHistory {
-  const new({required this.progress, required this.entries});
+  const new({
+    required this.progress,
+    required this.entries,
+    this.days = const [],
+  });
 
   final ExerciseProgress progress;
+
+  /// The plan days it is on, in plan order (usually one; an exercise can be
+  /// on more than one day).
+  final List<PlanDayRef> days;
 
   /// Newest first.
   final List<HistoryEntry> entries;

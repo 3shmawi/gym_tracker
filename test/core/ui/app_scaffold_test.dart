@@ -296,4 +296,66 @@ void main() {
     );
     expect(settings.fontPackage, 'cupertino_icons');
   });
+
+  // Regression: premium glass on every card in a list used too much memory
+  // and iOS killed the app while scrolling (Sentry GYM_TRACKER-12).
+  testWidgets('cards in a scrolling list use the lightweight glass on iOS', (
+    tester,
+  ) async {
+    await _pumpGlass(
+      tester,
+      AppScaffold(
+        body: ListView(
+          children: [
+            for (var i = 0; i < 20; i++) AppCard(child: Text('card $i')),
+          ],
+        ),
+      ),
+      platform: TargetPlatform.iOS,
+    );
+    final cards = tester.widgetList<GlassContainer>(
+      find.descendant(
+        of: find.byType(AppCard),
+        matching: find.byType(GlassContainer),
+      ),
+    );
+    expect(cards, isNotEmpty);
+    for (final card in cards) {
+      expect(card.quality, GlassQuality.standard);
+    }
+  });
+
+  // Regression: one glass card holding a whole history list grew taller than
+  // the screen and iOS killed the app while scrolling it (GYM_TRACKER-12).
+  testWidgets('a tall card is drawn flat, without glass, on iOS', (
+    tester,
+  ) async {
+    await _pumpGlass(
+      tester,
+      AppScaffold(
+        body: ListView(
+          children: [
+            AppCard(
+              key: const Key('tall'),
+              tall: true,
+              child: Column(
+                children: [for (var i = 0; i < 60; i++) Text('session $i')],
+              ),
+            ),
+          ],
+        ),
+      ),
+      platform: TargetPlatform.iOS,
+    );
+    expect(tester.takeException(), isNull);
+    final card = find.byKey(const Key('tall'));
+    expect(
+      find.descendant(of: card, matching: find.byType(AdaptiveGlass)),
+      findsNothing,
+    );
+    final fill = tester.widget<DecoratedBox>(
+      find.descendant(of: card, matching: find.byType(DecoratedBox)).first,
+    );
+    expect(fill.decoration, isA<ShapeDecoration>());
+  });
 }

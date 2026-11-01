@@ -93,7 +93,9 @@ How each exercise moved since the member started (design: board 3.3b,
   workouts, and the gain badge (↑ +7.5 / ↓ −2.5 / Same). Not done yet: says
   so. Tap a row for its history.
 - **Exercise history** (`/progress/<exerciseId>`, also by tapping an
-  exercise on the home screen): "Since <first date>", first → latest, the
+  exercise on the home screen): the workout it belongs to as a chip
+  ("Chest & Back · Days 1, 4" — a day the plan repeats shows once, Arabic
+  uses "،" so the numbers read in order); "Since <first date>", first → latest, the
   best set and the number of workouts; then every time, newest first
   ("Today", "Tue, Oct 27"), its sets and the change from the time before.
 - Matched by exercise id, so an exercise on two plan days (or renamed)

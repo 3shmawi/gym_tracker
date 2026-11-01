@@ -7,6 +7,7 @@ import 'package:gym_tracker/core/theme/app_text_styles.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
 import 'package:gym_tracker/features/workout/domain/entities/exercise_history.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/presentation/progress_format.dart';
 import 'package:gym_tracker/features/workout/presentation/workout_format.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
@@ -74,6 +75,23 @@ class _History extends StatelessWidget {
       padding: EdgeInsets.all(AppDimens.md),
       children: [
         Text(history.exercise.name.other(lang), style: secondary),
+        if (history.days.isNotEmpty) ...[
+          SizedBox(height: AppDimens.sm),
+          // The workout it belongs to: "Chest & Back · Days 1, 4".
+          Wrap(
+            spacing: AppDimens.sm,
+            runSpacing: AppDimens.xs,
+            children: [
+              for (final MapEntry(key: name, value: numbers) in _byName(
+                history.days,
+              ).entries)
+                AppBadge(
+                  label: _dayLabel(l10n, name.of(lang), numbers),
+                  tone: AppTone.neutral,
+                ),
+            ],
+          ),
+        ],
         SizedBox(height: AppDimens.sm2),
         AppCard(
           key: const Key('progress_summary'),
@@ -120,6 +138,8 @@ class _History extends StatelessWidget {
         ),
         SizedBox(height: AppDimens.md),
         AppCard(
+          key: const Key('history_list'),
+          tall: true,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -137,6 +157,23 @@ class _History extends StatelessWidget {
       ],
     );
   }
+}
+
+/// "Chest & Back · Days 1, 4". Arabic uses the Arabic comma, so the numbers
+/// read in order right to left.
+String _dayLabel(AppLocalizations l10n, String name, List<int> numbers) {
+  final list = numbers.join(l10n.localeName == 'ar' ? '، ' : ', ');
+  return '$name · ${l10n.progressPlanDays(numbers.length, list)}';
+}
+
+/// Day numbers per day name, in plan order: a plan that repeats a day
+/// (Chest & Back on days 1 and 4) shows it once.
+Map<LocalizedName, List<int>> _byName(List<PlanDayRef> days) {
+  final byName = <LocalizedName, List<int>>{};
+  for (final d in days) {
+    (byName[d.name] ??= []).add(d.number);
+  }
+  return byName;
 }
 
 class _EntryRow extends StatelessWidget {

@@ -368,6 +368,18 @@
       }
     }
   },
+  "progressPlanDays": "{count, plural, =1{Day {days}} other{Days {days}}}",
+  "@progressPlanDays": {
+    "description": "Which plan days an exercise is on, after the day name: Chest & Back · Days 1, 4",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "days": {
+        "type": "String"
+      }
+    }
+  },
   "progressHistory": "History",
   "progressToday": "Today",
   "progressNeverDone": "Do this exercise in a workout and every time shows up here.",

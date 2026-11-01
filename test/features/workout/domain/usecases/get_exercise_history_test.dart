@@ -43,6 +43,15 @@ void main() {
     expect(h.entries.first.sets.map((s) => s.reps), [12, 10]);
   });
 
+  test('the plan days it is on, in plan order', () {
+    final press = get(_plan, history, _press)!;
+    expect(press.days.map((d) => d.number), [1, 4]);
+    expect(press.days.first.name.en, 'Chest & Back');
+    final squat = get(_plan, history, 'barbell_squat')!;
+    expect(squat.days.map((d) => d.number), [3]);
+    expect(squat.days.single.name.ar, 'رجل');
+  });
+
   test('sets with 0 reps are left out', () {
     final h = get(_plan, history, _press)!;
     expect(h.entries[1].sets, hasLength(1));

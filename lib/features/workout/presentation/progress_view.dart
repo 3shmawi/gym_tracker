@@ -44,6 +44,7 @@ class ProgressView extends StatelessWidget {
           padding: EdgeInsets.all(AppDimens.md),
           children: [
             AppCard(
+              tall: true,
               child: Column(
                 children: [
                   for (final (i, p) in all.indexed) ...[
