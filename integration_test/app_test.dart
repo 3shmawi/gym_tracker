@@ -57,10 +57,16 @@ void main() {
     await beat(tester);
 
     // Tomorrow is legs: choose day 3.
-    await tester.tap(find.byKey(const Key('change_day_button')));
+    debugPrint(
+      'home pages: ${find.byType(NextWorkoutPage).evaluate().length}, '
+      'settings: ${find.byType(SettingsView).evaluate().length}, '
+      'change day buttons: '
+      '${find.byKey(const Key('change_day_button')).evaluate().length}',
+    );
+    await tester.tap(find.byKey(const Key('change_day_button')).hitTestable());
     await tester.pumpAndSettle();
     await beat(tester);
-    await tester.tap(find.byKey(const Key('choose_day_2')));
+    await tester.tap(find.byKey(const Key('choose_day_2')).hitTestable());
     await tester.pumpAndSettle();
     await beat(tester, 1200);
 
