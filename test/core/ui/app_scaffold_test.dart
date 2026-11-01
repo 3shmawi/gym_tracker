@@ -103,6 +103,24 @@ void main() {
         }
       }
 
+      // The start button hugs the start edge, the actions the end edge, and
+      // the title is really shown between them.
+      final pad = AppDimens.md;
+      final startRect = rects['start']!;
+      final endRect = rects['a2']!;
+      final ltrBar = direction == TextDirection.ltr;
+      expect(
+        ltrBar ? startRect.left : width - startRect.right,
+        closeTo(pad, 1),
+        reason: 'start button at the start edge',
+      );
+      expect(
+        ltrBar ? width - endRect.right : endRect.left,
+        closeTo(pad, 1),
+        reason: 'actions at the end edge',
+      );
+      expect(rects['title']!.width, greaterThan(100), reason: 'title shown');
+
       // The start button is at the start edge, the actions at the end.
       final ltr = direction == TextDirection.ltr;
       final start = rects['start']!;
