@@ -25,6 +25,13 @@ A manual run (Actions → Release → Run workflow) can force patch/minor/major.
    GitHub-hosted emulator has no GPU and went offline at the end of every
    app run, losing the results. Run them on a phone or local emulator when
    a change is Android-specific.
+   The iOS integration job is the slow one, so it runs only when the PR
+   changes something the app is built from (`lib/`, `ios/`,
+   `integration_test/`, `assets/`, `env/`, pubspec, `.fvmrc`, `ci.yml`);
+   otherwise it is skipped (a skipped job counts as passed). It caches Swift
+   packages, DerivedData and `build/ios` (`actions/cache` v6.1.0, checked
+   2026-11-01; saved after green runs only), so later builds are
+   incremental.
 2. **Android** — signed release AAB (prod) → Play track `PLAY_TRACK`
    (default `internal`).
 3. **iOS** — signing files fetched from App Store Connect with the API key →

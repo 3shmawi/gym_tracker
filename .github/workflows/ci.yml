@@ -118,11 +118,40 @@ jobs:
           supabase db start
           supabase test db
 
+  # Whether the PR touches anything the app is built from. The iOS
+  # integration job is the slow one (macOS runner, Xcode build), so a PR that
+  # only changes docs, scripts or other workflows skips it. A skipped job
+  # counts as passed for required checks.
+  changes:
+    name: What changed
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      app: ${{ steps.diff.outputs.app }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - id: diff
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if git diff --name-only "origin/$BASE_REF...HEAD" \
+            | grep -qE '^(lib/|ios/|integration_test/|assets/|env/|l10n\.yaml$|pubspec\.(yaml|lock)$|\.fvmrc$|\.github/workflows/ci\.yml$)'; then
+            echo "app=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "app=false" >> "$GITHUB_OUTPUT"
+            echo "No app changes: the iOS integration tests are skipped." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   # Every integration test, on an iPhone simulator with full Liquid Glass
   # (Metal), like a real phone. Same runner as the demo videos.
   integration-ios:
     name: Integration tests (iOS simulator)
-    if: github.event_name == 'pull_request'
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.app == 'true'
     runs-on: macos-latest
     timeout-minutes: 75
     steps:
@@ -143,6 +172,20 @@ jobs:
         run: |
           flutter pub get
           flutter gen-l10n
+
+      # The Xcode build is most of this job's time: keep Swift packages,
+      # DerivedData and Flutter's iOS build between runs (actions/cache saves
+      # only after a green run). Keyed on everything that changes them;
+      # a partial match still makes the build incremental.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/Developer/Xcode/DerivedData
+            build/ios
+          key: ios-build-${{ runner.os }}-${{ steps.fvm.outputs.version }}-${{ hashFiles('pubspec.lock', 'ios/**/Package.resolved', 'ios/Podfile.lock', 'ios/**/project.pbxproj') }}
+          restore-keys: |
+            ios-build-${{ runner.os }}-${{ steps.fvm.outputs.version }}-
 
       - name: Run integration tests
         run: |
