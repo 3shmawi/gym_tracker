@@ -342,6 +342,9 @@ class _Track {
 
 const _white = Color(0xFFFFFFFF);
 
+/// The dark text colour (#0C1610), for lines on light backgrounds.
+const _darkInk = Color(0xFF0C1610);
+
 /// An SVG linearGradient in objectBoundingBox units.
 enum _Grad {
   glass(
@@ -361,6 +364,18 @@ enum _Grad {
       Color.fromRGBO(255, 255, 255, .95),
       Color.fromRGBO(255, 255, 255, .15),
       Color.fromRGBO(255, 255, 255, .55),
+    ],
+    [0, .5, 1],
+  ),
+
+  /// [glass] strokes (the arms) for light backgrounds.
+  glassLight(
+    Offset.zero,
+    Offset(.4, 1),
+    [
+      Color.fromRGBO(0x0C, 0x16, 0x10, .4),
+      Color.fromRGBO(0x0C, 0x16, 0x10, .25),
+      Color.fromRGBO(0x0C, 0x16, 0x10, .18),
     ],
     [0, .5, 1],
   ),
@@ -423,12 +438,25 @@ class _Ink {
   final _Grad? grad;
   final Color? color;
 
+  /// On a light background ([light]) every white line is drawn in the dark
+  /// text colour instead: the glass edges, the arms (glass strokes) and
+  /// the muscle details. White glass fills stay, now outlined.
   void apply(Paint paint, Rect box, {required bool light}) {
+    final stroke = paint.style == PaintingStyle.stroke;
     if (grad != null) {
-      final g = light && grad == _Grad.edge ? _Grad.edgeLight : grad!;
+      final g = !light
+          ? grad!
+          : grad == _Grad.edge
+          ? _Grad.edgeLight
+          : grad == _Grad.glass && stroke
+          ? _Grad.glassLight
+          : grad!;
       paint.shader = g.shader(box);
     } else {
-      paint.color = color!;
+      final c = color!;
+      paint.color = light && c.r == 1 && c.g == 1 && c.b == 1
+          ? _darkInk.withValues(alpha: c.a)
+          : c;
     }
   }
 }

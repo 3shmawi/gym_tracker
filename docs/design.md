@@ -85,7 +85,7 @@ Frames are checked against the .dc.html rendered in Chromium
   never waits longer than start-up; 250 ms cross-fade into the app.
 - **Loading:** `LoadingView` loops it (no spinner): `LoadingSize.inline`
   (48), `card` (96), `screen` (166, default). Transparent background; in the light theme the
-  glass edges are drawn dark (`#0C1610`) instead of white so the figures
+  white lines (glass edges, arms, muscle details) are drawn dark (`#0C1610`) instead so the figures
   show (`AzmLogoAnimation(brightness:)`), everything else is unchanged.
 - Reduce Motion: the static logo. Screen readers: one "Loading" /
   "جاري التحميل" label, the parts are excluded.
