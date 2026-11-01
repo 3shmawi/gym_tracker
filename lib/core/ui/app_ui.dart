@@ -279,7 +279,12 @@ class AppIconButton extends StatelessWidget {
         child: ExcludeSemantics(
           child: ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            // Shrink-wrapped: a plain Center grows to the whole slot it gets
+            // (the bar's leading slot is as wide as the bar), which pushed
+            // the button to the middle and left the title no room.
             child: Center(
+              widthFactor: 1,
+              heightFactor: 1,
               child: AppUi.isLite(context)
                   ? _LiteIconButton(icon: icon, onPressed: onPressed)
                   : GlassButton(
