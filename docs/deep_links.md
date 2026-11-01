@@ -6,6 +6,7 @@ also a deep link.
 | Path | Screen |
 |---|---|
 | `/` | Next workout (home): the workout waiting for the member |
+| `/workout` | The workout in progress; with none, an empty state with a way home |
 | `/settings` | Settings |
 
 ## Custom scheme (works now)

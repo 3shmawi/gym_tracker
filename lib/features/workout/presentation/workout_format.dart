@@ -32,6 +32,10 @@ abstract final class WorkoutFormat {
     return sets.map((s) => '${weight(s.weight)}×${s.reps}').join(', ');
   }
 
+  /// "52.5 × 12", isolated so it reads the same inside Arabic text.
+  static String weightTimesReps(double kg, int reps) =>
+      ltr('${weight(kg)} × $reps');
+
   /// "3×12": sets × reps.
   static String target(int sets, int reps) => '$sets×$reps';
 }

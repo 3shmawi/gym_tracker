@@ -20,8 +20,4 @@ abstract final class FeatureFlags {
 /// All feature flag keys used by the app.
 abstract final class Flags {
   static const example = 'example_flag';
-
-  /// The active-workout screen (logging sets). Off until it ships; the
-  /// Start button on the next-workout screen is hidden while off.
-  static const activeWorkout = 'active_workout';
 }

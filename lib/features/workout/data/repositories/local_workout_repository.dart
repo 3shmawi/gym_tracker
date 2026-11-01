@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:gym_tracker/core/network/result.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/domain/repositories/workout_repository.dart';
@@ -19,6 +20,7 @@ class LocalWorkoutRepository implements WorkoutRepository {
   static const planKey = 'workout.plan';
   static const historyKey = 'workout.history';
   static const chosenDayKey = 'workout.chosen_day';
+  static const draftKey = 'workout.draft';
 
   /// Oldest sessions are dropped beyond this; suggestions only need the
   /// latest one per exercise.
@@ -53,6 +55,21 @@ class LocalWorkoutRepository implements WorkoutRepository {
     );
     await _prefs.remove(chosenDayKey);
   }, retries: 0);
+
+  @override
+  Future<Result<WorkoutDraft?>> loadDraft() => guard(() async {
+    final raw = _prefs.getString(draftKey);
+    if (raw == null) return null;
+    return _parse<WorkoutDraft>(() => WorkoutDraft.fromJson(_decodeMap(raw)));
+  }, retries: 0);
+
+  @override
+  Future<Result<void>> saveDraft(WorkoutDraft? draft) => guard(
+    () => draft == null
+        ? _prefs.remove(draftKey)
+        : _prefs.setString(draftKey, jsonEncode(draft.toJson())),
+    retries: 0,
+  );
 
   @override
   Future<Result<int?>> loadChosenDay() =>

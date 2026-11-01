@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/domain/repositories/workout_repository.dart';
@@ -36,6 +37,12 @@ class _FlakyRepo implements WorkoutRepository {
 
   @override
   Future<Result<int?>> loadChosenDay() => _inner.loadChosenDay();
+
+  @override
+  Future<Result<WorkoutDraft?>> loadDraft() => _inner.loadDraft();
+
+  @override
+  Future<Result<void>> saveDraft(WorkoutDraft? d) => _inner.saveDraft(d);
 
   @override
   Future<Result<void>> saveChosenDay(int? d) => _inner.saveChosenDay(d);

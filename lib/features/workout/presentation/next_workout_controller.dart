@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
-import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
 import 'package:gym_tracker/features/workout/domain/repositories/workout_repository.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/get_next_workout.dart';
 
@@ -17,11 +17,6 @@ final workoutRepositoryProvider = Provider<WorkoutRepository>(
 
 /// "Now", injectable so tests can pin dates (missed-day logic).
 final clockProvider = Provider<DateTime Function()>((ref) => DateTime.now);
-
-/// Whether the Start button leads to the active workout yet.
-final activeWorkoutEnabledProvider = FutureProvider<bool>(
-  (ref) => FeatureFlags.isEnabled(Flags.activeWorkout),
-);
 
 /// No automatic retry: the repository already retries with backoff, and
 /// the error screen has a Try again button.
@@ -79,6 +74,24 @@ class NextWorkoutController extends AsyncNotifier<NextWorkout?> {
       unawaited(Analytics.capture('next_day_chosen', {'day': dayIndex + 1}));
       return await build();
     });
+  }
+
+  /// Starts the shown workout (or resumes one in progress). Returns false
+  /// when it could not be saved.
+  Future<bool> startWorkout() async {
+    final next = state.value;
+    if (next == null) return false;
+    final existing = await _repo.loadDraft();
+    if (existing case Success(value: final _?)) return true;
+    final saved = await _repo.saveDraft(
+      WorkoutDraft(
+        dayIndex: next.dayIndex,
+        startedAt: ref.read(clockProvider)(),
+      ),
+    );
+    if (saved is Failed<void>) return false;
+    unawaited(Analytics.capture('workout_started', {'day': next.dayIndex + 1}));
+    return true;
   }
 
   static T _unwrap<T>(Result<T> result) => switch (result) {

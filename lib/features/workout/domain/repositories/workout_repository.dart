@@ -1,4 +1,5 @@
 import 'package:gym_tracker/core/network/result.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 
@@ -20,4 +21,10 @@ abstract interface class WorkoutRepository {
   Future<Result<int?>> loadChosenDay();
 
   Future<Result<void>> saveChosenDay(int? dayIndex);
+
+  /// The workout in progress, or null.
+  Future<Result<WorkoutDraft?>> loadDraft();
+
+  /// Saves (or with null, discards) the workout in progress.
+  Future<Result<void>> saveDraft(WorkoutDraft? draft);
 }

@@ -5,7 +5,11 @@ import 'package:gym_tracker/core/router/app_router.dart';
 import 'package:gym_tracker/core/router/not_found_page.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
+import 'package:gym_tracker/features/settings/data/repositories/shared_prefs_settings_repository.dart';
+import 'package:gym_tracker/features/settings/presentation/settings_controller.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
+import 'package:gym_tracker/features/workout/presentation/active_workout_page.dart';
+import 'package:gym_tracker/features/workout/presentation/active_workout_view.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_page.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
@@ -27,7 +31,9 @@ void main() {
           workoutRepositoryProvider.overrideWithValue(
             LocalWorkoutRepository(prefs),
           ),
-          activeWorkoutEnabledProvider.overrideWith((ref) => false),
+          settingsRepositoryProvider.overrideWithValue(
+            SharedPrefsSettingsRepository(prefs),
+          ),
         ],
         child: AppUi.testWrap(
           AppScreenScale(
@@ -66,5 +72,33 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(NextWorkoutPage), findsOneWidget);
+  });
+
+  testWidgets('/workout with no workout in progress is safe', (tester) async {
+    await pumpRouter(tester);
+    for (final path in [
+      '/workout',
+      '/workout?day=999',
+      '/workout?day=-1&sets=%3Cscript%3E',
+      '/workout/../settings',
+    ]) {
+      appRouter.go(path);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: path);
+      if (path.startsWith('/workout?') || path == '/workout') {
+        expect(find.byType(ActiveWorkoutPage), findsOneWidget, reason: path);
+        expect(find.byKey(const Key('workout_go_home')), findsOneWidget);
+      }
+    }
+  });
+
+  testWidgets('leaving an empty /workout goes home', (tester) async {
+    await pumpRouter(tester);
+    appRouter.go('/workout');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('workout_go_home')));
+    await tester.pumpAndSettle();
+    expect(find.byType(NextWorkoutPage), findsOneWidget);
+    expect(find.byType(ActiveWorkoutView), findsNothing);
   });
 }

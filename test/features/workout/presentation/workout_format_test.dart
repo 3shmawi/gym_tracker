@@ -41,4 +41,8 @@ void main() {
   test('ltr isolates numbers for Arabic text', () {
     expect(WorkoutFormat.ltr('3×12'), '\u20663×12\u2069');
   });
+
+  test('weight × reps is one isolated unit', () {
+    expect(WorkoutFormat.weightTimesReps(52.5, 12), '\u206652.5 × 12\u2069');
+  });
 }
