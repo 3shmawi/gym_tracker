@@ -40,6 +40,11 @@ would be printed in full by any tool that echoes it in an error.
   passed to `./scripts/mask_secrets.sh` right after it's written, before any
   tool reads it.
 - Never `set -x`, `curl -v` or "print the config to debug" in CI.
+- Env files are checked by `./scripts/check_env.sh`, which prints key
+  **names** only (empty / wrong kind), never values.
+- `POSTHOG_PERSONAL_API_KEY` (scope `project:read`) stays in
+  `~/.app-secrets/shared.env` on your Mac; it is never uploaded to CI or put
+  in `env/*.json`. Only the project key (`phc_…`, publishable) goes there.
 - A secret's value must not be a common word: GitHub stars out that text
   everywhere in every log. That's why new Android keystores use the alias
   `<repo>-upload`, not `upload` (which turned "Keep the AAB for a manual

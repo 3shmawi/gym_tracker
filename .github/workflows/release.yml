@@ -116,7 +116,8 @@ jobs:
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          if [ -n "$ENV_PROD_JSON" ]; then printf '%s' "$ENV_PROD_JSON" > env/prod.json; else cp env/example.json env/prod.json; fi
+          if [ -n "$ENV_PROD_JSON" ]; then printf '%s' "$ENV_PROD_JSON" > env/prod.json; else echo "::warning::ENV_PROD_JSON secret not set — building with empty keys (no analytics, crash reports or backend). Run tool/setup_secrets.sh"; cp env/example.json env/prod.json; fi
+          ./scripts/check_env.sh env/prod.json
           echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
           {
             echo "storeFile=upload-keystore.jks"
@@ -243,7 +244,8 @@ jobs:
         env:
           ENV_PROD_JSON: ${{ secrets.ENV_PROD_JSON }}
         run: |
-          if [ -n "$ENV_PROD_JSON" ]; then printf '%s' "$ENV_PROD_JSON" > env/prod.json; else cp env/example.json env/prod.json; fi
+          if [ -n "$ENV_PROD_JSON" ]; then printf '%s' "$ENV_PROD_JSON" > env/prod.json; else echo "::warning::ENV_PROD_JSON secret not set — building with empty keys (no analytics, crash reports or backend). Run tool/setup_secrets.sh"; cp env/example.json env/prod.json; fi
+          ./scripts/check_env.sh env/prod.json
           flutter pub get
           flutter gen-l10n
 

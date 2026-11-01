@@ -90,6 +90,15 @@ SUPABASE_REGION=eu-central-1
 SENTRY_AUTH_TOKEN=
 SENTRY_ORG=
 
+# PostHog: Settings -> Personal API keys, scope project:read (it never
+# leaves this Mac). Fills POSTHOG_API_KEY + POSTHOG_HOST in env/*.json from
+# the project named like the repo (or your only project). Override per app
+# with POSTHOG_PROJECT in apps/<repo>/app.env. POSTHOG_REGION: eu or us --
+# where your PostHog account lives (eu.posthog.com or us.posthog.com).
+# Without the key the env files are still checked against PostHog.
+POSTHOG_PERSONAL_API_KEY=
+POSTHOG_REGION=eu
+
 # Codemagic (only for repos with codemagic.yaml): personal account →
 # Settings → Integrations → Codemagic API → Show. Leave the team id empty to
 # keep the free plan (free minutes don't apply to teams).
@@ -256,6 +265,19 @@ if grep -q '^sentry:' pubspec.yaml 2>/dev/null; then
       SENTRY_URL="${SENTRY_URL:-https://sentry.io}" \
       python3 "$(dirname "$0")/sentry_project.py" env/*.json ||
       echo "skip          Sentry project (see the message above; set SENTRY_DSN by hand)"
+  fi
+fi
+# PostHog: fill the project key + host in env/*.json where still empty,
+# then check every file's key against its host (EU vs US mix-ups drop
+# every event silently).
+if ls env/*.json >/dev/null 2>&1; then
+  if command -v python3 >/dev/null; then
+    DRY_RUN=$DRY_RUN POSTHOG_PERSONAL_API_KEY="${POSTHOG_PERSONAL_API_KEY:-}" \
+      POSTHOG_REGION="${POSTHOG_REGION:-eu}" POSTHOG_PROJECT="${POSTHOG_PROJECT:-${REPO#*/}}" \
+      python3 "$(dirname "$0")/posthog_project.py" env/*.json ||
+      echo "skip          PostHog check (see the message above)"
+  else
+    echo "skip          PostHog check (python3 not installed)"
   fi
 fi
 # App config for the release build (Supabase/PostHog/Sentry keys).

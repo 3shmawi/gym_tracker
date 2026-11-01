@@ -13,13 +13,37 @@ abstract final class Analytics {
   static bool get isEnabled => _enabled;
 
   static Future<void> init() async {
-    if (Env.posthogApiKey.isEmpty) return;
+    final problem = configProblem(Env.posthogApiKey, Env.posthogHost);
+    if (problem != null) {
+      // Says why the dashboard stays empty; never prints the key itself.
+      debugPrint('Analytics off: $problem');
+      return;
+    }
     final config = PostHogConfig(Env.posthogApiKey)
       ..host = Env.posthogHost
       ..captureApplicationLifecycleEvents = true
       ..debug = !AppFlavor.current.isProd;
     await Posthog().setup(config);
     _enabled = true;
+  }
+
+  /// Why PostHog can't receive events with this [apiKey] and [host], or
+  /// null when they look right. A personal key (phx_) or the dashboard
+  /// address as host is accepted by the SDK, but every event is dropped.
+  @visibleForTesting
+  static String? configProblem(String apiKey, String host) {
+    if (apiKey.isEmpty) return 'POSTHOG_API_KEY is empty in env/<name>.json';
+    if (!apiKey.startsWith('phc_')) {
+      return 'POSTHOG_API_KEY is not a project API key (starts with phc_)';
+    }
+    if (!host.startsWith('https://')) {
+      return 'POSTHOG_HOST must start with https://';
+    }
+    if (RegExp(r'^https://(eu|us|app)\.posthog\.com/?$').hasMatch(host)) {
+      return 'POSTHOG_HOST is the dashboard address; use '
+          'https://eu.i.posthog.com or https://us.i.posthog.com';
+    }
+    return null;
   }
 
   static Future<void> capture(
