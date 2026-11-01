@@ -29,7 +29,7 @@ void main() {
     ok(await r.savePlan(PlanTemplates.fiveDaySplit));
     final plan = ok(await r.loadPlan())!;
     expect(plan.days, hasLength(5));
-    expect(plan.days[1].exercises[2].supersetWithNext, isTrue);
+    expect(plan.days[1].exercises[4].supersetWithNext, isTrue);
     expect(plan.days[0].exercises.last.name.ar, 'بطن');
   });
 

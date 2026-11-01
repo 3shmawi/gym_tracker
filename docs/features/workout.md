@@ -73,9 +73,9 @@ Status: slice 1 of 3.
   next workout → settings.
 
 ## Decisions & edge cases
-- Template days 1, 2 and 4, 5 use the exercises from the design brief.
-  Day 2's shoulder exercises and all of day 3 (legs) are common defaults:
-  **check them with the member's real plan**.
+- The template is the member's real plan (`plan_templates_test.dart` pins
+  it). Targets are 3×12 except abs (3×15); squat rests 120 s. Change the
+  targets when the member gives them.
 - Exercise ids are stable strings; history is matched by id, so renaming an
   exercise keeps its history.
 - Numbers use Western digits in both languages, like gym plates.

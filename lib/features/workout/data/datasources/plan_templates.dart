@@ -46,30 +46,48 @@ abstract final class PlanTemplates {
     exercises: [
       Exercise(
         id: 'db_shoulder_press',
-        name: LocalizedName(ar: 'ضغط كتف دمبل', en: 'Dumbbell Shoulder Press'),
+        name: LocalizedName(
+          ar: 'دفع دمبل جانبي كتف',
+          en: 'Dumbbell Shoulder Press',
+        ),
       ),
       Exercise(
-        id: 'lateral_raise',
-        name: LocalizedName(ar: 'رفرفة جانبي', en: 'Lateral Raise'),
+        id: 'db_front_raise',
+        name: LocalizedName(
+          ar: 'رفرفة دمبل أمامي كتف',
+          en: 'Dumbbell Front Raise',
+        ),
         weightStep: 1,
       ),
       Exercise(
+        id: 'reverse_pec_deck',
+        name: LocalizedName(ar: 'فراشة خلفي', en: 'Reverse Pec Deck'),
+      ),
+      Exercise(
+        id: 'db_shrug',
+        name: LocalizedName(ar: 'ترباس دمبل', en: 'Dumbbell Shrug'),
+      ),
+      // Biceps & triceps: two supersets.
+      Exercise(
         id: 'alternating_db_curl',
-        name: LocalizedName(ar: 'تبادل دمبل', en: 'Alternating Dumbbell Curl'),
+        name: LocalizedName(
+          ar: 'تبادل دمبل باي',
+          en: 'Alternating Dumbbell Curl',
+        ),
         supersetWithNext: true,
       ),
       Exercise(
         id: 'cable_kickback',
-        name: LocalizedName(ar: 'رفس كابل', en: 'Cable Kickback'),
+        name: LocalizedName(ar: 'رفس كابل تراي', en: 'Cable Kickback'),
       ),
       Exercise(
         id: 'hammer_curl',
-        name: LocalizedName(ar: 'شاكوش دمبل', en: 'Hammer Curl'),
+        name: LocalizedName(ar: 'شاكوش دمبل باي', en: 'Hammer Curl'),
         supersetWithNext: true,
       ),
       Exercise(
         id: 'rope_pushdown',
-        name: LocalizedName(ar: 'حبل خلفي', en: 'Rope Pushdown'),
+        name: LocalizedName(ar: 'حبل خلفي تراي', en: 'Rope Pushdown'),
       ),
     ],
   );
@@ -78,22 +96,43 @@ abstract final class PlanTemplates {
     name: LocalizedName(ar: 'رجل', en: 'Legs'),
     exercises: [
       Exercise(
+        id: 'barbell_squat',
+        name: LocalizedName(ar: 'بار اسكوات حر', en: 'Barbell Back Squat'),
+        weightStep: 5,
+        restSeconds: 120,
+      ),
+      Exercise(
         id: 'leg_press',
-        name: LocalizedName(ar: 'دفع رجل جهاز', en: 'Leg Press'),
+        name: LocalizedName(ar: 'دفع جهاز', en: 'Leg Press'),
         weightStep: 5,
       ),
       Exercise(
+        id: 'db_lunge',
+        name: LocalizedName(ar: 'طعن دمبل', en: 'Dumbbell Lunge'),
+      ),
+      Exercise(
         id: 'leg_extension',
-        name: LocalizedName(ar: 'رجل أمامي', en: 'Leg Extension'),
+        name: LocalizedName(ar: 'جهاز أمامية', en: 'Leg Extension'),
       ),
       Exercise(
         id: 'leg_curl',
-        name: LocalizedName(ar: 'رجل خلفي', en: 'Leg Curl'),
+        name: LocalizedName(ar: 'جهاز خلفية', en: 'Leg Curl'),
       ),
       Exercise(
-        id: 'calf_raise',
-        name: LocalizedName(ar: 'سمانة', en: 'Calf Raise'),
-        targetReps: 15,
+        id: 'machine_calf_raise',
+        name: LocalizedName(ar: 'سمانة جهاز', en: 'Machine Calf Raise'),
+        weightStep: 5,
+      ),
+      Exercise(
+        id: 'reverse_wrist_curl',
+        name: LocalizedName(
+          ar: 'ساعد مسطرة عكسي',
+          en: 'Reverse Barbell Wrist Curl',
+        ),
+      ),
+      Exercise(
+        id: 'barbell_wrist_curl',
+        name: LocalizedName(ar: 'رست بار أمامي', en: 'Barbell Wrist Curl'),
       ),
     ],
   );
