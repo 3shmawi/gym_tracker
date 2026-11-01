@@ -125,14 +125,21 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ProgressView), findsOneWidget);
     await beat(tester);
+    // Home is still mounted under Progress: scroll Progress's own list.
     final squat = find.byKey(const Key('progress_barbell_squat'));
     await tester.scrollUntilVisible(
       squat,
       200,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: find
+          .descendant(
+            of: find.byType(ProgressView),
+            matching: find.byType(Scrollable),
+          )
+          .first,
     );
+    await tester.pumpAndSettle();
     await beat(tester);
-    await tester.tap(squat);
+    await tester.tap(squat.hitTestable());
     await tester.pumpAndSettle();
     expect(find.byType(ExerciseHistoryView), findsOneWidget);
     expect(find.text('Today'), findsOneWidget);
