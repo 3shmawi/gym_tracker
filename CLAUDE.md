@@ -243,7 +243,7 @@ leaks").
 - Pre-commit runs format + analyze; don't bypass it.
 
 ## Release flow
-`develop` → staging builds (TestFlight staging app + APK pre-release) →
+`develop` → staging builds (TestFlight + Play internal staging app, APK pre-release) →
 PR to `main` → merge → store release with generated notes → when approved:
 Actions → **Announce update** (optional/force) → users see the update
 dialog. Backend: changes in `supabase/` deploy on merge (Supabase deploy).
