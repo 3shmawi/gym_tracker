@@ -14,7 +14,10 @@ CSS keyframes. Port them 1:1; do not redesign.
     turns into the pro bodybuilder (double-biceps, arms pump from the shoulder
     twice). Gap to the middle bar: 5 units.
   - 90–100 %: everything returns; figure 1 holds the bar overhead = the static
-    logo (`assets/branding/icon_foreground.png`), wordmark fades in.
+    logo (`assets/branding/icon_foreground.png`).
+  - **The app shows no wordmark**, in the splash or in loading: the
+    "Azm / عزم" text in the .dc.html file is a canvas preview only. Port the
+    figures, not the text.
   - Reduce motion: static logo only.
 - `level_figures.dc.html`: beginner / intermediate / pro figures
   (`lv1`, `lv2`, `lv3` symbols, 60×70 box) for the level feature.
