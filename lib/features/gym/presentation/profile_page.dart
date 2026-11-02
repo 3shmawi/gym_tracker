@@ -7,8 +7,11 @@ import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
+import 'package:gym_tracker/features/gym/domain/entities/solo_import.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
 import 'package:gym_tracker/features/gym/presentation/profile_view.dart';
+import 'package:gym_tracker/features/gym/presentation/solo_import_controller.dart';
+import 'package:gym_tracker/features/gym/presentation/solo_import_sheet.dart';
 import 'package:gym_tracker/features/gym/presentation/workspace_switcher.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 
@@ -20,12 +23,20 @@ class ProfilePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final actions = ref.read(accountActionsProvider);
+    final offer = ref.watch(soloOfferProvider).value;
+    final imported =
+        ref.watch(soloImportStatusProvider).value?.choice ==
+        SoloImportChoice.done;
     return ProfileView(
       session: ref.watch(accountSessionProvider),
       state: ref.watch(gymControllerProvider),
       onRetry: () => ref.invalidate(gymControllerProvider),
       onSwitch: () => unawaited(openWorkspaceSwitcher(context, ref)),
       onDelete: () => unawaited(context.push<void>(AppRoutes.deleteAccount)),
+      onSoloImport: offer == null
+          ? null
+          : () => unawaited(showSoloImportSheet(context, offer)),
+      soloImported: imported,
       onAddEmail: (email) async => switch (await actions.addEmail(email)) {
         Success() => null,
         Failed(:final failure) => failure,

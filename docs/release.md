@@ -155,6 +155,16 @@ Before the flag goes on in production:
 6. A real phone: scan a card from `scripts/make_invites` (staging), join, see
    Today, switch, sign out, delete the throwaway account.
 
+#### Website texts that must match the app (PR C)
+`website/privacy.html`, `terms.html` and `delete-account.html` (English and
+Arabic, "Last updated" 2026-11-02) describe gym accounts: no-email sign-in, the
+camera, hashed codes, hashed attempt logs kept 30 days, leaving a gym, deletion,
+minors, Cloudflare and **Turnstile**. The policy says Turnstile protects joining,
+so **turn Turnstile on before the `gym_join` flag** (step 1 above).
+`test/security/store_pages_test.dart` pins the promises. Cloudflare Pages deploys
+`website/` when this merges, so the texts are live before the flag: they describe
+a feature users cannot see yet, which is the safe order (never the reverse).
+
 #### Demo gym for App Review
 Apple (2.1) and Google need a way into the gym features without a real captain.
 The demo code is a **secret-like value that never goes in the repo, a chat or a
@@ -170,6 +180,9 @@ doc §8; re-read both consoles' pages before submitting).
 3. Paste the code and attach the QR image in the review notes: "Open Azm →
    Join your gym → type the code (or scan the QR). Solo mode needs no account."
    Then delete the PDF.
+   The demo code is a *reusable* code (kind `demo`): it needs the same attempt
+   throttling as every code and must never be pasted into a PR, an issue, a chat,
+   a log or the repo; if it leaks, run the script again (it rotates).
 4. The demo member is a trainee with all three permissions; its sessions and
    plans are wiped every night (`wipe_demo_data()`), so keep nothing real there.
 5. Schedule the nightly jobs once `pg_cron` is on (Database → Extensions →

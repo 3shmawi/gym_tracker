@@ -76,6 +76,9 @@ void main() {
       'gym_switched',
       'account_signed_out',
       'account_deleted',
+      'solo_import_started',
+      'solo_import_done',
+      'solo_import_failed',
     });
     // `via`: scan | link | code. `reason`: a word. `to`: solo | gym. Never a
     // code, a name, an id or an email.

@@ -27,11 +27,18 @@ class ProfileView extends StatelessWidget {
     required this.onDelete,
     required this.onRetry,
     this.onAddEmail,
+    this.onSoloImport,
+    this.soloImported = false,
     super.key,
   });
 
   final AccountSession session;
   final AsyncValue<GymSnapshot> state;
+
+  /// "Add my solo history to my account": shown only when there is solo data
+  /// to copy (null hides it); [soloImported] swaps it for a quiet line.
+  final VoidCallback? onSoloImport;
+  final bool soloImported;
   final VoidCallback onSwitch;
   final VoidCallback onSignOut;
   final VoidCallback onDelete;
@@ -59,6 +66,8 @@ class ProfileView extends StatelessWidget {
           onSignOut: onSignOut,
           onDelete: onDelete,
           onAddEmail: onAddEmail,
+          onSoloImport: onSoloImport,
+          soloImported: soloImported,
         ),
       },
     );
@@ -73,10 +82,14 @@ class _Content extends StatelessWidget {
     required this.onSignOut,
     required this.onDelete,
     required this.onAddEmail,
+    required this.onSoloImport,
+    required this.soloImported,
   });
 
   final AccountSession session;
   final GymSnapshot snapshot;
+  final VoidCallback? onSoloImport;
+  final bool soloImported;
   final VoidCallback onSwitch;
   final VoidCallback onSignOut;
   final VoidCallback onDelete;
@@ -157,6 +170,28 @@ class _Content extends StatelessWidget {
                 ),
               ),
               SizedBox(height: AppDimens.sm2),
+              if (onSoloImport != null || soloImported) ...[
+                AppCard(
+                  child: soloImported
+                      ? AppListRow(
+                          key: const Key('profile_solo_done'),
+                          leading: const AppLogoTile.icon(Icons.check),
+                          title: l10n.soloProfileDone,
+                          divider: false,
+                        )
+                      : AppListRow(
+                          key: const Key('profile_solo_import'),
+                          leading: const AppLogoTile.icon(
+                            Icons.cloud_upload_outlined,
+                          ),
+                          title: l10n.soloProfileRow,
+                          divider: false,
+                          trailing: const _Chevron(),
+                          onTap: onSoloImport,
+                        ),
+                ),
+                SizedBox(height: AppDimens.sm2),
+              ],
               if (onAddEmail != null && session.isAnonymous) ...[
                 _SecureCard(onAddEmail: onAddEmail!),
                 SizedBox(height: AppDimens.sm2),

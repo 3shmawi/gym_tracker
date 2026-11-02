@@ -224,6 +224,12 @@ Design: [`features/gym_account_app.md`](features/gym_account_app.md).
   gym's name first, and a sole owner is refused with the gym names.
 - **Add email** checks the address shape on the phone (ASCII, ≤ 254) and leaves
   the rest to Auth; the account keeps its id, so RLS and history are unchanged.
+- **Solo import** sends only workouts and the plan, in chunks of 50, with a
+  `client_id` that is a hash of the workout's own content (no device or account
+  id). The server validates everything again; imported workouts are solo, so no
+  captain sees them. The phone keeps its data; the import marks `done` only when
+  the server's total covers what was sent. `test/security/store_pages_test.dart`
+  checks the privacy/terms/delete pages keep promising what the app does.
 - Known, accepted: gym logos are initials only (no image request); the captain's
   name is not shown (RLS); `mobile_scanner` bundles the ML Kit model.
 
