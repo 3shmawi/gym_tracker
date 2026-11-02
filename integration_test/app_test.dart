@@ -8,6 +8,7 @@ import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_view.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/domain/services/rest_alarm.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_view.dart';
@@ -21,6 +22,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../test/helpers/fake_rest_alarm.dart';
+import 'flows/build_plan_flow.dart';
 import 'helpers/demo.dart';
 
 void main() {
@@ -63,6 +65,19 @@ void main() {
     await beat(tester);
     expect(find.byType(SettingsView), findsOneWidget);
     await beat(tester, 1500);
+  });
+
+  testWidgets('build your plan: two exercises, a target, start', (
+    tester,
+  ) async {
+    await freshInstall(tester);
+    await app.main();
+    await tester.pumpAndSettle();
+    await beat(tester, 1500);
+
+    await buildPlanFlow(tester);
+    expect(find.byType(ActiveWorkoutView), findsOneWidget);
+    await beat(tester, 2000);
   });
 
   testWidgets('leg day: pick day 3, log sets, rest, finish', (tester) async {
@@ -170,7 +185,7 @@ void main() {
       for (var d = 0; d < 3; d++) {
         await repo.saveSession(
           WorkoutSession(
-            dayIndex: d,
+            dayId: legacyDayId(d),
             finishedAt: DateTime(
               saturday.year,
               saturday.month,

@@ -9,7 +9,7 @@ const _press = 'flat_db_press';
 
 WorkoutSession _session(int day, DateTime at, List<(String, double, int)> s) =>
     WorkoutSession(
-      dayIndex: day,
+      dayId: legacyDayId(day),
       finishedAt: at,
       sets: [
         for (final (id, w, r) in s)

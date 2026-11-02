@@ -24,6 +24,9 @@ class NextWorkoutPage extends ConsumerWidget {
       onOpenExercise: (id) =>
           unawaited(context.push<void>(AppRoutes.exerciseHistory(id))),
       onChooseDay: (day) => unawaited(controller.chooseDay(day)),
+      onOpenPlan: () => unawaited(context.push<void>(AppRoutes.plan)),
+      onBuildPlan: () => unawaited(context.push<void>(AppRoutes.plan)),
+      onEditDay: (id) => unawaited(context.push<void>(AppRoutes.planDay(id))),
       onStart: next.value == null
           ? null
           : () async {

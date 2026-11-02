@@ -14,10 +14,12 @@ Status: slice 3 started (rest notification), plus levels.
 1. **Done:** plan, history, weight suggestions, next-workout screen, offline storage, choose the next day.
 2. **Done:** active workout: one-tap logging, edit/delete a set, rest timer (+15 s, skip), supersets, finish with summary and records. Saved after every change.
 3. **Done:** "Rest over" notification when the phone is locked or the app is in the background.
-   Next: edit the plan and targets, sync to Supabase (needs accounts).
+4. **Done:** edit the whole plan in the app (days, exercises, targets, supersets).
+   Next: sync to Supabase (needs accounts).
 
 ## User flows
-1. First launch → "No plan yet" → **Start with the 5-day plan** → Day 1 (بنش وضهر).
+1. First launch → "No plan yet" → **Start with the 5-day plan** → Day 1 (بنش وضهر),
+   or **Build your plan** → the plan editor with an empty plan (below).
 2. Open the app → next workout with suggestions → **Start workout** →
    `/workout`: the dock is prefilled (today's last set; else last time's second set,
    e.g. 15, 20, 25 → 20, or its only set; else 0 kg; target reps) → **Log** (one tap) → rest timer → next set.
@@ -31,11 +33,20 @@ Status: slice 3 started (rest notification), plus levels.
    The choice holds until a workout is finished, then the plan carries on
    from there.
 
+5. **Edit the plan** (`/plan`: the list button on the home bar, or
+   Settings → Workout → Your plan; design boards 5.0–5.9). See "Plan editor".
+
 ## Rules
-- **Next day** = the day after the last *finished* session, wrapping around
-  (`GetNextWorkout`). No history → day 1.
-- **Chosen day** (`saveChosenDay`) wins over the computed day; out-of-range
-  values are ignored; finishing a workout clears it. No waiting banner then.
+- **Days have stable ids** (`WorkoutDay.id`). Finished workouts, the workout
+  in progress and the chosen day store the day's **id**, not its position,
+  so reordering or deleting days never points them at the wrong day.
+- **Next day** = the day after the last *finished* session's day in the
+  current order, wrapping around (`GetNextWorkout`). No history, or that day
+  was deleted → day 1 (an edit pins the right day first, below).
+- **Chosen day** (`saveChosenDay`, a `ChosenDay`) wins over the computed
+  day; unknown ids are ignored; finishing a workout clears it. Picked by the
+  member: no waiting banner. Pinned by a plan edit (`byEdit`): the banner
+  still shows.
 - **Waiting** = today is after the day following the last finished session.
 - **Suggested weight** (`SuggestWeight`), from the latest session that has
   the exercise (day 4 uses day 1's sets for the same exercise):
@@ -84,6 +95,54 @@ Status: slice 3 started (rest notification), plus levels.
 - **Records** = heavier than any earlier set of that exercise (first times
   are not records).
 - Inputs are clamped: weight 0–1000 kg (NaN/∞ → 0), reps 0–999.
+
+## Plan editor
+Days: add, rename (Arabic + English), delete, reorder. Exercises in a day:
+add, rename, delete, reorder, superset with the next one. Targets: sets,
+reps, rest (s), weight step (kg). Everything is saved on the phone after
+each change ("Saves as you go"); there is no Save button.
+- **Screens:** `/plan` (days; "Next" and "In progress" badges),
+  `/plan/<dayId>` (exercises; supersets as A/B with the rail and the pair's
+  rest), `/plan/<dayId>/<exerciseId>` (names, steppers, weight step chips,
+  superset switch, delete). ⋯ on a row: rename, superset, move up/down,
+  delete. Drag handles reorder; "Move up / down" do the same for screen
+  readers. Deletes ask first; history is never deleted.
+- **The waiting workout stays the same after any edit** (`KeepNextWorkout`):
+  adding, renaming or reordering days doesn't change "next". If the waiting
+  day itself is deleted, the next day after it (old order) that still exists
+  waits. Done by pinning a `ChosenDay(byEdit: true)` only when the history
+  alone would point elsewhere; the member's own choice is kept while its day
+  exists.
+- **The day of a workout in progress is locked**: no rename, delete or
+  exercise/target change (banner + lock icons, "Continue the workout"). It
+  can still move: the draft points at it by id. Other days stay editable.
+- **New ids are new**: `day-<time36>` / `ex-<time36>`, checked against every
+  id in the plan, the history and ids already issued (`newPlanId`,
+  `takenIds`). A deleted exercise's id is never reused, so a new exercise
+  never inherits old history. Renaming keeps the id, so history stays.
+- **Limits** (`PlanLimits`, checked by `EditPlan` and again by
+  `LocalWorkoutRepository.savePlan`, which refuses with `ValidationFailure`):
+  1–14 days, ≤ 30 exercises a day, names 1–40 characters in each language,
+  sets 1–10, reps 1–100, rest 0–600 s in 15 s steps, weight step a finite
+  number > 0 and ≤ 50 (choices 0.5 / 1 / 1.25 / 2 / 2.5 / 5; another stored
+  value shows as its own chip). Steppers clamp to the limits.
+- **Names** (`PlanNames`): one language is enough (it fills the other);
+  trimmed, new lines and runs of spaces become one space, control and
+  bidi-override characters removed. Injection-like text (`'; DROP TABLE`,
+  `<script>`) is stored as plain JSON text, never interpreted.
+- **Supersets:** "with the next one"; the last exercise of a day never keeps
+  it (deleting/moving its partner ends it). The first of a pair has no rest
+  of its own (its rest stepper is off: "After the pair").
+- **A day with no exercises** is allowed in the plan. If it is the waiting
+  day, home shows "No exercises in this day yet" and **Add exercises**
+  (opens that day) instead of Start.
+- **A new plan** ("Build your plan") is saved when its first day is added
+  (`plan_created`, `source: editor`); the new day opens right away.
+- **Old data** (saved before day ids) migrates by position when read: plan
+  days get `day-1` … `day-n` (`legacyDayId`), sessions/drafts' `day` index
+  and the old int chosen day map to the same ids. The template uses those
+  ids too. Nothing is rewritten until the next save.
+- On-device only; Supabase sync comes with accounts.
 
 ## Progress (history per exercise)
 How each exercise moved since the member started (design: board 3.3b,
@@ -150,6 +209,16 @@ what the next level needs. Worked out by itself from the history
 - State: Riverpod; `clockProvider` makes dates testable.
 - Data sources: on-device only for now. Nothing leaves the phone except the
   analytics events below. The rest notification is local (no push token).
+- Plan editor: `domain/usecases/plan_rules.dart` (`PlanLimits`,
+  `PlanNames`, `validatePlan`, `newPlanId`), `edit_plan.dart` (`EditPlan`:
+  every change as a pure function; `KeepNextWorkout`; `takenIds`),
+  `entities/chosen_day.dart`. `PlanEditorController` (auto-disposed
+  AsyncNotifier shared by the three screens: plan, waiting day, locked day,
+  save failure + retry) → `PlanPage`/`PlanView`, `PlanDayPage`/`PlanDayView`,
+  `PlanExercisePage`/`PlanExerciseView`; `widgets/plan_widgets.dart` (row,
+  superset rail, name / delete / ⋯ sheets, reorderable card). Shared
+  controls added to `app_controls.dart`: `AppTextField`, `AppSwitchRow`,
+  `AppChoiceChip`, `AppDangerButton`.
 
 ## Rest notification setup
 Package: `flutter_local_notifications` **22.3.3** + `timezone` **0.11.2**
@@ -180,7 +249,8 @@ plugin README.
   it rings.
 - Routes: `/` (home) shows `NextWorkoutPage`; `/workout` the workout in
   progress (with none: an empty state with a way home); `/progress` and
-  `/progress/<exerciseId>`.
+  `/progress/<exerciseId>`; `/plan`, `/plan/<dayId>`,
+  `/plan/<dayId>/<exerciseId>`.
 
 ## Analytics events
 | Event | When | Properties |
@@ -198,6 +268,15 @@ Every event also carries `app` (`gym_tracker`) and `environment`
 (`staging` / `prod`). Screen views (`$screen`) use the route names: `home`,
 `workout`, `progress`, `exercise_history`, `settings`. PostHog dashboard:
 **Azm – workouts** (filtered to bundle `com.mohager.azm`).
+
+| `plan_opened` | Plan editor opened | none |
+| `plan_created` | First save of a plan built in the editor | `source: editor`, `days` |
+| `plan_day_added` / `plan_day_renamed` / `plan_day_deleted` / `plan_day_moved` | A day changed | `days` (count after) |
+| `plan_exercise_added` / `plan_exercise_renamed` / `plan_exercise_deleted` / `plan_exercise_moved` | An exercise changed | `days` |
+| `plan_superset_changed` | Superset switched | `on`, `days` |
+| `plan_targets_changed` | A target changed | `field` (`sets` / `reps` / `rest` / `weight_step`), `days` |
+
+No names, ids or values typed by the member are sent.
 
 ## Feature flags
 None. (`active_workout` was removed when the workout screen shipped.)
@@ -233,12 +312,31 @@ None. (`active_workout` was removed when the workout screen shipped.)
   `widgets/level_card_test.dart` (`screenUiTests` for every level state),
   `test/core/ui/azm_level_*_test.dart` (figure vs. the design).
 
+- Plan editor: `plan_rules_test.dart` (names, hostile and huge input,
+  limits, ids), `edit_plan_test.dart` (every edit, lock, last day,
+  supersets, clamping, `KeepNextWorkout`: reorder, delete the waiting / last
+  finished day, the member's choice, the banner, migrated history),
+  repository (round trip with ids, hostile names, refused invalid plans,
+  migration of plan / sessions / draft / old int chosen day, hostile stored
+  chosen day), `plan_editor_controller_test.dart` (build from nothing, ids
+  never reused, rename keeps history, next stays after reorder/delete, the
+  locked day, failed save + retry, load error), widget tests
+  `plan_view_test.dart`, `plan_day_view_test.dart`,
+  `plan_exercise_view_test.dart` (every state + sheets in
+  `screensUiTests`), home (plan button, Build your plan, empty day) and
+  settings, `test/security/deep_link_test.dart` (`/plan` links: crafted ids,
+  extra segments, links can't change data), `plan_editor_e2e_test.dart` and
+  the integration demo (shared `integration_test/flows/build_plan_flow.dart`).
+
 ## Decisions & edge cases
 - The template is the member's real plan (`plan_templates_test.dart` pins
   it). Targets are 3×12 except abs (3×15); squat rests 120 s. Change the
   targets when the member gives them.
 - Exercise ids are stable strings; history is matched by id, so renaming an
-  exercise keeps its history.
+  exercise keeps its history. Renaming changes only that day's copy of an
+  exercise that is on two days (day 1 and day 4); their history is shared.
+- Day ids instead of blocking edits: reordering is free, only the day of a
+  workout in progress is locked, and the waiting workout never jumps.
 - Numbers use Western digits in both languages, like gym plates.
 
 ## Demo & post
@@ -265,3 +363,11 @@ workout mid-rest → nothing rings.
 intermediate figure.
 **Caption (English):** Train 3 times a week and your level climbs. Take a break and it drops, but coming back is twice as fast.
 **Caption (Egyptian Arabic):** اتمرّن 3 مرات في الأسبوع ومستواك يطلع. لو وقفت بينزل، بس الرجوع أسرع بالنص.
+
+**Plan editor (fourth test):** "Build your plan" → add "صدر وتراي / Chest & Triceps" →
+add Bench Press and Rope Pushdown → open Bench Press, 4 sets, 5 kg step →
+back home: the new day is waiting → Start: "Set 1 of 4".
+**Hook:** Your plan, your exercises, in under a minute.
+**Caption (English):** Build your own plan in the app: days, exercises, sets, reps, rest. Reorder anything, and the workout waiting for you stays put.
+**Caption (Egyptian Arabic):** اعمل خطتك بنفسك من التطبيق: الأيام والتمارين والمجموعات والعدات والراحة. رتّب زي ما تحب، والتمرين اللي مستنيك مش هيتغير.
+**Hashtags:** #flutter #buildinpublic #gym #fitness #riverpod

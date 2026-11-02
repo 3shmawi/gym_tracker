@@ -12,6 +12,16 @@ abstract final class AppRoutes {
   /// Every exercise with its progress since the first time.
   static const progress = '/progress';
 
+  /// The plan editor: days in order.
+  static const plan = '/plan';
+
+  /// One plan day's exercises. Ids are encoded, so any id is safe.
+  static String planDay(String dayId) => '$plan/${Uri.encodeComponent(dayId)}';
+
+  /// One exercise's names and targets in a plan day.
+  static String planExercise(String dayId, String exerciseId) =>
+      '${planDay(dayId)}/${Uri.encodeComponent(exerciseId)}';
+
   /// One exercise's history. [exerciseId] is encoded, so any id is safe.
   static String exerciseHistory(String exerciseId) =>
       '$progress/${Uri.encodeComponent(exerciseId)}';

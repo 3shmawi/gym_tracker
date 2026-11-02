@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
+import 'package:gym_tracker/features/workout/domain/entities/chosen_day.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/get_next_workout.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/summarize_workout.dart';
@@ -19,7 +21,7 @@ final _now = DateTime(2026, 11, 2, 18, 30);
 /// Last time: Wide Lat Pulldown 50×12 ×3, Flat DB Press 22.5×12, 12, 11.
 final _history = [
   WorkoutSession(
-    dayIndex: 4,
+    dayId: legacyDayId(4),
     finishedAt: DateTime(2026, 10, 30),
     sets: [
       for (final r in [12, 12, 11])
@@ -37,10 +39,10 @@ ActiveWorkout workout(int day, List<LoggedSet> sets, {DateTime? restEndsAt}) {
     plan,
     _history,
     now: _now,
-    chosenDay: day,
+    chosenDay: ChosenDay(legacyDayId(day)),
   );
   final draft = WorkoutDraft(
-    dayIndex: day,
+    dayId: legacyDayId(day),
     startedAt: _now.subtract(const Duration(minutes: 17)),
     sets: sets,
     restEndsAt: restEndsAt,

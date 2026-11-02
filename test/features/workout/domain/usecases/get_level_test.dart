@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/features/workout/domain/entities/level.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/get_level.dart';
 
@@ -10,7 +11,7 @@ final _week0 = DateTime(2024, 1, 6, 18);
 List<WorkoutSession> _week(int week, [int workouts = 3]) => [
   for (var d = 0; d < workouts; d++)
     WorkoutSession(
-      dayIndex: d % 5,
+      dayId: legacyDayId(d % 5),
       finishedAt: _week0.add(Duration(days: week * 7 + d)),
       sets: const [],
     ),
@@ -149,7 +150,7 @@ void main() {
     final history = [
       for (final day in [6, 7, 8])
         WorkoutSession(
-          dayIndex: 0,
+          dayId: legacyDayId(0),
           finishedAt: _week0.add(Duration(days: day)),
           sets: const [],
         ),
@@ -161,7 +162,7 @@ void main() {
     final utc = [
       for (final s in _weeks(0, 3))
         WorkoutSession(
-          dayIndex: s.dayIndex,
+          dayId: s.dayId,
           finishedAt: s.finishedAt.toUtc(),
           sets: s.sets,
         ),

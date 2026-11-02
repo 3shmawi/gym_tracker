@@ -57,12 +57,28 @@ void main() {
     });
   });
 
+  testWidgets('"Your plan" opens the plan editor', (tester) async {
+    var opened = 0;
+    await tester.pumpApp(
+      SettingsView(
+        settings: const AppSettings(),
+        onLocaleChanged: (_) {},
+        onThemeModeChanged: (_) {},
+        onOpenPlan: () => opened++,
+      ),
+    );
+    expect(find.text('Workout'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('settings_plan')));
+    expect(opened, 1);
+  });
+
   screenUiTests(
     'settings',
     () => SettingsView(
       settings: const AppSettings(),
       onLocaleChanged: (_) {},
       onThemeModeChanged: (_) {},
+      onOpenPlan: () {},
     ),
   );
 }

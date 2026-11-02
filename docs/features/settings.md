@@ -5,6 +5,9 @@ Lets the user choose the app language (device default, English, Arabic) and
 theme (system, light, dark). Choices apply instantly and are saved on the
 device. Arabic switches the whole UI to right-to-left.
 
+A **Workout** section at the top links to the plan editor ("Your plan",
+`/plan`, see workout.md → Plan editor).
+
 ## Architecture (layered, state: riverpod)
 - Model: `lib/features/settings/domain/entities/app_settings.dart`
 - Repository: `lib/features/settings/domain/repositories/settings_repository.dart` (SharedPreferences)

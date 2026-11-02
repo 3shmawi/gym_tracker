@@ -25,6 +25,9 @@ class NextWorkoutView extends StatelessWidget {
     this.onStart,
     this.onOpenProgress,
     this.onOpenExercise,
+    this.onOpenPlan,
+    this.onBuildPlan,
+    this.onEditDay,
     super.key,
   });
 
@@ -46,12 +49,29 @@ class NextWorkoutView extends StatelessWidget {
   /// Hidden while null (the active workout isn't available yet).
   final VoidCallback? onStart;
 
+  /// Opens the plan editor ("Your plan", the list button on the bar).
+  final VoidCallback? onOpenPlan;
+
+  /// "Build your plan" on the no-plan screen: the editor with an empty plan.
+  final VoidCallback? onBuildPlan;
+
+  /// Opens a plan day in the editor (its id): "Add exercises" when the
+  /// waiting day has none.
+  final ValueChanged<String>? onEditDay;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return AppScaffold(
       title: l10n.todayTitle,
       actions: [
+        if (onOpenPlan != null && state.value != null)
+          AppIconButton(
+            key: const Key('home_plan_button'),
+            tooltip: l10n.planTitle,
+            icon: Icons.format_list_bulleted,
+            onPressed: onOpenPlan!,
+          ),
         if (onOpenProgress != null)
           AppIconButton(
             key: const Key('home_progress_button'),
@@ -72,14 +92,34 @@ class NextWorkoutView extends StatelessWidget {
           onStart: onStart,
           onChooseDay: onChooseDay,
           onOpenExercise: onOpenExercise,
+          onEditDay: onEditDay,
         ),
         AsyncData() => EmptyView(
           icon: Icons.fitness_center,
           message: l10n.todayNoPlan,
-          action: AppPrimaryButton(
-            key: const Key('use_template_button'),
-            label: l10n.todayUseTemplate,
-            onPressed: onUseTemplate,
+          action: Column(
+            mainAxisSize: MainAxisSize.min,
+            spacing: AppDimens.sm,
+            children: [
+              if (onBuildPlan != null)
+                AppPrimaryButton(
+                  key: const Key('build_plan_button'),
+                  label: l10n.planBuild,
+                  onPressed: onBuildPlan,
+                ),
+              if (onBuildPlan != null)
+                AppSecondaryButton(
+                  key: const Key('use_template_button'),
+                  label: l10n.todayUseTemplate,
+                  onPressed: onUseTemplate,
+                )
+              else
+                AppPrimaryButton(
+                  key: const Key('use_template_button'),
+                  label: l10n.todayUseTemplate,
+                  onPressed: onUseTemplate,
+                ),
+            ],
           ),
         ),
         AsyncError(:final error) => ErrorView(
@@ -98,9 +138,11 @@ class _Workout extends StatelessWidget {
     required this.onStart,
     required this.onChooseDay,
     this.onOpenExercise,
+    this.onEditDay,
   });
 
   final NextWorkout next;
+  final ValueChanged<String>? onEditDay;
   final ValueChanged<String>? onOpenExercise;
   final VoidCallback? onStart;
   final ValueChanged<int> onChooseDay;
@@ -211,6 +253,7 @@ class _Workout extends StatelessWidget {
     final lang = Localizations.localeOf(context).languageCode;
     final waitingSince = next.waitingSince;
     final dayOf = l10n.todayDayOf(next.dayIndex + 1, next.totalDays);
+    final empty = next.exercises.isEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -289,28 +332,74 @@ class _Workout extends StatelessWidget {
                 semanticLabel: dayOf,
               ),
               SizedBox(height: AppDimens.md),
-              AppCard(
-                child: Column(
-                  children: [
-                    for (final (i, preview) in next.exercises.indexed) ...[
-                      if (i > 0) Divider(height: 1, color: palette.fillSubtle),
-                      ExercisePreviewRow(
-                        number: i + 1,
-                        preview: preview,
-                        onTap: onOpenExercise == null
-                            ? null
-                            : () => onOpenExercise!(preview.exercise.id),
-                      ),
+              if (empty)
+                AppCard(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: AppDimens.sm),
+                    child: Column(
+                      spacing: AppDimens.xs,
+                      children: [
+                        Icon(
+                          Icons.format_list_bulleted,
+                          color: palette.textSecondary,
+                        ),
+                        Text(
+                          l10n.todayDayEmptyTitle,
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.title.copyWith(
+                            color: palette.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          l10n.todayDayEmptyBody,
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.caption.copyWith(
+                            color: palette.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                AppCard(
+                  child: Column(
+                    children: [
+                      for (final (i, preview) in next.exercises.indexed) ...[
+                        if (i > 0)
+                          Divider(height: 1, color: palette.fillSubtle),
+                        ExercisePreviewRow(
+                          number: i + 1,
+                          preview: preview,
+                          onTap: onOpenExercise == null
+                              ? null
+                              : () => onOpenExercise!(preview.exercise.id),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
               SizedBox(height: AppDimens.md),
               LevelCard(progress: next.level),
             ],
           ),
         ),
-        if (onStart != null)
+        if (empty && onEditDay != null)
+          Padding(
+            padding: EdgeInsetsDirectional.fromSTEB(
+              AppDimens.md,
+              AppDimens.sm,
+              AppDimens.md,
+              AppDimens.md,
+            ),
+            child: AppPrimaryButton(
+              key: const Key('home_add_exercises'),
+              label: l10n.todayAddExercises,
+              icon: Icons.add,
+              onPressed: () => onEditDay!(next.day.id),
+            ),
+          )
+        else if (onStart != null && !empty)
           Padding(
             padding: EdgeInsetsDirectional.fromSTEB(
               AppDimens.md,

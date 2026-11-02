@@ -8,6 +8,9 @@ import 'package:gym_tracker/features/settings/presentation/settings_page.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_page.dart';
 import 'package:gym_tracker/features/workout/presentation/exercise_history_page.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_page.dart';
+import 'package:gym_tracker/features/workout/presentation/plan_day_page.dart';
+import 'package:gym_tracker/features/workout/presentation/plan_exercise_page.dart';
+import 'package:gym_tracker/features/workout/presentation/plan_page.dart';
 import 'package:gym_tracker/features/workout/presentation/progress_page.dart';
 
 /// Root navigator, used to show app-wide dialogs (e.g. the update dialog).
@@ -46,6 +49,29 @@ final appRouter = GoRouter(
           builder: (context, state) => ExerciseHistoryPage(
             exerciseId: state.pathParameters['exerciseId']!,
           ),
+        ),
+      ],
+    ),
+    GoRoute(
+      path: AppRoutes.plan,
+      name: 'plan',
+      builder: (context, state) => const PlanPage(),
+      routes: [
+        GoRoute(
+          path: ':dayId',
+          name: 'plan_day',
+          builder: (context, state) =>
+              PlanDayPage(dayId: state.pathParameters['dayId']!),
+          routes: [
+            GoRoute(
+              path: ':exerciseId',
+              name: 'plan_exercise',
+              builder: (context, state) => PlanExercisePage(
+                dayId: state.pathParameters['dayId']!,
+                exerciseId: state.pathParameters['exerciseId']!,
+              ),
+            ),
+          ],
         ),
       ],
     ),

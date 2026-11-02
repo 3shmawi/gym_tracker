@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/summarize_workout.dart';
 
@@ -10,7 +11,7 @@ void main() {
 
   final history = [
     WorkoutSession(
-      dayIndex: 0,
+      dayId: legacyDayId(0),
       finishedAt: DateTime(2026, 10, 30),
       sets: [s('pulldown', 50, 12), s('press', 22.5, 12)],
     ),

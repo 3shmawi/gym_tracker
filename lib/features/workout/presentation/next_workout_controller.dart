@@ -5,6 +5,7 @@ import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
+import 'package:gym_tracker/features/workout/domain/entities/chosen_day.dart';
 import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
@@ -99,10 +100,13 @@ class NextWorkoutController extends AsyncNotifier<NextWorkout?> {
     });
   }
 
-  /// Makes [dayIndex] the next workout (until a workout is finished).
+  /// Makes the day at [dayIndex] the next workout (until a workout is
+  /// finished).
   Future<void> chooseDay(int dayIndex) async {
+    final days = state.value?.days;
+    if (days == null || dayIndex < 0 || dayIndex >= days.length) return;
     state = await AsyncValue.guard(() async {
-      _unwrap(await _repo.saveChosenDay(dayIndex));
+      _unwrap(await _repo.saveChosenDay(ChosenDay(days[dayIndex].id)));
       unawaited(Analytics.capture('next_day_chosen', {'day': dayIndex + 1}));
       return await build();
     });
@@ -116,10 +120,7 @@ class NextWorkoutController extends AsyncNotifier<NextWorkout?> {
     final existing = await _repo.loadDraft();
     if (existing case Success(value: final _?)) return true;
     final saved = await _repo.saveDraft(
-      WorkoutDraft(
-        dayIndex: next.dayIndex,
-        startedAt: ref.read(clockProvider)(),
-      ),
+      WorkoutDraft(dayId: next.day.id, startedAt: ref.read(clockProvider)()),
     );
     if (saved is Failed<void>) return false;
     unawaited(Analytics.capture('workout_started', {'day': next.dayIndex + 1}));

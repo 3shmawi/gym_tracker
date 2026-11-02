@@ -405,5 +405,208 @@
   "restOnTimeLater": "Not now",
   "todayAgainTitle": "You already trained today",
   "todayAgainBody": "Start another workout anyway? It counts as the next day of your plan.",
-  "todayAgainStart": "Start another workout"
+  "todayAgainStart": "Start another workout",
+  "planTitle": "Your plan",
+  "planBuild": "Build your plan",
+  "planAutosave": "Saves as you go",
+  "planHint": "Days run in this order, one after the other. Drag the handle to reorder.",
+  "planDays": "{count, plural, =1{1 day} other{{count} days}}",
+  "@planDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "planNext": "Next",
+  "planInProgress": "In progress",
+  "planAddDay": "Add a day",
+  "planAddFirstDay": "Add the first day",
+  "planEmptyTitle": "Your plan is empty",
+  "planEmptyBody": "Start with the first day, like \"Chest & Triceps\". You can add and reorder days later.",
+  "planOptions": "Options for {name}",
+  "@planOptions": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "planDrag": "Drag to reorder {name}",
+  "@planDrag": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "planMoveUp": "Move up",
+  "planMoveDown": "Move down",
+  "planRename": "Rename",
+  "planRenameDay": "Rename the day",
+  "planDeleteDay": "Delete the day",
+  "planDeleteDayTitle": "Delete \"{name}\"?",
+  "@planDeleteDayTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "planDeleteDayBody": "Its exercises leave the plan. What you logged stays in your history and progress.",
+  "planLastDay": "A plan keeps at least one day.",
+  "planCancel": "Cancel",
+  "planAddExercise": "Add an exercise",
+  "planDayEmptyTitle": "This day is empty",
+  "planDayEmptyBody": "Add the exercises you do on this day, in the order you do them.",
+  "planExerciseMeta": "{target} · rest {rest} s · step {step} kg",
+  "@planExerciseMeta": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      },
+      "rest": {
+        "type": "String"
+      },
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "planExerciseMetaSuperset": "{target} · step {step} kg",
+  "@planExerciseMetaSuperset": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      },
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "planDayHint": "Tap an exercise to change its targets. Changes start from the next workout; its history is kept.",
+  "planSupersetRail": "Superset · rest after both {rest} s",
+  "@planSupersetRail": {
+    "placeholders": {
+      "rest": {
+        "type": "String"
+      }
+    }
+  },
+  "planSuperset": "Superset with the next one",
+  "planSupersetDetail": "{name} · no rest between",
+  "@planSupersetDetail": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "planSupersetLast": "The last exercise has no next one",
+  "planDeleteExercise": "Delete exercise",
+  "planDeleteExerciseTitle": "Delete \"{name}\"?",
+  "@planDeleteExerciseTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "planDeleteExerciseBody": "It leaves this day. What you logged stays in your history and progress.",
+  "planExerciseTitle": "Exercise",
+  "planExerciseOf": "{day} · {n} of {total}",
+  "@planExerciseOf": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "planTargets": "Targets",
+  "planSets": "Sets",
+  "planRange": "{min}–{max}",
+  "@planRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "planReps": "Reps",
+  "planRepsHint": "per set",
+  "planRest": "Rest",
+  "planRestHint": "in {step} s steps",
+  "@planRestHint": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      }
+    }
+  },
+  "planRestAfterPair": "After the pair",
+  "planSecondsUnit": "s",
+  "planSetsLess": "One set less",
+  "planSetsMore": "One set more",
+  "planRepsLess": "One rep less",
+  "planRepsMore": "One rep more",
+  "planRestLess": "{step} seconds less",
+  "@planRestLess": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      }
+    }
+  },
+  "planRestMore": "{step} seconds more",
+  "@planRestMore": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      }
+    }
+  },
+  "planWeightStep": "Weight step",
+  "planWeightStepHint": "Smallest change on the machine",
+  "planWeightStepChoice": "{step} kg",
+  "@planWeightStepChoice": {
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "planNameAr": "Name in Arabic",
+  "planNameEn": "Name in English",
+  "planNameOneIsEnough": "Write one language and it's used for both.",
+  "planNameEmpty": "Write a name",
+  "planNameTooLong": "Too long, {max} characters at most",
+  "@planNameTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "planAdd": "Add",
+  "planSave": "Save",
+  "planLocked": "This workout is in progress. Finish or close it to edit this day.",
+  "planLockedOthers": "You can still edit and reorder the other days.",
+  "planResume": "Continue the workout",
+  "planSaveFailed": "Couldn't save your plan",
+  "planSaveFailedBody": "Your last change is still on screen. Try again, nothing was lost.",
+  "planDayNotFound": "This day isn't in your plan.",
+  "planBackToPlan": "Back to your plan",
+  "todayDayEmptyTitle": "No exercises in this day yet",
+  "todayDayEmptyBody": "Add its exercises first, or choose another day to start.",
+  "todayAddExercises": "Add exercises",
+  "settingsWorkout": "Workout"
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gym_tracker/core/adaptive/adaptive.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
+import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
@@ -49,6 +50,7 @@ class EmptyView extends StatelessWidget {
   const new({
     required this.message,
     this.icon = Icons.inbox_outlined,
+    this.detail,
     this.action,
     super.key,
   });
@@ -56,12 +58,20 @@ class EmptyView extends StatelessWidget {
   final String message;
   final IconData icon;
 
+  /// A second, smaller line: what to do or why it's empty.
+  final String? detail;
+
   /// The way out of the empty state, e.g. "Start with the 5-day plan".
   final Widget? action;
 
   @override
   Widget build(BuildContext context) {
-    return _CenteredMessage(icon: icon, message: message, action: action);
+    return _CenteredMessage(
+      icon: icon,
+      message: message,
+      detail: detail,
+      action: action,
+    );
   }
 }
 
@@ -86,10 +96,16 @@ class ErrorView extends StatelessWidget {
 }
 
 class _CenteredMessage extends StatelessWidget {
-  const new({required this.icon, required this.message, this.action});
+  const new({
+    required this.icon,
+    required this.message,
+    this.detail,
+    this.action,
+  });
 
   final IconData icon;
   final String message;
+  final String? detail;
   final Widget? action;
 
   @override
@@ -108,6 +124,16 @@ class _CenteredMessage extends StatelessWidget {
               style: AppTextStyles.title,
               textAlign: TextAlign.center,
             ),
+            if (detail != null) ...[
+              SizedBox(height: AppDimens.sm),
+              Text(
+                detail!,
+                style: AppTextStyles.body.copyWith(
+                  color: context.palette.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
             if (action != null) ...[SizedBox(height: AppDimens.lg), action!],
           ],
         ),

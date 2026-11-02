@@ -1,4 +1,5 @@
 import 'package:gym_tracker/core/network/result.dart';
+import 'package:gym_tracker/features/workout/domain/entities/chosen_day.dart';
 import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
@@ -10,6 +11,8 @@ abstract interface class WorkoutRepository {
   /// The member's plan, or null when they have none yet.
   Future<Result<WorkoutPlan?>> loadPlan();
 
+  /// Saves the plan; a plan outside `PlanLimits` is refused with a
+  /// `ValidationFailure`.
   Future<Result<void>> savePlan(WorkoutPlan plan);
 
   /// Finished workouts, oldest first.
@@ -18,10 +21,11 @@ abstract interface class WorkoutRepository {
   /// Saves a finished workout and clears the chosen day.
   Future<Result<void>> saveSession(WorkoutSession session);
 
-  /// The day the member picked as next (0-based), or null to follow the plan.
-  Future<Result<int?>> loadChosenDay();
+  /// The day picked as next (by the member, or pinned by a plan edit), or
+  /// null to follow the plan.
+  Future<Result<ChosenDay?>> loadChosenDay();
 
-  Future<Result<void>> saveChosenDay(int? dayIndex);
+  Future<Result<void>> saveChosenDay(ChosenDay? day);
 
   /// The workout in progress, or null.
   Future<Result<WorkoutDraft?>> loadDraft();
