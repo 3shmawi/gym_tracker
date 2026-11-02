@@ -4,4 +4,4 @@ Azm — Gym workout tracker: next session, last weight, quick logging
 • Feature two: what it does for you
 • Works in Arabic and English, light and dark mode
 
-Privacy first: we only collect what the app needs. Privacy policy: https://3shmawi.github.io/gym_tracker/privacy.html
+Privacy first: we only collect what the app needs. Privacy policy: https://azmm.pages.dev/privacy

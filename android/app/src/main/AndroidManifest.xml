@@ -16,12 +16,21 @@
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="gymtracker" />
-            </intent-filter>
+      <!-- Custom scheme: azm://<path> opens any route. -->
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="azm"/>
+      </intent-filter>
+      <!-- App Links: only https://azmm.pages.dev/join/... opens the app
+           (verified through website/.well-known/assetlinks.json). -->
+      <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="https" android:host="azmm.pages.dev" android:pathPrefix="/join/"/>
+      </intent-filter>
     </activity>
     <!-- Shows the scheduled "Rest over" notification. Not exported. No boot
          receiver: a rest doesn't survive a reboot. -->

@@ -2,8 +2,8 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["9RA43G2P63.com.mohager.azm"],
-        "components": [{ "/": "/*" }]
+        "appIDs": ["9RA43G2P63.com.mohager.azm", "9RA43G2P63.com.mohager.azm.stg"],
+        "components": [{ "/": "/join/*", "comment": "Invite links only" }]
       }
     ]
   }

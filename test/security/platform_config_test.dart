@@ -16,6 +16,30 @@ void main() {
       expect(manifest, isNot(contains('android:debuggable="true"')));
     });
 
+    test('the azm:// scheme and only azmm.pages.dev/join/ open the app', () {
+      expect(manifest, isNot(contains('gymtracker')));
+      expect(manifest, contains('<data android:scheme="azm"/>'));
+      // Exactly one https filter: verified, one host, one path prefix.
+      final https = RegExp('<data[^>]*android:scheme="https"[^>]*/>')
+          .allMatches(manifest)
+          .map((m) => m.group(0)!)
+          .toList();
+      expect(https, hasLength(1));
+      expect(https.single, contains('android:host="azmm.pages.dev"'));
+      expect(https.single, contains('android:pathPrefix="/join/"'));
+      expect(https.single, isNot(contains('pathPattern')));
+      expect(manifest, isNot(contains('android:scheme="http"')));
+      expect(
+        RegExp(
+          '<intent-filter android:autoVerify="true">(?:(?!</intent-filter>)'
+          '.)*android:scheme="https"',
+          dotAll: true,
+        ).hasMatch(manifest),
+        isTrue,
+        reason: 'the https filter needs android:autoVerify="true"',
+      );
+    });
+
     test('only the launcher activity is exported', () {
       final exported = RegExp('android:exported="true"').allMatches(manifest);
       expect(exported.length, 1);
@@ -79,9 +103,30 @@ void main() {
       expect(has('ITSAppUsesNonExemptEncryption', '<false/>'), isTrue);
     });
 
-    test('the gymtracker:// scheme opens the app (deep links)', () {
+    test('the azm:// scheme opens the app (deep links)', () {
       expect(has('FlutterDeepLinkingEnabled', '<true/>'), isTrue);
-      expect(plist, contains('<string>gymtracker</string>'));
+      expect(plist, contains('<string>azm</string>'));
+      expect(plist, isNot(contains('gymtracker')));
+    });
+
+    test('Universal Links: only applinks:azmm.pages.dev, in every flavor', () {
+      final entitlements = File('ios/Runner/Runner.entitlements')
+          .readAsStringSync();
+      final domains = RegExp('<string>([^<]*)</string>')
+          .allMatches(entitlements)
+          .map((m) => m.group(1))
+          .toList();
+      expect(domains, ['applinks:azmm.pages.dev']);
+
+      // Every Runner build configuration (Debug/Release/Profile x staging/
+      // prod) signs with the entitlements; RunnerTests has no Info.plist.
+      final pbxproj = File('ios/Runner.xcodeproj/project.pbxproj')
+          .readAsStringSync();
+      final configs = 'INFOPLIST_FILE = Runner/Info.plist;'.allMatches(pbxproj);
+      final signed = 'CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;'
+          .allMatches(pbxproj);
+      expect(configs.length, greaterThanOrEqualTo(6));
+      expect(signed.length, configs.length);
     });
 
     test('declares English and Arabic', () {
