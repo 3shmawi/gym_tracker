@@ -7,7 +7,7 @@ Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 - [Release & CI/CD](release.md) — how merging to `main` ships to the stores
 - [Deep links](deep_links.md)
 - [Security](security.md) — what is tested and how
-- [Decisions](decisions/) — why the stack looks the way it does
+- [Decisions](decisions/) — why the stack looks the way it does; [gym accounts](decisions/gym_accounts.md) (proposed)
 
 ## Features
 - [App update gate](features/app_update.md)
