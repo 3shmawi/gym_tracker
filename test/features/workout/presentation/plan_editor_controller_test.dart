@@ -52,6 +52,8 @@ class _FailingSaves implements WorkoutRepository {
   Future<Result<Level>> loadBestLevel() => _inner.loadBestLevel();
   @override
   Future<Result<void>> saveBestLevel(Level l) => _inner.saveBestLevel(l);
+  @override
+  Future<Result<void>> clearHistory() => _inner.clearHistory();
 }
 
 const _chest = LocalizedName(ar: 'صدر', en: 'Chest');

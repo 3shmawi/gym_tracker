@@ -40,6 +40,34 @@ void main() {
       );
     });
 
+    // The gym QR scanner (docs/decisions/gym_accounts.md §8).
+    test('the camera: asked for, but the app installs without one', () {
+      expect(manifest, contains('android.permission.CAMERA'));
+      expect(
+        RegExp(
+          r'<uses-feature android:name="android.hardware.camera"\s+'
+          r'android:required="false"\s*/>',
+        ).hasMatch(manifest),
+        isTrue,
+        reason: 'required=false: typing the code works without a camera',
+      );
+    });
+
+    test('no other sensor or storage permission came with the scanner', () {
+      for (final p in [
+        'RECORD_AUDIO',
+        'READ_EXTERNAL_STORAGE',
+        'WRITE_EXTERNAL_STORAGE',
+        'READ_MEDIA',
+        'ACCESS_FINE_LOCATION',
+        'ACCESS_COARSE_LOCATION',
+        'READ_CONTACTS',
+        'USE_BIOMETRIC',
+      ]) {
+        expect(manifest, isNot(contains('permission.$p')), reason: p);
+      }
+    });
+
     test('only the launcher activity is exported', () {
       final exported = RegExp('android:exported="true"').allMatches(manifest);
       expect(exported.length, 1);
@@ -127,6 +155,46 @@ void main() {
           .allMatches(pbxproj);
       expect(configs.length, greaterThanOrEqualTo(6));
       expect(signed.length, configs.length);
+    });
+
+    test('says why the camera is used, in English and Arabic', () {
+      const en =
+          "Azm uses the camera only to scan your gym's QR code. "
+          'Nothing is recorded or saved.';
+      const ar =
+          'يستخدم عزم الكاميرا فقط لقراءة رمز QR الخاص بالجيم. '
+          'لا يتم تسجيل أو حفظ أي صور.';
+      expect(has('NSCameraUsageDescription', '<string>$en</string>'), isTrue);
+      final strings = {
+        'en': File('ios/Runner/en.lproj/InfoPlist.strings').readAsStringSync(),
+        'ar': File('ios/Runner/ar.lproj/InfoPlist.strings').readAsStringSync(),
+      };
+      expect(strings['en'], contains('"NSCameraUsageDescription" = "$en";'));
+      expect(strings['ar'], contains('"NSCameraUsageDescription" = "$ar";'));
+      // The files are part of the app: a variant group in the Runner target.
+      final pbxproj = File('ios/Runner.xcodeproj/project.pbxproj')
+          .readAsStringSync();
+      expect(pbxproj, contains('path = en.lproj/InfoPlist.strings;'));
+      expect(pbxproj, contains('path = ar.lproj/InfoPlist.strings;'));
+      expect(pbxproj, contains('InfoPlist.strings in Resources'));
+      expect(
+        RegExp(r'knownRegions = \([^)]*\bar,').hasMatch(pbxproj),
+        isTrue,
+        reason: 'Arabic must be a known region or the strings are ignored',
+      );
+    });
+
+    test('asks for no other private data', () {
+      for (final key in [
+        'NSPhotoLibraryUsageDescription',
+        'NSMicrophoneUsageDescription',
+        'NSLocationWhenInUseUsageDescription',
+        'NSContactsUsageDescription',
+        'NSFaceIDUsageDescription',
+        'NSUserTrackingUsageDescription',
+      ]) {
+        expect(plist, isNot(contains(key)), reason: key);
+      }
     });
 
     test('declares English and Arabic', () {

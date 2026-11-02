@@ -121,6 +121,19 @@ class LocalWorkoutRepository implements WorkoutRepository {
   Future<Result<void>> saveBestLevel(Level level) =>
       guard(() => _prefs.setString(levelKey, level.name), retries: 0);
 
+  @override
+  Future<Result<void>> clearHistory() => guard(() async {
+    for (final key in [
+      historyKey,
+      chosenDayKey,
+      legacyChosenDayKey,
+      draftKey,
+      levelKey,
+    ]) {
+      await _prefs.remove(key);
+    }
+  }, retries: 0);
+
   List<WorkoutSession> _readHistory() {
     final raw = _prefs.getString(historyKey);
     if (raw == null) return [];

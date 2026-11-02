@@ -10,6 +10,16 @@ abstract final class AppColors {
   static const primary = Color(0xFF22C55E);
   static const primaryText = Color(0xFF15803D);
 
+  /// Gym logo tiles (design `.lg`): blue first, amber second, then again.
+  static const gymBlueStart = Color(0xFF2563EB);
+  static const gymBlueEnd = Color(0xFF1E3A8A);
+  static const gymAmberStart = Color(0xFFF59E0B);
+  static const gymAmberEnd = Color(0xFFB45309);
+
+  /// The scanner's camera backdrop (design `.cam`) and its white corner marks.
+  static const cameraCenter = Color(0xFF2B3A33);
+  static const cameraEdge = Color(0xFF0B100D);
+
   /// Text/icons on a [primary] fill (9.6:1).
   static const onPrimary = Color(0xFF04210F);
 

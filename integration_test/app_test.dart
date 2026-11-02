@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
 import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
+import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/core/router/app_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/splash/animated_splash.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/features/gym/presentation/join_page.dart';
+import 'package:gym_tracker/features/gym/presentation/joined_view.dart';
+import 'package:gym_tracker/features/gym/presentation/scanner_camera.dart';
+import 'package:gym_tracker/features/gym/presentation/scanner_view.dart';
+import 'package:gym_tracker/features/gym/presentation/welcome_view.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_view.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
@@ -24,6 +29,8 @@ import 'package:integration_test/integration_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../test/helpers/fake_rest_alarm.dart';
+import '../test/helpers/gym_app.dart' show FakeCamera;
+import '../test/helpers/gym_fakes.dart';
 import 'flows/build_plan_flow.dart';
 import 'helpers/demo.dart';
 
@@ -313,8 +320,8 @@ void main() {
     await beat(tester, 1500);
 
     // The link only filled the boxes in: nothing joined. Join is the
-    // member's own tap (and, until joining ships, stays off).
-    expect(find.byKey(const Key('join_not_ready')), findsOneWidget);
+    // member's own tap.
+    expect(find.byKey(const Key('join_submit')), findsOneWidget);
     await beat(tester, 1200);
 
     // A bad link shows an empty field and says why.
@@ -334,6 +341,56 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('H'), findsOneWidget);
     await beat(tester, 1500);
+  });
+
+  testWidgets('join a gym: scan the QR, "Welcome", then today\'s workout', (
+    tester,
+  ) async {
+    // The simulator has no camera and the demo no server: a fake camera and a
+    // gym that accepts the code, set after start-up.
+    FeatureFlags.overrides[Flags.gymJoin] = true;
+    addTearDown(FeatureFlags.overrides.clear);
+    await freshInstall(tester);
+    await app.main();
+    useFakeRestAlarm();
+    final camera = FakeCamera();
+    scannerCameraOverride = camera.builder;
+    addTearDown(() => scannerCameraOverride = null);
+    final gyms = FakeGymRepository(redeemResult: Success(joinedGym()));
+    Dependencies.gymRepository = gyms;
+    final account = FakeAccountRepository();
+    Dependencies.accountRepository = account;
+    await tester.pumpAndSettle();
+    await beat(tester, 1200);
+
+    // A new install asks once how to start.
+    expect(find.byType(WelcomeView), findsOneWidget);
+    await beat(tester, 1500);
+    await tester.tap(find.byKey(const Key('welcome_join')));
+    await tester.pumpAndSettle();
+    expect(find.byType(ScannerView), findsOneWidget);
+    await beat(tester, 1800);
+
+    // The camera reads the QR the captain printed: it joins at once.
+    camera.scan('https://azmm.pages.dev/join/K7M2QX');
+    await tester.pumpAndSettle();
+    // Redeeming signs the phone in (anonymously) first.
+    account.emit(anonymousSession);
+    await tester.pumpAndSettle();
+    expect(gyms.redeemed, [testCode]);
+    expect(find.byType(JoinedView), findsOneWidget);
+    expect(find.text('Welcome to Iron House'), findsOneWidget);
+    await beat(tester, 2500);
+
+    // Start training: today's workout.
+    await tester.tap(find.byKey(const Key('joined_start')));
+    await tester.pumpAndSettle();
+    await beat(tester, 1200);
+    expect(find.byType(NextWorkoutPage), findsOneWidget);
+    await tester.tap(find.byKey(const Key('use_template_button')));
+    await tester.pumpAndSettle();
+    expect(find.byType(ExercisePreviewRow), findsWidgets);
+    await beat(tester, 2000);
   });
 }
 

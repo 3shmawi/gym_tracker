@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gym_tracker/core/adaptive/adaptive.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
@@ -10,11 +11,16 @@ import 'package:gym_tracker/l10n/l10n.dart';
 /// Pure UI: the code and what to do with it come in as data and callbacks.
 ///
 /// A link only pre-fills [initialCode]; nothing is submitted until the member
-/// taps Join ([onSubmit]). While [onSubmit] is null (joining is not built
-/// yet) the button stays off and a line says so.
+/// taps Join ([onSubmit]). While [onSubmit] is null the button stays off and a
+/// line says so. A refused code shows [invalid] inline (board 3, "Wrong code");
+/// the other reasons come as a sheet from the page.
 class JoinView extends StatefulWidget {
   const new({
     required this.onSubmit,
+    this.busy = false,
+    this.invalid = false,
+    this.onEdited,
+    this.onBack,
     this.initialCode = '',
     this.fromLink = false,
     this.linkIncomplete = false,
@@ -32,6 +38,18 @@ class JoinView extends StatefulWidget {
 
   final ValueChanged<InviteCode>? onSubmit;
 
+  /// The code is on its way to the server: the button says so and is off.
+  final bool busy;
+
+  /// The server said this code is not right: red boxes and a message.
+  final bool invalid;
+
+  /// The member changed the code (a refusal no longer applies).
+  final VoidCallback? onEdited;
+
+  /// A back button for when nothing is behind this screen (a cold link).
+  final VoidCallback? onBack;
+
   @override
   State<JoinView> createState() => _JoinViewState();
 }
@@ -44,7 +62,15 @@ class _JoinViewState extends State<JoinView> {
     super.initState();
     _controller = TextEditingController(
       text: InviteCode.clean(widget.initialCode),
-    )..addListener(() => setState(() {}));
+    );
+    var last = _controller.text;
+    _controller.addListener(() {
+      setState(() {});
+      if (_controller.text != last) {
+        last = _controller.text;
+        widget.onEdited?.call();
+      }
+    });
   }
 
   @override
@@ -66,15 +92,25 @@ class _JoinViewState extends State<JoinView> {
     final palette = context.palette;
     final untouched = _controller.text == InviteCode.clean(widget.initialCode);
     final _Slot slot;
-    if (widget.linkIncomplete && _controller.text.isEmpty) {
+    if (widget.invalid) {
+      slot = _Slot.invalid;
+    } else if (widget.linkIncomplete && _controller.text.isEmpty) {
       slot = _Slot.error;
     } else if (widget.fromLink && untouched && _code != null) {
       slot = _Slot.linkBanner;
     } else {
       slot = _Slot.hint;
     }
-    final isError = slot == _Slot.error;
+    final isError = slot == _Slot.error || slot == _Slot.invalid;
     return AppScaffold(
+      leading: widget.onBack == null
+          ? null
+          : AppIconButton(
+              key: const Key('join_back'),
+              icon: AdaptiveIcons.back(context),
+              tooltip: l10n.commonBack,
+              onPressed: widget.onBack!,
+            ),
       padBottom: false,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -122,14 +158,17 @@ class _JoinViewState extends State<JoinView> {
                         height: 1.6,
                       ),
                     ),
-                    _Slot.linkBanner => _LinkBanner(
+                    _Slot.linkBanner => AppBanner(
                       key: const Key('join_message'),
+                      icon: Icons.link,
                       text: l10n.joinFromLink,
                     ),
-                    _Slot.error => Semantics(
+                    _Slot.error || _Slot.invalid => Semantics(
                       liveRegion: true,
                       child: Text(
-                        l10n.joinLinkIncomplete,
+                        slot == _Slot.invalid
+                            ? l10n.joinInvalidInline
+                            : l10n.joinLinkIncomplete,
                         key: const Key('join_message'),
                         textAlign: TextAlign.center,
                         style: AppTextStyles.body.copyWith(
@@ -162,8 +201,9 @@ class _JoinViewState extends State<JoinView> {
               ),
               child: AppPrimaryButton(
                 key: const Key('join_submit'),
-                label: l10n.joinAction,
-                onPressed: widget.onSubmit != null && _code != null
+                label: widget.busy ? l10n.joinInProgress : l10n.joinAction,
+                onPressed:
+                    widget.onSubmit != null && _code != null && !widget.busy
                     ? _submit
                     : null,
               ),
@@ -175,50 +215,4 @@ class _JoinViewState extends State<JoinView> {
   }
 }
 
-enum _Slot { hint, linkBanner, error }
-
-/// "We opened the link and typed the code for you" (design `.banner.info`:
-/// 18 radius, 10 × 14 padding, link icon, blue tint).
-class _LinkBanner extends StatelessWidget {
-  const new({required this.text, super.key});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.palette;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: palette.trendKeep.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(AppDimens.scaled(18)),
-      ),
-      child: Padding(
-        padding: EdgeInsetsDirectional.symmetric(
-          horizontal: AppDimens.scaled(14),
-          vertical: AppDimens.scaled(10),
-        ),
-        child: Row(
-          spacing: AppDimens.scaled(10),
-          children: [
-            ExcludeSemantics(
-              child: Icon(
-                Icons.link,
-                size: AppDimens.scaled(20),
-                color: palette.textPrimary,
-              ),
-            ),
-            Expanded(
-              child: Text(
-                text,
-                style: AppTextStyles.body.copyWith(
-                  color: palette.textPrimary,
-                  fontSize: AppDimens.scaled(13.5),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+enum _Slot { hint, linkBanner, error, invalid }

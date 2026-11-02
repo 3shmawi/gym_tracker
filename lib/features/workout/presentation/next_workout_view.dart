@@ -26,6 +26,7 @@ class NextWorkoutView extends StatelessWidget {
     this.onOpenProgress,
     this.onOpenExercise,
     this.onOpenPlan,
+    this.onOpenWorkspace,
     this.onBuildPlan,
     this.onEditDay,
     super.key,
@@ -59,12 +60,22 @@ class NextWorkoutView extends StatelessWidget {
   /// waiting day has none.
   final ValueChanged<String>? onEditDay;
 
+  /// "Where are you training?": only for people with a gym account.
+  final VoidCallback? onOpenWorkspace;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return AppScaffold(
       title: l10n.todayTitle,
       actions: [
+        if (onOpenWorkspace != null)
+          AppIconButton(
+            key: const Key('home_workspace_button'),
+            tooltip: l10n.switchTitle,
+            icon: Icons.swap_horiz,
+            onPressed: onOpenWorkspace!,
+          ),
         if (onOpenPlan != null && state.value != null)
           AppIconButton(
             key: const Key('home_plan_button'),

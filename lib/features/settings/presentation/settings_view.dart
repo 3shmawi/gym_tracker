@@ -14,6 +14,8 @@ class SettingsView extends StatelessWidget {
     required this.onLocaleChanged,
     required this.onThemeModeChanged,
     this.onOpenPlan,
+    this.onOpenAccount,
+    this.onJoinGym,
     super.key,
   });
 
@@ -23,6 +25,11 @@ class SettingsView extends StatelessWidget {
 
   /// Opens the plan editor; the Workout section is hidden while null.
   final VoidCallback? onOpenPlan;
+
+  /// "My account" for people signed in to a gym; else [onJoinGym] offers
+  /// "Join your gym". Both null (gym accounts off) hides the section.
+  final VoidCallback? onOpenAccount;
+  final VoidCallback? onJoinGym;
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +51,24 @@ class SettingsView extends StatelessWidget {
                 icon: Icons.format_list_bulleted,
                 onTap: onOpenPlan!,
               ),
+            ),
+          ],
+          if (onOpenAccount != null || onJoinGym != null) ...[
+            SettingsSectionHeader(l10n.settingsAccount),
+            AppCard(
+              child: onOpenAccount != null
+                  ? SettingsLinkTile(
+                      key: const Key('settings_account'),
+                      label: l10n.settingsMyAccount,
+                      icon: Icons.account_circle_outlined,
+                      onTap: onOpenAccount!,
+                    )
+                  : SettingsLinkTile(
+                      key: const Key('settings_join_gym'),
+                      label: l10n.settingsJoinGym,
+                      icon: Icons.qr_code_scanner,
+                      onTap: onJoinGym!,
+                    ),
             ),
           ],
           SettingsSectionHeader(l10n.settingsLanguage),

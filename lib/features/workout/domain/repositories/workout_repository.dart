@@ -37,4 +37,9 @@ abstract interface class WorkoutRepository {
   Future<Result<Level>> loadBestLevel();
 
   Future<Result<void>> saveBestLevel(Level level);
+
+  /// Erases finished workouts, the one in progress, the chosen day and the
+  /// level on this phone (account deletion: "also erase workouts on this
+  /// phone"). The plan stays.
+  Future<Result<void>> clearHistory();
 }

@@ -124,6 +124,37 @@ After the deploy:
 - Rolling back: migrations are never edited once applied; a fix is a new
   migration. Revoke leaked invites instead of dropping rows.
 
+#### Gym accounts in the app (`gym_join` flag)
+Everything in the app is behind the PostHog flag `gym_join` (off by default):
+shipping the build changes nothing for users until it is turned on. Turn it on
+for staging first (PostHog → Feature flags → `gym_join`, filter
+`app = gym_tracker`, `environment = staging`).
+Before the flag goes on in production:
+1. **Turnstile.** Cloudflare dashboard → Turnstile → a widget for the app; put
+   the **secret** in Supabase → Authentication → Attack Protection (Captcha
+   provider: Turnstile). The site key is publishable; the app code that asks
+   Turnstile for a token plugs into `SupabaseGymRepository.captchaToken`
+   (today `null`). Without it anonymous sign-in is open to scripts (Supabase
+   limits it to 30 per hour per IP by default).
+2. **Camera strings.** `ios/Runner/{en,ar}.lproj/InfoPlist.strings` and
+   `Info.plist` (`NSCameraUsageDescription`) hold the text App Review sees
+   (decision doc §8). Edit all three together; `platform_config_test.dart`
+   pins them.
+3. **Store forms.** Apple App Privacy: Name, User ID, Health & Fitness, Diagnostics,
+   none used for tracking; Google Data safety: Personal info (name), Health and
+   fitness, App activity, Device or other IDs (the install id), encrypted in
+   transit, deletion URL `https://azmm.pages.dev/delete-account.html`
+   (updated in PR C). The camera is used on the device only.
+4. **App size.** `mobile_scanner` bundles the ML Kit barcode model on Android
+   (about +3–10 MB); the unbundled variant is a one-line
+   `android/gradle.properties` change (`dev.steenbakker.mobile_scanner.useUnbundled=true`)
+   at the cost of a Play-services download on first scan.
+5. **First CI build.** `flutter_secure_storage` 11 raises Android `minSdk` to 24
+   (ours is 26) and asks for `compileSdk` 37; open the Runner target once in
+   Xcode and check `InfoPlist.strings` is listed under Resources.
+6. A real phone: scan a card from `scripts/make_invites` (staging), join, see
+   Today, switch, sign out, delete the throwaway account.
+
 #### Demo gym for App Review
 Apple (2.1) and Google need a way into the gym features without a real captain.
 The demo code is a **secret-like value that never goes in the repo, a chat or a

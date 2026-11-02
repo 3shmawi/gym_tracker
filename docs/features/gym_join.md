@@ -1,8 +1,8 @@
 # Feature: join a gym by link or code
 
-> Step 1/3 of the delivery plan in [`../decisions/gym_accounts.md`](../decisions/gym_accounts.md) §13
-> (website + the app's `/join` route). Redeeming a code (sign-in, Supabase) is
-> step 3/4 and not here.
+> Step 1 of the delivery plan in [`../decisions/gym_accounts.md`](../decisions/gym_accounts.md) §13
+> (website + the app's `/join` route). Redeeming the code (sign-in, scanner,
+> Joined, switcher, profile) is [`gym_account_app.md`](gym_account_app.md).
 
 ## What it does
 - **Web page** `https://azmm.pages.dev/join/<code>` (`website/join.html`): what a
@@ -18,8 +18,13 @@
   member taps **Join** to confirm. A link with no valid code shows an empty
   field and "This link has no valid code".
 - Behind the **`gym_join`** feature flag (PostHog), off by default: off, the
-  links open the home screen like before. While joining is not built the Join
-  button stays off and a line says "Joining a gym arrives in the next update".
+  links open the home screen like before. The Join button now redeems the code
+  (`joinSubmitProvider` → `JoinController`); `join_not_ready` shows only when
+  that provider is null (tests).
+- The screen also shows a wrong code inline (red boxes, board 3 "Wrong code")
+  and a busy state; the other refusals open the scanner's sheets. `/join/<code>`,
+  `/join/scan` and `/join/joined` are top-level routes now (not children of
+  `/join`), so a link opens one screen, not two stacked.
 
 ## Design
 Copied from the approved gym accounts design (boards 3, 8a, 8b, `extra.css`):
@@ -79,14 +84,13 @@ quiet chip (`.cta.off`) everywhere.
 - Universal/App Links are unchanged (`/join/*` only, no query), so a link
   `?c=` is never claimed.
 
-## Not done here
+## Not done here (see gym_account_app.md for what came after)
 - The store button for iOS still points to the placeholder app id
   (`idYOUR_APP_ID`, same as the home page; both must change together, a test
   keeps them equal).
-- The scanner screen, Joined/solo-data screens and the redeem call (delivery
-  steps 3/4).
-- Analytics for the screen: the screen name comes from the route names
-  (`join`, `join_code`); `gym_join_started` etc. arrive with the redeem step.
+- The solo-data question (PR C).
+- Analytics: the screen name comes from the route names (`join`, `join_code`);
+  the events are in `gym_account_app.md`.
 
 ## Demo & post
 Hook: "Scan the QR your captain gave you and your gym is already typed in."

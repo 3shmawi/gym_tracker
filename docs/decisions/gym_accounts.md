@@ -470,3 +470,18 @@ above as the self-service route.
 | Last owner | `account_deletion_blockers()` plus a `BEFORE DELETE` trigger on `memberships`; deleting a whole gym still works. |
 | `pg_cron` | Not created by a migration (unverified on our plan); `schedule_maintenance()` schedules the jobs when the extension is on. |
 
+## 18. The app as built (delivery step 3, PR B) — where it differs from §5–§12
+
+Feature doc: [`features/gym_account_app.md`](../features/gym_account_app.md).
+
+| Point | Decision / difference |
+|---|---|
+| Switcher | A **sheet** (board 4), not a `/gym` route (§7). The only new routes are `/welcome`, `/join/scan`, `/join/joined`, `/profile`, `/profile/delete`. |
+| Join routes | `/join/<code>`, `/join/scan`, `/join/joined` are top-level routes (not children of `/join`): a child stacks on an empty enter-code screen and both react to the same result. `scan` and `joined` precede `:code`; paths are case sensitive. |
+| First screen | Only the choose-your-path page of board 1 is built; pages 1–3 do not exist in the app. Shown once, never to people with a plan or an account. |
+| Session storage | `SecureLocalStorage` (Keychain `first_unlock_this_device` / Android Keystore); a Keychain session of an earlier install is dropped on a fresh install (§12 "Reinstall"). |
+| Captain name, logo | Not shown: RLS gives a trainee no read on the captain's row and `redeem_invite` does not return it; the logo is not downloaded (initials tile). Both need a small backend addition. |
+| Workspaces | Stored and refreshed, but **Today still shows the on-device plan** for every workspace and new workouts carry no `gym_id` yet (§13 step 4). A missing or ended active membership → solo. |
+| Email upgrade | "Add email" calls `updateUser(email)` (§16 #2). Signing back in with that email needs an email one-time-code screen, not built yet. |
+| Turnstile | Seam only (`captchaToken`, `null`); required before the flag goes on. |
+| Last-owner delete | An owner types the name of the first gym they own (alphabetical); the server decides about the rest (`409 last_owner`). |
