@@ -50,6 +50,47 @@ void main() {
       expect(locale, const Locale('ar'));
     });
 
+    testWidgets('gym accounts off: no gym section', (tester) async {
+      await tester.pumpApp(
+        SettingsView(
+          settings: const AppSettings(),
+          onLocaleChanged: (_) {},
+          onThemeModeChanged: (_) {},
+        ),
+      );
+      expect(find.text(l10nEn.settingsAccount), findsNothing);
+    });
+
+    testWidgets('signed in: "My account"; signed out: "Join your gym"', (
+      tester,
+    ) async {
+      var account = 0;
+      await tester.pumpApp(
+        SettingsView(
+          settings: const AppSettings(),
+          onLocaleChanged: (_) {},
+          onThemeModeChanged: (_) {},
+          onOpenAccount: () => account++,
+        ),
+      );
+      await tester.tap(find.byKey(const Key('settings_account')));
+      expect(account, 1);
+      expect(find.byKey(const Key('settings_join_gym')), findsNothing);
+
+      var joined = 0;
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpApp(
+        SettingsView(
+          settings: const AppSettings(),
+          onLocaleChanged: (_) {},
+          onThemeModeChanged: (_) {},
+          onJoinGym: () => joined++,
+        ),
+      );
+      await tester.tap(find.byKey(const Key('settings_join_gym')));
+      expect(joined, 1);
+    });
+
     testWidgets('meets accessibility guidelines', (tester) async {
       await tester.pumpApp(
         SettingsView(

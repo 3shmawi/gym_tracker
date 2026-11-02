@@ -15,7 +15,9 @@ Status: slice 3 started (rest notification), plus levels.
 2. **Done:** active workout: one-tap logging, edit/delete a set, rest timer (+15 s, skip), supersets, finish with summary and records. Saved after every change.
 3. **Done:** "Rest over" notification when the phone is locked or the app is in the background.
 4. **Done:** edit the whole plan in the app (days, exercises, targets, supersets).
-   Next: sync to Supabase (needs accounts).
+   Next: sync to Supabase (needs accounts). With a gym account the home bar
+   also shows the workspace switcher (`docs/features/gym_account_app.md`); Today
+   still shows the on-device plan until plan sync (delivery step 4).
 
 ## User flows
 1. First launch → "No plan yet" → **Start with the 5-day plan** → Day 1 (بنش وضهر),

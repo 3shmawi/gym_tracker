@@ -24,6 +24,12 @@ helper/error, "n/40" counter, fixed direction), `AppSwitchRow` (adaptive
 switch, whole row toggles), `AppChoiceChip` (48×48, weight step choices),
 and `EmptyView(detail:)` for a second line under an empty state's title.
 
+Gym account screens add `lib/core/ui/app_gym_controls.dart` (exported by
+`app_ui.dart`): `AppLogoTile`, `AppOrb`, `AppListRow`, `AppRadioMark`,
+`AppBanner`, `AppSectionLabel`, `AppViewfinder`, `AppCameraBackdrop`,
+`AppChoiceCard`; and `AppDangerButton(style: tinted | outlined | solid)`.
+Their deviations from the board are listed in `features/gym_account_app.md`.
+
 When the Design System changes, update these files first, then screens.
 
 ## UI style: glass

@@ -83,6 +83,7 @@ Widget view(
   VoidCallback? onOpenPlan,
   VoidCallback? onBuildPlan,
   ValueChanged<String>? onEditDay,
+  VoidCallback? onOpenWorkspace,
 }) => NextWorkoutView(
   state: state,
   onRetry: onRetry ?? () {},
@@ -93,6 +94,7 @@ Widget view(
   onOpenPlan: onOpenPlan ?? () {},
   onBuildPlan: onBuildPlan ?? () {},
   onEditDay: onEditDay ?? (_) {},
+  onOpenWorkspace: onOpenWorkspace,
 );
 
 /// The waiting day has no exercises yet (a day just added in the editor).
@@ -447,7 +449,26 @@ void main() {
     });
   });
 
+  group('the workspace button (gym accounts)', () {
+    testWidgets('is there only for people with an account', (tester) async {
+      await tester.pumpApp(view(AsyncData(day1Waiting())));
+      expect(find.byKey(const Key('home_workspace_button')), findsNothing);
+    });
+
+    testWidgets('opens "Where are you training?"', (tester) async {
+      var opened = 0;
+      await tester.pumpApp(
+        view(AsyncData(day1Waiting()), onOpenWorkspace: () => opened++),
+      );
+      await tester.tap(find.byKey(const Key('home_workspace_button')));
+      expect(opened, 1);
+      expect(find.byTooltip(l10nEn.switchTitle), findsOneWidget);
+    });
+  });
+
   screensUiTests({
+    'next_workout_with_workspace_button': () =>
+        view(AsyncData(day1Waiting()), onStart: () {}, onOpenWorkspace: () {}),
     'next_workout_intermediate': () =>
         view(AsyncData(withLevel(intermediate)), onStart: () {}),
     'next_workout_comeback': () => view(AsyncData(withLevel(proComeback))),

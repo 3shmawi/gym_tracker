@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
+import 'package:gym_tracker/features/gym/presentation/workspace_switcher.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_view.dart';
@@ -14,12 +16,20 @@ class NextWorkoutPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(nextWorkoutControllerProvider.notifier);
+    final signedIn = ref.watch(accountSessionProvider).isSignedIn;
+    // Keeps the gyms fresh while signed in, so a revoked membership puts the
+    // person back in solo as soon as the app opens.
+    if (signedIn) ref.watch(gymControllerProvider);
     final next = ref.watch(nextWorkoutControllerProvider);
     return NextWorkoutView(
       state: next,
       onRetry: () => unawaited(controller.retry()),
       onUseTemplate: () => unawaited(controller.useTemplate()),
       onOpenSettings: () => unawaited(context.push<void>(AppRoutes.settings)),
+      // Only people with a gym account choose where they train.
+      onOpenWorkspace: signedIn
+          ? () => unawaited(openWorkspaceSwitcher(context, ref))
+          : null,
       onOpenProgress: () => unawaited(context.push<void>(AppRoutes.progress)),
       onOpenExercise: (id) =>
           unawaited(context.push<void>(AppRoutes.exerciseHistory(id))),

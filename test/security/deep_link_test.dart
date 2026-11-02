@@ -13,8 +13,14 @@ import 'package:gym_tracker/core/router/not_found_page.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/features/gym/domain/entities/invite_code.dart';
+import 'package:gym_tracker/features/gym/domain/entities/workspace.dart';
+import 'package:gym_tracker/features/gym/presentation/delete_account_view.dart';
 import 'package:gym_tracker/features/gym/presentation/join_page.dart';
 import 'package:gym_tracker/features/gym/presentation/join_submit.dart';
+import 'package:gym_tracker/features/gym/presentation/joined_view.dart';
+import 'package:gym_tracker/features/gym/presentation/profile_view.dart';
+import 'package:gym_tracker/features/gym/presentation/scanner_view.dart';
+import 'package:gym_tracker/features/gym/presentation/welcome_view.dart';
 import 'package:gym_tracker/features/settings/data/repositories/shared_prefs_settings_repository.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_controller.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
@@ -33,6 +39,8 @@ import 'package:gym_tracker/l10n/l10n.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/fake_rest_alarm.dart';
+import '../helpers/gym_app.dart';
+import '../helpers/gym_fakes.dart' show anonymousSession;
 import '../helpers/pump_app.dart' show l10nEn;
 
 /// Deep links are untrusted input: unknown or crafted paths must land on a
@@ -135,7 +143,9 @@ void main() {
     Future<void> pump(WidgetTester tester) => pumpRouter(
       tester,
       extraOverrides: [
-        joinSubmitProvider.overrideWithValue((code) async => submits.add(code)),
+        joinSubmitProvider.overrideWithValue(
+          (code, via) async => submits.add(code),
+        ),
       ],
     );
 
@@ -279,10 +289,152 @@ void main() {
     testWidgets('without a submit handler Join stays off after a link', (
       tester,
     ) async {
-      await pumpRouter(tester);
+      await pumpRouter(
+        tester,
+        extraOverrides: [joinSubmitProvider.overrideWithValue(null)],
+      );
       appRouter.go('/join/K7M2QX');
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('join_not_ready')), findsOneWidget);
+    });
+  });
+
+  group('gym account screens', () {
+    const accountPaths = ['/profile', '/profile/delete'];
+    const joinPaths = ['/join/scan', '/join/joined', '/welcome'];
+
+    testWidgets('with the flag off every one of them opens home', (
+      tester,
+    ) async {
+      final app = GymApp(flagOn: false, session: anonymousSession);
+      await app.pump(tester);
+      for (final path in [...accountPaths, ...joinPaths]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.byType(NextWorkoutPage), findsOneWidget, reason: path);
+      }
+      expect(app.gyms.redeemed, isEmpty);
+    });
+
+    testWidgets('signed-out people never reach the account screens', (
+      tester,
+    ) async {
+      final app = GymApp();
+      await app.pump(tester);
+      for (final path in [
+        ...accountPaths,
+        '/profile?redirect=https://evil.example.com',
+        '/profile/delete?confirm=delete',
+        '/profile/',
+        '/profile/delete/',
+      ]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.byType(ProfileView), findsNothing, reason: path);
+        expect(find.byType(DeleteAccountView), findsNothing, reason: path);
+        expect(find.byType(WelcomeView), findsOneWidget, reason: path);
+      }
+      expect(app.account.deletes, 0, reason: 'a link never deletes anything');
+    });
+
+    testWidgets('signed-in people reach them; a link changes nothing', (
+      tester,
+    ) async {
+      final app = GymApp(session: anonymousSession);
+      await app.pump(tester);
+      appRouter.go('/profile');
+      await tester.pumpAndSettle();
+      expect(find.byType(ProfileView), findsOneWidget);
+      appRouter.go('/profile/delete?confirm=delete&eraseLocal=true');
+      await tester.pumpAndSettle();
+      expect(find.byType(DeleteAccountView), findsOneWidget);
+      expect(app.account.deletes, 0, reason: 'only the button deletes');
+      expect(app.account.signOuts, 0);
+    });
+
+    testWidgets('/join/joined without a join goes home, never crashes', (
+      tester,
+    ) async {
+      final app = GymApp();
+      await app.pump(tester);
+      appRouter.go('/join/joined');
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byType(JoinedView), findsNothing);
+      expect(find.byType(NextWorkoutPage), findsOneWidget);
+    });
+
+    testWidgets('the scanner screen reads nothing from its address', (
+      tester,
+    ) async {
+      final app = GymApp();
+      await app.pump(tester);
+      for (final path in [
+        '/join/scan',
+        '/join/scan?c=K7M2QX',
+        '/join/scan?code=K7M2QX&auto=true',
+        '/join/scan#K7M2QX',
+      ]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.byType(ScannerView), findsOneWidget, reason: path);
+      }
+      expect(app.gyms.redeemed, isEmpty);
+    });
+
+    testWidgets('"scan" and "joined" are routes, never codes', (tester) async {
+      final app = GymApp();
+      await app.pump(tester);
+      appRouter.go('/join/scan');
+      await tester.pumpAndSettle();
+      expect(find.byType(JoinPage), findsNothing);
+      // Paths are case sensitive: "SCAN" is only a (wrong) code.
+      appRouter.go('/join/SCAN');
+      await tester.pumpAndSettle();
+      expect(find.byType(ScannerView), findsNothing);
+      expect(find.byType(JoinPage), findsOneWidget);
+      expect(app.gyms.redeemed, isEmpty);
+    });
+
+    testWidgets('look-alike and extra paths are not found', (tester) async {
+      final app = GymApp(session: anonymousSession);
+      await app.pump(tester);
+      for (final path in [
+        '/gym',
+        '/profile/delete/now',
+        '/profile/other',
+        '/welcome/x',
+        '/join/scan/x',
+        '/join/joined/x',
+        '/account',
+        '/delete-account',
+      ]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.byType(NotFoundPage), findsOneWidget, reason: path);
+      }
+    });
+
+    testWidgets('a link cannot fake a session or a join result', (
+      tester,
+    ) async {
+      final app = GymApp();
+      await app.pump(tester);
+      for (final path in [
+        '/join/joined?gym=Evil&role=owner',
+        '/join/joined?membership=m1',
+        '/profile?session=abc&role=owner',
+      ]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(find.byType(JoinedView), findsNothing, reason: path);
+        expect(find.byType(ProfileView), findsNothing, reason: path);
+      }
+      expect(app.local.workspace, const SoloWorkspace());
     });
   });
 

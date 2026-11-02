@@ -6,12 +6,13 @@ Security is tested, not assumed. Three layers run on every pull request.
 | Test | Guards against |
 |---|---|
 | `secrets_test.dart` | private keys, Supabase secret/service-role keys, AWS/Stripe/GitHub/Google keys or hard-coded keystore passwords in `lib/`, `android/`, `ios/`, `website/`, `supabase/`, `env/`; non-empty `env/example.json`; `.gitignore` missing env/signing entries |
-| `platform_config_test.dart` | cleartext HTTP, debuggable releases, the `azm://` scheme and an https App Link that is not exactly `azmm.pages.dev/join/` (Android + iOS entitlements, both flavors), extra exported Android activities, disabled iOS App Transport Security; notifications: only `SCHEDULE_EXACT_ALARM` (no `USE_EXACT_ALARM`, full-screen intent or boot receiver), the receiver not exported, the icon kept from R8, the iOS delegate set |
+| `platform_config_test.dart` | camera permission without `required=false`, any other sensor/storage/location permission, a missing or untranslated `NSCameraUsageDescription`, `ar` missing from the iOS regions, cleartext HTTP, debuggable releases, the `azm://` scheme and an https App Link that is not exactly `azmm.pages.dev/join/` (Android + iOS entitlements, both flavors), extra exported Android activities, disabled iOS App Transport Security; notifications: only `SCHEDULE_EXACT_ALARM` (no `USE_EXACT_ALARM`, full-screen intent or boot receiver), the receiver not exported, the icon kept from R8, the iOS delegate set |
 | `workflow_secrets_test.dart` | secrets pasted into CI scripts, a key written to a file without `scripts/mask_secrets.sh`, `set -x`, actions not pinned to a commit |
 | `well_known_test.dart` | `.well-known` files holding anything but app ids, package names and SHA-256 fingerprints (no secrets); wrong paths (only `/join/*`) or hosts; missing `application/json` headers; website, store texts, docs and app pointing to a host other than `azmm.pages.dev` (or still to the old one) |
 | `join_page_test.dart` | `website/join.html` using `innerHTML`/`document.write`/`eval`/navigation from the address, inline script or style, a third party or tracker, a store link different from the home page, a missing `/join/*` rewrite or `no-store` header, a `?c=` link |
 | `supabase_backend_test.dart` | a table without RLS or without its pgTAP file, a table that keeps `anon`/`authenticated` grants, a `security definer` function without a fixed `search_path` or open to `anon`, a literal (non-random) Vault secret in a migration, a plain `code` column on `invites`, the Edge Function logging request data / reading secrets / losing JWT verification or pinned dependencies, invite PDFs or function `.env` files not git-ignored |
-| `deep_link_test.dart` | crafted/unknown deep links crashing the app or reaching unexpected screens; open redirects via query parameters; a tapped notification opens only `/workout` (its payload is never read) |
+| `deep_link_test.dart` | crafted/unknown deep links crashing the app or reaching unexpected screens; open redirects via query parameters; a tapped notification opens only `/workout` (its payload is never read); the gym account screens: flag off → home, signed out → `/welcome`, a link never joins, signs out or deletes, `/join/joined` cannot be faked, `scan`/`joined` are never codes |
+| `gym_account_app_test.dart` | the session outside secure storage, a secret besides the session and install id, a `print` in gym code, an analytics event or property beyond the agreed ones (codes, names, ids, emails), the scanner opening a URL or returning the camera image, `signInAnonymously` outside redeem (never at launch), the router joining/signing out/deleting |
 
 ### Join page (`website/join.html`, `/join/<code>`)
 It is shown to people who scan an invite QR without the app, and its address
@@ -177,6 +178,39 @@ Part 2 (sessions, solo import, demo, deletion):
 - Known, accepted: a deleted user's access token keeps passing JWT checks until
   it expires (Auth does not check the database), but every row policy keys on
   `people.auth_user_id`, which is gone, so it can read and write nothing.
+
+### Gym accounts in the app (join, switch, profile)
+Design: [`features/gym_account_app.md`](features/gym_account_app.md).
+- **The session** (refresh token) is in the Keychain / Keystore through
+  `SecureLocalStorage`, never in `shared_preferences`. iOS items are
+  `first_unlock_this_device`; a Keychain session left by an earlier install is
+  dropped on a fresh install. An unreadable store means "no session".
+- **Anonymous sign-in happens only when a code is redeemed**, never at launch
+  (solo users make no account); the `captchaToken` seam is `null` until
+  Cloudflare Turnstile is configured — **required before shipping** (decision
+  §16). Until then the 30-per-hour-per-IP limit of anonymous sign-ins and the
+  redeem throttles are the only guards.
+- **A QR is untrusted input.** The scanner takes text only through
+  `InviteCode.fromScan`: `https://azmm.pages.dev/join/<code>`,
+  `azm://join/<code>` or the bare code; another host, a port, user info, a query,
+  a fragment, extra path pieces or text over 200 characters is "invalid" and is
+  never sent. It never opens a URL, never returns the camera image
+  (`returnImage` off) and the camera is asked for only when the scanner opens.
+- **A link never joins; a scan joins at once** (the person deliberately scanned).
+  Double taps and repeated camera frames start one try. Errors say what to do
+  next and nothing about whether a code ever existed.
+- **What is stored on the phone** (shared preferences, not secret): the active
+  workspace, gym names/roles/permission flags, "first screen answered". What is
+  in secure storage: the Supabase session and the random install id.
+- **Analytics** carries only `via`, `reason` and `to`: never a code, name, id or
+  email. Sign out and delete reset the analytics identity.
+- **Sign out** is one-way for an anonymous account (the dialog says so);
+  **Delete account** sends exactly `{"confirm":"delete"}`, an owner types the
+  gym's name first, and a sole owner is refused with the gym names.
+- **Add email** checks the address shape on the phone (ASCII, ≤ 254) and leaves
+  the rest to Auth; the account keeps its id, so RLS and history are unchanged.
+- Known, accepted: gym logos are initials only (no image request); the captain's
+  name is not shown (RLS); `mobile_scanner` bundles the ML Kit model.
 
 Running `scripts/make_invites` follows the CI rules above even though it is
 local: secrets only through the environment, no `set -x` / verbose flags, no

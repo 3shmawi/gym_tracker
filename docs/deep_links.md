@@ -13,6 +13,18 @@ also a deep link.
 | `/plan/<dayId>` | One plan day's exercises (unknown ids: "This day isn't in your plan") |
 | `/plan/<dayId>/<exerciseId>` | An exercise's names and targets (unknown ids: "not in your plan") |
 | `/settings` | Settings |
+| `/welcome` | "How do you want to start?" (join a gym / train alone). Behind the `gym_join` flag |
+| `/join/scan` | The QR scanner. Reads nothing from its address. Behind the flag |
+| `/join/joined` | "Welcome to <gym>" right after a code was accepted; opened any other way it goes home. Behind the flag |
+| `/profile` | My account. **Signed-in people only**: signed out → `/welcome` (flag off → home) |
+| `/profile/delete` | Delete account. Signed-in only, same redirect. A link never deletes: only the button does |
+
+Gym account links (`/welcome`, `/join/scan`, `/join/joined`, `/profile`,
+`/profile/delete`) only open screens; a query or fragment changes nothing
+(`test/security/deep_link_test.dart` → "gym account screens"). `/join/scan` and
+`/join/joined` come before `/join/<code>`, and paths are case sensitive, so
+`/join/SCAN` is only a wrong code. There is no `/gym` route: the switcher is a
+sheet.
 
 Plan links only open the editor: nothing in a link (query or path) can add,
 change or delete anything. Ids are encoded by `AppRoutes.planDay` /
@@ -37,10 +49,12 @@ other https path stays in the browser.
 | `/join/<code>` | The enter-code screen with the code filled in. A link **never joins**: the member taps Join. A code that is not 6 characters of `A-H J K M N P-Z 2-9` (any case) shows an empty field and "this link has no valid code". |
 | `/join` (no code) | The same screen, empty (opened by `azm://join` from the web page when it has no code). A query (`?c=…`) is ignored |
 | `/join/<code>/…`, `/joinx/…` | Not found |
+| scanned QR | Not a link: the in-app scanner takes `https://azmm.pages.dev/join/<code>`, `azm://join/<code>` or the bare code, nothing else (`InviteCode.fromScan`), and joins at once |
 
 The whole `/join` family is behind the `gym_join` feature flag (PostHog,
 `Flags.gymJoin`): **off, every `/join…` link opens the home screen**, as before
-gym accounts. The flag goes on when joining works (delivery step 3/4).
+gym accounts. The flag goes on when joining works end to end and Turnstile
+is set up (`docs/release.md` → "Gym accounts in the app").
 
 The same links work as `azm://join/<code>` (custom scheme: Flutter maps the
 host to the first path segment, like `azm://settings`).

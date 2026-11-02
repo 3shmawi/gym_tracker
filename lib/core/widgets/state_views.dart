@@ -150,6 +150,14 @@ extension AppFailureMessage on AppFailure {
     UnauthorizedFailure() => l10n.errorUnauthorized,
     NotFoundFailure() => l10n.errorNotFound,
     ValidationFailure() => l10n.errorValidation,
+    InviteFailure(:final problem) => switch (problem) {
+      InviteProblem.invalid => l10n.joinInvalidInline,
+      InviteProblem.expired => l10n.joinExpiredTitle,
+      InviteProblem.used => l10n.joinUsedTitle,
+      InviteProblem.conflict => l10n.joinConflictTitle,
+      InviteProblem.throttled => l10n.joinThrottledTitle,
+    },
+    LastOwnerFailure() => l10n.errorLastOwner,
     ServerFailure() || UnknownFailure() => l10n.errorUnknown,
   };
 }

@@ -6,6 +6,7 @@ import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 export 'app_controls.dart';
+export 'app_gym_controls.dart';
 export 'azm_level_figure.dart';
 export 'azm_logo_animation.dart';
 

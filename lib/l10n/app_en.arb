@@ -643,5 +643,162 @@
   "joinNotReady": "Joining a gym arrives in the next update.",
   "@joinNotReady": {
     "description": "Shown instead of enabling Join while joining is not built yet."
-  }
+  },
+  "commonCancel": "Cancel",
+  "commonClose": "Close",
+  "commonOk": "OK",
+  "welcomeTitle": "How do you want to start?",
+  "welcomeSubtitle": "You can change this any time in Settings.",
+  "welcomeJoinTitle": "Join your gym",
+  "welcomeJoinBody": "Scan the QR code your captain gave you, or type the code.",
+  "welcomeSoloTitle": "Train on my own",
+  "welcomeSoloBody": "No account. Everything stays on your phone.",
+  "welcomeHaveCode": "I have a code. Type it here",
+  "scanTitle": "Scan your gym's code",
+  "scanHint": "Point the camera at the QR code your captain gave you",
+  "scanTypeInstead": "Type the code instead",
+  "scanDeniedTitle": "Camera not allowed",
+  "scanDeniedBody": "We only need the camera to read your gym's QR code. We don't record or save any images.",
+  "scanOpenSettings": "Open settings",
+  "scanUnavailableTitle": "The camera isn't available",
+  "scanUnavailableBody": "You can still join: type the 6-character code your captain gave you.",
+  "scanOfflineTitle": "We need the internet to accept the code",
+  "scanOfflineBody": "The code wasn't used. Try again when you're back online.",
+  "scanJoining": "Joining your gym…",
+  "joinInProgress": "Joining…",
+  "joinScanAgain": "Scan again",
+  "joinTypeCode": "Type the code",
+  "joinTypeOtherCode": "Type another code",
+  "joinInvalidInline": "That code isn't right. Check the six boxes and try again.",
+  "joinInvalidTitle": "This code isn't right",
+  "joinInvalidBody": "Make sure it's the Azm code your captain gave you, or type the 6-character code.",
+  "joinExpiredTitle": "This code has expired",
+  "joinExpiredBody": "A code works for 7 days only. Ask your captain for a new one, then scan it.",
+  "joinUsedTitle": "This code was already used",
+  "joinUsedBody": "Each code works on one phone only. If you changed phones or the code isn't yours, ask your captain for a recovery code.",
+  "joinConflictTitle": "This account can't use this code",
+  "joinConflictBody": "You may already be in this gym. If you're not sure, ask your captain.",
+  "joinThrottledTitle": "Too many tries",
+  "joinThrottledBody": "Wait a few minutes, then try again.",
+  "joinedBadge": "You joined",
+  "joinedWelcome": "Welcome to {gym}",
+  "@joinedWelcome": {
+    "placeholders": {
+      "gym": {
+        "type": "String"
+      }
+    }
+  },
+  "joinedPermissionsTitle": "What you can do in your plan",
+  "joinedPermTargets": "Edit your targets: sets and reps",
+  "joinedPermPlan": "Edit the whole plan",
+  "joinedPermOwn": "Build your own plan",
+  "joinedPrivacy": "Your captain sees workouts you log in this gym only. Your other workouts stay private.",
+  "joinedStart": "Start training",
+  "roleOwner": "Owner",
+  "roleCaptain": "Captain",
+  "roleTrainee": "Trainee",
+  "switchTitle": "Where are you training?",
+  "switchSolo": "Solo",
+  "switchSoloDetail": "On your phone only",
+  "switchJoinAnother": "Join another gym",
+  "switchEndedHeader": "Ended memberships",
+  "switchEndedReadable": "Ended {date} · history is readable",
+  "@switchEndedReadable": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "switchEndedLocked": "Ended {date} · history is locked by the gym",
+  "@switchEndedLocked": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "switchEndedReadableNoDate": "Ended · history is readable",
+  "switchEndedLockedNoDate": "Ended · history is locked by the gym",
+  "switchReadOnly": "Read only",
+  "switchLocked": "Locked",
+  "switchLockedNote": "“Locked” hides that gym's history only. It doesn't delete it, and it comes back if you join again.",
+  "switchFootnote": "Your workout history is yours and moves with you.",
+  "profileTitle": "My account",
+  "profileMemberOf": "Member of {gyms}",
+  "@profileMemberOf": {
+    "placeholders": {
+      "gyms": {
+        "type": "String"
+      }
+    }
+  },
+  "profileNoGym": "Not in a gym yet",
+  "profileGymsHeader": "Your gyms",
+  "profileSwitch": "Change where you train",
+  "profileNoEmail": "Your account has no email or password. To get in on a new phone, ask your captain for a code.",
+  "profileSignedInAs": "Signed in as {email}",
+  "@profileSignedInAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "profileSecureTitle": "Secure your account",
+  "profileSecureBody": "Add an email to get back in on a new phone without asking your captain.",
+  "profileAddEmail": "Add email",
+  "profileEmailLabel": "Email",
+  "profileEmailInvalid": "That doesn't look like an email address.",
+  "profileEmailSend": "Send the link",
+  "profileEmailSent": "We sent a link to {email}. Open it to finish.",
+  "@profileEmailSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "profileSignOut": "Sign out",
+  "profileDelete": "Delete account",
+  "signOutTitle": "Sign out?",
+  "signOutBody": "You'll be signed out of your account on this phone, and you can only get back in with a new code from your captain. Workouts saved to your account aren't deleted.",
+  "signOutSoloNote": "Solo workouts stay on this phone.",
+  "signOutStay": "Stay signed in",
+  "signOutConfirm": "Sign out",
+  "deleteTitle": "Delete account",
+  "deleteHeadline": "Delete your account for good",
+  "deleteItemProfile": "Your profile, name and membership in every gym",
+  "deleteItemWorkouts": "All the workouts saved to your account",
+  "deleteItemPlans": "Plans you made yourself",
+  "deleteEraseLocal": "Also delete this phone's workouts",
+  "deleteEraseLocalDetail": "The Solo workouts stored here",
+  "deleteWarning": "Deleting is immediate and can't be undone. Your captain won't see your data afterwards. You can join again with a new code.",
+  "deleteOwnerPrompt": "To confirm, type the name of your gym: {gym}",
+  "@deleteOwnerPrompt": {
+    "placeholders": {
+      "gym": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteOwnerLabel": "Gym name",
+  "deleteAction": "Delete my account for good",
+  "deleteLastOwnerTitle": "You're the only owner of a gym with members",
+  "deleteLastOwnerBody": "Hand {gyms} over to another owner, or delete the gym first. Then you can delete your account.",
+  "@deleteLastOwnerBody": {
+    "placeholders": {
+      "gyms": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLastOwner": "You're the only owner of a gym that still has members.",
+  "settingsAccount": "Gym",
+  "settingsJoinGym": "Join your gym",
+  "settingsMyAccount": "My account",
+  "joinErrorTitle": "We couldn't join right now",
+  "joinErrorBody": "Something went wrong on our side. Try again in a moment.",
+  "commonBack": "Back"
 }

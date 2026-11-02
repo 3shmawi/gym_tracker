@@ -47,6 +47,8 @@ class _FlakyRepo implements WorkoutRepository {
   @override
   Future<Result<void>> saveBestLevel(Level level) =>
       _inner.saveBestLevel(level);
+  @override
+  Future<Result<void>> clearHistory() => _inner.clearHistory();
 
   @override
   Future<Result<WorkoutDraft?>> loadDraft() => _inner.loadDraft();

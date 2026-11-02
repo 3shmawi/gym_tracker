@@ -120,6 +120,55 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    testWidgets('a refused code shows the inline message, red boxes', (
+      tester,
+    ) async {
+      await tester.pumpApp(
+        JoinView(initialCode: 'K7M2QZ', invalid: true, onSubmit: (_) {}),
+      );
+      expect(message(tester).data, l10nEn.joinInvalidInline);
+    });
+
+    testWidgets('while joining the button says so and does nothing', (
+      tester,
+    ) async {
+      var submitted = 0;
+      await tester.pumpApp(
+        JoinView(
+          initialCode: 'K7M2QX',
+          busy: true,
+          onSubmit: (_) => submitted++,
+        ),
+      );
+      expect(find.text(l10nEn.joinInProgress), findsOneWidget);
+      await tester.tap(
+        find.byKey(const Key('join_submit')),
+        warnIfMissed: false,
+      );
+      expect(submitted, 0);
+    });
+
+    testWidgets(
+      'editing the code tells the page (a refusal no longer applies)',
+      (tester) async {
+        var edits = 0;
+        await tester.pumpApp(
+          JoinView(
+            initialCode: 'K7M2QZ',
+            invalid: true,
+            onEdited: () => edits++,
+            onSubmit: (_) {},
+          ),
+        );
+        await tester.enterText(field(), 'K7M2QX');
+        await tester.pump();
+        expect(edits, 1);
+        await tester.enterText(field(), 'K7M2QX');
+        await tester.pump();
+        expect(edits, 1, reason: 'the same text is not an edit');
+      },
+    );
+
     testWidgets('meets accessibility guidelines', (tester) async {
       await tester.pumpApp(
         JoinView(initialCode: 'K7M2QX', fromLink: true, onSubmit: (_) {}),
@@ -136,5 +185,7 @@ void main() {
         JoinView(linkIncomplete: true, fromLink: true, onSubmit: (_) {}),
     'join_not_ready': () =>
         const JoinView(initialCode: 'K7M2QX', onSubmit: null),
+    'join_invalid_code': () =>
+        JoinView(initialCode: 'K7M2QZ', invalid: true, onSubmit: (_) {}),
   });
 }

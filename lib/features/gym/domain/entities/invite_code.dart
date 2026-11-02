@@ -31,6 +31,40 @@ class InviteCode {
     return _valid.hasMatch(code) ? InviteCode._(code) : null;
   }
 
+  /// The only places a scanned QR may point to. Anything else (another host,
+  /// a query, a fragment, extra path pieces, a port, user info) is refused,
+  /// so a poster with a look-alike QR cannot make the app do anything.
+  static const linkHost = 'azmm.pages.dev';
+  static const _maxScanLength = 200;
+
+  /// The code in a scanned QR: `https://azmm.pages.dev/join/<code>`,
+  /// `azm://join/<code>` or the bare code. Null for everything else.
+  static InviteCode? fromScan(String? raw) {
+    if (raw == null) return null;
+    final text = raw.trim();
+    if (text.isEmpty || text.length > _maxScanLength) return null;
+    if (!text.contains(':')) return tryParse(text);
+    final uri = Uri.tryParse(text);
+    if (uri == null || uri.hasQuery || uri.hasFragment || uri.userInfo != '') {
+      return null;
+    }
+    if (uri.hasPort && uri.port != 0) return null;
+    final scheme = uri.scheme.toLowerCase();
+    final host = uri.host.toLowerCase();
+    final segments = uri.pathSegments;
+    switch (scheme) {
+      case 'https':
+        if (host != linkHost || uri.hasPort) return null;
+        if (segments.length != 2 || segments.first != 'join') return null;
+        return tryParse(segments.last);
+      case 'azm':
+        if (host != 'join' || segments.length != 1) return null;
+        return tryParse(segments.single);
+      default:
+        return null;
+    }
+  }
+
   /// What a person may type: letters and digits of the alphabet only,
   /// upper-cased, at most [length] characters. For text fields.
   static String clean(String input) {

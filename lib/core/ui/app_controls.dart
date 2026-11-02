@@ -67,6 +67,7 @@ class _PillButton extends StatelessWidget {
     required this.fill,
     required this.foreground,
     required this.haptic,
+    this.outline,
   });
 
   final String label;
@@ -75,6 +76,9 @@ class _PillButton extends StatelessWidget {
   final Color fill;
   final Color foreground;
   final Future<void> Function() haptic;
+
+  /// A border instead of a fill (design `.cta.sec` with an error border).
+  final Color? outline;
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +95,11 @@ class _PillButton extends StatelessWidget {
           // Off (design `.cta.off`): a quiet chip with tertiary text, not a
           // faded brand button.
           color: enabled ? fill : context.palette.fillSubtle,
-          shape: const StadiumBorder(),
+          shape: StadiumBorder(
+            side: outline != null && enabled
+                ? BorderSide(color: outline!)
+                : BorderSide.none,
+          ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: enabled
@@ -578,29 +586,60 @@ class AppChoiceRow extends StatelessWidget {
   }
 }
 
-/// A destructive action (delete a day, an exercise): error-tinted pill,
-/// warning haptic. Pair it with [AppSecondaryButton] to cancel.
+/// How loud an [AppDangerButton] is.
+enum AppDangerStyle {
+  /// Error-tinted pill: delete a day, an exercise.
+  tinted,
+
+  /// Transparent with an error border: a way out that must not be hit by
+  /// habit (profile → Delete account).
+  outlined,
+
+  /// Solid error fill, white text: the final confirm of an irreversible act.
+  solid,
+}
+
+/// A destructive action: warning haptic. Pair it with [AppSecondaryButton]
+/// to cancel.
 class AppDangerButton extends StatelessWidget {
   const new({
     required this.label,
     required this.onPressed,
     this.icon,
+    this.style = AppDangerStyle.tinted,
     super.key,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
+  final AppDangerStyle style;
 
   @override
-  Widget build(BuildContext context) => _PillButton(
-    label: label,
-    icon: icon,
-    onPressed: onPressed,
-    fill: context.palette.error.withValues(alpha: 0.16),
-    foreground: context.palette.error,
-    haptic: HapticFeedback.mediumImpact,
-  );
+  Widget build(BuildContext context) {
+    final error = context.palette.error;
+    return _PillButton(
+      label: label,
+      icon: icon,
+      onPressed: onPressed,
+      fill: switch (style) {
+        AppDangerStyle.tinted => error.withValues(alpha: 0.16),
+        AppDangerStyle.outlined => Colors.transparent,
+        AppDangerStyle.solid => error,
+      },
+      // The design's white text on the dark theme's #F87171 is 2.8:1, under
+      // the 3:1 large-text minimum: dark mode uses the dark brand ink.
+      foreground: style == AppDangerStyle.solid
+          ? (Theme.of(context).brightness == Brightness.dark
+                ? AppColors.darkBg
+                : Colors.white)
+          : error,
+      outline: style == AppDangerStyle.outlined
+          ? error.withValues(alpha: 0.6)
+          : null,
+      haptic: HapticFeedback.mediumImpact,
+    );
+  }
 }
 
 /// A labelled one-line text field: label above, helper or error and a
@@ -618,6 +657,8 @@ class AppTextField extends StatelessWidget {
     this.onChanged,
     this.onSubmitted,
     this.textInputAction = TextInputAction.next,
+    this.keyboardType,
+    this.autofillHints,
     super.key,
   });
 
@@ -635,6 +676,8 @@ class AppTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final TextInputAction textInputAction;
+  final TextInputType? keyboardType;
+  final Iterable<String>? autofillHints;
 
   @override
   Widget build(BuildContext context) {
@@ -667,6 +710,8 @@ class AppTextField extends StatelessWidget {
             autofocus: autofocus,
             textDirection: textDirection,
             textInputAction: textInputAction,
+            keyboardType: keyboardType,
+            autofillHints: autofillHints,
             onChanged: onChanged,
             onSubmitted: onSubmitted,
             style: AppTextStyles.body.copyWith(color: palette.textPrimary),

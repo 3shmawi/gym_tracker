@@ -12,6 +12,21 @@ abstract final class AppRoutes {
   /// open the home screen). A bare `/join` opens the same screen empty.
   static const join = '/join';
 
+  /// "How do you want to start?": join a gym or train alone.
+  static const welcome = '/welcome';
+
+  /// The QR scanner (before `/join/:code`, so "scan" is never a code).
+  static const joinScan = '/join/scan';
+
+  /// "Welcome to {gym}" after a code was accepted.
+  static const joined = '/join/joined';
+
+  /// My account (signed-in people only).
+  static const profile = '/profile';
+
+  /// Delete account (signed-in people only).
+  static const deleteAccount = '/profile/delete';
+
   /// The invite link path for a valid code (the code is encoded, so any
   /// text is safe).
   static String joinCode(String code) => '$join/${Uri.encodeComponent(code)}';
