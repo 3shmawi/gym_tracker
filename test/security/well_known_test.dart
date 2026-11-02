@@ -124,6 +124,37 @@ void main() {
     }
   });
 
+  test('_headers hardens every page (CSP, no framing, no sniffing)', () {
+    final headers = File('website/_headers').readAsStringSync();
+    final block = RegExp(
+      r'^/\*\n((?:[ \t]+.*\n?)+)',
+      multiLine: true,
+    ).firstMatch(headers);
+    expect(block, isNotNull);
+    final rules = block!.group(1)!;
+    expect(rules, contains("default-src 'none'"));
+    expect(rules, contains("script-src 'self'"));
+    expect(rules, contains("frame-ancestors 'none'"));
+    // No way to weaken the policy.
+    expect(rules, isNot(contains('unsafe-inline')));
+    expect(rules, isNot(contains('unsafe-eval')));
+    expect(rules, isNot(contains('script-src *')));
+    expect(rules, contains('X-Content-Type-Options: nosniff'));
+    expect(rules, contains('X-Frame-Options: DENY'));
+  });
+
+  test('pages keep no inline script or style (the CSP would block it)', () {
+    final inline = RegExp(
+      r'<script(?![^>]*\ssrc=)|<style|\sstyle=|\son[a-z]+=',
+      caseSensitive: false,
+    );
+    for (final f in Directory('website').listSync().whereType<File>()) {
+      if (f.path.endsWith('.html')) {
+        expect(inline.hasMatch(f.readAsStringSync()), isFalse, reason: f.path);
+      }
+    }
+  });
+
   test('no GitHub Pages deploy is left', () {
     expect(File('.github/workflows/website.yml').existsSync(), isFalse);
   });

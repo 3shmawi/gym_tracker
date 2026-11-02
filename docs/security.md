@@ -11,6 +11,22 @@ Security is tested, not assumed. Three layers run on every pull request.
 | `well_known_test.dart` | `.well-known` files holding anything but app ids, package names and SHA-256 fingerprints (no secrets); wrong paths (only `/join/*`) or hosts; missing `application/json` headers; website, store texts, docs and app pointing to a host other than `azmm.pages.dev` (or still to the old one) |
 | `deep_link_test.dart` | crafted/unknown deep links crashing the app or reaching unexpected screens; open redirects via query parameters; a tapped notification opens only `/workout` (its payload is never read) |
 
+### Links that open the app
+- `azm://` is a custom scheme: **any app can register it**, so treat every
+  link as untrusted input. Routes only open screens; nothing in a link's
+  path or query changes data (`deep_link_test.dart`, incl. `/join/<code>`,
+  where the code is never read).
+- https links are verified by Apple/Google against
+  `https://azmm.pages.dev/.well-known/` (HTTPS, no redirect, JSON) and only
+  `/join/*` is claimed. Whoever can change `website/` on `main` controls
+  which apps may open them, so `main` stays protected (PR + green checks)
+  and the Cloudflare project has no other deploy path. The Android file
+  lists *public* certificate fingerprints only.
+- Staging bundle ids are listed next to prod in the same files; the staging
+  apps are signed by the same team and are never public.
+- `website/_headers` sets a strict CSP (no inline script/style, no framing,
+  no third parties besides Google Fonts), nosniff and HSTS on every page.
+
 ## 2. CI `security` job
 - **gitleaks** — scans the whole git history for committed secrets.
 - **OSV-Scanner** — checks `pubspec.lock` against known vulnerabilities.
