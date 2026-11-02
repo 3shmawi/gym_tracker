@@ -11,6 +11,11 @@ abstract final class Env {
     'POSTHOG_HOST',
     defaultValue: 'https://eu.i.posthog.com',
   );
+
+  /// Cloudflare Turnstile **site** key (publishable). The secret key lives only
+  /// in Supabase → Authentication → Attack Protection. Empty: no captcha is
+  /// asked for (the project must then have captcha protection off).
+  static const turnstileSiteKey = String.fromEnvironment('TURNSTILE_SITE_KEY');
   static const sentryDsn = String.fromEnvironment('SENTRY_DSN');
   static const clarityProjectId = String.fromEnvironment('CLARITY_PROJECT_ID');
 }

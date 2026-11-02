@@ -1,4 +1,6 @@
 import 'package:gym_tracker/core/backend/backend.dart';
+import 'package:gym_tracker/core/captcha/turnstile_captcha.dart';
+import 'package:gym_tracker/core/config/env.dart';
 import 'package:gym_tracker/core/notifications/local_notifications.dart';
 import 'package:gym_tracker/features/gym/data/datasources/secret_store.dart';
 import 'package:gym_tracker/features/gym/data/datasources/secure_install_id_store.dart';
@@ -54,6 +56,9 @@ abstract final class Dependencies {
       gymRepository = SupabaseGymRepository(
         Backend.client,
         SecureInstallIdStore(const FlutterSecretStore()),
+        captchaToken: Env.turnstileSiteKey.isEmpty
+            ? null
+            : const TurnstileCaptcha(siteKey: Env.turnstileSiteKey).token,
       );
       accountRepository = SupabaseAccountRepository(Backend.client);
       soloImportRepository = SupabaseSoloImportRepository(Backend.client);

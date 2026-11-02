@@ -130,12 +130,24 @@ shipping the build changes nothing for users until it is turned on. Turn it on
 for staging first (PostHog → Feature flags → `gym_join`, filter
 `app = gym_tracker`, `environment = staging`).
 Before the flag goes on in production:
-1. **Turnstile.** Cloudflare dashboard → Turnstile → a widget for the app; put
-   the **secret** in Supabase → Authentication → Attack Protection (Captcha
-   provider: Turnstile). The site key is publishable; the app code that asks
-   Turnstile for a token plugs into `SupabaseGymRepository.captchaToken`
-   (today `null`). Without it anonymous sign-in is open to scripts (Supabase
-   limits it to 30 per hour per IP by default).
+1. **Turnstile (built; needs your keys).** The app asks Turnstile for a token
+   before every anonymous sign-in (`lib/core/captcha/turnstile_captcha.dart`,
+   package `cloudflare_turnstile` 3.8.1, invisible widget in a headless web view).
+   - Cloudflare → Turnstile → the widget's **Domains** must include
+     `azmm.pages.dev` (the app uses it as the widget's origin).
+   - Put the **site key** (publishable) in every env file the build uses
+     (`TURNSTILE_SITE_KEY` in `env/staging.json`, `env/prod.json`, and the
+     `ENV_*_JSON` secrets). Put the **secret** only in Supabase → Authentication →
+     Attack Protection (Captcha provider: Turnstile). Never in an env file.
+   - **Order matters:** with captcha protection on in Supabase, a build without
+     `TURNSTILE_SITE_KEY` cannot sign in anonymously (joining fails). With the
+     key set and protection off, tokens are simply ignored.
+   - The widget should be an *invisible* (or non-interactive) type: it runs
+     without UI, so a Managed widget that decides to show a challenge cannot be
+     completed and the join fails after 20 seconds. Check on the first staging
+     build; if it happens, change the widget's mode in Cloudflare.
+   - Without captcha, anonymous sign-in is open to scripts (Supabase limits it
+     to 30 per hour per IP by default).
 2. **Camera strings.** `ios/Runner/{en,ar}.lproj/InfoPlist.strings` and
    `Info.plist` (`NSCameraUsageDescription`) hold the text App Review sees
    (decision doc §8). Edit all three together; `platform_config_test.dart`

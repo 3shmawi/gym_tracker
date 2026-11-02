@@ -201,10 +201,12 @@ Design: [`features/gym_account_app.md`](features/gym_account_app.md).
   `first_unlock_this_device`; a Keychain session left by an earlier install is
   dropped on a fresh install. An unreadable store means "no session".
 - **Anonymous sign-in happens only when a code is redeemed**, never at launch
-  (solo users make no account); the `captchaToken` seam is `null` until
-  Cloudflare Turnstile is configured — **required before shipping** (decision
-  §16). Until then the 30-per-hour-per-IP limit of anonymous sign-ins and the
-  redeem throttles are the only guards.
+  (solo users make no account), and with a Cloudflare Turnstile token when
+  `TURNSTILE_SITE_KEY` is set (`lib/core/captcha/`). The site key is publishable
+  and lives in the env files; the **secret** is only in Supabase's Auth settings
+  (`gym_account_app_test.dart` fails on a `0x4…` key in `lib/` and keeps the
+  widget's origin to the website host without opening the site's CSP). A widget
+  that does not answer within 20 s fails the join (never a silent skip).
 - **A QR is untrusted input.** The scanner takes text only through
   `InviteCode.fromScan`: `https://azmm.pages.dev/join/<code>`,
   `azm://join/<code>` or the bare code; another host, a port, user info, a query,

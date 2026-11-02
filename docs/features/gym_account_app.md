@@ -143,6 +143,15 @@ it refuses, the phone keeps everything, a second run changes nothing),
 `solo_import_data_test.dart`, `solo_import_sheet_test.dart` (+ `screensUiTests`),
 `solo_import_flows_test.dart`.
 
+## Turnstile
+`TurnstileCaptcha` (`lib/core/captcha/`, `cloudflare_turnstile` 3.8.1 read on
+pub.dev 2026-11-02; Cloudflare's own docs were not reachable from the build
+environment) gets a token in an invisible widget and feeds
+`SupabaseGymRepository.captchaToken`. Off (no token) when `TURNSTILE_SITE_KEY` is
+empty. Failures: no answer in 20 s → `TimeoutFailure`, retryable widget error →
+`NetworkFailure`, refusal → `UnknownFailure`; the join then shows its normal
+"couldn't join" / offline sheet.
+
 ## Analytics (no personal data)
 | Event | Properties |
 |---|---|
@@ -220,7 +229,7 @@ the Keychain and `app_settings` need a real phone.
 - Signing back in with the email added in Profile (an email one-time-code
   screen); today the email makes the account permanent and recoverable on the
   server, but the app has no sign-in screen for it.
-- Cloudflare Turnstile (`captchaToken` is `null`; required before shipping).
+- A visible Turnstile fallback (the widget runs invisibly; see `docs/release.md`).
 - Showing an ended gym's readable history; the captain's name; logo images.
 
 ## Demo & post

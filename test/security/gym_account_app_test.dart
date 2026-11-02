@@ -166,17 +166,32 @@ void main() {
     }
   });
 
-  test('the Turnstile seam exists and no secret came with it', () {
-    final repo = read(
-      'lib/features/gym/data/repositories/supabase_gym_repository.dart',
-    );
-    expect(repo, contains('captchaToken'));
+  test('Turnstile: the site key comes from the env file, never the secret', () {
+    final env = read('lib/core/config/env.dart');
+    expect(env, contains("String.fromEnvironment('TURNSTILE_SITE_KEY')"));
+    final di = read('lib/core/di/dependencies.dart');
+    expect(di, contains('Env.turnstileSiteKey.isEmpty'));
+    expect(di, contains('captchaToken:'));
+    final example = read('env/example.json');
+    expect(example, contains('"TURNSTILE_SITE_KEY": ""'));
     for (final file in dartFiles('lib')) {
+      final text = file.readAsStringSync();
       expect(
-        file.readAsStringSync().toLowerCase(),
-        isNot(contains('turnstile_secret')),
-        reason: file.path,
+        RegExp('0x4[A-Za-z0-9_-]{20,}').hasMatch(text),
+        isFalse,
+        reason: '${file.path}: a Turnstile key in source',
       );
+      expect(text.toLowerCase(), isNot(contains('turnstile_secret')));
     }
+  });
+
+  test('the Turnstile origin is a domain of the website only', () {
+    final captcha = read('lib/core/captcha/turnstile_captcha.dart');
+    expect(captcha, contains("defaultBaseUrl = 'https://azmm.pages.dev'"));
+    // The website's strict CSP must not open up for the widget.
+    expect(
+      read('website/_headers'),
+      isNot(contains('challenges.cloudflare.com')),
+    );
   });
 }
