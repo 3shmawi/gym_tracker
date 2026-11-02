@@ -9,6 +9,7 @@ Security is tested, not assumed. Three layers run on every pull request.
 | `platform_config_test.dart` | cleartext HTTP, debuggable releases, the `azm://` scheme and an https App Link that is not exactly `azmm.pages.dev/join/` (Android + iOS entitlements, both flavors), extra exported Android activities, disabled iOS App Transport Security; notifications: only `SCHEDULE_EXACT_ALARM` (no `USE_EXACT_ALARM`, full-screen intent or boot receiver), the receiver not exported, the icon kept from R8, the iOS delegate set |
 | `workflow_secrets_test.dart` | secrets pasted into CI scripts, a key written to a file without `scripts/mask_secrets.sh`, `set -x`, actions not pinned to a commit |
 | `well_known_test.dart` | `.well-known` files holding anything but app ids, package names and SHA-256 fingerprints (no secrets); wrong paths (only `/join/*`) or hosts; missing `application/json` headers; website, store texts, docs and app pointing to a host other than `azmm.pages.dev` (or still to the old one) |
+| `supabase_backend_test.dart` | a table without RLS or without its pgTAP file, a table that keeps `anon`/`authenticated` grants, a `security definer` function without a fixed `search_path` or open to `anon`, a literal (non-random) Vault secret in a migration, a plain `code` column on `invites`, the Edge Function logging request data / reading secrets / losing JWT verification or pinned dependencies, invite PDFs or function `.env` files not git-ignored |
 | `deep_link_test.dart` | crafted/unknown deep links crashing the app or reaching unexpected screens; open redirects via query parameters; a tapped notification opens only `/workout` (its payload is never read) |
 
 ### Links that open the app
@@ -36,6 +37,10 @@ Security is tested, not assumed. Three layers run on every pull request.
 - **Supabase RLS tests** — `supabase test db` runs `supabase/tests/*.sql`
   (pgTAP) against a local database built from the migrations. Enable once:
   `supabase init` (creates `supabase/config.toml`), commit it.
+- **Edge Function tests** (Deno, `denoland/deno:2.9.6`) and **invite tooling
+  tests** (Python, hash-pinned packages) run when a PR touches
+  `supabase/functions/` or `scripts/make_invites/`, and on every push to
+  `main`.
 
 ## 3. Rules for new code (also in CLAUDE.md)
 - New route → add hostile paths to `deep_link_test.dart`.
@@ -87,6 +92,64 @@ would be printed in full by any tool that echoes it in an error.
 - No `pull_request_target`. Anything a PR can control (titles, branch or
   file names, step outputs) goes through `env:` and is quoted.
 
+## 5. Gym accounts: invites, secrets and where they live
+Design: [`decisions/gym_accounts.md`](decisions/gym_accounts.md); feature:
+[`features/gym_accounts_backend.md`](features/gym_accounts_backend.md).
+
+| Secret / sensitive value | Where it lives | Where it must never be |
+|---|---|---|
+| **Invite pepper** (HMAC key for codes and address hashes) | Supabase **Vault**, secret `invite_pepper`, generated *inside Postgres* by migration `0006` (`gen_random_bytes`). Nobody types or sees it. | repo, env files, CI, app, logs. Read only by `security definer` functions in the unexposed `private` schema. |
+| **Secret key** (`sb_secret_…`) for `scripts/make_invites` | your password manager → the shell environment of your own computer for that one command (`SUPABASE_SECRET_KEY`, with `SUPABASE_URL`) | `env/*.json`, any workflow, the app, a flag on the command line, shell history, the repo. The script refuses to run when `CI` / `GITHUB_ACTIONS` is set. |
+| **Secret key inside the Edge Function** | injected by the Supabase platform (`@supabase/server` reads it); our code never reads an env var | our source (a test fails if the function touches `Deno.env`) |
+| **Invite codes** | printed on the cards only (and in the owner's hands). The database keeps `HMAC-SHA256(pepper, code)` and shows a code once, to whoever created it. | logs, analytics, the invites table, the PDF's file name, chat. A PDF of live cards is not written inside the repo and is created with mode 0600. |
+| Addresses of failed attempts | `invite_attempts.ip_hash` = HMAC with the pepper, purged after 30 days | plain text anywhere |
+
+How the invite path is protected (each item has a test):
+- **Single use, 7 days, revocable, bound to the first install id**; a replay
+  from another phone gets `used`; the same phone retrying gets the same
+  success. Expired and revoked codes are refused. All checks and the update
+  happen in one transaction with the invite row locked.
+- **Brute force:** ≤ 10 failed attempts / hour / user, ≤ 30 / hour / address,
+  and a global pause above 200 failures in 10 minutes. Residual risk: a valid
+  code is ≈ 1 in 9 × 10⁸ per guess (29.7 bits) — fine with this throttling, and
+  the *link* can carry a longer token later without UI change.
+- **Who may call what:** `redeem_invite_core` and `admin_create_invites` are
+  executable by `service_role` only; the Edge Function passes the user id it
+  verified from the JWT, so a client can neither forge identity nor address.
+  `create_invite`, `revoke_invite`, `save_plan`, `leave_gym` check the caller
+  themselves and are closed to `anon`.
+- **Anonymous Supabase users have the `authenticated` role**, so no policy
+  relies on the role alone; managers additionally need a permanent session.
+- **The function** accepts only POST + JSON ≤ 1 KB, exactly
+  `{code, install_id}`, ASCII-only codes from the 31-letter alphabet; adds no
+  CORS header; answers with fixed bodies; logs no request data.
+- **Hostile input:** wrong types, huge strings, unicode look-alikes
+  (`ſ`, `ß`, full-width), SQL/HTML-like text, newline-padded codes, a
+  `__proto__` key, replay, expiry, revocation and 40-guess brute force are in
+  the Deno and pgTAP tests.
+- **Known, accepted risks** (decision doc §5/§12): a *recover* code lets
+  the gym's captain move a trainee's identity to a phone they hold, so only
+  captains you trust should hold the role, and it is refused while the person
+  is active in another gym. The throttle's address comes from
+  `cf-connecting-ip`, else the last `x-forwarded-for` hop; I could not verify
+  which header the Supabase gateway sets, so treat the per-address limit as
+  best-effort (the per-user limit, Supabase's own 30 anonymous sign-ins/hour
+  per IP and the global pause still apply). The dependency trees of the Edge
+  Function were not checked against OSV (not reachable from the build
+  environment); the Python packages were (`pip-audit`, clean).
+- `scripts/make_invites` never follows HTTP redirects (urllib would re-send
+  the secret key to the redirect target); tested.
+- **Needs the project to use the new API keys and JWT signing keys:**
+  `@supabase/server` rejects legacy `anon`/`service_role` keys and legacy
+  HS256 user JWTs (its docs, read 2026-11-02). Check before the first deploy
+  (docs/release.md).
+
+Running `scripts/make_invites` follows the CI rules above even though it is
+local: secrets only through the environment, no `set -x` / verbose flags, no
+key written to a file (so there is nothing for `scripts/mask_secrets.sh` to
+mask; if you ever run it where logs are collected, mask the key first), tools
+pinned (Python packages with hashes, `requirements.txt`).
+
 ## If a key leaks (log, chat, commit)
 1. **Revoke or rotate it first**, then clean up. Logs can be copied in the
    minutes they are public.
@@ -101,6 +164,8 @@ would be printed in full by any tool that echoes it in an error.
 | Play service-account JSON | Google Cloud → IAM → Service accounts → Keys → delete the key, create a new one |
 | Android upload keystore | Play Console → App integrity → request an upload key reset |
 | Supabase secret key / DB password / access token | Supabase dashboard → rotate it |
+| An invite card (photo, PDF, chat) | Revoke that invite (`revoke_invite`, or dashboard) and issue a new one; a code that was already used is harmless |
+| The invite pepper | Replace the Vault secret `invite_pepper` (a new random value). Every unused invite stops working: revoke and re-issue them. Used invites and memberships are unaffected |
 | Sentry auth token, GitHub token | Revoke in Sentry / GitHub settings, create a new one |
 
 ## If a scan fails

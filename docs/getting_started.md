@@ -49,6 +49,13 @@ After `tool/setup_secrets.sh` has uploaded the Supabase secrets, run Actions →
 it). GitHub pauses scheduled workflows in repos with no commits for 60 days —
 re-enable it from the Actions tab if that happens.
 
+**Backend tests** (when you change `supabase/` or `scripts/make_invites/`):
+`supabase start && supabase test db` (pgTAP, needs Docker);
+`cd supabase/functions/redeem_invite && deno test --frozen --no-prompt`;
+`python -m unittest discover -s scripts/make_invites` inside the venv that
+`scripts/make_invites/run.sh` builds. Making QR cards:
+`docs/features/gym_accounts_backend.md`.
+
 ## 3. Run
 ```bash
 ./scripts/run.sh            # staging

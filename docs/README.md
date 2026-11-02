@@ -7,10 +7,11 @@ Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 - [Release & CI/CD](release.md) — how merging to `main` ships to the stores
 - [Deep links](deep_links.md)
 - [Security](security.md) — what is tested and how
-- [Decisions](decisions/) — why the stack looks the way it does; [gym accounts](decisions/gym_accounts.md) (accepted, not built)
+- [Decisions](decisions/) — why the stack looks the way it does; [gym accounts](decisions/gym_accounts.md) (accepted; backend built, app and dashboard not yet)
 
 ## Features
 - [App update gate](features/app_update.md)
 - [Settings (language & theme)](features/settings.md)
 - [Workout (plan, plan editor, next workout, weight suggestions, levels)](features/workout.md)
 - [Splash and loading animation](features/splash_and_loading.md)
+- [Gym accounts — backend](features/gym_accounts_backend.md) (tables, RLS, `redeem_invite`, QR cards)

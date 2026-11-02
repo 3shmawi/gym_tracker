@@ -80,6 +80,50 @@ Changes under `supabase/` merged to `main` → `supabase.yml` runs
 `SUPABASE_ACCESS_TOKEN` + `SUPABASE_DB_PASSWORD` (the project ref is read
 from `SUPABASE_URL`). PRs touching `supabase/` run the RLS tests first.
 
+### Gym accounts (migrations 0005–0008, Edge Function `redeem_invite`)
+Facts checked 2026-11-02 against the Supabase docs on GitHub
+(`supabase/supabase` → `apps/docs/content/guides/functions/` and
+`database/`) and the `@supabase/server` 1.9.2 package docs; supabase.com itself
+was not reachable from the build environment, so re-read the pages marked ★
+before the first production deploy.
+
+Do once, **before** merging (the deploy runs on merge):
+1. **Auth → Sign In / Providers → Anonymous sign-ins: on.** Local dev has it
+   on in `config.toml`; the hosted project needs the switch. ★
+2. **API keys and JWT signing keys.** `@supabase/server` (used by the
+   function) accepts only the new `sb_publishable_…` / `sb_secret_…` keys and
+   asymmetric JWT signing keys; legacy HS256 user tokens are rejected. In the
+   dashboard: Settings → API Keys (new keys in use) and Settings → JWT Keys
+   (signing keys migrated). If the project is still on the legacy secret, do
+   the migration first or the function answers 401. ★
+3. **Vault** is on by default; migration `0006` creates the pepper
+   (`invite_pepper`) itself. Check after the deploy:
+   `select count(*) from vault.secrets where name = 'invite_pepper';` → 1.
+   Never create or print it by hand.
+4. **Captcha (later):** Authentication → Attack Protection → Turnstile, when
+   the app step ships `signInAnonymously()`.
+
+What the deploy does: `supabase db push` applies the four migrations (all new
+tables are empty, nothing the live app uses changes, so it is backward
+compatible with the store version), then `supabase functions deploy` publishes
+`redeem_invite` with `verify_jwt = true` (`supabase/config.toml`). The function
+needs no secret from us: the platform provides the URL and keys.
+
+After the deploy:
+- Smoke test without any real code:
+  `curl -s -o /dev/null -w '%{http_code}\n' -X POST "$SUPABASE_URL/functions/v1/redeem_invite"`
+  → `401` (no session); with an anonymous user's token and a made-up code →
+  `404 not_found`.
+- Create a pilot gym row (the developer does this; no self-service in v1):
+  Table editor → `gyms` → insert `name`. Then make cards with
+  `scripts/make_invites/run.sh` (see `docs/features/gym_accounts_backend.md`).
+- **Schedule the clean-up** (once `pg_cron` is confirmed on the plan ★):
+  `select cron.schedule('purge-invite-attempts', '17 3 * * *', 'select public.purge_invite_attempts()');`
+  Until then run `select public.purge_invite_attempts();` from the SQL editor
+  now and then (30-day retention promised in the privacy policy).
+- Rolling back: migrations are never edited once applied; a fix is a new
+  migration. Revoke leaked invites instead of dropping rows.
+
 ## Store listing
 Texts in `store/`, uploaded by Actions → **Store listing** (fastlane
 supply/deliver) — see `store/README.md`.
@@ -115,6 +159,9 @@ are pinned by hand — bump them here and in the kit together:
 | gitleaks | CI `security` job | v8.30.1 |
 | OSV-Scanner | CI `security` job | v2.7.0 |
 | Supabase CLI | Supabase workflows | 2.120.0 |
+| Deno (`denoland/deno` image) | CI Edge Function tests | 2.9.6 |
+| `@supabase/server`, `@std/assert` | `supabase/functions/redeem_invite/deno.json` + `deno.lock` | 1.9.2, 1.0.19 |
+| Python packages for `scripts/make_invites` | `scripts/make_invites/requirements.txt` (hashes) | qrcode 8.2, pillow 13.0.0, reportlab 5.0.1, zxing-cpp 3.1.1, charset-normalizer 3.5.2 |
 
 ## One-time setup
 - Create the app in Play Console and App Store Connect (bundle id

@@ -69,6 +69,13 @@ Feature layers — layered:
   Flutter imports except value types) → `presentation/`. Presentation depends
   on domain only; implementations are wired in `core/di/dependencies.dart`.
 
+## Replies in Arabic
+When an answer is written in Arabic (Egyptian), every English word, name,
+command, file path, identifier or code fragment inside it goes between
+backticks, for example: افتح `Settings` ثم شغّل `supabase test db`. Whole
+code or command blocks use fenced blocks. This keeps mixed right-to-left and
+left-to-right text readable.
+
 ## Rules (non-negotiable)
 
 **Before any setup or new feature (check first, then build)**
