@@ -67,8 +67,8 @@ void main() {
     String msg(Object? k, Object? v) => jsonEncode({'k': k, 'v': v});
 
     test('a token, a failure, a timeout', () {
-      final ok = TurnstilePage.parse(msg('token', '0.abcdefghijklmnop-_'));
-      expect(ok?.value, '0.abcdefghijklmnop-_');
+      final ok = TurnstilePage.parse(msg('token', 'fake-token-for-tests'));
+      expect(ok?.value, 'fake-token-for-tests');
       expect(TurnstilePage.parse(msg('error', '110200'))?.failed, isTrue);
       expect(TurnstilePage.parse(msg('timeout', ''))?.timedOut, isTrue);
       expect(TurnstilePage.parse(msg('expired', ''))?.timedOut, isTrue);
