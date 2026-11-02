@@ -34,6 +34,20 @@ final appRouter = GoRouter(
       builder: (context, state) => const NextWorkoutPage(),
     ),
     GoRoute(
+      path: AppRoutes.join,
+      name: 'join_root',
+      // Only `/join/<code>` is a link; a bare `/join` is not found.
+      builder: (context, state) => const NotFoundPage(),
+      routes: [
+        GoRoute(
+          path: ':code',
+          name: 'join',
+          // The code is untrusted and unused: go home, change nothing.
+          redirect: (context, state) => AppRoutes.home,
+        ),
+      ],
+    ),
+    GoRoute(
       path: AppRoutes.workout,
       name: 'workout',
       builder: (context, state) => const ActiveWorkoutPage(),

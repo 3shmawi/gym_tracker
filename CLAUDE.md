@@ -18,13 +18,13 @@ this project. Read it fully before changing code. Feature details live in
 | Backend | Supabase (`lib/core/backend/`), kept awake by `.github/workflows/supabase-keepalive.yml` |
 | Monitoring | Sentry (`lib/core/monitoring/`) |
 | Analytics & feature flags | PostHog (`lib/core/analytics/`, `lib/core/feature_flags/`) — no Firebase |
-| Routing & deep links | go_router (`lib/core/router/`), scheme `gymtracker://`, host `example.com` |
+| Routing & deep links | go_router (`lib/core/router/`), scheme `azm://`, https host `azmm.pages.dev` (only `/join/*`) |
 | UI style | Liquid Glass (liquid_glass_widgets, all platforms) — screens use `AppScaffold`, `AppCard`, `AppIconButton` from `lib/core/ui/app_ui.dart` |
 | Fonts | Inter (Latin) + Cairo (Arabic), bundled in `assets/fonts` |
 | Localization | English + Arabic (RTL), ARB files in `lib/l10n/` |
 | Lints | very_good_analysis (strict) |
 | CI/CD | GitHub Actions — merge to `main` releases to both stores |
-| Website | `website/` — landing, privacy policy, terms, delete account (https://3shmawi.github.io/gym_tracker) |
+| Website | `website/` — landing, privacy policy, terms, delete account (Cloudflare Pages, https://azmm.pages.dev) |
 
 ## Commands
 With FVM installed, prefix with `fvm` (`fvm flutter test`, `fvm dart format .`).
