@@ -14,13 +14,13 @@ captain can shape the trainee's plan. Solo mode stays exactly as it is.
 - **Solo mode stays**: no account, on-device, as today.
 - **Captain/owner creates the trainee account.** The trainee never gets a
   password. The QR holds an invite link
-  `https://azmm.pages.dev/join?c=<code>`: single use, expires in 7 days,
+  `https://azmm.pages.dev/join/<code>`: single use, expires in 7 days,
   revocable, bound to the first device. The same 6-character code is printed
   under the QR for manual entry. The gym logo sits in the QR centre
   (error correction **H**, logo ≤ 20 %).
 - **Links**: the https link opens the app when installed (Universal Links /
   App Links); otherwise `website/join.html` shows the store buttons and the
-  code. `azm://join?c=<code>` is the custom-scheme fallback.
+  code. `azm://join/<code>` is the custom-scheme fallback.
 - **Roles**: `owner`, `captain`, `trainee`. A captain grants each trainee
   permissions: *edit targets* / *edit the whole plan* / *build own plan*.
 - **Several gyms** per trainee, one active at a time; **history belongs to
@@ -29,6 +29,10 @@ captain can shape the trainee's plan. Solo mode stays exactly as it is.
   updated your plan".
 - **Membership ended**: a gym setting (owner/captain) decides: history stays
   **readable** or is **locked**.
+- **Two surfaces** (added after design review): the **mobile app is for
+  trainees**; owners and captains run the gym from a **web dashboard**
+  (members, permissions, plans, invites, QR cards, gym settings). The phone
+  keeps only a small captain companion (quick add + show the QR card).
 
 ## 2. Things in the brief that need a decision or conflict with the repo
 
@@ -36,7 +40,7 @@ captain can shape the trainee's plan. Solo mode stays exactly as it is.
 |---|---|---|
 | 1 | **Scheme** — resolved by #18: the app now registers `azm://`. | Nothing to do. |
 | 2 | **Host** — resolved by #18: the site is on Cloudflare Pages, `https://azmm.pages.dev`, with `.well-known` at the root. | Nothing to do. |
-| 3 | **Link shape (new mismatch).** #18 ships Universal/App Links only for the **path** `/join/*` (AASA `components`, Android `pathPrefix="/join/"`). The brief says `/join?c=<code>`, whose path is `/join`: it would **not** open the app. | Pick one, **needs your OK**: (a) keep the brief: add `{"/": "/join", "?": {"c": "?*"}}` to the AASA, change the Android filter to `pathPrefix="/join"`, update `well_known_test.dart`; or (b) use `/join/<code>` as shipped (no query, nothing to change, `docs/deep_links.md` already says the code is never read). This doc and the design board write `?c=`; (b) is a find-and-replace. |
+| 3 | **Link shape** — decided: follow `main`. The invite link is the **path** `https://azmm.pages.dev/join/<code>` (and `azm://join/<code>`), exactly what #18 ships (AASA `/join/*`, Android `pathPrefix="/join/"`). No query string, so no config change. | Nothing to do. The earlier brief wrote `?c=<code>`; that spelling is dropped everywhere. |
 | 4 | **"Logo ≤ 20 %"** is ambiguous. 20 % of the *area* (≈ 45 % of the width) is too near the limit of level H (30 % recoverable). | Logo box side ≤ 20 % of the QR side (≈ 4 % of the area). CI renders the QR with the logo at three sizes and decodes it (zxing). |
 | 5 | **6-character code = the secret.** A 31-letter alphabet (no `0 O 1 I L`) gives ≈ 8.9 × 10⁸ codes (≈ 29.7 bits). Fine with throttling, weak without. | Throttle redeem attempts (§5), store only an HMAC of the code, keep it single-use and 7 days. If throttling proves too weak, the *link* (not the typed code) can carry a longer token — no UI change. |
 | 6 | **Who creates a gym / who signs the owner and captain in?** The brief covers trainees only. An owner on an anonymous session loses the gym with the phone. | Owners sign in with **email one-time code**. A captain is invited like a trainee, then must **add an email** before issuing invites. Gyms are created by the developer for pilot gyms (no self-service gym creation in v1). **Needs your OK.** |
@@ -134,14 +138,14 @@ role gets **nothing** on any new table.
    (alphabet `ABCDEFGHJKMNPQRSTUVWXYZ23456789`, from `gen_random_bytes`),
    stores `HMAC-SHA256(pepper, code)` and `expires_at = now() + 7 days`,
    and returns the plain code **once**. The app builds the QR from
-   `https://azmm.pages.dev/join?c=<code>` (level H, logo ≤ 20 % of the side)
+   `https://azmm.pages.dev/join/<code>` (level H, logo ≤ 20 % of the side)
    and prints the code under it. Share sheet: image / PDF / copy link.
    Lost the printout? **Revoke and re-issue** (the code cannot be shown again).
 3. Revoke any time (`revoke_invite`). Pending invites show "expires in n days".
 
 **Trainee**
 4. Scans the QR with the camera or in-app scanner, taps the link, or types the
-   code. The link opens the app (Universal/App Link), else `azm://join?c=…`,
+   code. The link opens the app (Universal/App Link), else `azm://join/<code>`,
    else `join.html` (store buttons + the code, §7).
    - A **link** opens the *Enter code* screen with the code prefilled — it
      never redeems by itself. The in-app **scanner** submits at once (the
@@ -231,8 +235,9 @@ Session details:
   (`Runner.entitlements`), AASA + `assetlinks.json` (Play fingerprints in),
   `website/_headers` (JSON content types, strict CSP, `Referrer-Policy`,
   `Permissions-Policy: camera=()` for the website), `well_known_test.dart`.
-  Still to change for invites: the link shape (§2 row 3) and the app-side
-  handler (today `/join/<code>` just opens Home and reads nothing).
+  Still to change for invites: the app-side handler (today `/join/<code>`
+  just opens Home and reads nothing; it must open the Enter-code screen with
+  the code filled in, and never join by itself).
 - Apple caches the AASA through its CDN, so test on a real build, not only
   the simulator.
 - `website/join.html` (EN + AR like the other pages): "Open in Azm", App
@@ -247,10 +252,18 @@ Session details:
   Because the site CSP has `connect-src 'none'`, the page cannot check a code,
   which is what we want.
 - `docs/deep_links.md` gets the final `/join` shape, and
-  `test/security/deep_link_test.dart` gets: missing `c`, empty, too long,
+  `test/security/deep_link_test.dart` gets: no code (`/join`), empty, too long,
   lower case, injection-like (`<script>`, `'; drop`, `javascript:`), unicode,
-  a second `c`, an `https://evil.example` in `c`, `/join/extra`.
+  extra segments (`/join/ABC123/extra`), a trailing slash, an `https://evil.example` as the code, percent-encoded characters.
   A link can only open the Enter-code screen.
+- **Dashboard hosting**: the marketing site's CSP is `connect-src 'none'`
+  and must stay that way, so the dashboard is a **separate web app on its own
+  origin** (its own Cloudflare Pages project, e.g. `azmm-dash.pages.dev`) with
+  its own CSP that allows only our Supabase project and Turnstile. It never
+  shares an origin with `join.html`. Stack for it (Flutter web, to reuse the
+  domain layer, or a plain web app) is open and **needs your OK**; either way
+  the rules are the same RLS and RPCs, and its sign-in is email one-time code
+  (permanent session, as §4 requires). Boards 10–12 in the design.
 - App route `/join` (name `join`), `/join/scan` (`join_scan`), `/gym` switcher,
   `/profile`. Screen names feed analytics.
 
@@ -380,6 +393,8 @@ if its day was removed, it can be finished and stays in history.
 
 ## 13. Delivery plan (after the design is approved)
 
+0. Decide the dashboard's stack and origin (§7), then build it after step 4
+   (it needs the same tables and RPCs; the phone needs it only for the QR).
 1. Website: `join.html`, `_headers`, `.well-known`, `delete-account.html`,
    `privacy.html` (docs + security tests).
 2. Supabase migration + pgTAP + RPCs.
