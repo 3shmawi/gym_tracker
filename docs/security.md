@@ -127,6 +127,18 @@ How the invite path is protected (each item has a test):
   (`ſ`, `ß`, full-width), SQL/HTML-like text, newline-padded codes, a
   `__proto__` key, replay, expiry, revocation and 40-guess brute force are in
   the Deno and pgTAP tests.
+- **Known, accepted risks** (decision doc §5/§12): a *recover* code lets
+  the gym's captain move a trainee's identity to a phone they hold, so only
+  captains you trust should hold the role, and it is refused while the person
+  is active in another gym. The throttle's address comes from
+  `cf-connecting-ip`, else the last `x-forwarded-for` hop; I could not verify
+  which header the Supabase gateway sets, so treat the per-address limit as
+  best-effort (the per-user limit, Supabase's own 30 anonymous sign-ins/hour
+  per IP and the global pause still apply). The dependency trees of the Edge
+  Function were not checked against OSV (not reachable from the build
+  environment); the Python packages were (`pip-audit`, clean).
+- `scripts/make_invites` never follows HTTP redirects (urllib would re-send
+  the secret key to the redirect target); tested.
 - **Needs the project to use the new API keys and JWT signing keys:**
   `@supabase/server` rejects legacy `anon`/`service_role` keys and legacy
   HS256 user JWTs (its docs, read 2026-11-02). Check before the first deploy

@@ -430,10 +430,21 @@ def render_pdf(gym_name: str, cards: list[Card], qr_for: Callable[[str], object]
 Transport = Callable[[str, str, dict, Optional[bytes]], tuple[int, bytes]]
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """urllib would re-send our headers, the secret key included, to wherever a
+    redirect points. Supabase's API never redirects, so any redirect is an error."""
+
+    def redirect_request(self, *args, **kwargs):
+        return None
+
+
+_OPENER = urllib.request.build_opener(_NoRedirect)
+
+
 def urllib_transport(method: str, url: str, headers: dict, body: Optional[bytes]) -> tuple[int, bytes]:
     request = urllib.request.Request(url, data=body, headers=headers, method=method)
     try:
-        with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT_SECONDS) as response:
+        with _OPENER.open(request, timeout=HTTP_TIMEOUT_SECONDS) as response:
             return response.status, response.read(8 * 1024 * 1024)
     except urllib.error.HTTPError as error:
         return error.code, error.read(64 * 1024)

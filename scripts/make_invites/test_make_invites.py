@@ -423,6 +423,47 @@ class EndToEnd(unittest.TestCase):
         self.assertFalse(any(r[1].endswith("/rpc/admin_create_invites") for r in server.requests))
 
 
+class Redirects(unittest.TestCase):
+    def test_the_key_is_never_sent_to_a_redirect_target(self):
+        import http.server
+        import threading
+
+        seen = []
+
+        class Target(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                seen.append(self.headers.get("apikey"))
+                self.send_response(200)
+                self.end_headers()
+
+            def log_message(self, *args):
+                pass
+
+        target = http.server.HTTPServer(("127.0.0.1", 0), Target)
+
+        class Redirector(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(302)
+                self.send_header("Location", f"http://127.0.0.1:{target.server_port}/steal")
+                self.end_headers()
+
+            def log_message(self, *args):
+                pass
+
+        redirector = http.server.HTTPServer(("127.0.0.1", 0), Redirector)
+        for server in (target, redirector):
+            threading.Thread(target=server.serve_forever, daemon=True).start()
+        try:
+            status, _ = mi.urllib_transport(
+                "GET", f"http://127.0.0.1:{redirector.server_port}/x", {"apikey": FAKE_KEY}, None
+            )
+        finally:
+            target.shutdown()
+            redirector.shutdown()
+        self.assertEqual(status, 302)
+        self.assertEqual(seen, [], "the key reached the redirect target")
+
+
 class SourceRules(unittest.TestCase):
     """docs/security.md → 'CI and secrets': what the tooling must never do."""
 
