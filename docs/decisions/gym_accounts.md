@@ -439,3 +439,23 @@ variables*, *Testing your Edge Functions*, *Managing dependencies*;
 | QR cards | `scripts/make_invites` (Python, hash-pinned). The logo box is 18 % of the QR symbol's side (never above 20 %); every QR is decoded again with zxing before it is printed. |
 | Still unverified (needs supabase.com) | Token/refresh lifetimes, `auth.admin.deleteUser`, `pg_cron` on our plan, `supabase_flutter` and scanner package versions, the Google Play deletion page. |
 
+## 16. Account model confirmed (2026-11-02, product owner)
+
+Trainees stay on **anonymous sign-in**; nothing changes in §6. Added:
+1. **CAPTCHA (Cloudflare Turnstile) on anonymous sign-in is required before
+   the app step ships**; it also becomes the fallback for the global breaker
+   in `redeem_invite_core` (§15).
+2. **Optional email upgrade** in Profile ("Secure your account"): the
+   anonymous user is made permanent with `updateUser({email})`, so
+   `auth.uid()`, `people`, memberships and history are unchanged and no
+   migration is needed. It lets a person recover a lost phone without a
+   captain. Delivery step 3/4 of §13.
+3. Owners and captains keep **email one-time code** (permanent session).
+4. Email is **not** mandatory for trainees (it would slow joining and widen
+   the privacy policy and store forms).
+
+Still open (needs a decision): a trainee active in **two gyms** who loses
+their phone cannot be recovered by one captain (§5), so re-joining creates a
+second person. Proposal: an owner-approved merge RPC, plus the email upgrade
+above as the self-service route.
+
