@@ -193,14 +193,14 @@ the clean URLs (`/privacy`, `/terms`, `/delete-account`).
 ## Universal Links / App Links (manual store steps)
 Host `azmm.pages.dev`, path `/join/*` (see `docs/deep_links.md`). Do once,
 after the first Play upload and before relying on the links:
-1. **Play app-signing SHA-256** — Play Console → the app → Test and release →
-   App integrity → App signing → "App signing key certificate" → SHA-256.
-   Replace `REPLACE_WITH_PLAY_APP_SIGNING_SHA256` in
-   `website/.well-known/assetlinks.json`. Do the same for the staging app
-   `com.mohager.azm.stg` (its own listing, its own key). Add the *upload* key
-   fingerprint too if you want links to open sideloaded/APK staging builds.
-   Merge to `main`; Cloudflare deploys; check
-   `adb shell pm get-app-links com.mohager.azm` shows `verified`.
+1. **Play app-signing SHA-256** — done for `com.mohager.azm` and
+   `com.mohager.azm.stg` (public fingerprints in
+   `website/.well-known/assetlinks.json`). Redo it if the app-signing key
+   changes: Play Console → the app → Test and release → App integrity →
+   App signing → "App signing key certificate" → SHA-256. Add the *upload*
+   key fingerprint too if you want links to open sideloaded APK builds.
+   After a merge, check `adb shell pm get-app-links com.mohager.azm` shows
+   `verified`.
 2. **Associated Domains capability** — Apple Developer → Certificates,
    Identifiers & Profiles → Identifiers → `com.mohager.azm` and
    `com.mohager.azm.stg` → tick **Associated Domains** → Save. Without it the

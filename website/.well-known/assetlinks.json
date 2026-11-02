@@ -4,7 +4,9 @@
     "target": {
       "namespace": "android_app",
       "package_name": "com.mohager.azm",
-      "sha256_cert_fingerprints": ["REPLACE_WITH_PLAY_APP_SIGNING_SHA256"]
+      "sha256_cert_fingerprints": [
+        "55:1A:F9:AF:C0:BC:8C:B1:4C:49:6C:8B:61:70:7A:F2:27:C0:D2:82:15:E4:1A:F1:B8:62:5E:06:14:F6:5F:A7"
+      ]
     }
   },
   {
@@ -12,7 +14,9 @@
     "target": {
       "namespace": "android_app",
       "package_name": "com.mohager.azm.stg",
-      "sha256_cert_fingerprints": ["REPLACE_WITH_STAGING_PLAY_APP_SIGNING_SHA256"]
+      "sha256_cert_fingerprints": [
+        "09:15:65:E0:C7:D5:0C:D5:31:22:4C:06:EA:78:4C:95:82:42:5A:82:13:F4:6F:B4:EF:7F:1F:B1:44:FA:1B:1A"
+      ]
     }
   }
 ]
