@@ -129,8 +129,12 @@ jobs:
       - name: Edge Function tests (Deno)
         if: steps.backend.outputs.present == 'true'
         run: |
-          docker run --rm -v "$PWD/supabase/functions/redeem_invite:/app" -w /app \
-            denoland/deno:2.9.6 sh -c 'deno lint && deno fmt --check && deno test --frozen --no-prompt'
+          docker run --rm -v "$PWD/supabase/functions:/app" -w /app \
+            denoland/deno:2.9.6 sh -c '
+              for d in redeem_invite delete-account; do
+                (cd "$d" && deno lint && deno fmt --check && deno test --frozen --no-prompt) || exit 1
+              done
+              deno lint _shared && deno fmt --check _shared'
 
       - name: Invite tooling tests (Python, hash-pinned packages)
         if: steps.backend.outputs.present == 'true'

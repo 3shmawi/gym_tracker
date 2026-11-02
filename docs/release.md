@@ -80,7 +80,7 @@ Changes under `supabase/` merged to `main` → `supabase.yml` runs
 `SUPABASE_ACCESS_TOKEN` + `SUPABASE_DB_PASSWORD` (the project ref is read
 from `SUPABASE_URL`). PRs touching `supabase/` run the RLS tests first.
 
-### Gym accounts (migrations 0005–0008, Edge Function `redeem_invite`)
+### Gym accounts (migrations 0005–0011, Edge Functions `redeem_invite` and `delete-account`)
 Facts checked 2026-11-02 against the Supabase docs on GitHub
 (`supabase/supabase` → `apps/docs/content/guides/functions/` and
 `database/`) and the `@supabase/server` 1.9.2 package docs; supabase.com itself
@@ -123,6 +123,38 @@ After the deploy:
   now and then (30-day retention promised in the privacy policy).
 - Rolling back: migrations are never edited once applied; a fix is a new
   migration. Revoke leaked invites instead of dropping rows.
+
+#### Demo gym for App Review
+Apple (2.1) and Google need a way into the gym features without a real captain.
+The demo code is a **secret-like value that never goes in the repo, a chat or a
+log**: it lives only in App Store Connect → App Review → Notes, and in Play
+Console → App content → App access (checked 2026-11-02 against the decision
+doc §8; re-read both consoles' pages before submitting).
+1. Once: Table editor → `gyms` → insert a gym named `Azm Demo Gym` with
+   `is_demo = true` (nothing else); copy its `id`.
+2. For each submission, on your computer:
+   `scripts/make_invites/run.sh --demo --gym <demo-gym-id>`. It rotates the
+   code (the previous one stops working) and writes one PDF card with the code
+   and a QR, outside the repo, mode 0600.
+3. Paste the code and attach the QR image in the review notes: "Open Azm →
+   Join your gym → type the code (or scan the QR). Solo mode needs no account."
+   Then delete the PDF.
+4. The demo member is a trainee with all three permissions; its sessions and
+   plans are wiped every night (`wipe_demo_data()`), so keep nothing real there.
+5. Schedule the nightly jobs once `pg_cron` is on (Database → Extensions →
+   `pg_cron`, or `create extension pg_cron with schema pg_catalog;`, Supabase
+   Cron guide read 2026-11-02): run `select public.schedule_maintenance();` in
+   the SQL editor as the project owner. It returns `scheduled`, or says that
+   `pg_cron` is not enabled and does nothing. This also schedules the purge of
+   invite attempts older than 30 days.
+
+#### Account deletion (store requirement)
+`delete-account` is the server half of Profile → Delete account (app step).
+It hard-deletes the auth user (`auth.admin.deleteUser(id, false)`,
+`@supabase/auth-js` 2.118.0 docs, read 2026-11-02) and everything of that
+person cascades. A sole owner of a gym with members gets `409 last_owner` and
+must hand over or empty the gym first. After the deploy, smoke test with a
+throwaway anonymous user: `POST` without a token → `401`.
 
 ## Store listing
 Texts in `store/`, uploaded by Actions → **Store listing** (fastlane

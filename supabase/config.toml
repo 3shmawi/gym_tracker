@@ -422,3 +422,9 @@ enabled = true
 [functions.redeem_invite]
 enabled = true
 verify_jwt = true
+
+# Account deletion (Apple 5.1.1(v), Google Play): a signed-in user deletes
+# themselves. JWT verified by the platform and again by the function.
+[functions.delete-account]
+enabled = true
+verify_jwt = true

@@ -459,3 +459,14 @@ their phone cannot be recovered by one captain (§5), so re-joining creates a
 second person. Proposal: an owner-approved merge RPC, plus the email upgrade
 above as the self-service route.
 
+## 17. Backend part 2 as built (migrations 0009–0011)
+
+| Point | Decision / difference |
+|---|---|
+| `workout_sessions.started_at` | Does not exist. The on-device `WorkoutSession` is `{day_id, finished_at, sets}` (no id, no start time), so `client_id` is a deterministic hash of the session's content, which makes `import_solo_data` idempotent. |
+| Personal plan | New table `personal_plans` (one per person); a gym's plan stays in `plans`. Written only by `import_solo_data` for now. |
+| Solo cap | 1000 solo sessions per person (the phone keeps ≤ 200). |
+| Demo invite | `invites.membership_id` and `expires_at` are nullable for kind `demo` (constraints keep every other kind as before); a trigger allows it only for `gyms.is_demo`. |
+| Last owner | `account_deletion_blockers()` plus a `BEFORE DELETE` trigger on `memberships`; deleting a whole gym still works. |
+| `pg_cron` | Not created by a migration (unverified on our plan); `schedule_maintenance()` schedules the jobs when the extension is on. |
+
