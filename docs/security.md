@@ -160,6 +160,24 @@ How the invite path is protected (each item has a test):
   HS256 user JWTs (its docs, read 2026-11-02). Check before the first deploy
   (docs/release.md).
 
+Part 2 (sessions, solo import, demo, deletion):
+- **History is the person's:** staff read a member's gym sessions only while the
+  membership is active, only for members they may manage, never solo sessions
+  or another gym's (`workout_sessions` RLS, pgTAP). `locked` hides, never deletes.
+- **`import_solo_data`** validates every session and the plan on the server
+  (same limits as the app), is atomic per call, idempotent and capped; imported
+  sessions are solo, so no captain ever sees them.
+- **The demo code** is reusable by design, so it is limited: only a gym marked
+  `is_demo`, trainee role, wiped nightly, rotated per submission, stored only as
+  an HMAC, shown once to the owner's script. It is the one code that can be
+  guessed more than once, so it stays under the same attempt throttling.
+- **`delete-account`** deletes only the verified caller (the id never comes from
+  the body, which is exactly `{"confirm":"delete"}`); it logs no id, token or
+  gym name; a sole owner is refused (and the database refuses too).
+- Known, accepted: a deleted user's access token keeps passing JWT checks until
+  it expires (Auth does not check the database), but every row policy keys on
+  `people.auth_user_id`, which is gone, so it can read and write nothing.
+
 Running `scripts/make_invites` follows the CI rules above even though it is
 local: secrets only through the environment, no `set -x` / verbose flags, no
 key written to a file (so there is nothing for `scripts/mask_secrets.sh` to

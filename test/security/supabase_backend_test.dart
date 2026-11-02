@@ -134,57 +134,68 @@ void main() {
     },
   );
 
-  group('Edge Function redeem_invite', () {
-    final dir = Directory('supabase/functions/redeem_invite');
-    final sources = dir
-        .listSync()
-        .whereType<File>()
-        .where((f) => f.path.endsWith('.ts') && !f.path.endsWith('.test.ts'))
-        .toList();
+  for (final name in ['redeem_invite', 'delete-account']) {
+    group('Edge Function $name', () {
+      final dir = Directory('supabase/functions/$name');
+      // Its own files and the shared ones it imports.
+      final sources =
+          [
+                ...dir.listSync().whereType<File>(),
+                ...Directory('supabase/functions/_shared')
+                    .listSync()
+                    .whereType<File>(),
+              ]
+              .where(
+                (f) => f.path.endsWith('.ts') && !f.path.endsWith('.test.ts'),
+              )
+              .toList();
 
-    test('is deployed with JWT verification on', () {
-      final config = File('supabase/config.toml').readAsStringSync();
-      expect(
-        config,
-        matches(RegExp(r'\[functions\.redeem_invite\][^\[]*verify_jwt = true')),
-      );
-    });
-
-    test('logs no request data, headers or tokens', () {
-      for (final file in sources) {
-        final text = file.readAsStringSync();
+      test('is deployed with JWT verification on', () {
+        final config = File('supabase/config.toml').readAsStringSync();
         expect(
-          RegExp(r'console\.(log|info|debug|warn|trace|dir)').hasMatch(text),
-          isFalse,
-          reason: '${file.path} writes to the log',
+          config,
+          matches(RegExp('\\[functions\\.$name\\][^\\[]*verify_jwt = true')),
         );
-        // The only log lines are fixed texts plus a database error code.
-        for (final m in RegExp(r'console\.error\(([^)]*)\)').allMatches(text)) {
+      });
+
+      test('logs no request data, headers or tokens', () {
+        for (final file in sources) {
+          final text = file.readAsStringSync();
           expect(
-            m.group(1),
-            isNot(matches(RegExp(r'\b(req|body|headers|code|token|ip)\b'))),
-            reason: 'console.error must not print request data',
+            RegExp(r'console\.(log|info|debug|warn|trace|dir)').hasMatch(text),
+            isFalse,
+            reason: '${file.path} writes to the log',
           );
+          // The only log lines are fixed texts plus a database error code.
+          for (final m in RegExp(
+            r'console\.error\(([^)]*)\)',
+          ).allMatches(text)) {
+            expect(
+              m.group(1),
+              isNot(matches(RegExp(r'\b(req|body|headers|code|token|ip)\b'))),
+              reason: 'console.error must not print request data',
+            );
+          }
         }
-      }
-    });
+      });
 
-    test('reads no secret itself and does not widen access', () {
-      for (final file in sources) {
-        final text = file.readAsStringSync();
-        expect(text, isNot(contains('Deno.env')), reason: file.path);
-        expect(text, isNot(contains('Access-Control-Allow-Origin')));
-        expect(text, isNot(contains('service_role')), reason: file.path);
-      }
-    });
+      test('reads no secret itself and does not widen access', () {
+        for (final file in sources) {
+          final text = file.readAsStringSync();
+          expect(text, isNot(contains('Deno.env')), reason: file.path);
+          expect(text, isNot(contains('Access-Control-Allow-Origin')));
+          expect(text, isNot(contains('service_role')), reason: file.path);
+        }
+      });
 
-    test('keeps its dependencies pinned and locked', () {
-      final deno = File('${dir.path}/deno.json').readAsStringSync();
-      expect(deno, matches(RegExp(r'npm:@supabase/server@\d+\.\d+\.\d+"')));
-      expect(deno, matches(RegExp(r'jsr:@std/assert@\d+\.\d+\.\d+"')));
-      expect(File('${dir.path}/deno.lock').existsSync(), isTrue);
+      test('keeps its dependencies pinned and locked', () {
+        final deno = File('${dir.path}/deno.json').readAsStringSync();
+        expect(deno, matches(RegExp(r'npm:@supabase/server@\d+\.\d+\.\d+"')));
+        expect(deno, matches(RegExp(r'jsr:@std/assert@\d+\.\d+\.\d+"')));
+        expect(File('${dir.path}/deno.lock').existsSync(), isTrue);
+      });
     });
-  });
+  }
 
   test('invite cards and function secrets cannot be committed by accident', () {
     final ignore = File('.gitignore').readAsStringSync();

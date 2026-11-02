@@ -57,7 +57,11 @@ Push to `develop` → `staging.yml`:
 - **Android** — signed APK attached to a `staging-…` pre-release (last 3
   kept), and a signed AAB uploaded to the Play track `PLAY_STAGING_TRACK`
   (default `internal`) of the separate staging app `com.mohager.azm.stg`
+<<<<<<< yours
   ("Azm Stg", installs next to the store app).
+=======
+  (installs next to the store app).
+>>>>>>> kit 1928c02
 - **iOS** — TestFlight of `com.mohager.azm.stg`.
 
 Uses `ENV_STAGING_JSON` and the same keystore and `PLAY_SERVICE_ACCOUNT_JSON`
@@ -80,7 +84,7 @@ Changes under `supabase/` merged to `main` → `supabase.yml` runs
 `SUPABASE_ACCESS_TOKEN` + `SUPABASE_DB_PASSWORD` (the project ref is read
 from `SUPABASE_URL`). PRs touching `supabase/` run the RLS tests first.
 
-### Gym accounts (migrations 0005–0008, Edge Function `redeem_invite`)
+### Gym accounts (migrations 0005–0011, Edge Functions `redeem_invite` and `delete-account`)
 Facts checked 2026-11-02 against the Supabase docs on GitHub
 (`supabase/supabase` → `apps/docs/content/guides/functions/` and
 `database/`) and the `@supabase/server` 1.9.2 package docs; supabase.com itself
@@ -124,6 +128,38 @@ After the deploy:
 - Rolling back: migrations are never edited once applied; a fix is a new
   migration. Revoke leaked invites instead of dropping rows.
 
+#### Demo gym for App Review
+Apple (2.1) and Google need a way into the gym features without a real captain.
+The demo code is a **secret-like value that never goes in the repo, a chat or a
+log**: it lives only in App Store Connect → App Review → Notes, and in Play
+Console → App content → App access (checked 2026-11-02 against the decision
+doc §8; re-read both consoles' pages before submitting).
+1. Once: Table editor → `gyms` → insert a gym named `Azm Demo Gym` with
+   `is_demo = true` (nothing else); copy its `id`.
+2. For each submission, on your computer:
+   `scripts/make_invites/run.sh --demo --gym <demo-gym-id>`. It rotates the
+   code (the previous one stops working) and writes one PDF card with the code
+   and a QR, outside the repo, mode 0600.
+3. Paste the code and attach the QR image in the review notes: "Open Azm →
+   Join your gym → type the code (or scan the QR). Solo mode needs no account."
+   Then delete the PDF.
+4. The demo member is a trainee with all three permissions; its sessions and
+   plans are wiped every night (`wipe_demo_data()`), so keep nothing real there.
+5. Schedule the nightly jobs once `pg_cron` is on (Database → Extensions →
+   `pg_cron`, or `create extension pg_cron with schema pg_catalog;`, Supabase
+   Cron guide read 2026-11-02): run `select public.schedule_maintenance();` in
+   the SQL editor as the project owner. It returns `scheduled`, or says that
+   `pg_cron` is not enabled and does nothing. This also schedules the purge of
+   invite attempts older than 30 days.
+
+#### Account deletion (store requirement)
+`delete-account` is the server half of Profile → Delete account (app step).
+It hard-deletes the auth user (`auth.admin.deleteUser(id, false)`,
+`@supabase/auth-js` 2.118.0 docs, read 2026-11-02) and everything of that
+person cascades. A sole owner of a gym with members gets `409 last_owner` and
+must hand over or empty the gym first. After the deploy, smoke test with a
+throwaway anonymous user: `POST` without a token → `401`.
+
 ## Store listing
 Texts in `store/`, uploaded by Actions → **Store listing** (fastlane
 supply/deliver) — see `store/README.md`.
@@ -137,6 +173,29 @@ supply/deliver) — see `store/README.md`.
 Both stores raise these every year (Apple in spring, Google in August).
 When a deadline is announced, update this table and the workflows in the
 kit, then `scripts/kit_sync.sh` in each app.
+
+## Kit sync
+`.github/workflows/kit-sync.yml` runs every Monday (or Actions → Kit sync →
+Run workflow) and compares this app with the latest flutter-project-kit
+using `scripts/kit_sync.sh` (3-way merge, your changes are kept).
+
+- **With `KIT_SYNC_TOKEN`**: it opens a `chore/kit-sync-…` PR with the
+  kit's changes; if some files conflict it is a draft with `<<<<<<<`
+  markers to resolve. A newer sync closes an older unmerged one. A kit
+  version you closed on purpose is not re-opened.
+- **Without it**: it opens (and keeps updating) a "Kit update available"
+  issue, and you run `scripts/kit_sync.sh` by hand.
+
+Why a token: GitHub's built-in token cannot change files in
+`.github/workflows`, and PRs it opens do not start CI. Create a fine-grained
+token for this repo only (Contents, Pull requests, Workflows: read & write),
+put it in `KIT_SYNC_TOKEN` in `~/.app-secrets/shared.env` (or
+`apps/<repo>/app.env`) and run `tool/setup_secrets.sh`, or
+`gh secret set KIT_SYNC_TOKEN`. Also allow Actions to open PRs: repo
+Settings → Actions → General → "Allow GitHub Actions to create and approve
+pull requests".
+
+Always review the PR: kit changes can add packages or change workflows.
 
 ## Crash symbols (Sentry)
 Release builds are obfuscated; `scripts/upload_symbols.sh` sends the symbols
@@ -199,7 +258,9 @@ doesn't stop the run halfway; re-running the script is always safe.
 | `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8_BASE64` | App Store Connect API key |
 | `IOS_CERTIFICATE_P12_BASE64`, `IOS_CERTIFICATE_PASSWORD` | your Apple Distribution certificate (.p12) |
 | `APPLE_TEAM_ID` | Team ID |
-| `ENV_PROD_JSON` | contents of `env/prod.json` |
+| `ENV_PROD_JSON` | contents of `env/prod.json` (re-upload after changing a key; the release run warns about empty keys — `scripts/check_env.sh`) |
+
+| `KIT_SYNC_TOKEN` | optional, see "Kit sync" below |
 
 A store whose secrets are missing is skipped (with a warning), not failed.
 iOS signing imports your .p12 and lets App Store Connect create/refresh the

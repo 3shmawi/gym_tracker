@@ -6,6 +6,7 @@ Run LOCALLY, by the gym's owner (you), on your own computer:
     scripts/make_invites/run.sh --gym <gym-uuid> --count 20 [--names names.txt]
                                 [--logo logo.png] [--out cards.pdf]
                                 [--edit-targets] [--edit-plan] [--build-own-plan]
+    scripts/make_invites/run.sh --demo --gym <demo-gym-uuid>      # App Review code card
     scripts/make_invites/run.sh --dry-run --count 6 --gym-name "Sample Gym"
 
 What it does (docs/decisions/gym_accounts.md §5):
@@ -141,6 +142,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--edit-targets", action="store_true", help="trainees may edit targets")
     parser.add_argument("--edit-plan", action="store_true", help="trainees may edit the whole plan")
     parser.add_argument("--build-own-plan", action="store_true", help="trainees may build their own plan")
+    parser.add_argument("--demo", action="store_true",
+                        help="make (or rotate) the reusable demo code of a demo gym: one card for App Review")
     parser.add_argument("--dry-run", action="store_true", help="draw sample cards, touch no server")
     parser.add_argument("--gym-name", help="gym name on the cards (dry run only)")
     return parser
@@ -156,6 +159,7 @@ class Options:
     permissions: tuple[bool, bool, bool]
     dry_run: bool
     gym_name: Optional[str]
+    demo: bool = False
 
 
 def parse_options(argv: list[str], now: dt.datetime) -> Options:
@@ -169,6 +173,12 @@ def parse_options(argv: list[str], now: dt.datetime) -> Options:
             raise UsageError("--gym-name is only for --dry-run")
         if not args.gym or not UUID_RE.fullmatch(args.gym.strip().lower()):
             raise UsageError("--gym <gym uuid> is required")
+    if args.demo:
+        if args.dry_run or args.names or args.count is not None or any(
+            (args.edit_targets, args.edit_plan, args.build_own_plan)
+        ):
+            raise UsageError("--demo makes one reusable code: no --count, --names, permissions or --dry-run")
+        args.count = 1
     count = args.count
     if names is not None:
         if count is not None and count != len(names):
@@ -192,6 +202,7 @@ def parse_options(argv: list[str], now: dt.datetime) -> Options:
         permissions=(args.edit_targets, args.edit_plan, args.build_own_plan),
         dry_run=args.dry_run,
         gym_name=gym_name,
+        demo=args.demo,
     )
 
 
@@ -289,6 +300,7 @@ class Card:
     code: str
     name: str
     expires: str  # YYYY-MM-DD
+    demo: bool = False
 
 
 _FONTS_READY = False
@@ -410,6 +422,9 @@ def render_pdf(gym_name: str, cards: list[Card], qr_for: Callable[[str], object]
             f"Single use · expires {card.expires} · keep it private",
             f"يُستخدم مرة واحدة · ينتهي في {card.expires} · لا تشاركه",
         ]
+        if card.demo:
+            lines[2] = "Demo code for App Review · reusable · rotate it each submission"
+            lines[3] = "كود تجريبي لمراجعة المتاجر · قابل لإعادة الاستخدام"
         if sample:
             lines[2] = "SAMPLE CARD · this code does not work"
             lines[3] = "نموذج فقط · هذا الكود غير صالح"
@@ -509,6 +524,13 @@ class Api:
                 raise ApiError("unexpected answer from admin_create_invites")
         return rows
 
+    def create_demo_invite(self, gym_id: str) -> dict:
+        row = self.call("POST", "/rest/v1/rpc/admin_create_demo_invite", {"p_gym_id": gym_id})
+        if not (isinstance(row, dict) and CODE_RE.fullmatch(str(row.get("code", "")))
+                and UUID_RE.fullmatch(str(row.get("invite_id", "")))):
+            raise ApiError("unexpected answer from admin_create_demo_invite")
+        return row
+
     def revoke(self, invite_ids: list[str], now: dt.datetime) -> None:
         ids = ",".join(i for i in invite_ids if UUID_RE.fullmatch(i))
         if ids:
@@ -568,6 +590,23 @@ def run(argv: list[str], env: dict[str, str], transport: Transport = urllib_tran
         return 0
 
     assert api is not None
+    if opts.demo:
+        row = api.create_demo_invite(opts.gym_id)
+        try:
+            card = Card(row["code"], "App Review", "", demo=True)
+            write_private_file(out_path, render_pdf(gym_name, [card], qr_for, sample=False))
+        except BaseException:
+            try:
+                api.revoke([row["invite_id"]], now)
+                print("failed while drawing the card; the new demo code was revoked", file=out)
+            except ApiError:
+                print("failed while drawing the card; rotate the demo code again", file=out)
+            raise
+        print(f"created the demo code for “{gym_name}” (reusable, the previous one is revoked)", file=out)
+        print(f"card: {out_path}", file=out)
+        print("Put the code and the QR in App Store Connect → App Review notes and Play Console → "
+              "App access. Delete the PDF afterwards; rotate the code for every submission.", file=out)
+        return 0
     rows = api.create_invites(opts.gym_id, opts.count, opts.names, opts.permissions)
     try:
         cards = [

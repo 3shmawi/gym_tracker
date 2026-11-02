@@ -18,6 +18,19 @@
   "settingsThemeSystem": "System",
   "settingsThemeLight": "Light",
   "settingsThemeDark": "Dark",
+  "settingsAbout": "About",
+  "settingsVersion": "Version",
+  "settingsVersionValue": "{version} ({build})",
+  "@settingsVersionValue": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  },
   "updateOptionalTitle": "Update available",
   "updateForceTitle": "Update required",
   "updateForceMessage": "This version is no longer supported. Please update to continue.",

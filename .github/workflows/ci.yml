@@ -2,6 +2,9 @@ name: CI
 
 on:
   pull_request:
+    # ready_for_review: the iOS job below skips drafts, so it starts when
+    # the PR is marked ready.
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_call:
 
 # Read-only token by default; a job that must write asks for it itself.
@@ -135,8 +138,12 @@ jobs:
       - name: Edge Function tests (Deno)
         if: steps.backend.outputs.present == 'true'
         run: |
-          docker run --rm -v "$PWD/supabase/functions/redeem_invite:/app" -w /app \
-            denoland/deno:2.9.6 sh -c 'deno lint && deno fmt --check && deno test --frozen --no-prompt'
+          docker run --rm -v "$PWD/supabase/functions:/app" -w /app \
+            denoland/deno:2.9.6 sh -c '
+              for d in redeem_invite delete-account; do
+                (cd "$d" && deno lint && deno fmt --check && deno test --frozen --no-prompt) || exit 1
+              done
+              deno lint _shared && deno fmt --check _shared'
 
       - name: Invite tooling tests (Python, hash-pinned packages)
         if: steps.backend.outputs.present == 'true'
@@ -149,7 +156,8 @@ jobs:
   # Whether the PR touches anything the app is built from. The iOS
   # integration job is the slow one (macOS runner, Xcode build), so a PR that
   # only changes docs, scripts or other workflows skips it. A skipped job
-  # counts as passed for required checks.
+  # counts as passed for required checks. Drafts skip it too: mark the PR
+  # "Ready for review" to run it.
   changes:
     name: What changed
     if: github.event_name == 'pull_request'
@@ -179,7 +187,10 @@ jobs:
   integration-ios:
     name: Integration tests (iOS simulator)
     needs: changes
-    if: github.event_name == 'pull_request' && needs.changes.outputs.app == 'true'
+    if: >-
+      github.event_name == 'pull_request'
+      && github.event.pull_request.draft == false
+      && needs.changes.outputs.app == 'true'
     runs-on: macos-latest
     timeout-minutes: 75
     steps:
@@ -190,15 +201,23 @@ jobs:
       - uses: $/.github/actions/setup-flutter
         id: flutter
 
+<<<<<<< yours
       # The Xcode build is most of this job's time: keep Swift packages,
       # DerivedData and Flutter's iOS build between runs (actions/cache saves
       # only after a green run). Keyed on everything that changes them;
       # a partial match still makes the build incremental.
+=======
+      # The Xcode build is most of this job's time: keep the Swift packages
+      # and Flutter's iOS build between runs (actions/cache saves only after
+      # a green run). Not DerivedData: it is several GB, so saving and
+      # restoring it costs about what it saves. Keyed on everything that
+      # changes these; a partial match still makes the build incremental.
+>>>>>>> kit 1928c02
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/Library/Caches/org.swift.swiftpm
-            ~/Library/Developer/Xcode/DerivedData
+            ~/Library/Developer/Xcode/DerivedData/SourcePackages
             build/ios
           key: ios-build-${{ runner.os }}-${{ steps.flutter.outputs.version }}-${{ hashFiles('pubspec.lock', 'ios/**/Package.resolved', 'ios/Podfile.lock', 'ios/**/project.pbxproj') }}
           restore-keys: |

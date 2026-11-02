@@ -64,6 +64,10 @@ class FakeServer:
             return 200, json.dumps([{"name": "Heroes Gym", "logo_path": self.logo_path}]).encode()
         if "/storage/v1/object/gym-logos/" in url:
             return 200, png_bytes()
+        if "/rpc/admin_create_demo_invite" in url:
+            code = random_code(self.rng)
+            self.codes.append(code)
+            return 200, json.dumps({"invite_id": "f0000000-0000-4000-8000-0000000000dd", "code": code}).encode()
         if "/rpc/admin_create_invites" in url:
             payload = json.loads(body)
             n = self.count_override or payload["p_count"]
@@ -462,6 +466,62 @@ class Redirects(unittest.TestCase):
             redirector.shutdown()
         self.assertEqual(status, 302)
         self.assertEqual(seen, [], "the key reached the redirect target")
+
+
+class DemoCard(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.out = Path(self.tmp.name) / "demo.pdf"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_makes_one_card_and_prints_no_code(self):
+        server = FakeServer()
+        code, text, _ = run_cli(["--demo", "--gym", GYM_ID, "--out", str(self.out)], server=server)
+        self.assertEqual(code, 0, text)
+        self.assertTrue(self.out.read_bytes().startswith(b"%PDF"))
+        self.assertEqual(len(re.findall(rb"/Type /Page\b(?!s)", self.out.read_bytes())), 1)
+        calls = [r for r in server.requests if r[1].endswith("/rpc/admin_create_demo_invite")]
+        self.assertEqual(json.loads(calls[0][3]), {"p_gym_id": GYM_ID})
+        self.assertFalse(any(r[1].endswith("/rpc/admin_create_invites") for r in server.requests))
+        for secret in server.codes + [FAKE_KEY]:
+            self.assertNotIn(secret, text)
+
+    def test_refuses_options_that_do_not_apply(self):
+        for extra in (["--count", "3"], ["--names", "x.txt"], ["--edit-plan"], ["--dry-run"]):
+            with self.subTest(extra=extra):
+                code, _text, server = run_cli(["--demo", "--gym", GYM_ID, "--out", str(self.out)] + extra)
+                self.assertIn(code, (2,))
+                self.assertEqual(server.requests, [])
+
+    def test_needs_a_gym_and_never_runs_in_ci(self):
+        self.assertEqual(run_cli(["--demo", "--out", str(self.out)])[0], 2)
+        server = FakeServer()
+        code, _text, _ = run_cli(["--demo", "--gym", GYM_ID, "--out", str(self.out)],
+                                 env={**ENV, "CI": "true"}, server=server)
+        self.assertEqual(code, 2)
+        self.assertEqual(server.requests, [])
+
+    def test_the_new_demo_code_is_revoked_if_the_card_cannot_be_drawn(self):
+        server = FakeServer()
+        real = mi.render_pdf
+        calls = {"n": 0}
+
+        def flaky(*args, **kwargs):
+            calls["n"] += 1
+            if calls["n"] == 2:
+                raise RuntimeError("disk on fire")
+            return real(*args, **kwargs)
+
+        mi.render_pdf = flaky
+        try:
+            with self.assertRaises(RuntimeError):
+                run_cli(["--demo", "--gym", GYM_ID, "--out", str(self.out)], server=server)
+        finally:
+            mi.render_pdf = real
+        self.assertEqual(len([r for r in server.requests if r[0] == "PATCH"]), 1)
+        self.assertFalse(self.out.exists())
 
 
 class SourceRules(unittest.TestCase):

@@ -27,6 +27,8 @@ Future<String?> _joinGate(BuildContext context, GoRouterState state) async =>
 final appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: AppRoutes.home,
+  // Root navigator only. Tabs added later (StatefulShellBranch) need their
+  // own `observers: Analytics.navigatorObservers` to be tracked.
   observers: [
     ...Monitoring.navigatorObservers,
     ...Analytics.navigatorObservers,
@@ -38,6 +40,7 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.home,
       name: 'home',
+<<<<<<< yours
       builder: (context, state) => const NextWorkoutPage(),
     ),
     GoRoute(
@@ -99,6 +102,9 @@ final appRouter = GoRouter(
           ],
         ),
       ],
+=======
+      builder: (context, state) => const HomePage(),
+>>>>>>> kit 1928c02
     ),
     GoRoute(
       path: AppRoutes.settings,
