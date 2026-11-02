@@ -144,9 +144,12 @@ it refuses, the phone keeps everything, a second run changes nothing),
 `solo_import_flows_test.dart`.
 
 ## Turnstile
-`TurnstileCaptcha` (`lib/core/captcha/`, `cloudflare_turnstile` 3.8.1 read on
+`TurnstileCaptcha` (`lib/core/captcha/`, `webview_flutter` 4.14.1 read on
 pub.dev 2026-11-02; Cloudflare's own docs were not reachable from the build
-environment) gets a token in an invisible widget and feeds
+environment; `cloudflare_turnstile` was tried first and dropped: its
+`flutter_inappwebview` 1.1.3 (last stable 2024) breaks the Android build with the
+current Gradle) gets a token from a 1-pixel web view (`appearance:
+'interaction-only'`; it cannot show a challenge) and feeds
 `SupabaseGymRepository.captchaToken`. Off (no token) when `TURNSTILE_SITE_KEY` is
 empty. Failures: no answer in 20 s → `TimeoutFailure`, retryable widget error →
 `NetworkFailure`, refusal → `UnknownFailure`; the join then shows its normal

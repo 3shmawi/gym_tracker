@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cloudflare_turnstile/cloudflare_turnstile.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/captcha/turnstile_captcha.dart';
 import 'package:gym_tracker/core/config/env.dart';
@@ -47,23 +46,6 @@ void main() {
       throwsA(isA<TimeoutFailure>()),
     );
   });
-
-  test(
-    'a retryable widget error is a network failure, the rest unknown',
-    () async {
-      await expectLater(
-        captcha(
-          (k, b) async =>
-              throw const TurnstileException('net', retryable: true),
-        ).token(),
-        throwsA(isA<NetworkFailure>()),
-      );
-      await expectLater(
-        captcha((k, b) async => throw const TurnstileException('no')).token(),
-        throwsA(isA<UnknownFailure>()),
-      );
-    },
-  );
 
   test(
     'the site key is not baked into the app: it comes from the env file',

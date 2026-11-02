@@ -1,20 +1,25 @@
 import 'dart:async';
 
-import 'package:cloudflare_turnstile/cloudflare_turnstile.dart';
+import 'package:flutter/widgets.dart';
+import 'package:gym_tracker/core/captcha/turnstile_page.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
+import 'package:gym_tracker/core/router/app_router.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 /// Gets a Cloudflare Turnstile token for the anonymous sign-in
 /// (docs/decisions/gym_accounts.md §16): Supabase checks it with the Turnstile
 /// secret that lives only in Supabase's Auth settings.
 ///
-/// The widget runs invisibly in a headless web view. It is created, used once
-/// and disposed for each token: a token works once and expires in minutes.
+/// The widget runs in a 1-pixel web view that only opens Cloudflare's own
+/// host; it is created for each token and thrown away (a token works once and
+/// expires in minutes). The widget must be a type that needs no person
+/// (invisible / non-interactive): the web view cannot show a challenge.
 class TurnstileCaptcha {
   const new({
     required this.siteKey,
     this.baseUrl = defaultBaseUrl,
     this.timeout = const Duration(seconds: 20),
-    this.fetch = _fetchFromWidget,
+    this.fetch = _fetchWithWebView,
   });
 
   /// Must be one of the widget's registered domains (Cloudflare dashboard →
@@ -31,8 +36,7 @@ class TurnstileCaptcha {
   final Future<String?> Function(String siteKey, String baseUrl) fetch;
 
   /// A fresh token, or a failure ([TimeoutFailure] when the widget does not
-  /// answer, [UnknownFailure] when it refuses). Never null: an empty token
-  /// would make the sign-in fail with a less clear error.
+  /// answer, [UnknownFailure] when it refuses). Never null or empty.
   Future<String> token() async {
     try {
       final value = await fetch(siteKey, baseUrl).timeout(timeout);
@@ -42,25 +46,62 @@ class TurnstileCaptcha {
       return value;
     } on TimeoutException catch (error) {
       throw TimeoutFailure(error);
-    } on TurnstileException catch (error) {
-      // Retryable errors (a network hiccup in the web view) are network
-      // failures; the rest are the widget refusing this client.
-      throw error.retryable ? NetworkFailure(error) : UnknownFailure(error);
     }
   }
 
-  static Future<String?> _fetchFromWidget(
+  static Future<String?> _fetchWithWebView(
     String siteKey,
     String baseUrl,
   ) async {
-    final turnstile = CloudflareTurnstile.invisible(
-      siteKey: siteKey,
-      baseUrl: baseUrl,
+    final page = TurnstilePage.html(siteKey);
+    final overlay = rootNavigatorKey.currentState?.overlay;
+    if (overlay == null) throw const UnknownFailure('turnstile: no screen');
+    final done = Completer<String?>();
+    void finish(String? token) {
+      if (!done.isCompleted) done.complete(token);
+    }
+
+    final controller = WebViewController();
+    await controller.setJavaScriptMode(JavaScriptMode.unrestricted);
+    await controller.addJavaScriptChannel(
+      TurnstilePage.channel,
+      onMessageReceived: (message) {
+        final parsed = TurnstilePage.parse(message.message);
+        if (parsed == null) return;
+        if (parsed.value != null) finish(parsed.value);
+        if (parsed.failed) finish(null);
+        // `timedOut` / expired: keep waiting for the widget's retry; the
+        // overall timeout ends the wait.
+      },
     );
+    await controller.setNavigationDelegate(
+      NavigationDelegate(
+        onNavigationRequest: (request) =>
+            TurnstilePage.allowsNavigation(request.url)
+            ? NavigationDecision.navigate
+            : NavigationDecision.prevent,
+        onWebResourceError: (_) => finish(null),
+      ),
+    );
+    final entry = OverlayEntry(
+      builder: (_) => Positioned(
+        left: 0,
+        top: 0,
+        width: 1,
+        height: 1,
+        child: IgnorePointer(
+          child: ExcludeSemantics(child: WebViewWidget(controller: controller)),
+        ),
+      ),
+    );
+    overlay.insert(entry);
     try {
-      return await turnstile.getToken();
+      await controller.loadHtmlString(page, baseUrl: baseUrl);
+      return await done.future;
     } finally {
-      await turnstile.dispose();
+      entry
+        ..remove()
+        ..dispose();
     }
   }
 }
