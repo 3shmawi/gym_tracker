@@ -88,7 +88,9 @@ class _PillButton extends StatelessWidget {
           minWidth: double.infinity,
         ),
         child: Material(
-          color: enabled ? fill : fill.withValues(alpha: 0.4),
+          // Off (design `.cta.off`): a quiet chip with tertiary text, not a
+          // faded brand button.
+          color: enabled ? fill : context.palette.fillSubtle,
           shape: const StadiumBorder(),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
@@ -115,7 +117,9 @@ class _PillButton extends StatelessWidget {
                       label,
                       textAlign: TextAlign.center,
                       style: AppTextStyles.title.copyWith(
-                        color: foreground,
+                        color: enabled
+                            ? foreground
+                            : context.palette.textTertiary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -858,6 +862,170 @@ class AppChoiceChip extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A short fixed-length code (the gym invite code) drawn as separate boxes.
+/// One invisible [TextField] takes the typing, so paste, autofill and every
+/// keyboard behave normally; the boxes are only the picture. Boxes run
+/// left-to-right in every language (a code is Latin text), they never move
+/// between states, and an error only recolors them.
+///
+/// [clean] decides what may be typed (it is applied to every edit and paste).
+class AppCodeField extends StatefulWidget {
+  const new({
+    required this.label,
+    required this.controller,
+    required this.length,
+    required this.clean,
+    this.hasError = false,
+    this.autofocus = false,
+    this.onChanged,
+    this.onSubmitted,
+    super.key,
+  });
+
+  /// The field's name for screen readers.
+  final String label;
+  final TextEditingController controller;
+  final int length;
+  final String Function(String input) clean;
+  final bool hasError;
+  final bool autofocus;
+  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
+
+  @override
+  State<AppCodeField> createState() => _AppCodeFieldState();
+}
+
+class _AppCodeFieldState extends State<AppCodeField> {
+  final _focus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_rebuild);
+    _focus.addListener(_rebuild);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_rebuild);
+    _focus.dispose();
+    super.dispose();
+  }
+
+  void _rebuild() => setState(() {});
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final scheme = Theme.of(context).colorScheme;
+    final text = widget.controller.text;
+    final cursor = _focus.hasFocus
+        ? text.length.clamp(0, widget.length - 1)
+        : -1;
+    // Design (.codes b): 62 high, 16 radius, 28 px / 800 digits, 8 gap.
+    final boxHeight = AppDimens.scaled(62);
+    return SizedBox(
+      height: boxHeight,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ExcludeSemantics(
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: Row(
+                  spacing: AppDimens.sm,
+                  children: [
+                    for (var i = 0; i < widget.length; i++)
+                      Expanded(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: palette.fillSubtle,
+                            borderRadius: BorderRadius.circular(
+                              AppDimens.radiusMd + 4,
+                            ),
+                            border: Border.all(
+                              width: 2,
+                              color: widget.hasError
+                                  ? palette.error
+                                  : i == cursor
+                                  ? scheme.primary
+                                  : palette.fillSubtle,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              i < text.length ? text[i] : '',
+                              style: AppTextStyles.numL.copyWith(
+                                fontSize: AppDimens.scaled(28),
+                                fontWeight: FontWeight.w800,
+                                color: widget.hasError
+                                    ? palette.error
+                                    : palette.textPrimary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: Semantics(
+              label: widget.label,
+              textField: true,
+              child: Opacity(
+                opacity: 0,
+                child: TextField(
+                  controller: widget.controller,
+                  focusNode: _focus,
+                  autofocus: widget.autofocus,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  enableInteractiveSelection: false,
+                  textCapitalization: TextCapitalization.characters,
+                  textDirection: TextDirection.ltr,
+                  textInputAction: TextInputAction.done,
+                  maxLength: widget.length,
+                  inputFormatters: [_CleanFormatter(widget.clean)],
+                  onChanged: widget.onChanged,
+                  onSubmitted: widget.onSubmitted,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    counterText: '',
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Replaces every edit by its cleaned form, cursor at the end (a code is
+/// short, and pasting "k7m-2qx " must give `K7M2QX`).
+class _CleanFormatter extends TextInputFormatter {
+  const new(this.clean);
+
+  final String Function(String input) clean;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = clean(newValue.text);
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
     );
   }
 }

@@ -1,0 +1,146 @@
+/* Join page. Copied from the approved design board (Claude Design, gym
+   accounts, boards 8a/8b: Web.dc.html, WebDesktop.dc.html, extra.css) with the
+   same sizes, radii, colors and spacing. Self-contained: Inter and Cairo are
+   served from this site (OFL, @fontsource 5.3.0, checked 2026-11-02), so the
+   page makes no third-party request. */
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/assets/fonts/inter-latin-400.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 600; font-display: swap;
+  src: url("/assets/fonts/inter-latin-600.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("/assets/fonts/inter-latin-700.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 800; font-display: swap;
+  src: url("/assets/fonts/inter-latin-800.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Cairo"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/assets/fonts/cairo-arabic-400.woff2") format("woff2"); unicode-range: U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC; }
+@font-face { font-family: "Cairo"; font-style: normal; font-weight: 600; font-display: swap;
+  src: url("/assets/fonts/cairo-arabic-600.woff2") format("woff2"); unicode-range: U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC; }
+@font-face { font-family: "Cairo"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("/assets/fonts/cairo-arabic-700.woff2") format("woff2"); unicode-range: U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC; }
+@font-face { font-family: "Cairo"; font-style: normal; font-weight: 800; font-display: swap;
+  src: url("/assets/fonts/cairo-arabic-800.woff2") format("woff2"); unicode-range: U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC; }
+
+:root {
+  --p: #22C55E; --on-p: #04210F;
+  --g0: #EEF4F0;
+  --glass: rgba(255,255,255,.66); --glass-hi: rgba(255,255,255,.7); --glass-edge: rgba(255,255,255,.9);
+  --t1: #0C1610; --t2: #46554C; --t3: #5F6E66; --warn: #B45309;
+  --chip: rgba(12,22,16,.06);
+  --bg: radial-gradient(120% 60% at 85% 0%, #BBF7D0 0%, transparent 55%),
+        radial-gradient(90% 50% at 0% 100%, #D1FAE5 0%, transparent 60%), var(--g0);
+  --store-bg: #0C1610; --focus: #0B6B33;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --g0: #07120C;
+    --glass: rgba(22,34,28,.62); --glass-hi: rgba(255,255,255,.10); --glass-edge: rgba(255,255,255,.14);
+    --t1: #F2F7F3; --t2: #A9B8AF; --t3: #7C8B83; --warn: #FBBF24;
+    --chip: rgba(255,255,255,.07);
+    --bg: radial-gradient(120% 60% at 85% 0%, #14532D 0%, transparent 55%),
+          radial-gradient(90% 50% at 0% 100%, #0B3B24 0%, transparent 60%), var(--g0);
+    --store-bg: #000; --focus: #86EFAC;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; min-height: 100vh; background: var(--bg); background-attachment: fixed; color: var(--t1);
+  font-family: "Inter", "Cairo", system-ui, sans-serif; }
+html[dir="rtl"] body { font-family: "Cairo", "Inter", system-ui, sans-serif; }
+[data-lang] { display: none; }
+html[lang="en"] [data-lang="en"], html[lang="ar"] [data-lang="ar"] { display: revert; }
+
+.ic { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round;
+  stroke-linejoin: round; flex: none; }
+.ic.s { width: 20px; height: 20px; }
+.ic.xl { width: 44px; height: 44px; }
+
+/* .web: the phone layout, 375 wide in the design, fluid here. */
+.web { max-width: 480px; min-height: 100vh; margin: 0 auto; padding: 20px 20px 26px; display: flex;
+  flex-direction: column; gap: 18px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; }
+.logo { width: 36px; height: 36px; border-radius: 11px; background: linear-gradient(135deg, #22C55E, #0B6B33);
+  display: grid; place-items: center; color: #04210F; font: 800 18px "Inter", sans-serif; flex: none; }
+.lang { display: none; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+.t-l { font-size: 24px; font-weight: 800; line-height: 1.2; text-wrap: balance; margin: 0; }
+.lead { margin: 8px 0 0; color: var(--t2); line-height: 1.6; font-size: 15px; }
+.t-xs { font-size: 12px; color: var(--t2); }
+
+.gl { background: var(--glass); backdrop-filter: blur(24px) saturate(1.6); -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border: 1px solid var(--glass-edge); box-shadow: inset 0 1px 0 var(--glass-hi), 0 10px 30px -12px #0008; }
+.codecard { border-radius: 28px; padding: 18px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  text-align: center; }
+.code6 { font: 800 34px "Inter", sans-serif; letter-spacing: .28em; direction: ltr; padding-inline-start: .28em;
+  font-variant-numeric: tabular-nums; user-select: all; -webkit-user-select: all; }
+.small-btn { height: 48px; min-width: 56px; width: 100%; padding: 0 14px; border-radius: 24px; background: var(--chip);
+  display: flex; align-items: center; justify-content: center; gap: 8px; font: 700 15px "Inter", "Cairo", sans-serif;
+  color: var(--t1); border: 0; cursor: pointer; }
+.copied { margin: 0; }
+
+.cta { height: 60px; border-radius: 30px; background: var(--p); color: var(--on-p); font: 800 18px "Inter", "Cairo", sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 12px 30px -10px #22C55E99;
+  text-decoration: none; flex: none; }
+.store { height: 56px; border-radius: 16px; background: var(--store-bg); border: 1px solid #444; color: #fff; display: flex;
+  align-items: center; justify-content: center; gap: 10px; font-weight: 700; font-size: 16px; text-decoration: none; flex: none; }
+/* The other store, quietly (design: "On iPhone? App Store"). */
+.page[data-platform="ios"] #store-android, .page[data-platform="android"] #store-ios {
+  background: transparent; color: var(--t1); border-color: var(--glass-edge); height: 48px; font-weight: 600; font-size: 14px; }
+@media (prefers-color-scheme: light) {
+  .page[data-platform="ios"] #store-android, .page[data-platform="android"] #store-ios { border-color: #0C161033; }
+}
+/* Explicit order, because .actions is display: contents (its buttons share the
+   page's flex column and its gap). The platform's store comes first. */
+.top { order: 0; } .panel.ok { order: 1; } .panel.bad { order: 1; } .codecard { order: 2; }
+#open { order: 3; } #store-ios, #store-android { order: 4; } .sp { order: 6; } .foot { order: 7; }
+.page[data-platform="ios"] #store-android, .page[data-platform="android"] #store-ios { order: 5; }
+.cta:focus-visible, .store:focus-visible, .small-btn:focus-visible, .lang:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+.center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  text-align: center; padding: 0 12px; }
+.center p { margin: 0; color: var(--t2); font-size: 15px; line-height: 1.6; max-width: 30ch; }
+.orb { width: 88px; height: 88px; border-radius: 44px; display: grid; place-items: center; color: var(--warn);
+  background: radial-gradient(circle at 30% 25%, var(--glass-hi), var(--glass)); border: 1px solid var(--glass-edge);
+  box-shadow: 0 20px 50px -20px #FBBF2488; }
+.center .t-l { font-size: 22px; }
+
+.sp { flex: 1; min-height: 0; }
+.actions { display: contents; }
+.foot { text-align: center; line-height: 1.7; }
+.foot p { margin: 0; }
+.url { font: 500 12px ui-monospace, Menlo, monospace; color: var(--t3); direction: ltr; text-align: center; }
+
+/* Desktop (design board 8b): two columns, a top bar with the language switch,
+   the code on a white card, black store buttons, no "Open in Azm". */
+@media (min-width: 900px) {
+  body { background: radial-gradient(120% 60% at 85% 0%, #BBF7D0 0%, transparent 55%), #EEF4F0; color: #0C1610;
+    --t2: #46554C; --t3: #5F6E66; --chip: rgba(12,22,16,.06); --p: #15803D; --warn: #B45309; }
+  .web { max-width: 1040px; min-height: 100vh; padding: 0 56px 40px; display: grid; grid-template-columns: 1fr 1fr;
+    grid-template-areas: "top top" "text card" "acts card" "foot card"; column-gap: 40px; row-gap: 16px;
+    grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr); }
+  .top { grid-area: top; height: 64px; margin: 0 -56px; padding: 0 32px; border-bottom: 1px solid rgba(12,22,16,.08); }
+  .lang { display: inline-block; height: 40px; padding: 0 16px; border-radius: 20px; background: transparent;
+    border: 1px solid rgba(12,22,16,.2); font: 700 14px "Inter", "Cairo", sans-serif; color: #0C1610; cursor: pointer; }
+  .panel { grid-area: text; display: flex; flex-direction: column; align-self: end; gap: 16px; }
+  .panel .t-l { font-size: 38px; }
+  .lead { font-size: 17px; line-height: 1.7; max-width: 34ch; margin: 0; color: #46554C; }
+  .center { flex: none; align-items: flex-start; text-align: start; padding: 0; }
+  .codecard { grid-area: card; align-self: center; background: #fff; backdrop-filter: none; -webkit-backdrop-filter: none;
+    border: 0; border-radius: 24px; padding: 24px; gap: 10px; box-shadow: 0 10px 30px -14px #0003; color: #0C1610; }
+  .codecard .t-xs { font-size: 13px; font-weight: 600; color: #46554C; }
+  .code6 { font-size: 46px; letter-spacing: .3em; padding-inline-start: .3em; }
+  .codecard .hint { font-size: 13px; color: #46554C; max-width: 30ch; line-height: 1.6; }
+  .small-btn { width: auto; height: 52px; border-radius: 26px; padding: 0 24px; background: #15803D; color: #fff;
+    font: 800 16px "Inter", "Cairo", sans-serif; }
+  .actions { grid-area: acts; display: flex; flex-direction: row; flex-wrap: wrap; gap: 12px; margin-top: 6px; align-self: start; }
+  .actions .store { height: 52px; border-radius: 26px; padding: 0 24px; background: #0C1610; border: 0; font-weight: 800;
+    font-size: 16px; }
+  .page .actions .store { order: 0; height: 52px; background: #0C1610; color: #fff; border: 0; font-size: 16px; font-weight: 800; }
+  .page[data-platform] #open { display: none; }
+  .sp { display: none; }
+  .foot { grid-area: foot; text-align: start; font-size: 13px; }
+  .foot .t-xs { font-size: 13px; }
+  .url { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) { .cta, .store, .small-btn { transition: filter .15s; } .cta:hover, .store:hover { filter: brightness(1.06); } }

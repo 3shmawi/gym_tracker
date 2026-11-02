@@ -2,14 +2,19 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/bootstrap.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
+import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
 import 'package:gym_tracker/core/router/app_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/router/not_found_page.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
+import 'package:gym_tracker/features/gym/domain/entities/invite_code.dart';
+import 'package:gym_tracker/features/gym/presentation/join_page.dart';
+import 'package:gym_tracker/features/gym/presentation/join_submit.dart';
 import 'package:gym_tracker/features/settings/data/repositories/shared_prefs_settings_repository.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_controller.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
@@ -28,11 +33,15 @@ import 'package:gym_tracker/l10n/l10n.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/fake_rest_alarm.dart';
+import '../helpers/pump_app.dart' show l10nEn;
 
 /// Deep links are untrusted input: unknown or crafted paths must land on a
 /// safe screen, never crash or open something unexpected.
 void main() {
-  Future<void> pumpRouter(WidgetTester tester) async {
+  Future<void> pumpRouter(
+    WidgetTester tester, {
+    List<Override> extraOverrides = const [],
+  }) async {
     tester.view
       ..physicalSize = const Size(1125, 2436)
       ..devicePixelRatio = 3;
@@ -48,6 +57,7 @@ void main() {
           settingsRepositoryProvider.overrideWithValue(
             SharedPrefsSettingsRepository(prefs),
           ),
+          ...extraOverrides,
         ],
         child: AppUi.testWrap(
           AppScreenScale(
@@ -79,35 +89,201 @@ void main() {
     }
   });
 
-  testWidgets('/join/<code> opens the home screen and reads nothing', (
-    tester,
-  ) async {
-    await pumpRouter(tester);
-    for (final path in [
-      '/join/abc',
-      '/join/%3Cscript%3Ealert(1)%3C%2Fscript%3E',
-      "/join/'; drop table plans;--",
-      '/join/${'x' * 5000}',
-      '/join/abc?redirect=https://evil.example.com',
-      '/join/abc?plan=delete&day=-1',
-    ]) {
-      appRouter.go(path);
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull, reason: path);
-      expect(find.byType(NextWorkoutPage), findsOneWidget, reason: path);
-    }
+  group('/join with the gym_join flag off (the default)', () {
+    testWidgets('/join and /join/<code> open home and read nothing', (
+      tester,
+    ) async {
+      await pumpRouter(tester);
+      for (final path in [
+        '/join',
+        '/join/abc',
+        '/join/K7M2QX',
+        '/join/%3Cscript%3Ealert(1)%3C%2Fscript%3E',
+        "/join/'; drop table plans;--",
+        '/join/${'x' * 5000}',
+        '/join/abc?redirect=https://evil.example.com',
+        '/join/abc?plan=delete&day=-1',
+      ]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.byType(NextWorkoutPage), findsOneWidget, reason: path);
+        expect(find.byType(JoinPage), findsNothing, reason: path);
+      }
+    });
+
+    testWidgets('look-alike and extra paths are not found', (tester) async {
+      await pumpRouter(tester);
+      for (final path in ['/joinx/abc', '/join/abc/def', '/join/K7M2QX/x']) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.byType(NotFoundPage), findsOneWidget, reason: path);
+      }
+    });
   });
 
-  testWidgets('a bare /join and look-alike paths are not found', (
-    tester,
-  ) async {
-    await pumpRouter(tester);
-    for (final path in ['/join', '/joinx/abc', '/join/abc/def']) {
-      appRouter.go(path);
+  group('/join with the gym_join flag on', () {
+    var submits = <InviteCode>[];
+
+    setUp(() {
+      submits = [];
+      FeatureFlags.overrides[Flags.gymJoin] = true;
+    });
+    tearDown(FeatureFlags.overrides.clear);
+
+    Future<void> pump(WidgetTester tester) => pumpRouter(
+      tester,
+      extraOverrides: [
+        joinSubmitProvider.overrideWithValue((code) async => submits.add(code)),
+      ],
+    );
+
+    String typed(WidgetTester tester) => tester
+        .widget<TextField>(
+          find.descendant(
+            of: find.byKey(const Key('join_code')),
+            matching: find.byType(TextField),
+          ),
+        )
+        .controller!
+        .text;
+
+    String message(WidgetTester tester) => tester
+        .widget<Text>(
+          find.descendant(
+            of: find.byKey(const Key('join_message')),
+            matching: find.byType(Text),
+            matchRoot: true,
+          ),
+        )
+        .data!;
+
+    testWidgets('a valid code from a link only fills the field', (
+      tester,
+    ) async {
+      await pump(tester);
+      for (final path in [
+        '/join/K7M2QX',
+        '/join/k7m2qx',
+        '/join/%4B7M2QX',
+        '/join/K7M2QX?redirect=https://evil.example.com',
+      ]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.byType(JoinPage), findsOneWidget, reason: path);
+        expect(typed(tester), 'K7M2QX', reason: path);
+      }
+      expect(submits, isEmpty, reason: 'a link must never join by itself');
+    });
+
+    testWidgets('a link cannot sign in; only a tap on Join does', (
+      tester,
+    ) async {
+      await pump(tester);
+      appRouter.go('/join/K7M2QX');
       await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull, reason: path);
-      expect(find.byType(NotFoundPage), findsOneWidget, reason: path);
-    }
+      // Time passes and the app is backgrounded: still nothing.
+      await tester.pump(const Duration(minutes: 5));
+      [
+        AppLifecycleState.inactive,
+        AppLifecycleState.hidden,
+        AppLifecycleState.paused,
+        AppLifecycleState.hidden,
+        AppLifecycleState.inactive,
+        AppLifecycleState.resumed,
+      ].forEach(tester.binding.handleAppLifecycleStateChanged);
+      await tester.pumpAndSettle();
+      expect(submits, isEmpty);
+
+      await tester.tap(find.byKey(const Key('join_submit')));
+      await tester.pumpAndSettle();
+      expect(submits.map((c) => c.value), ['K7M2QX']);
+    });
+
+    testWidgets('hostile codes show an empty field and an error, never join', (
+      tester,
+    ) async {
+      await pump(tester);
+      for (final path in [
+        '/join/abc',
+        '/join/ABC230', // 0 is not in the alphabet
+        '/join/ABC23', // too short
+        '/join/ABC2345', // too long
+        '/join/%3Cscript%3Ealert(1)%3C%2Fscript%3E',
+        "/join/'; drop table plans;--",
+        '/join/${'x' * 5000}',
+        '/join/%C3%9F%C5%BF%EF%BC%A1%EF%BC%A2%EF%BC%A3%EF%BC%94', // ß ſ Ａ…
+        '/join/javascript:alert(1)',
+        '/join/https:%2F%2Fevil.example',
+        '/join/%00ABC23',
+        '/join/abc?redirect=https://evil.example.com',
+        '/join/abc?plan=delete&day=-1',
+      ]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.byType(JoinPage), findsOneWidget, reason: path);
+        expect(typed(tester), isEmpty, reason: path);
+        expect(message(tester), l10nEn.joinLinkIncomplete, reason: path);
+        // Still on the join screen: a query parameter cannot redirect it.
+        expect(
+          appRouter.routeInformationProvider.value.uri.path,
+          startsWith('/join'),
+          reason: path,
+        );
+      }
+      expect(submits, isEmpty);
+    });
+
+    testWidgets('a bare /join opens the screen empty, a query is ignored', (
+      tester,
+    ) async {
+      await pump(tester);
+      for (final path in ['/join', '/join?c=K7M2QX', '/join?code=K7M2QX']) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(find.byType(JoinPage), findsOneWidget, reason: path);
+        expect(typed(tester), isEmpty, reason: path);
+        expect(
+          message(tester),
+          l10nEn.joinHint,
+          reason: 'not an error: nothing was wrong with the link',
+        );
+      }
+      expect(submits, isEmpty);
+    });
+
+    testWidgets('extra segments and look-alikes are still not found', (
+      tester,
+    ) async {
+      await pump(tester);
+      for (final path in [
+        '/join/K7M2QX/extra',
+        '/joinx/K7M2QX',
+        '/join/K7M2QX/',
+      ]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        if (path == '/join/K7M2QX/') {
+          // A trailing slash is the same link.
+          expect(typed(tester), 'K7M2QX');
+        } else {
+          expect(find.byType(NotFoundPage), findsOneWidget, reason: path);
+        }
+      }
+    });
+
+    testWidgets('without a submit handler Join stays off after a link', (
+      tester,
+    ) async {
+      await pumpRouter(tester);
+      appRouter.go('/join/K7M2QX');
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('join_not_ready')), findsOneWidget);
+    });
   });
 
   testWidgets('query parameters cannot redirect the app', (tester) async {

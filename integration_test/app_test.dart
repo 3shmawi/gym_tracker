@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
+import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
 import 'package:gym_tracker/core/router/app_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/splash/animated_splash.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
+import 'package:gym_tracker/features/gym/presentation/join_page.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_view.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
@@ -287,6 +289,50 @@ void main() {
     await lockPhone(tester);
     expect(alarm.scheduled, isNull);
     await unlockPhone(tester);
+    await beat(tester, 1500);
+  });
+
+  testWidgets('an invite link fills in the code and waits for the tap', (
+    tester,
+  ) async {
+    // Behind the gym_join flag: off in the stores until joining works.
+    FeatureFlags.overrides[Flags.gymJoin] = true;
+    addTearDown(FeatureFlags.overrides.clear);
+    await freshInstall(tester);
+    await app.main();
+    useFakeRestAlarm();
+    await tester.pumpAndSettle();
+    await beat(tester, 1200);
+
+    // Someone scans the QR (or taps the link) while the app is installed.
+    appRouter.go('/join/k7m2qx');
+    await tester.pumpAndSettle();
+    expect(find.byType(JoinPage), findsOneWidget);
+    expect(find.text('K'), findsOneWidget);
+    expect(find.text('X'), findsOneWidget);
+    await beat(tester, 1500);
+
+    // The link only filled the boxes in: nothing joined. Join is the
+    // member's own tap (and, until joining ships, stays off).
+    expect(find.byKey(const Key('join_not_ready')), findsOneWidget);
+    await beat(tester, 1200);
+
+    // A bad link shows an empty field and says why.
+    appRouter.go('/join/not-a-code');
+    await tester.pumpAndSettle();
+    expect(find.byType(JoinPage), findsOneWidget);
+    await beat(tester, 1500);
+
+    // The member can still type the code by hand.
+    await tester.enterText(
+      find.descendant(
+        of: find.byKey(const Key('join_code')),
+        matching: find.byType(TextField),
+      ),
+      'hjk2mn',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('H'), findsOneWidget);
     await beat(tester, 1500);
   });
 }

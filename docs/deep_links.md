@@ -34,8 +34,26 @@ other https path stays in the browser.
 
 | Path | Behaviour |
 |---|---|
-| `/join/<code>` | Opens the app on the home screen. Reserved for invites: the code is never read, nothing changes. |
-| `/join` (no code) | Not claimed by the website; inside the app: not-found page |
+| `/join/<code>` | The enter-code screen with the code filled in. A link **never joins**: the member taps Join. A code that is not 6 characters of `A-H J K M N P-Z 2-9` (any case) shows an empty field and "this link has no valid code". |
+| `/join` (no code) | The same screen, empty (opened by `azm://join` from the web page when it has no code). A query (`?c=…`) is ignored |
+| `/join/<code>/…`, `/joinx/…` | Not found |
+
+The whole `/join` family is behind the `gym_join` feature flag (PostHog,
+`Flags.gymJoin`): **off, every `/join…` link opens the home screen**, as before
+gym accounts. The flag goes on when joining works (delivery step 3/4).
+
+The same links work as `azm://join/<code>` (custom scheme: Flutter maps the
+host to the first path segment, like `azm://settings`).
+
+**When the app is not installed** (or the link opened in an in-app browser),
+https://azmm.pages.dev/join/<code> is a web page: `website/join.html` (served for
+every `/join/*` by `website/_redirects`, a 200 rewrite). It reads the code from
+the *path* only (never `?c=`), validates it with `^[A-HJKMNP-Z2-9]{6}$`, shows
+it as text (`textContent`), and offers "Open in Azm" (`azm://join/<code>`), the
+store button for the platform, and a copy button. No script means no code on
+screen, but the buttons and both languages still work. It never calls a
+backend and has no trackers (CSP `connect-src 'none'`, fonts served from the
+same site). Design: boards 8a/8b of the gym accounts design.
 
 How it is wired:
 - `website/.well-known/apple-app-site-association` — `components`:
@@ -58,7 +76,8 @@ Test:
 ```bash
 curl -sI https://azmm.pages.dev/.well-known/apple-app-site-association   # 200, application/json
 adb shell pm get-app-links com.mohager.azm                                 # azmm.pages.dev: verified
-xcrun simctl openurl booted "https://azmm.pages.dev/join/abc"
+xcrun simctl openurl booted "https://azmm.pages.dev/join/K7M2QX"
+xcrun simctl openurl booted "azm://join/K7M2QX"
 ```
 Docs checked 2026-11-02: Android "Verify Android App Links" (read in full: the
 system fetches `/.well-known/assetlinks.json` per host; on Android 15+ changes

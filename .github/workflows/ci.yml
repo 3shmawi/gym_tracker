@@ -86,6 +86,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: pipx run zizmor==1.31.1 --min-severity low --format github .github/workflows .github/actions
 
+      # The join page's address parsing and platform detection: plain Node, no
+      # packages (test/website/join_code.test.js). Hostile addresses must never
+      # produce a code.
+      - name: Join page logic tests (Node)
+        run: node --test test/website/join_code.test.js
+
       # Runs once `supabase init` has created supabase/config.toml.
       # RLS tests run when a PR touches supabase/ (or on manual runs).
       - name: Supabase changes?

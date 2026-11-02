@@ -6,9 +6,15 @@ abstract final class AppRoutes {
   static const home = '/';
   static const settings = '/settings';
 
-  /// Invite links, `https://azmm.pages.dev/join/<code>`. Reserved: the code is
-  /// never read, the link only opens the app on the home screen.
+  /// Invite links: `https://azmm.pages.dev/join/<code>` and
+  /// `azm://join/<code>`. They open the enter-code screen with the code filled
+  /// in and never join by themselves (behind the `gym_join` flag; off, they
+  /// open the home screen). A bare `/join` opens the same screen empty.
   static const join = '/join';
+
+  /// The invite link path for a valid code (the code is encoded, so any
+  /// text is safe).
+  static String joinCode(String code) => '$join/${Uri.encodeComponent(code)}';
 
   /// The workout in progress (logging sets).
   static const workout = '/workout';

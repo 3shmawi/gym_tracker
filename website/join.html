@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Join your gym on Azm · انضم إلى جيمك على عزم</title>
+  <meta name="description" content="Open your gym invite in Azm.">
+  <meta name="robots" content="noindex, nofollow">
+  <!-- The link carries a one-time code: never send it to another site. -->
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#22C55E">
+  <link rel="stylesheet" href="/assets/join.css">
+  <!-- Without JavaScript both languages are shown (the language switch and the
+       code need script). A stylesheet, because the CSP forbids inline style. -->
+  <noscript><link rel="stylesheet" href="/assets/join-nojs.css"></noscript>
+  <script src="/assets/i18n.js"></script>
+  <script src="/assets/join-code.js" defer></script>
+  <script src="/assets/join.js" defer></script>
+</head>
+<body>
+<main class="web page" id="join" data-state="pending" data-platform="other">
+  <header class="top">
+    <span class="brand"><span class="logo" aria-hidden="true">A</span><span data-lang="en">Azm</span><span data-lang="ar">عزم</span></span>
+    <button class="lang" id="lang-toggle" type="button">العربية</button>
+  </header>
+
+  <!-- The code is valid, or JavaScript has not run yet. -->
+  <section class="panel ok" aria-labelledby="t-ok">
+    <h1 class="t-l" id="t-ok">
+      <span data-lang="en">Join your gym on Azm</span>
+      <span data-lang="ar">انضم إلى جيمك على عزم</span>
+    </h1>
+    <p class="lead">
+      <span data-lang="en">Your captain invited you to train with them. Install the app, then type the code or open this link again.</span>
+      <span data-lang="ar">دعاك الكابتن للتدرّب معه. ثبّت التطبيق، ثم اكتب الكود أو افتح الرابط من جديد.</span>
+    </p>
+    <noscript>
+      <p class="lead">
+        <span data-lang="en">Your code is the last 6 characters of this page's address.</span>
+        <span data-lang="ar">كودك هو آخر 6 حروف في عنوان هذه الصفحة.</span>
+      </p>
+    </noscript>
+  </section>
+
+  <!-- Filled by join.js with textContent, only after the format check. -->
+  <div class="codecard gl" id="codecard" hidden>
+    <div class="t-xs">
+      <span data-lang="en">Your code</span>
+      <span data-lang="ar">كودك</span>
+    </div>
+    <div class="code6" id="code" dir="ltr" translate="no"></div>
+    <div class="t-xs hint">
+      <span data-lang="en">Type this in Azm after installing.</span>
+      <span data-lang="ar">اكتب هذا الكود في عزم بعد التثبيت.</span>
+    </div>
+    <button class="small-btn" id="copy" type="button" hidden>
+      <svg class="ic s" aria-hidden="true" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>
+      <span data-lang="en">Copy code</span>
+      <span data-lang="ar">انسخ الكود</span>
+    </button>
+    <p class="t-xs copied" id="copied" role="status" hidden>
+      <span data-lang="en">Copied</span>
+      <span data-lang="ar">تم النسخ</span>
+    </p>
+  </div>
+
+  <!-- The link has no valid code. Nothing from the address is printed. -->
+  <section class="panel bad center" aria-labelledby="t-bad" hidden>
+    <div class="orb" aria-hidden="true"><svg class="ic xl" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 4l9 16H3zM12 10v4M12 17h.01"/></svg></div>
+    <h1 class="t-l" id="t-bad">
+      <span data-lang="en">This link is incomplete</span>
+      <span data-lang="ar">الرابط ناقص</span>
+    </h1>
+    <p>
+      <span data-lang="en">We could not find a valid code in this link. Ask your captain for a new QR code, or open Azm and type the code.</span>
+      <span data-lang="ar">لم نجد كودًا صالحًا في هذا الرابط. اطلب من الكابتن رمز QR جديدًا، أو افتح عزم واكتب الكود.</span>
+    </p>
+  </section>
+
+  <div class="actions">
+    <!-- Without JavaScript this opens the app on its enter-code screen. -->
+    <a class="cta" id="open" href="azm://join">
+      <span data-lang="en">Open in Azm</span>
+      <span data-lang="ar">افتح في عزم</span>
+    </a>
+    <a class="store" id="store-ios" href="https://apps.apple.com/app/idYOUR_APP_ID" rel="noopener noreferrer">
+      <span data-lang="en">App Store</span>
+      <span data-lang="ar">App Store</span>
+    </a>
+    <a class="store" id="store-android" href="https://play.google.com/store/apps/details?id=com.mohager.azm" rel="noopener noreferrer">
+      <span data-lang="en">Google Play</span>
+      <span data-lang="ar">Google Play</span>
+    </a>
+  </div>
+
+  <div class="sp"></div>
+  <footer class="foot" id="foot">
+    <p class="t-xs valid">
+      <span data-lang="en">The code works once, for 7 days, on one device.</span>
+      <span data-lang="ar">الكود صالح 7 أيام ويعمل على جهاز واحد.</span>
+    </p>
+    <p class="url" dir="ltr">azmm.pages.dev/join</p>
+  </footer>
+</main>
+</body>
+</html>

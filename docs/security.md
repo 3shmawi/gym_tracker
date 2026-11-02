@@ -9,13 +9,29 @@ Security is tested, not assumed. Three layers run on every pull request.
 | `platform_config_test.dart` | cleartext HTTP, debuggable releases, the `azm://` scheme and an https App Link that is not exactly `azmm.pages.dev/join/` (Android + iOS entitlements, both flavors), extra exported Android activities, disabled iOS App Transport Security; notifications: only `SCHEDULE_EXACT_ALARM` (no `USE_EXACT_ALARM`, full-screen intent or boot receiver), the receiver not exported, the icon kept from R8, the iOS delegate set |
 | `workflow_secrets_test.dart` | secrets pasted into CI scripts, a key written to a file without `scripts/mask_secrets.sh`, `set -x`, actions not pinned to a commit |
 | `well_known_test.dart` | `.well-known` files holding anything but app ids, package names and SHA-256 fingerprints (no secrets); wrong paths (only `/join/*`) or hosts; missing `application/json` headers; website, store texts, docs and app pointing to a host other than `azmm.pages.dev` (or still to the old one) |
+| `join_page_test.dart` | `website/join.html` using `innerHTML`/`document.write`/`eval`/navigation from the address, inline script or style, a third party or tracker, a store link different from the home page, a missing `/join/*` rewrite or `no-store` header, a `?c=` link |
 | `deep_link_test.dart` | crafted/unknown deep links crashing the app or reaching unexpected screens; open redirects via query parameters; a tapped notification opens only `/workout` (its payload is never read) |
+
+### Join page (`website/join.html`, `/join/<code>`)
+It is shown to people who scan an invite QR without the app, and its address
+holds a one-time code, so it only **displays** it:
+- Only the path is read (never query, hash or referrer), checked with
+  `^[A-HJKMNP-Z2-9]{6}$` after an ASCII-only check, written with `textContent`.
+  `join-code.js` is pure and tested in Node (`test/website/join_code.test.js`,
+  run in CI) against hostile addresses; `join_page_test.dart` bans
+  `innerHTML`, `document.write`, `eval`, `location =`, `fetch` and trackers.
+- No third-party request: Inter and Cairo are served from the site, so the CSP
+  `font-src` is `'self'` plus the existing Google Fonts host (other pages). The
+  page sends no referrer (`<meta name="referrer">`, `rel="noopener noreferrer"`
+  on store links), is `no-store` and `noindex`.
+- The app side: a link only pre-fills the field; joining needs the member's tap
+  (`joinSubmitProvider`), and the whole route is behind the `gym_join` flag.
 
 ### Links that open the app
 - `azm://` is a custom scheme: **any app can register it**, so treat every
   link as untrusted input. Routes only open screens; nothing in a link's
   path or query changes data (`deep_link_test.dart`, incl. `/join/<code>`,
-  where the code is never read).
+  where the code only fills the enter-code screen and never joins).
 - https links are verified by Apple/Google against
   `https://azmm.pages.dev/.well-known/` (HTTPS, no redirect, JSON) and only
   `/join/*` is claimed. Whoever can change `website/` on `main` controls

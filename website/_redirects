@@ -1,0 +1,3 @@
+# /join/<code> is one page: join.html reads the code from the address.
+# A 200 rule rewrites without changing the URL. The code is never sent anywhere.
+/join/*  /join.html  200

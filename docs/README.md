@@ -14,3 +14,4 @@ Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 - [Settings (language & theme)](features/settings.md)
 - [Workout (plan, plan editor, next workout, weight suggestions, levels)](features/workout.md)
 - [Splash and loading animation](features/splash_and_loading.md)
+- [Join a gym by link or code](features/gym_join.md) (web page `/join/<code>` + the app's enter-code screen)
