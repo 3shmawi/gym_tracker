@@ -19,25 +19,52 @@ change or delete anything. Ids are encoded by `AppRoutes.planDay` /
 `planExercise`; crafted ids are covered in `test/security/deep_link_test.dart`.
 
 ## Custom scheme (works now)
-Registered in `AndroidManifest.xml` and `ios/Runner/Info.plist`
-(`CFBundleURLTypes`, `FlutterDeepLinkingEnabled`).
-`gymtracker://settings` — test with:
+Scheme `azm://`, registered in `AndroidManifest.xml` and `ios/Runner/Info.plist`
+(`CFBundleURLTypes`, `FlutterDeepLinkingEnabled`). Every path above works:
+`azm://settings` — test with:
 ```bash
-adb shell am start -a android.intent.action.VIEW -d "gymtracker://settings"
-xcrun simctl openurl booted "gymtracker://settings"
+adb shell am start -a android.intent.action.VIEW -d "azm://settings"
+xcrun simctl openurl booted "azm://settings"
 ```
 
-## https links (App Links / Universal Links)
-Host: `example.com`. Needs, once:
-1. The website served from that domain (root), including
-   `website/.well-known/assetlinks.json` and
-   `website/.well-known/apple-app-site-association`.
-2. `assetlinks.json`: replace the SHA-256 with Play Console → Setup →
-   App signing → "App signing key certificate" fingerprint.
-3. `apple-app-site-association`: check the Team ID (`9RA43G2P63`).
-4. Apple Developer → Identifiers → `com.mohager.azm` → enable
-   **Associated Domains** (then CI regenerates the profile).
+## https links (Universal Links / App Links)
+Host: `azmm.pages.dev` (Cloudflare Pages, Git integration, production branch
+`main`, output directory `website/`). **Only `/join/*` opens the app**; every
+other https path stays in the browser.
 
-If no domain was chosen at creation, add later: intent filter in
-`AndroidManifest.xml` (`android:autoVerify="true"`, scheme https) and
-`ios/Runner/Runner.entitlements` with `applinks:<domain>`.
+| Path | Behaviour |
+|---|---|
+| `/join/<code>` | Opens the app on the home screen. Reserved for invites: the code is never read, nothing changes. |
+| `/join` (no code) | Not claimed by the website; inside the app: not-found page |
+
+How it is wired:
+- `website/.well-known/apple-app-site-association` — `components`:
+  `/join/*`, appIDs `9RA43G2P63.com.mohager.azm` and `…azm.stg`.
+- `website/.well-known/assetlinks.json` — packages `com.mohager.azm` and
+  `com.mohager.azm.stg` with the Play app-signing SHA-256.
+- `website/_headers` — serves both files as `application/json` (the AASA file
+  has no extension, Pages would send `application/octet-stream`). Both files
+  must answer 200 directly, with no redirect.
+- iOS: `ios/Runner/Runner.entitlements` (`applinks:azmm.pages.dev`), set as
+  `CODE_SIGN_ENTITLEMENTS` for every Runner configuration (both flavors).
+- Android: intent filter with `android:autoVerify="true"`, scheme `https`,
+  host `azmm.pages.dev`, `android:pathPrefix="/join/"`.
+- Guarded by `test/security/well_known_test.dart` and
+  `test/security/platform_config_test.dart`.
+
+Manual store steps: `docs/release.md` → "Universal Links / App Links".
+
+Test:
+```bash
+curl -sI https://azmm.pages.dev/.well-known/apple-app-site-association   # 200, application/json
+adb shell pm get-app-links com.mohager.azm                                 # azmm.pages.dev: verified
+xcrun simctl openurl booted "https://azmm.pages.dev/join/abc"
+```
+Docs checked 2026-11-02: Android "Verify Android App Links" (read in full: the
+system fetches `/.well-known/assetlinks.json` per host; on Android 15+ changes
+can take up to 7 days to reach devices, on 14 and lower they are read at
+install/update). Apple's Associated Domains / AASA pages are JavaScript-only
+and came back as titles from this session, and `developers.cloudflare.com` is
+blocked in it, so those two rest on Apple's documented rules (HTTPS, status
+200 without redirects, `application/json`, `components` format, CDN cache)
+plus a check of the live site's headers. Re-read them when you next touch this.

@@ -1,3 +1,3 @@
-# gym_tracker
+# Azm
 
 Gym workout tracker: next session, last weight, quick logging

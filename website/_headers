@@ -1,0 +1,19 @@
+# Security headers for every page. The site has no inline script or style, no
+# forms and no third-party code; fonts come from Google Fonts only.
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Strict-Transport-Security: max-age=31536000
+
+# Cloudflare Pages custom headers. Apple and Google fetch these two files
+# and want JSON; the AASA file has no extension, so Pages would serve it as
+# application/octet-stream. Keep both free of redirects (see docs/deep_links.md).
+/.well-known/apple-app-site-association
+  Content-Type: application/json
+  Cache-Control: public, max-age=3600
+/.well-known/assetlinks.json
+  Content-Type: application/json
+  Cache-Control: public, max-age=3600

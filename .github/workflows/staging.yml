@@ -112,11 +112,11 @@ jobs:
           TAG: staging-${{ needs.version.outputs.version }}-${{ needs.version.outputs.build }}
         run: |
           apk=$(find build/app/outputs/flutter-apk -name '*staging-release.apk' | head -n 1)
-          cp "$apk" "gym_tracker-staging-$VERSION-$BUILD.apk"
+          cp "$apk" "azm-staging-$VERSION-$BUILD.apk"
           gh release create "$TAG" --prerelease --target "$GITHUB_SHA" \
             --title "Staging $VERSION ($BUILD)" \
             --notes "Branch develop @ ${GITHUB_SHA::7}. Install the APK on Android." \
-            ./gym_tracker-staging-*.apk
+            ./azm-staging-*.apk
           gh release list --limit 50 --json tagName,isPrerelease --jq '.[] | select(.isPrerelease and (.tagName | startswith("staging-"))) | .tagName' \
             | tail -n +4 | while read -r old; do gh release delete "$old" --yes --cleanup-tag; done
           echo "### 📦 Staging APK: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$TAG" >> "$GITHUB_STEP_SUMMARY"

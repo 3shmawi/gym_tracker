@@ -79,6 +79,37 @@ void main() {
     }
   });
 
+  testWidgets('/join/<code> opens the home screen and reads nothing', (
+    tester,
+  ) async {
+    await pumpRouter(tester);
+    for (final path in [
+      '/join/abc',
+      '/join/%3Cscript%3Ealert(1)%3C%2Fscript%3E',
+      "/join/'; drop table plans;--",
+      '/join/${'x' * 5000}',
+      '/join/abc?redirect=https://evil.example.com',
+      '/join/abc?plan=delete&day=-1',
+    ]) {
+      appRouter.go(path);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: path);
+      expect(find.byType(NextWorkoutPage), findsOneWidget, reason: path);
+    }
+  });
+
+  testWidgets('a bare /join and look-alike paths are not found', (
+    tester,
+  ) async {
+    await pumpRouter(tester);
+    for (final path in ['/join', '/joinx/abc', '/join/abc/def']) {
+      appRouter.go(path);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: path);
+      expect(find.byType(NotFoundPage), findsOneWidget, reason: path);
+    }
+  });
+
   testWidgets('query parameters cannot redirect the app', (tester) async {
     await pumpRouter(tester);
 
