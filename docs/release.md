@@ -57,7 +57,11 @@ Push to `develop` → `staging.yml`:
 - **Android** — signed APK attached to a `staging-…` pre-release (last 3
   kept), and a signed AAB uploaded to the Play track `PLAY_STAGING_TRACK`
   (default `internal`) of the separate staging app `com.mohager.azm.stg`
+<<<<<<< yours
   ("Azm Stg", installs next to the store app).
+=======
+  (installs next to the store app).
+>>>>>>> kit 1928c02
 - **iOS** — TestFlight of `com.mohager.azm.stg`.
 
 Uses `ENV_STAGING_JSON` and the same keystore and `PLAY_SERVICE_ACCOUNT_JSON`
@@ -170,6 +174,29 @@ Both stores raise these every year (Apple in spring, Google in August).
 When a deadline is announced, update this table and the workflows in the
 kit, then `scripts/kit_sync.sh` in each app.
 
+## Kit sync
+`.github/workflows/kit-sync.yml` runs every Monday (or Actions → Kit sync →
+Run workflow) and compares this app with the latest flutter-project-kit
+using `scripts/kit_sync.sh` (3-way merge, your changes are kept).
+
+- **With `KIT_SYNC_TOKEN`**: it opens a `chore/kit-sync-…` PR with the
+  kit's changes; if some files conflict it is a draft with `<<<<<<<`
+  markers to resolve. A newer sync closes an older unmerged one. A kit
+  version you closed on purpose is not re-opened.
+- **Without it**: it opens (and keeps updating) a "Kit update available"
+  issue, and you run `scripts/kit_sync.sh` by hand.
+
+Why a token: GitHub's built-in token cannot change files in
+`.github/workflows`, and PRs it opens do not start CI. Create a fine-grained
+token for this repo only (Contents, Pull requests, Workflows: read & write),
+put it in `KIT_SYNC_TOKEN` in `~/.app-secrets/shared.env` (or
+`apps/<repo>/app.env`) and run `tool/setup_secrets.sh`, or
+`gh secret set KIT_SYNC_TOKEN`. Also allow Actions to open PRs: repo
+Settings → Actions → General → "Allow GitHub Actions to create and approve
+pull requests".
+
+Always review the PR: kit changes can add packages or change workflows.
+
 ## Crash symbols (Sentry)
 Release builds are obfuscated; `scripts/upload_symbols.sh` sends the symbols
 to Sentry after the store upload so stack traces stay readable. It never
@@ -231,7 +258,9 @@ doesn't stop the run halfway; re-running the script is always safe.
 | `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8_BASE64` | App Store Connect API key |
 | `IOS_CERTIFICATE_P12_BASE64`, `IOS_CERTIFICATE_PASSWORD` | your Apple Distribution certificate (.p12) |
 | `APPLE_TEAM_ID` | Team ID |
-| `ENV_PROD_JSON` | contents of `env/prod.json` |
+| `ENV_PROD_JSON` | contents of `env/prod.json` (re-upload after changing a key; the release run warns about empty keys — `scripts/check_env.sh`) |
+
+| `KIT_SYNC_TOKEN` | optional, see "Kit sync" below |
 
 A store whose secrets are missing is skipped (with a warning), not failed.
 iOS signing imports your .p12 and lets App Store Connect create/refresh the
