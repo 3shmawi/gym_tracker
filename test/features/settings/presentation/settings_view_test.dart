@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:gym_tracker/features/settings/domain/entities/app_settings.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_view.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../helpers/pump_app.dart';
 import '../../../helpers/ui_check.dart';

@@ -30,7 +30,7 @@ A manual run (Actions → Release → Run workflow) can force patch/minor/major.
    `integration_test/`, `assets/`, `env/`, pubspec, `.fvmrc`, `ci.yml`,
    `.github/actions/`);
    otherwise it is skipped (a skipped job counts as passed). It caches Swift
-   packages, DerivedData and `build/ios` (`actions/cache` v6.1.0, checked
+   packages and `build/ios`, not DerivedData (several GB: saving and restoring cost about what it saves) (`actions/cache` v6.1.0, checked
    2026-11-01; saved after green runs only), so later builds are
    incremental.
    Every job sets up Flutter through one shared action,
@@ -57,11 +57,7 @@ Push to `develop` → `staging.yml`:
 - **Android** — signed APK attached to a `staging-…` pre-release (last 3
   kept), and a signed AAB uploaded to the Play track `PLAY_STAGING_TRACK`
   (default `internal`) of the separate staging app `com.mohager.azm.stg`
-<<<<<<< yours
   ("Azm Stg", installs next to the store app).
-=======
-  (installs next to the store app).
->>>>>>> kit 1928c02
 - **iOS** — TestFlight of `com.mohager.azm.stg`.
 
 Uses `ENV_STAGING_JSON` and the same keystore and `PLAY_SERVICE_ACCOUNT_JSON`

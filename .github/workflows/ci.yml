@@ -195,18 +195,11 @@ jobs:
       - uses: $/.github/actions/setup-flutter
         id: flutter
 
-<<<<<<< yours
-      # The Xcode build is most of this job's time: keep Swift packages,
-      # DerivedData and Flutter's iOS build between runs (actions/cache saves
-      # only after a green run). Keyed on everything that changes them;
-      # a partial match still makes the build incremental.
-=======
       # The Xcode build is most of this job's time: keep the Swift packages
       # and Flutter's iOS build between runs (actions/cache saves only after
       # a green run). Not DerivedData: it is several GB, so saving and
       # restoring it costs about what it saves. Keyed on everything that
       # changes these; a partial match still makes the build incremental.
->>>>>>> kit 1928c02
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
