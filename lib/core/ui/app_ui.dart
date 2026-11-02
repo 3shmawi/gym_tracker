@@ -129,25 +129,12 @@ class AppScaffold extends StatelessWidget {
   /// Defaults to [AppBackground]; pass a photo for image-rich screens.
   final Widget? background;
 
-  /// Keeps the body above the home indicator. Pass false when the body ends
-  /// in a dock that pads itself (`SafeArea(top: false)`), so the dock's
-  /// surface reaches the bottom edge instead of stopping above a strip of
-  /// background.
-  final bool padBottom;
-
-  /// The glass bar's height: room for the 48-pt icon buttons.
-  static const barHeight = 56.0;
-
   @override
   Widget build(BuildContext context) {
-<<<<<<< yours
     // This page's own route, not the whole navigator: Navigator.canPop()
     // is true for the home page too while settings is on top, and a rebuild
     // then (e.g. a language change) left home with a back button.
     final canPop = ModalRoute.of(context)?.impliesAppBarDismissal ?? false;
-=======
-    final canPop = Navigator.of(context).canPop();
->>>>>>> kit 1928c02
     final start =
         leading ??
         (canPop
@@ -163,15 +150,9 @@ class AppScaffold extends StatelessWidget {
     }
     return GlassScaffold(
       background: background ?? const AppBackground(),
-<<<<<<< yours
       // The body sits below the bar, not behind it: our screens don't add a
       // spacer for the bar, so their top row (e.g. "change day") was under
       // the glass bar and could not be tapped.
-=======
-      // The body sits below the bar, not behind it: screens don't add a
-      // spacer for the bar, so their top row was under the glass bar and
-      // could not be tapped.
->>>>>>> kit 1928c02
       extendBody: false,
       appBar: hasBar
           ? GlassAppBar(
@@ -179,14 +160,8 @@ class AppScaffold extends StatelessWidget {
               padding: EdgeInsetsDirectional.symmetric(
                 horizontal: AppDimens.md,
               ),
-<<<<<<< yours
               // Like the design and the lite bar: the title follows the
               // start button; the actions sit at the end edge.
-=======
-              // Like the lite bar: the title follows the start button; the
-              // actions sit at the end edge. (Everything in the title slot
-              // made the buttons and the title overlap.)
->>>>>>> kit 1928c02
               centerTitle: false,
               leading: start,
               title: title == null
@@ -201,15 +176,11 @@ class AppScaffold extends StatelessWidget {
         type: MaterialType.transparency,
         // With a bar, the scaffold already places the body below the
         // status bar and the bar.
-<<<<<<< yours
         child: SafeArea(
           top: !hasBar,
           bottom: padBottom,
           child: _constrained(body),
         ),
-=======
-        child: SafeArea(top: !hasBar, bottom: padBottom, child: body),
->>>>>>> kit 1928c02
       ),
     );
   }
@@ -348,13 +319,8 @@ class AppIconButton extends StatelessWidget {
                       onTap: onPressed,
                       // The default (56) drew past the 48-pt slot, so
                       // neighbouring buttons and the title overlapped.
-<<<<<<< yours
                       width: AppDimens.minTouchTarget,
                       height: AppDimens.minTouchTarget,
-=======
-                      width: 48,
-                      height: 48,
->>>>>>> kit 1928c02
                       iconSize: AppDimens.iconMd,
                     ),
             ),

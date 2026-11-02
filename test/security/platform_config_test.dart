@@ -91,18 +91,13 @@ void main() {
       expect(arbitraryLoads.hasMatch(plist), isFalse);
     });
 
-<<<<<<< yours
     // The kit adds these at creation; its patch once failed silently on
-=======
-    // new_project.sh adds these; its patch once failed silently on
->>>>>>> kit 1928c02
     // flavorizr's indented Info.plist, so they are checked here.
     bool has(String key, String value) =>
         RegExp('<key>${RegExp.escape(key)}</key>\\s*${RegExp.escape(value)}')
             .hasMatch(plist);
 
     test('declares exempt encryption (no export question per build)', () {
-<<<<<<< yours
       // Only HTTPS/TLS: exempt. App Store Connect then skips "App
       // Encryption Documentation" for every build, staging and prod.
       expect(has('ITSAppUsesNonExemptEncryption', '<false/>'), isTrue);
@@ -132,14 +127,6 @@ void main() {
           .allMatches(pbxproj);
       expect(configs.length, greaterThanOrEqualTo(6));
       expect(signed.length, configs.length);
-=======
-      expect(has('ITSAppUsesNonExemptEncryption', '<false/>'), isTrue);
-    });
-
-    test('the custom scheme opens the app (deep links)', () {
-      expect(has('FlutterDeepLinkingEnabled', '<true/>'), isTrue);
-      expect(plist, contains('<string>gymtracker</string>'));
->>>>>>> kit 1928c02
     });
 
     test('declares English and Arabic', () {
@@ -151,7 +138,6 @@ void main() {
         isTrue,
       );
     });
-<<<<<<< yours
 
     test('notification taps reach the app (delegate set)', () {
       final delegate = File('ios/Runner/AppDelegate.swift').readAsStringSync();
@@ -161,7 +147,5 @@ void main() {
     test('PostHog starts from Dart only, not by itself', () {
       expect(has('com.posthog.posthog.AUTO_INIT', '<false/>'), isTrue);
     });
-=======
->>>>>>> kit 1928c02
   });
 }

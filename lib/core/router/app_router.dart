@@ -33,7 +33,6 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.home,
       name: 'home',
-<<<<<<< yours
       builder: (context, state) => const NextWorkoutPage(),
     ),
     GoRoute(
@@ -91,9 +90,6 @@ final appRouter = GoRouter(
           ],
         ),
       ],
-=======
-      builder: (context, state) => const HomePage(),
->>>>>>> kit 1928c02
     ),
     GoRoute(
       path: AppRoutes.settings,
