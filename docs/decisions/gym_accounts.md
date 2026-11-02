@@ -34,9 +34,9 @@ captain can shape the trainee's plan. Solo mode stays exactly as it is.
 
 | # | Point | Recommendation (used in this doc) |
 |---|---|---|
-| 1 | **Scheme**: the app registers `gymtracker://` (AndroidManifest, Info.plist, `docs/deep_links.md`, security tests). The brief says `azm://`. | Register `azm` **in addition**; keep `gymtracker` until the notification/launch code and `deep_link_test.dart` are moved, then drop it. |
-| 2 | **Host**: `docs/deep_links.md` says `example.com` (`DEEPLINK_DOMAIN=''`); `CLAUDE.md` says the site is on `3shmawi.github.io/gym_tracker`. A GitHub *project* site lives under `/gym_tracker`, so it **cannot** serve `/.well-known/` at the host root — Universal/App Links need the root. | Serve `website/` from `azmm.pages.dev` (root). Update `CLAUDE.md`, `deep_links.md`, `.well-known/*`. A custom domain later is a config change, not a redesign. |
-| 3 | `apple-app-site-association` currently claims `/*`. | Restrict to `/join` (and `/join/*`). |
+| 1 | **Scheme** — resolved by #18: the app now registers `azm://`. | Nothing to do. |
+| 2 | **Host** — resolved by #18: the site is on Cloudflare Pages, `https://azmm.pages.dev`, with `.well-known` at the root. | Nothing to do. |
+| 3 | **Link shape (new mismatch).** #18 ships Universal/App Links only for the **path** `/join/*` (AASA `components`, Android `pathPrefix="/join/"`). The brief says `/join?c=<code>`, whose path is `/join`: it would **not** open the app. | Pick one, **needs your OK**: (a) keep the brief: add `{"/": "/join", "?": {"c": "?*"}}` to the AASA, change the Android filter to `pathPrefix="/join"`, update `well_known_test.dart`; or (b) use `/join/<code>` as shipped (no query, nothing to change, `docs/deep_links.md` already says the code is never read). This doc and the design board write `?c=`; (b) is a find-and-replace. |
 | 4 | **"Logo ≤ 20 %"** is ambiguous. 20 % of the *area* (≈ 45 % of the width) is too near the limit of level H (30 % recoverable). | Logo box side ≤ 20 % of the QR side (≈ 4 % of the area). CI renders the QR with the logo at three sizes and decodes it (zxing). |
 | 5 | **6-character code = the secret.** A 31-letter alphabet (no `0 O 1 I L`) gives ≈ 8.9 × 10⁸ codes (≈ 29.7 bits). Fine with throttling, weak without. | Throttle redeem attempts (§5), store only an HMAC of the code, keep it single-use and 7 days. If throttling proves too weak, the *link* (not the typed code) can carry a longer token — no UI change. |
 | 6 | **Who creates a gym / who signs the owner and captain in?** The brief covers trainees only. An owner on an anonymous session loses the gym with the phone. | Owners sign in with **email one-time code**. A captain is invited like a trainee, then must **add an email** before issuing invites. Gyms are created by the developer for pilot gyms (no self-service gym creation in v1). **Needs your OK.** |
@@ -227,21 +227,26 @@ Session details:
 
 ## 7. Links, website and platform setup
 
-- Android: intent filter for `https://azmm.pages.dev/join` with
-  `android:autoVerify="true"`, plus `azm://join`. `assetlinks.json` needs the
-  Play App Signing SHA-256 (still a placeholder).
-- iOS: Associated Domains `applinks:azmm.pages.dev`; AASA `components`
-  limited to `/join`; `CFBundleURLSchemes` adds `azm`. Apple caches the AASA
-  through its CDN, so test on a real build, not only the simulator.
-- Cloudflare Pages `_headers`: `/.well-known/apple-app-site-association`
-  served as `application/json`; `/join*` with `Referrer-Policy: no-referrer`,
-  `Cache-Control: no-store`, `X-Robots-Tag: noindex`.
+- Already shipped by #18: scheme `azm://`, `applinks:azmm.pages.dev`
+  (`Runner.entitlements`), AASA + `assetlinks.json` (Play fingerprints in),
+  `website/_headers` (JSON content types, strict CSP, `Referrer-Policy`,
+  `Permissions-Policy: camera=()` for the website), `well_known_test.dart`.
+  Still to change for invites: the link shape (§2 row 3) and the app-side
+  handler (today `/join/<code>` just opens Home and reads nothing).
+- Apple caches the AASA through its CDN, so test on a real build, not only
+  the simulator.
 - `website/join.html` (EN + AR like the other pages): "Open in Azm", App
-  Store, Google Play, and "Your code: ABC123". It reads `c` from the query,
-  accepts only `^[A-HJ-KM-NP-Z2-9]{6}$` (uppercased), writes it with
-  `textContent` (never `innerHTML`), loads no third-party script, and never
-  calls the backend.
-- `docs/deep_links.md` gets `/join` (query `c`), and
+  Store, Google Play, and "Your code: ABC123". It must fit the site's CSP
+  (`default-src 'none'; script-src 'self'; connect-src 'none'`): **no inline
+  script or style**, one external `assets/join.js`. It reads the code, accepts
+  only `^[A-HJ-KM-NP-Z2-9]{6}$` (uppercased), writes it with `textContent`
+  (never `innerHTML`), loads no third-party script, never calls the backend,
+  and adds `<meta name="robots" content="noindex">`. The existing
+  `strict-origin-when-cross-origin` referrer policy already sends only the
+  origin to other sites; a `/join*` override to `no-referrer` is optional.
+  Because the site CSP has `connect-src 'none'`, the page cannot check a code,
+  which is what we want.
+- `docs/deep_links.md` gets the final `/join` shape, and
   `test/security/deep_link_test.dart` gets: missing `c`, empty, too long,
   lower case, injection-like (`<script>`, `'; drop`, `javascript:`), unicode,
   a second `c`, an `https://evil.example` in `c`, `/join/extra`.
