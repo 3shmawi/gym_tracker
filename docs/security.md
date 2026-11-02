@@ -29,6 +29,21 @@ holds a one-time code, so it only **displays** it:
 - The app side: a link only pre-fills the field; joining needs the member's tap
   (`joinSubmitProvider`), and the whole route is behind the `gym_join` flag.
 
+### Join page (`website/join.html`, `/join/<code>`)
+It is shown to people who scan an invite QR without the app, and its address
+holds a one-time code, so it only **displays** it:
+- Only the path is read (never query, hash or referrer), checked with
+  `^[A-HJKMNP-Z2-9]{6}$` after an ASCII-only check, written with `textContent`.
+  `join-code.js` is pure and tested in Node (`test/website/join_code.test.js`,
+  run in CI) against hostile addresses; `join_page_test.dart` bans
+  `innerHTML`, `document.write`, `eval`, `location =`, `fetch` and trackers.
+- No third-party request: Inter and Cairo are served from the site, so the CSP
+  `font-src` is `'self'` plus the existing Google Fonts host (other pages). The
+  page sends no referrer (`<meta name="referrer">`, `rel="noopener noreferrer"`
+  on store links), is `no-store` and `noindex`.
+- The app side: a link only pre-fills the field; joining needs the member's tap
+  (`joinSubmitProvider`), and the whole route is behind the `gym_join` flag.
+
 ### Links that open the app
 - `azm://` is a custom scheme: **any app can register it**, so treat every
   link as untrusted input. Routes only open screens; nothing in a link's
