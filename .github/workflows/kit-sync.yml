@@ -1,0 +1,131 @@
+# Keeps this app current with flutter-project-kit. Every Monday (or on
+# demand: Actions → Kit sync → Run workflow) it runs scripts/kit_sync.sh,
+# the same 3-way merge you can run by hand, and
+#   · with the KIT_SYNC_TOKEN secret → opens a PR (draft if files conflict)
+#   · without it                     → opens/updates an issue that says what
+#                                      changed and how to sync locally
+# Why a token: GitHub does not let the built-in token change files under
+# .github/workflows, and PRs it opens never start CI. A fine-grained token
+# for this repo only (Contents, Pull requests, Workflows: read & write) fixes
+# both. Setup: docs/release.md → "Kit sync".
+name: Kit sync
+
+on:
+  schedule:
+    - cron: '41 6 * * 1'   # Mondays, 06:41 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kit-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Sync with the kit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    env:
+      GH_TOKEN: ${{ secrets.KIT_SYNC_TOKEN || github.token }}
+      HAS_TOKEN: ${{ secrets.KIT_SYNC_TOKEN != '' }}
+      REPO: ${{ github.repository }}
+      BASE_BRANCH: ${{ github.event.repository.default_branch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+
+      # Same Flutter as the app, so the sync formats files like the project.
+      - uses: $/.github/actions/setup-flutter
+        with:
+          packages: 'false'
+
+      - name: Sync with the kit
+        run: |
+          log="$RUNNER_TEMP/sync.log"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          set -o pipefail
+
+          if [ "$HAS_TOKEN" != true ]; then
+            # No token: report only, change nothing.
+            ./scripts/kit_sync.sh --dry-run 2>&1 | tee "$log"
+            if grep -q 'Already up to date' "$log"; then
+              echo "✓ Already up to date." >> "$GITHUB_STEP_SUMMARY"; exit 0
+            fi
+            {
+              echo "The kit has changes this app doesn't have yet:"
+              echo
+              echo '```'
+              head -c 50000 "$log"
+              echo '```'
+              echo
+              echo "To bring them in: run \`scripts/kit_sync.sh\` locally, review the branch it creates, open the PR."
+              echo "To get this as a ready PR every week, add the \`KIT_SYNC_TOKEN\` secret (docs/release.md → Kit sync)."
+            } > "$RUNNER_TEMP/body.md"
+            title="Kit update available"
+            number=$(gh issue list --repo "$REPO" --state open --search "\"$title\" in:title" \
+              --json number,title --jq "[.[] | select(.title == \"$title\")][0].number // empty")
+            if [ -n "$number" ]; then
+              gh issue edit "$number" --repo "$REPO" --body-file "$RUNNER_TEMP/body.md"
+            else
+              gh issue create --repo "$REPO" --title "$title" --body-file "$RUNNER_TEMP/body.md"
+            fi
+            exit 0
+          fi
+
+          ./scripts/kit_sync.sh 2>&1 | tee "$log"
+          branch=$(git branch --show-current)
+          case "$branch" in
+            chore/kit-sync-*) ;;
+            *) echo "✓ Already up to date." >> "$GITHUB_STEP_SUMMARY"; exit 0 ;;
+          esac
+
+          # A branch for this kit version exists already (open PR, or one
+          # you closed on purpose): leave it alone.
+          if git ls-remote --exit-code --heads "https://github.com/${REPO}.git" "$branch" >/dev/null 2>&1; then
+            echo "Branch $branch already exists — nothing to do." >> "$GITHUB_STEP_SUMMARY"; exit 0
+          fi
+
+          # Conflicts leave the script uncommitted, with <<<<<<< markers.
+          draft=()
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -q -m "chore: sync with flutter-project-kit ${branch#chore/kit-sync-} (conflicts to resolve)"
+            draft=(--draft)
+          fi
+
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" "HEAD:refs/heads/$branch"
+          {
+            echo "Brings this app up to date with flutter-project-kit (\`scripts/kit_sync.sh\`)."
+            if [ ${#draft[@]} -gt 0 ]; then
+              echo
+              echo "**Some files conflict** with your changes. Search for \`<<<<<<<\`, resolve, commit, then mark the PR ready."
+            fi
+            echo
+            echo '```'
+            head -c 50000 "$log"
+            echo '```'
+            echo
+            echo "After merging, run \`flutter pub get && flutter test\` — new templates may need new packages."
+          } > "$RUNNER_TEMP/body.md"
+          gh pr create --repo "$REPO" --base "$BASE_BRANCH" --head "$branch" \
+            "${draft[@]}" \
+            --title "chore: sync with flutter-project-kit ${branch#chore/kit-sync-}" \
+            --body-file "$RUNNER_TEMP/body.md"
+
+          # An older, unmerged sync PR is superseded by this one.
+          gh pr list --repo "$REPO" --state open --json number,headRefName \
+            --jq ".[] | select(.headRefName | startswith(\"chore/kit-sync-\")) | select(.headRefName != \"$branch\") | .number" |
+            while read -r old; do
+              gh pr close "$old" --repo "$REPO" --delete-branch \
+                --comment "Superseded by the newer kit sync on \`$branch\`."
+            done

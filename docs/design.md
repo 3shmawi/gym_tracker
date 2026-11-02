@@ -48,6 +48,7 @@ Screens use `lib/core/ui/app_ui.dart` (`AppScaffold`, `AppCard`,
   draws plain surfaces: no shader, no blur, no blurred shadow, no screen
   capture. New glass widgets in `app_ui.dart` need the same lite branch.
 - `AppScaffold` places the body **below** the glass bar
+<<<<<<< yours
   (`GlassScaffold(extendBody: false)`), not behind it: screens don't add a
   spacer for the bar, and their top row was hidden and untappable under it.
 - The bar: `leading` at the start edge (default: back when the page can
@@ -60,6 +61,17 @@ Screens use `lib/core/ui/app_ui.dart` (`AppScaffold`, `AppCard`,
   instead of stopping above a strip of background.
 - iOS icons come from `CupertinoIcons` (`core/adaptive/`), whose font is
   the `cupertino_icons` package: without it every iOS icon was a "?" box.
+=======
+  (`GlassScaffold(extendBody: false)`): screens add no spacer for the bar.
+  The bar: `leading` at the start edge (default: back when the page can
+  pop), the title after it, `actions` at the end edge; icon buttons are
+  48×48. `test/core/ui/app_scaffold_test.dart` checks the glass bar in
+  English and Arabic, because screen tests draw the lite bar.
+- A screen that ends in a dock passes `padBottom: false` and pads the dock
+  itself (`SafeArea(top: false)`), so the dock reaches the bottom edge.
+- iOS icons come from `CupertinoIcons` (`core/adaptive/`), whose font is the
+  `cupertino_icons` package: without it every iOS icon is a "?" box.
+>>>>>>> kit 1928c02
 - When Flutter ships official Cupertino Liquid Glass, swap the
   implementation inside `app_ui.dart` only.
 
