@@ -56,7 +56,7 @@ insert into public.invites (id, gym_id, membership_id, kind, code_hmac, expires_
 select throws_ok($$ insert into public.invites (gym_id, membership_id, kind, code_hmac, expires_at) values ('d0000000-0000-4000-8000-00000000000a', 'e0000000-0000-4000-8000-000000000007', 'join', private.hash_invite_code('PQRSTU'), now() + interval '8 days') $$, '23514', null, 'an invite cannot live longer than 7 days');
 select throws_ok($$ insert into public.invites (gym_id, membership_id, kind, code_hmac, expires_at) values ('d0000000-0000-4000-8000-00000000000a', 'e0000000-0000-4000-8000-000000000007', 'join', private.hash_invite_code('ABCDEF'), now() + interval '1 day') $$, '23505', null, 'two invites cannot share a code hash');
 select throws_ok($$ insert into public.invites (gym_id, membership_id, kind, code_hmac, expires_at) values ('d0000000-0000-4000-8000-00000000000a', 'e0000000-0000-4000-8000-000000000007', 'join', '\x00'::bytea, now() + interval '1 day') $$, '23514', null, 'the stored value must be a 32-byte hash, not a code');
-select throws_ok($$ insert into public.invites (gym_id, membership_id, kind, code_hmac, expires_at) values ('d0000000-0000-4000-8000-00000000000a', 'e0000000-0000-4000-8000-000000000007', 'demo', private.hash_invite_code('VWXYZ2'), now() + interval '1 day') $$, '23514', null, 'the demo kind is not available yet');
+select throws_ok($$ insert into public.invites (gym_id, membership_id, kind, code_hmac, expires_at) values ('d0000000-0000-4000-8000-00000000000a', 'e0000000-0000-4000-8000-000000000007', 'demo', private.hash_invite_code('VWXYZ2'), now() + interval '1 day') $$, '23514', null, 'a demo invite cannot belong to a member');
 select throws_ok($$ update public.invites set used_at = now() where id = 'f0000000-0000-4000-8000-000000000007' $$, '23514', null, 'a used invite must be bound to an install id');
 
 -- anon ------------------------------------------------------------------------------
@@ -106,7 +106,7 @@ select throws_ok($$ delete from public.invites $$, '42501', null, 'a captain can
 select throws_ok($$ select public.create_invite('e0000000-0000-4000-8000-000000000002', 'recover') $$, '42501', null, 'a captain cannot issue a code for a captain');
 select throws_ok($$ select public.create_invite('e0000000-0000-4000-8000-000000000001', 'recover') $$, '42501', null, 'a captain cannot issue a code for the owner');
 select throws_ok($$ select public.create_invite('00000000-0000-0000-0000-000000000000') $$, '42501', null, 'an unknown membership gives the same answer as a forbidden one');
-select throws_ok($$ select public.create_invite('e0000000-0000-4000-8000-000000000007', 'demo') $$, '22023', null, 'the demo kind cannot be requested');
+select throws_ok($$ select public.create_invite('e0000000-0000-4000-8000-000000000007', 'demo') $$, '22023', null, 'a captain cannot ask for a demo invite');
 select throws_ok($$ select public.create_invite('e0000000-0000-4000-8000-000000000007', null) $$, '22023', null, 'a missing kind is refused');
 select throws_ok($$ select public.create_invite('e0000000-0000-4000-8000-000000000003', 'join') $$, '22023', null, 'a join code is only for pending members');
 select throws_ok($$ select public.create_invite('e0000000-0000-4000-8000-000000000007', 'recover') $$, '22023', null, 'a recover code is only for members that have a person');

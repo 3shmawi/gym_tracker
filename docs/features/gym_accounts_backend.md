@@ -150,14 +150,39 @@ scripts/make_invites/run.sh --gym <gym-uuid> --count 20 --edit-targets
   table, a pgTAP file for each, definer functions pin `search_path` and are
   closed to anon, no literal Vault secret, the function logs nothing.
 
+## Part 2: sessions, solo import, demo gym, account deletion
+Migrations 0009–0011, Edge Function `delete-account`, `make_invites --demo`.
+
+| Piece | What it does |
+|---|---|
+| `workout_sessions` | A person's history: `client_id` (unique per person), `gym_id` / `membership_id` (null = solo), `day_id`, `finished_at`, `sets` (validated: ≤ 500 sets, weight 0–1000, reps 0–1000, ids `[A-Za-z0-9_-]{1,64}`, ≤ 64 KB). RLS: a person reads, logs, edits and deletes their own; **staff read only their gym's sessions, only while that member is active, never solo ones**; a `locked` gym hides an ended member's gym sessions from them (never deletes). The app has no session id or start time, so `client_id` is a hash of the session's content and `started_at` does not exist. |
+| `personal_plans` | The person's own plan (the solo plan moved into the account). Read-only for clients. |
+| `import_solo_data(sessions, plan)` | Moves solo data in chunks of ≤ 50: all-or-nothing per call, idempotent (same `client_id` = skipped), sessions stay solo, the plan is never overwritten, ≤ 1000 solo sessions per person. Returns `{imported, skipped, plan_saved, solo_total}`; the app keeps its local copy until `solo_total` matches. Needs a person (the member has joined a gym). |
+| Demo gym | `invites.kind = 'demo'`: reusable, no expiry, only for a gym with `is_demo`, gives a trainee membership with all permissions; `admin_create_demo_invite(gym)` (secret key) makes and **rotates** it; `wipe_demo_data()` clears the demo gym's sessions and plans nightly; `schedule_maintenance()` schedules both daily jobs once `pg_cron` is on. |
+| `delete-account` | `POST /functions/v1/delete-account` with `{"confirm": "delete"}` and the user's token: deletes the caller (never an id from the body). `409 last_owner` (with the gym names) while they are the only owner of a gym with members; `200` also when already deleted (a retry is safe). Cascade: `auth.users → people → memberships, workout_sessions, personal_plans`; audit columns (`created_by`, `ended_by`) are set to null. A database trigger refuses to cascade away the last owner as a second line of defense. |
+
+Making the demo card (App Review notes need a code and a sample QR):
+```bash
+export SUPABASE_URL=https://<project-ref>.supabase.co
+export SUPABASE_SECRET_KEY=…
+scripts/make_invites/run.sh --demo --gym <demo-gym-uuid>
+```
+It writes one PDF (never in the repo), revokes the previous demo code and
+prints no code. Procedure and rotation: `docs/release.md` → "Demo gym for App Review".
+
+Tests: `supabase/tests/workout_sessions_rls`, `personal_plans_rls`,
+`import_solo_data` (hostile chunks, retry, resume, atomicity, cap),
+`demo_invites`, `account_deletion` (161 assertions); Deno `delete-account`
+(12); Python `--demo` (4).
+
 ## Not done in this step (see the decision doc)
-- `workout_sessions` and `import_solo_data` (delivery step 3/5), the `demo`
-  invite kind, `delete-account`, the dashboard, the app screens.
+- The app screens, the dashboard.
 - A CAPTCHA fallback for the global breaker (needs Cloudflare Turnstile keys).
 - Server-side "ids are never reused": the server keeps no id history; the app
   creates fresh ids.
-- A schedule for `purge_invite_attempts()` and for deleting stale anonymous
-  users (`pg_cron` availability on the plan is still unverified).
+- Deleting stale anonymous users (no automatic cleanup in Supabase; a job for
+  users older than 30 days without a person). `pg_cron` on the plan is still
+  unverified: `schedule_maintenance()` says so instead of failing.
 
 ## Analytics
 None from the backend. The app step adds `gym_join_started`, `gym_joined`,
