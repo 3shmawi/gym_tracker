@@ -1,9 +1,11 @@
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
+import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
 import 'package:gym_tracker/core/monitoring/monitoring.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/router/not_found_page.dart';
+import 'package:gym_tracker/features/gym/presentation/join_page.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_page.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_page.dart';
 import 'package:gym_tracker/features/workout/presentation/exercise_history_page.dart';
@@ -15,6 +17,11 @@ import 'package:gym_tracker/features/workout/presentation/progress_page.dart';
 
 /// Root navigator, used to show app-wide dialogs (e.g. the update dialog).
 final rootNavigatorKey = GlobalKey<NavigatorState>();
+
+/// Invite links lead to the enter-code screen only while the `gym_join` flag
+/// is on; otherwise they open the home screen.
+Future<String?> _joinGate(BuildContext context, GoRouterState state) async =>
+    await FeatureFlags.isEnabled(Flags.gymJoin) ? null : AppRoutes.home;
 
 /// The app's router. Deep links are handled by go_router automatically.
 final appRouter = GoRouter(
@@ -37,15 +44,19 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.join,
-      name: 'join_root',
-      // Only `/join/<code>` is a link; a bare `/join` is not found.
-      builder: (context, state) => const NotFoundPage(),
+      name: 'join',
+      // Off (default): invite links open the home screen, as before gym
+      // accounts. On: the enter-code screen.
+      redirect: _joinGate,
+      builder: (context, state) => const JoinPage(),
       routes: [
         GoRoute(
           path: ':code',
-          name: 'join',
-          // The code is untrusted and unused: go home, change nothing.
-          redirect: (context, state) => AppRoutes.home,
+          name: 'join_code',
+          // The code is untrusted: JoinPage parses it, shows it in the field
+          // and never joins; the member has to confirm.
+          builder: (context, state) =>
+              JoinPage(rawCode: state.pathParameters['code']),
         ),
       ],
     ),

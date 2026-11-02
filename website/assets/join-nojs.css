@@ -1,0 +1,5 @@
+/* Loaded only when JavaScript is off: show both languages (the switch and the
+   code both need script). */
+[data-lang] { display: revert; }
+.lang { display: none !important; }
+[data-lang="ar"] { margin-top: .2em; }

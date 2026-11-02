@@ -621,5 +621,27 @@
   "todayDayEmptyTitle": "No exercises in this day yet",
   "todayDayEmptyBody": "Add its exercises first, or choose another day to start.",
   "todayAddExercises": "Add exercises",
-  "settingsWorkout": "Workout"
+  "settingsWorkout": "Workout",
+  "joinTitle": "Enter your gym code",
+  "@joinTitle": {
+    "description": "Title of the screen where a member types the 6-character invite code of their gym."
+  },
+  "joinCodeLabel": "Gym code",
+  "@joinCodeLabel": {
+    "description": "Screen-reader name of the 6-box invite code field."
+  },
+  "joinHint": "6 letters and numbers, printed under the QR code your captain gave you. Capital or small letters both work.",
+  "joinFromLink": "We opened the link and typed the code for you. Tap Join to confirm.",
+  "@joinFromLink": {
+    "description": "Shown when the screen was opened from an invite link: the link only fills in the code, the member still confirms."
+  },
+  "joinLinkIncomplete": "This link has no valid code. Ask your captain for a new QR code, or type the code.",
+  "joinAction": "Join",
+  "@joinAction": {
+    "description": "Button that confirms the code and joins the gym."
+  },
+  "joinNotReady": "Joining a gym arrives in the next update.",
+  "@joinNotReady": {
+    "description": "Shown instead of enabling Join while joining is not built yet."
+  }
 }

@@ -1,7 +1,7 @@
 # Security headers for every page. The site has no inline script or style, no
 # forms and no third-party code; fonts come from Google Fonts only.
 /*
-  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
@@ -17,3 +17,12 @@
 /.well-known/assetlinks.json
   Content-Type: application/json
   Cache-Control: public, max-age=3600
+
+# The invite page: its address carries a one-time code, so it is never cached
+# or indexed (join.html also sets robots and referrer meta tags).
+/join
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+/join/*
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
