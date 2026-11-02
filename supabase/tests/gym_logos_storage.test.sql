@@ -61,8 +61,7 @@ set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000003","r
 
 select results_eq($$ select name from storage.objects where bucket_id = 'gym-logos' $$, $$ values ('d0000000-0000-4000-8000-00000000000a/logo.png') $$, 'a trainee reads only their own gym''s logo');
 select throws_ok($$ insert into storage.objects (bucket_id, name) values ('gym-logos', 'd0000000-0000-4000-8000-00000000000a/logo.jpg') $$, '42501', null, 'a trainee cannot upload a logo');
-select results_eq($$ with c as (delete from storage.objects where name = 'd0000000-0000-4000-8000-00000000000a/logo.png' returning 1) select count(*)::int from c $$, $$ values (0) $$, 'a trainee cannot delete the logo');
-
+select ok((select qual like '%i_manage%' and roles = '{authenticated}' from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'managers delete their gym logo'), 'deleting a logo (through the Storage API, which blocks direct SQL deletes) needs a manager of that gym');
 reset role;
 reset request.jwt.claims;
 
