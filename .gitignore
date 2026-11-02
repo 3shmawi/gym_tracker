@@ -72,3 +72,9 @@ supabase/.branches/
 # FVM (the pinned version lives in .fvmrc, which is committed)
 .fvm/
 test/**/failures/
+
+# Invite cards hold live codes: never commit them (scripts/make_invites)
+azm-invites/
+invites-*.pdf
+supabase/functions/.env
+supabase/functions/**/.env
