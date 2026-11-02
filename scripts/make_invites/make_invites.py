@@ -523,7 +523,9 @@ def run(argv: list[str], env: dict[str, str], transport: Transport = urllib_tran
         now: Optional[dt.datetime] = None, out=sys.stdout) -> int:
     now = now or dt.datetime.now(dt.timezone.utc)
     opts = parse_options(argv, now)
-    if os.environ.get("GITHUB_ACTIONS") or env.get("GITHUB_ACTIONS") or env.get("CI"):
+    # [env] is the whole environment (main passes os.environ), so a test can
+    # exercise this without depending on where it runs.
+    if env.get("GITHUB_ACTIONS") or env.get("CI"):
         raise UsageError("refusing to run in CI: run this on your own computer")
     out_path = check_output_path(opts.out)
 
