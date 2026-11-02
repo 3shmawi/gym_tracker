@@ -64,7 +64,6 @@ class SettingsChoiceTile extends StatelessWidget {
   }
 }
 
-<<<<<<< yours
 /// A row that opens another screen (chevron at the end, mirrored in RTL).
 class SettingsLinkTile extends StatelessWidget {
   const new({
@@ -97,12 +96,15 @@ class SettingsLinkTile extends StatelessWidget {
         color: scheme.outline,
       ),
       onTap: onTap,
-=======
+    );
+  }
+}
+
 /// Shows the installed app version and build number, e.g. `1.2.3 (45)`.
 /// Read from the platform (pubspec `version: 1.2.3+45`), so it always matches
 /// what the stores and the update gate see. Empty until it loads.
 class SettingsVersionTile extends StatelessWidget {
-  const SettingsVersionTile({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +130,6 @@ class SettingsVersionTile extends StatelessWidget {
                 ),
         );
       },
->>>>>>> kit 1928c02
     );
   }
 }

@@ -110,7 +110,7 @@ jobs:
             echo "No changes under supabase/ — RLS tests skipped."
           fi
 
-      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
+      - uses: supabase/setup-cli@d239d1052f6f024a8d746d7e5aeddead63b9cb53 # v3.1.0
         if: steps.supabase.outputs.present == 'true'
         with:
           # Pinned: "latest" asks the GitHub API on every run and gets rate-limited.
@@ -201,18 +201,11 @@ jobs:
       - uses: $/.github/actions/setup-flutter
         id: flutter
 
-<<<<<<< yours
-      # The Xcode build is most of this job's time: keep Swift packages,
-      # DerivedData and Flutter's iOS build between runs (actions/cache saves
-      # only after a green run). Keyed on everything that changes them;
-      # a partial match still makes the build incremental.
-=======
       # The Xcode build is most of this job's time: keep the Swift packages
       # and Flutter's iOS build between runs (actions/cache saves only after
       # a green run). Not DerivedData: it is several GB, so saving and
       # restoring it costs about what it saves. Keyed on everything that
       # changes these; a partial match still makes the build incremental.
->>>>>>> kit 1928c02
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
