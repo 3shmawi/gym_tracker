@@ -8,6 +8,7 @@ built to match. Code never invents its own look.
 | Design System (tokens, components, guidelines) | https://claude.ai/artifact/WUzyEppnEkcQXvVYec4m9H (source: `docs/design/workout_logging.html`) |
 | Screens: Today, active workout, rest timer, superset, finish, states | same artifact, section 3 |
 | Plan editor: days, a day's exercises, targets, add/rename and delete sheets, reorder, empty/locked/error states, entry points (boards 5.0–5.9) | https://claude.ai/artifact/KSeCy8hrBAPfgERNc32Am1 (approved Nov 2026) |
+| Gym accounts: onboarding, scanner and its errors, enter code, Joined, solo-data question, gym switcher, profile (sign out, delete account), plan editor with permissions off, "captain updated your plan" toast, web join page, captain mobile companion, **web dashboard** for owners/captains (boards 1–12; decision: `docs/decisions/gym_accounts.md`) | https://claude.ai/artifact/XjCnp9ZLUVZ57o7pJ7odBu (approved Nov 2026) |
 | App icon (logo directions, 1b chosen) | https://claude.ai/artifact/26UTiBL3xuXEB8pKjCjn3L |
 
 ## Tokens → code

@@ -1,8 +1,8 @@
 # Gym accounts — design decision
 
-Date: 2026-11-02 · Status: **proposed** (design only, no code yet) · Owner: Mohamed
+Date: 2026-11-02 · Status: **accepted** — design approved 2026-11-02; design only, no code yet. Items 4–8 of §2 are confirmed when their implementation PR starts · Owner: Mohamed
 
-Design board (Claude Design, draft until approved; not yet in `docs/design.md`):
+Design board (Claude Design, approved; linked from `docs/design.md`):
 https://claude.ai/artifact/XjCnp9ZLUVZ57o7pJ7odBu
 
 Azm today is solo: no account, everything on the phone. This adds *gyms*: a
@@ -260,9 +260,9 @@ Session details:
   and must stay that way, so the dashboard is a **separate web app on its own
   origin** (its own Cloudflare Pages project, e.g. `azmm-dash.pages.dev`) with
   its own CSP that allows only our Supabase project and Turnstile. It never
-  shares an origin with `join.html`. Stack for it (Flutter web, to reuse the
-  domain layer, or a plain web app) is open and **needs your OK**; either way
-  the rules are the same RLS and RPCs, and its sign-in is email one-time code
+  shares an origin with `join.html`. Stack: **decided, a plain web app, not
+  Flutter web**; it is **not built yet** (delivery step 0). The rules are the
+  same RLS and RPCs, and its sign-in is email one-time code
   (permanent session, as §4 requires). Boards 10–12 in the design.
 - App route `/join` (name `join`), `/join/scan` (`join_scan`), `/gym` switcher,
   `/profile`. Screen names feed analytics.
@@ -393,7 +393,7 @@ if its day was removed, it can be finished and stays in history.
 
 ## 13. Delivery plan (after the design is approved)
 
-0. Decide the dashboard's stack and origin (§7), then build it after step 4
+0. Dashboard: a plain web app on its own origin (§7, stack decided); build it after step 4
    (it needs the same tables and RPCs; the phone needs it only for the QR).
 1. Website: `join.html`, `_headers`, `.well-known`, `delete-account.html`,
    `privacy.html` (docs + security tests).
