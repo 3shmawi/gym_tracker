@@ -61,3 +61,39 @@ class SettingsChoiceTile extends StatelessWidget {
     );
   }
 }
+
+/// A row that opens another screen (chevron at the end, mirrored in RTL).
+class SettingsLinkTile extends StatelessWidget {
+  const new({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    super.key,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ListTile(
+      leading: Icon(icon, color: scheme.primary),
+      title: Text(
+        label,
+        style: AppTextStyles.body.copyWith(
+          color: scheme.onSurface,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      trailing: Icon(
+        Directionality.of(context) == TextDirection.rtl
+            ? Icons.chevron_left
+            : Icons.chevron_right,
+        color: scheme.outline,
+      ),
+      onTap: onTap,
+    );
+  }
+}

@@ -1,3 +1,4 @@
+import 'package:gym_tracker/features/workout/domain/entities/chosen_day.dart';
 import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
@@ -10,9 +11,15 @@ import 'package:gym_tracker/features/workout/domain/usecases/suggest_weight.dart
 /// last finished one, wrapping around. If the member skipped a day, the
 /// same workout waits ([NextWorkout.waitingSince] is set).
 ///
+/// Days are matched by id, so reordering or deleting days never points a
+/// finished workout at the wrong day. When the last finished day was
+/// deleted, the plan starts again from day 1 (a plan edit pins the waiting
+/// day first, see `KeepNextWorkout`).
+///
 /// The member can pick the next day themselves (`chosenDay`, e.g. joining
-/// mid-plan); that wins until the next finished workout.
-/// Out-of-range choices are ignored.
+/// mid-plan); that wins until the next finished workout. Unknown ids are
+/// ignored. A day pinned by an edit ([ChosenDay.byEdit]) keeps the
+/// "waiting since" banner.
 class GetNextWorkout {
   const new({this.suggestWeight = const SuggestWeight()});
 
@@ -22,7 +29,7 @@ class GetNextWorkout {
     WorkoutPlan plan,
     List<WorkoutSession> history, {
     required DateTime now,
-    int? chosenDay,
+    ChosenDay? chosenDay,
     bool workoutInProgress = false,
     LevelProgress level = LevelProgress.start,
   }) {
@@ -32,19 +39,20 @@ class GetNextWorkout {
     final sorted = [...history]
       ..sort((a, b) => a.finishedAt.compareTo(b.finishedAt));
     final last = sorted.isEmpty ? null : sorted.last;
-    final chosen =
-        chosenDay != null && chosenDay >= 0 && chosenDay < plan.days.length
-        ? chosenDay
-        : null;
+    final chosenIndex = plan.indexOfDay(chosenDay?.dayId);
+    final chosen = chosenIndex < 0 ? null : chosenIndex;
+    final lastIndex = plan.indexOfDay(last?.dayId);
     final dayIndex =
-        chosen ?? (last == null ? 0 : (last.dayIndex + 1) % plan.days.length);
+        chosen ?? (lastIndex < 0 ? 0 : (lastIndex + 1) % plan.days.length);
     final day = plan.days[dayIndex];
 
     return NextWorkout(
       dayIndex: dayIndex,
       days: plan.days,
       day: day,
-      waitingSince: chosen == null ? _waitingSince(last, now) : null,
+      waitingSince: chosen == null || chosenDay!.byEdit
+          ? _waitingSince(last, now)
+          : null,
       trainedToday: !workoutInProgress && _sameDay(last?.finishedAt, now),
       level: level,
       exercises: [

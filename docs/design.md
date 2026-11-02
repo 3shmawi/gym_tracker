@@ -7,6 +7,7 @@ built to match. Code never invents its own look.
 |---|---|
 | Design System (tokens, components, guidelines) | https://claude.ai/artifact/WUzyEppnEkcQXvVYec4m9H (source: `docs/design/workout_logging.html`) |
 | Screens: Today, active workout, rest timer, superset, finish, states | same artifact, section 3 |
+| Plan editor: days, a day's exercises, targets, add/rename and delete sheets, reorder, empty/locked/error states, entry points (boards 5.0–5.9) | https://claude.ai/artifact/KSeCy8hrBAPfgERNc32Am1 (approved Nov 2026) |
 | App icon (logo directions, 1b chosen) | https://claude.ai/artifact/26UTiBL3xuXEB8pKjCjn3L |
 
 ## Tokens → code
@@ -16,6 +17,11 @@ built to match. Code never invents its own look.
 | Type scale, font family | `lib/core/theme/app_text_styles.dart` |
 | Spacing, radius, sizes | `lib/core/theme/app_dimens.dart` |
 | Components | `lib/core/ui/app_controls.dart` (exported by `app_ui.dart`): `AppPrimaryButton`, `AppSecondaryButton`, `AppStepper`, `AppBadge` (`AppTone`), `AppSetChip` (`AppSetState`). Showcase + tests: `test/core/ui/app_controls_test.dart` |
+
+More components (plan editor): `AppDangerButton`, `AppTextField` (label,
+helper/error, "n/40" counter, fixed direction), `AppSwitchRow` (adaptive
+switch, whole row toggles), `AppChoiceChip` (48×48, weight step choices),
+and `EmptyView(detail:)` for a second line under an empty state's title.
 
 When the Design System changes, update these files first, then screens.
 

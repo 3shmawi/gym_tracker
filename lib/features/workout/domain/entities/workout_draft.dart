@@ -6,14 +6,14 @@ import 'package:meta/meta.dart';
 @immutable
 class WorkoutDraft {
   const new({
-    required this.dayIndex,
+    required this.dayId,
     required this.startedAt,
     this.sets = const [],
     this.restEndsAt,
   });
 
   factory fromJson(Map<String, Object?> json) => WorkoutDraft(
-    dayIndex: json['day']! as int,
+    dayId: readDayId(json),
     startedAt: DateTime.parse(json['started_at']! as String),
     sets: [
       for (final s in json['sets']! as List<Object?>)
@@ -24,7 +24,9 @@ class WorkoutDraft {
         : DateTime.parse(json['rest_ends_at']! as String),
   );
 
-  final int dayIndex;
+  /// The plan day being done (`WorkoutDay.id`). That day can't be edited
+  /// until the workout is finished or discarded.
+  final String dayId;
   final DateTime startedAt;
 
   /// Every set logged so far, in the order done.
@@ -43,14 +45,14 @@ class WorkoutDraft {
     List<LoggedSet>? sets,
     DateTime? Function()? restEndsAt,
   }) => WorkoutDraft(
-    dayIndex: dayIndex,
+    dayId: dayId,
     startedAt: startedAt,
     sets: sets ?? this.sets,
     restEndsAt: restEndsAt == null ? this.restEndsAt : restEndsAt(),
   );
 
   Map<String, Object?> toJson() => {
-    'day': dayIndex,
+    'day_id': dayId,
     'started_at': startedAt.toUtc().toIso8601String(),
     'sets': [for (final s in sets) s.toJson()],
     'rest_ends_at': restEndsAt?.toUtc().toIso8601String(),

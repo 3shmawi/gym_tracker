@@ -7,6 +7,7 @@ import 'package:gym_tracker/core/widgets/state_views.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/get_next_workout.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_view.dart';
@@ -19,7 +20,7 @@ import '../../../helpers/ui_check.dart';
 NextWorkout day1Waiting() =>
     const GetNextWorkout()(PlanTemplates.fiveDaySplit, [
       WorkoutSession(
-        dayIndex: 4,
+        dayId: legacyDayId(4),
         finishedAt: DateTime(2026, 11, 2, 19),
         sets: [
           for (final r in [12, 12, 11])
@@ -38,7 +39,7 @@ NextWorkout day1Waiting() =>
 
 NextWorkout day2() => const GetNextWorkout()(PlanTemplates.fiveDaySplit, [
   WorkoutSession(
-    dayIndex: 0,
+    dayId: legacyDayId(0),
     finishedAt: DateTime(2026, 11, 2),
     sets: const [],
   ),
@@ -49,7 +50,7 @@ NextWorkout withLevel(LevelProgress level) => const GetNextWorkout()(
   PlanTemplates.fiveDaySplit,
   [
     WorkoutSession(
-      dayIndex: 0,
+      dayId: legacyDayId(0),
       finishedAt: DateTime(2026, 11, 2),
       sets: const [],
     ),
@@ -79,6 +80,9 @@ Widget view(
   VoidCallback? onRetry,
   VoidCallback? onUseTemplate,
   ValueChanged<int>? onChooseDay,
+  VoidCallback? onOpenPlan,
+  VoidCallback? onBuildPlan,
+  ValueChanged<String>? onEditDay,
 }) => NextWorkoutView(
   state: state,
   onRetry: onRetry ?? () {},
@@ -86,6 +90,40 @@ Widget view(
   onOpenSettings: () {},
   onChooseDay: onChooseDay ?? (_) {},
   onStart: onStart,
+  onOpenPlan: onOpenPlan ?? () {},
+  onBuildPlan: onBuildPlan ?? () {},
+  onEditDay: onEditDay ?? (_) {},
+);
+
+/// The waiting day has no exercises yet (a day just added in the editor).
+NextWorkout emptyDay() => const GetNextWorkout()(
+  const WorkoutPlan(
+    days: [
+      WorkoutDay(
+        id: 'chest',
+        name: LocalizedName(ar: 'صدر', en: 'Chest'),
+        exercises: [
+          Exercise(
+            id: 'bench',
+            name: LocalizedName(ar: 'بنش', en: 'Bench'),
+          ),
+        ],
+      ),
+      WorkoutDay(
+        id: 'back',
+        name: LocalizedName(ar: 'ضهر وباي', en: 'Back & Biceps'),
+        exercises: [],
+      ),
+    ],
+  ),
+  [
+    WorkoutSession(
+      dayId: 'chest',
+      finishedAt: DateTime(2026, 11, 2, 19),
+      sets: const [],
+    ),
+  ],
+  now: DateTime(2026, 11, 3),
 );
 
 /// Finds text ignoring the LTR isolates around numbers.
@@ -94,6 +132,51 @@ Finder textPlain(String text) => find.byWidgetPredicate(
 );
 
 void main() {
+  group('plan editor entry points', () {
+    testWidgets('the plan button on the bar opens the editor', (tester) async {
+      var opened = 0;
+      await tester.pumpApp(view(AsyncData(day2()), onOpenPlan: () => opened++));
+      await tester.tap(find.byKey(const Key('home_plan_button')));
+      expect(opened, 1);
+      expect(find.byTooltip('Your plan'), findsOneWidget);
+    });
+
+    testWidgets('no plan: build one, or start with the template', (
+      tester,
+    ) async {
+      var built = 0;
+      var template = 0;
+      await tester.pumpApp(
+        view(
+          const AsyncData(null),
+          onBuildPlan: () => built++,
+          onUseTemplate: () => template++,
+        ),
+      );
+      // No plan yet: nothing to edit on the bar.
+      expect(find.byKey(const Key('home_plan_button')), findsNothing);
+      await tester.tap(find.byKey(const Key('build_plan_button')));
+      await tester.tap(find.byKey(const Key('use_template_button')));
+      expect(built, 1);
+      expect(template, 1);
+      expect(find.text('Build your plan'), findsOneWidget);
+    });
+
+    testWidgets('a waiting day with no exercises: add them, no Start', (
+      tester,
+    ) async {
+      final edited = <String>[];
+      await tester.pumpApp(
+        view(AsyncData(emptyDay()), onStart: () {}, onEditDay: edited.add),
+      );
+      expect(find.text('Back & Biceps'), findsOneWidget);
+      expect(find.text('No exercises in this day yet'), findsOneWidget);
+      expect(find.text('Start workout'), findsNothing);
+      await tester.tap(find.byKey(const Key('home_add_exercises')));
+      expect(edited, ['back']);
+    });
+  });
+
   group(NextWorkoutView, () {
     testWidgets('shows the day, last time and the suggestion', (tester) async {
       await tester.pumpApp(view(AsyncData(day1Waiting()), onStart: () {}));
@@ -144,7 +227,7 @@ void main() {
       NextWorkout trainedToday() =>
           const GetNextWorkout()(PlanTemplates.fiveDaySplit, [
             WorkoutSession(
-              dayIndex: 0,
+              dayId: legacyDayId(0),
               finishedAt: DateTime(2026, 11, 3, 7),
               sets: const [],
             ),
@@ -372,6 +455,7 @@ void main() {
     'next_workout': () => view(AsyncData(day1Waiting()), onStart: () {}),
     'next_workout_supersets': () => view(AsyncData(day2())),
     'next_workout_no_plan': () => view(const AsyncData(null)),
+    'next_workout_empty_day': () => view(AsyncData(emptyDay()), onStart: () {}),
     'next_workout_error': () =>
         view(const AsyncError(NetworkFailure(), StackTrace.empty)),
   });

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/network/result.dart';
+import 'package:gym_tracker/features/workout/domain/entities/chosen_day.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
@@ -74,7 +75,7 @@ class ActiveWorkoutController extends AsyncNotifier<ActiveWorkout?> {
     final draft = _unwrap(await _repo.loadDraft());
     if (draft == null) return null;
     final plan = _unwrap(await _repo.loadPlan());
-    if (plan == null || draft.dayIndex >= plan.days.length) return null;
+    if (plan == null || plan.dayById(draft.dayId) == null) return null;
     _plan = plan;
     _history = _unwrap(await _repo.loadHistory());
     return _view(draft);
@@ -85,11 +86,11 @@ class ActiveWorkoutController extends AsyncNotifier<ActiveWorkout?> {
       _plan,
       _history,
       now: _now(),
-      chosenDay: draft.dayIndex,
+      chosenDay: ChosenDay(draft.dayId),
     );
     return ActiveWorkout(
       day: next.day,
-      dayIndex: draft.dayIndex,
+      dayIndex: next.dayIndex,
       totalDays: next.totalDays,
       draft: draft,
       previews: next.exercises,
@@ -178,7 +179,7 @@ class ActiveWorkoutController extends AsyncNotifier<ActiveWorkout?> {
     if (current == null) return false;
     final saved = await _repo.saveSession(
       WorkoutSession(
-        dayIndex: current.dayIndex,
+        dayId: current.day.id,
         finishedAt: _now(),
         sets: current.draft.sets,
       ),

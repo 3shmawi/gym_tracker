@@ -1,11 +1,13 @@
 import 'dart:convert';
 
 import 'package:gym_tracker/core/network/result.dart';
+import 'package:gym_tracker/features/workout/domain/entities/chosen_day.dart';
 import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/domain/repositories/workout_repository.dart';
+import 'package:gym_tracker/features/workout/domain/usecases/plan_rules.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// [WorkoutRepository] on the phone (SharedPreferences, JSON). Works
@@ -20,7 +22,11 @@ class LocalWorkoutRepository implements WorkoutRepository {
 
   static const planKey = 'workout.plan';
   static const historyKey = 'workout.history';
-  static const chosenDayKey = 'workout.chosen_day';
+  static const chosenDayKey = 'workout.next_day';
+
+  /// Before days had ids the chosen day was its 0-based position (int).
+  /// Read once as `day-<n>` (see `legacyDayId`), removed on the next save.
+  static const legacyChosenDayKey = 'workout.chosen_day';
   static const draftKey = 'workout.draft';
   static const levelKey = 'workout.level';
 
@@ -35,11 +41,15 @@ class LocalWorkoutRepository implements WorkoutRepository {
     return _parse<WorkoutPlan>(() => WorkoutPlan.fromJson(_decodeMap(raw)));
   }, retries: 0);
 
+  /// Refuses (`ValidationFailure`) a plan outside `PlanLimits`: no days,
+  /// empty or long names, targets out of range, repeated ids. Names are
+  /// stored as JSON text, never interpreted.
   @override
-  Future<Result<void>> savePlan(WorkoutPlan plan) => guard(
-    () => _prefs.setString(planKey, jsonEncode(plan.toJson())),
-    retries: 0,
-  );
+  Future<Result<void>> savePlan(WorkoutPlan plan) => guard(() async {
+    final problem = validatePlan(plan);
+    if (problem != null) throw FormatException('invalid plan: $problem');
+    await _prefs.setString(planKey, jsonEncode(plan.toJson()));
+  }, retries: 0);
 
   @override
   Future<Result<List<WorkoutSession>>> loadHistory() =>
@@ -56,6 +66,7 @@ class LocalWorkoutRepository implements WorkoutRepository {
       jsonEncode([for (final s in kept) s.toJson()]),
     );
     await _prefs.remove(chosenDayKey);
+    await _prefs.remove(legacyChosenDayKey);
   }, retries: 0);
 
   @override
@@ -73,17 +84,31 @@ class LocalWorkoutRepository implements WorkoutRepository {
     retries: 0,
   );
 
+  /// A stored value of the wrong shape reads as no choice (the plan then
+  /// follows the history) rather than an error screen.
   @override
-  Future<Result<int?>> loadChosenDay() =>
-      guard(() async => _prefs.getInt(chosenDayKey), retries: 0);
+  Future<Result<ChosenDay?>> loadChosenDay() => guard(() async {
+    final raw = _prefs.get(chosenDayKey);
+    if (raw is String) {
+      try {
+        return ChosenDay.fromJson(jsonDecode(raw));
+      } on FormatException {
+        return null;
+      }
+    }
+    final legacy = _prefs.get(legacyChosenDayKey);
+    return legacy is int && legacy >= 0 ? ChosenDay(legacyDayId(legacy)) : null;
+  }, retries: 0);
 
   @override
-  Future<Result<void>> saveChosenDay(int? dayIndex) => guard(
-    () => dayIndex == null
-        ? _prefs.remove(chosenDayKey)
-        : _prefs.setInt(chosenDayKey, dayIndex),
-    retries: 0,
-  );
+  Future<Result<void>> saveChosenDay(ChosenDay? day) => guard(() async {
+    await _prefs.remove(legacyChosenDayKey);
+    if (day == null) {
+      await _prefs.remove(chosenDayKey);
+    } else {
+      await _prefs.setString(chosenDayKey, jsonEncode(day.toJson()));
+    }
+  }, retries: 0);
 
   @override
   Future<Result<Level>> loadBestLevel() => guard(

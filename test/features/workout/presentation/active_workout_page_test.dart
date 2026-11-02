@@ -32,7 +32,7 @@ void main() {
     repo = LocalWorkoutRepository(await SharedPreferences.getInstance());
     await repo.savePlan(PlanTemplates.fiveDaySplit);
     // Legs (day 3): the squat rests 120 s.
-    await repo.saveDraft(WorkoutDraft(dayIndex: 2, startedAt: now));
+    await repo.saveDraft(WorkoutDraft(dayId: 'day-3', startedAt: now));
     alarm = FakeRestAlarm();
     appRouter.go(AppRoutes.workout);
   });

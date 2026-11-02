@@ -4,6 +4,7 @@ import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
@@ -22,7 +23,7 @@ void main() {
     await repo.savePlan(PlanTemplates.fiveDaySplit);
     await repo.saveSession(
       WorkoutSession(
-        dayIndex: 4,
+        dayId: legacyDayId(4),
         finishedAt: DateTime(2026, 10, 30),
         sets: [
           for (var i = 0; i < 3; i++)
@@ -37,7 +38,7 @@ void main() {
   });
 
   Future<ProviderContainer> start(int day) async {
-    await repo.saveDraft(WorkoutDraft(dayIndex: day, startedAt: now));
+    await repo.saveDraft(WorkoutDraft(dayId: legacyDayId(day), startedAt: now));
     final c = ProviderContainer(
       overrides: [
         workoutRepositoryProvider.overrideWithValue(repo),
@@ -65,7 +66,9 @@ void main() {
   test(
     'a draft for a day the plan no longer has → null, not a crash',
     () async {
-      await repo.saveDraft(WorkoutDraft(dayIndex: 99, startedAt: now));
+      await repo.saveDraft(
+        WorkoutDraft(dayId: legacyDayId(99), startedAt: now),
+      );
       final c = ProviderContainer(
         overrides: [workoutRepositoryProvider.overrideWithValue(repo)],
       );
@@ -181,7 +184,7 @@ void main() {
     expect(c.read(activeWorkoutControllerProvider).value, isNull);
     expect(ok(await repo.loadDraft()), isNull);
     final history = ok(await repo.loadHistory());
-    expect(history.last.dayIndex, 0);
+    expect(history.last.dayId, 'day-1');
     expect(history.last.sets.single.weight, 52.5);
     expect(history.last.finishedAt.isAtSameMomentAs(now), isTrue);
 

@@ -1,3 +1,4 @@
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:meta/meta.dart';
 
 /// One logged set.
@@ -41,12 +42,12 @@ class LoggedSet {
 @immutable
 class WorkoutSession {
   const new({
-    required this.dayIndex,
+    required this.dayId,
     required this.finishedAt,
     required this.sets,
   });
   factory fromJson(Map<String, Object?> json) => WorkoutSession(
-    dayIndex: json['day']! as int,
+    dayId: readDayId(json),
     finishedAt: DateTime.parse(json['finished_at']! as String),
     sets: [
       for (final s in json['sets']! as List<Object?>)
@@ -54,7 +55,8 @@ class WorkoutSession {
     ],
   );
 
-  final int dayIndex;
+  /// The plan day done ([WorkoutDay.id]).
+  final String dayId;
   final DateTime finishedAt;
   final List<LoggedSet> sets;
 
@@ -64,8 +66,14 @@ class WorkoutSession {
   ];
 
   Map<String, Object?> toJson() => {
-    'day': dayIndex,
+    'day_id': dayId,
     'finished_at': finishedAt.toUtc().toIso8601String(),
     'sets': [for (final s in sets) s.toJson()],
   };
 }
+
+/// The day id stored in a session or draft: `day_id`, or for data saved
+/// before days had ids, the old 0-based position `day` mapped to
+/// [legacyDayId].
+String readDayId(Map<String, Object?> json) =>
+    json['day_id'] as String? ?? legacyDayId(json['day']! as int);

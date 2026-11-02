@@ -1,5 +1,6 @@
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/domain/entities/exercise_history.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/get_exercise_history.dart';
 
@@ -15,7 +16,7 @@ final List<WorkoutSession> progressSessions = [
     (3, 22.5, 52.5, 50.0),
   ])
     WorkoutSession(
-      dayIndex: 0,
+      dayId: legacyDayId(0),
       finishedAt: DateTime(2026, 10, 13 + i * 7, 19),
       sets: [
         for (final r in [12, 12, 11])

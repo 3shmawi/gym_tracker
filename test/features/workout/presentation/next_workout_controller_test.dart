@@ -4,6 +4,7 @@ import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
+import 'package:gym_tracker/features/workout/domain/entities/chosen_day.dart';
 import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
@@ -38,7 +39,7 @@ class _FlakyRepo implements WorkoutRepository {
   Future<Result<void>> saveSession(WorkoutSession s) => _inner.saveSession(s);
 
   @override
-  Future<Result<int?>> loadChosenDay() => _inner.loadChosenDay();
+  Future<Result<ChosenDay?>> loadChosenDay() => _inner.loadChosenDay();
 
   @override
   Future<Result<Level>> loadBestLevel() => _inner.loadBestLevel();
@@ -54,7 +55,7 @@ class _FlakyRepo implements WorkoutRepository {
   Future<Result<void>> saveDraft(WorkoutDraft? d) => _inner.saveDraft(d);
 
   @override
-  Future<Result<void>> saveChosenDay(int? d) => _inner.saveChosenDay(d);
+  Future<Result<void>> saveChosenDay(ChosenDay? d) => _inner.saveChosenDay(d);
 }
 
 void main() {
@@ -114,10 +115,12 @@ void main() {
       const WorkoutPlan(
         days: [
           WorkoutDay(
+            id: 'a',
             name: LocalizedName(ar: 'أ', en: 'A'),
             exercises: [],
           ),
           WorkoutDay(
+            id: 'b',
             name: LocalizedName(ar: 'ب', en: 'B'),
             exercises: [],
           ),
@@ -126,7 +129,7 @@ void main() {
     );
     await repo.saveSession(
       WorkoutSession(
-        dayIndex: 0,
+        dayId: 'a',
         finishedAt: DateTime(2026, 11, 2, 19),
         sets: const [],
       ),
@@ -148,7 +151,7 @@ void main() {
     // Finishing day 3 clears the choice; the plan continues with day 4.
     await repo.saveSession(
       WorkoutSession(
-        dayIndex: 2,
+        dayId: legacyDayId(2),
         finishedAt: DateTime(2026, 11, 2),
         sets: const [],
       ),
@@ -164,7 +167,7 @@ void main() {
     ok(
       await repo.saveSession(
         WorkoutSession(
-          dayIndex: 0,
+          dayId: legacyDayId(0),
           finishedAt: DateTime(2026, 11, 5, 7),
           sets: const [],
         ),
@@ -176,7 +179,10 @@ void main() {
 
     ok(
       await repo.saveDraft(
-        WorkoutDraft(dayIndex: 1, startedAt: DateTime(2026, 11, 5, 18)),
+        WorkoutDraft(
+          dayId: legacyDayId(1),
+          startedAt: DateTime(2026, 11, 5, 18),
+        ),
       ),
     );
     final during = await container(repo)
@@ -195,7 +201,7 @@ void main() {
           ok(
             await repo.saveSession(
               WorkoutSession(
-                dayIndex: d,
+                dayId: legacyDayId(d),
                 finishedAt: start.add(Duration(days: w * 7 + d, hours: 18)),
                 sets: const [],
               ),

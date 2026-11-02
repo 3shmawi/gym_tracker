@@ -573,3 +573,291 @@ class AppChoiceRow extends StatelessWidget {
     );
   }
 }
+
+/// A destructive action (delete a day, an exercise): error-tinted pill,
+/// warning haptic. Pair it with [AppSecondaryButton] to cancel.
+class AppDangerButton extends StatelessWidget {
+  const new({
+    required this.label,
+    required this.onPressed,
+    this.icon,
+    super.key,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) => _PillButton(
+    label: label,
+    icon: icon,
+    onPressed: onPressed,
+    fill: context.palette.error.withValues(alpha: 0.16),
+    foreground: context.palette.error,
+    haptic: HapticFeedback.mediumImpact,
+  );
+}
+
+/// A labelled one-line text field: label above, helper or error and a
+/// character counter below. [textDirection] pins the field's direction
+/// (an English name in an Arabic screen stays LTR).
+class AppTextField extends StatelessWidget {
+  const new({
+    required this.label,
+    required this.controller,
+    this.helper,
+    this.error,
+    this.maxLength,
+    this.textDirection,
+    this.autofocus = false,
+    this.onChanged,
+    this.onSubmitted,
+    this.textInputAction = TextInputAction.next,
+    super.key,
+  });
+
+  final String label;
+  final TextEditingController controller;
+  final String? helper;
+
+  /// Shown instead of [helper], in the error color, with a red outline.
+  final String? error;
+
+  /// Shown as "n/max"; typing past it is allowed so the error can explain.
+  final int? maxLength;
+  final TextDirection? textDirection;
+  final bool autofocus;
+  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
+  final TextInputAction textInputAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final scheme = Theme.of(context).colorScheme;
+    final hasError = error != null;
+    OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppDimens.radiusMd + 4),
+      borderSide: BorderSide(color: color, width: width),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Read once, as the field's name.
+        ExcludeSemantics(
+          child: Text(
+            label,
+            style: AppTextStyles.caption.copyWith(
+              color: palette.textSecondary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        SizedBox(height: AppDimens.xs + 2),
+        Semantics(
+          label: label,
+          child: TextField(
+            controller: controller,
+            autofocus: autofocus,
+            textDirection: textDirection,
+            textInputAction: textInputAction,
+            onChanged: onChanged,
+            onSubmitted: onSubmitted,
+            style: AppTextStyles.body.copyWith(color: palette.textPrimary),
+            decoration: InputDecoration(
+              semanticCounterText: '',
+              filled: true,
+              fillColor: palette.fillSubtle,
+              constraints: BoxConstraints(minHeight: AppDimens.targetLog),
+              contentPadding: EdgeInsetsDirectional.symmetric(
+                horizontal: AppDimens.md,
+                vertical: AppDimens.md,
+              ),
+              enabledBorder: border(
+                hasError ? palette.error : palette.fillSubtle,
+                hasError ? 2 : 1,
+              ),
+              focusedBorder: border(
+                hasError ? palette.error : scheme.primary,
+                2,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: AppDimens.xs),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                error ?? helper ?? '',
+                style: AppTextStyles.caption.copyWith(
+                  color: hasError ? palette.error : palette.textSecondary,
+                  fontWeight: hasError ? FontWeight.w700 : null,
+                ),
+              ),
+            ),
+            if (maxLength != null)
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: controller,
+                builder: (context, value, _) => Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text(
+                    '${value.text.runes.length}/$maxLength',
+                    style: AppTextStyles.caption.copyWith(
+                      color: hasError ? palette.error : palette.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// A row with a label, optional detail and an adaptive switch; the whole
+/// row toggles. At least [AppDimens.targetLog] high.
+class AppSwitchRow extends StatelessWidget {
+  const new({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.detail,
+    super.key,
+  });
+
+  final String label;
+  final String? detail;
+  final bool value;
+
+  /// null disables the row.
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final enabled = onChanged != null;
+    return MergeSemantics(
+      child: InkWell(
+        onTap: enabled ? () => onChanged!(!value) : null,
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: AppDimens.targetLog),
+          child: Padding(
+            padding: EdgeInsetsDirectional.symmetric(vertical: AppDimens.sm),
+            child: Row(
+              spacing: AppDimens.sm2,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        label,
+                        style: AppTextStyles.body.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: enabled
+                              ? palette.textPrimary
+                              : palette.textSecondary,
+                        ),
+                      ),
+                      if (detail != null)
+                        Text(
+                          detail!,
+                          style: AppTextStyles.caption.copyWith(
+                            color: palette.textSecondary,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Switch.adaptive(value: value, onChanged: onChanged),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// One choice in a wrapping row of choices (e.g. weight step 2.5 kg): at
+/// least 48×48, primary outline and tint when selected.
+class AppChoiceChip extends StatelessWidget {
+  const new({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.semanticLabel,
+    super.key,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  /// Read instead of [label] (e.g. "2.5 kg" for "2.5").
+  final String? semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final primary = Theme.of(context).colorScheme.primary;
+    return Semantics(
+      button: true,
+      inMutuallyExclusiveGroup: true,
+      selected: selected,
+      label: semanticLabel ?? label,
+      excludeSemantics: true,
+      child: Material(
+        color: selected
+            ? AppColors.primary.withValues(alpha: 0.2)
+            : palette.fillSubtle,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd + 2),
+          side: BorderSide(
+            color: selected ? primary : Colors.transparent,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () {
+            unawaited(HapticFeedback.selectionClick());
+            onTap();
+          },
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minWidth: AppDimens.minTouchTarget,
+              minHeight: AppDimens.minTouchTarget,
+            ),
+            child: Padding(
+              padding: EdgeInsetsDirectional.symmetric(
+                horizontal: AppDimens.sm2,
+              ),
+              child: Center(
+                widthFactor: 1,
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text(
+                    label,
+                    style: AppTextStyles.body.copyWith(
+                      color: palette.textPrimary,
+                      fontWeight: FontWeight.w700,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

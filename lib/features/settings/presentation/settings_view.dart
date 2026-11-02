@@ -12,12 +12,16 @@ class SettingsView extends StatelessWidget {
     required this.settings,
     required this.onLocaleChanged,
     required this.onThemeModeChanged,
+    this.onOpenPlan,
     super.key,
   });
 
   final AppSettings settings;
   final ValueChanged<Locale?> onLocaleChanged;
   final ValueChanged<ThemeMode> onThemeModeChanged;
+
+  /// Opens the plan editor; the Workout section is hidden while null.
+  final VoidCallback? onOpenPlan;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +34,17 @@ class SettingsView extends StatelessWidget {
       body: ListView(
         padding: EdgeInsets.symmetric(horizontal: AppDimens.md),
         children: [
+          if (onOpenPlan != null) ...[
+            SettingsSectionHeader(l10n.settingsWorkout),
+            AppCard(
+              child: SettingsLinkTile(
+                key: const Key('settings_plan'),
+                label: l10n.planTitle,
+                icon: Icons.format_list_bulleted,
+                onTap: onOpenPlan!,
+              ),
+            ),
+          ],
           SettingsSectionHeader(l10n.settingsLanguage),
           AppCard(
             child: Column(

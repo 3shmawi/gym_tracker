@@ -20,6 +20,9 @@ import 'package:gym_tracker/features/workout/presentation/exercise_history_page.
 import 'package:gym_tracker/features/workout/presentation/exercise_history_view.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_page.dart';
+import 'package:gym_tracker/features/workout/presentation/plan_day_page.dart';
+import 'package:gym_tracker/features/workout/presentation/plan_exercise_page.dart';
+import 'package:gym_tracker/features/workout/presentation/plan_page.dart';
 import 'package:gym_tracker/features/workout/presentation/progress_page.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -185,5 +188,68 @@ void main() {
       expect(source, isNot(contains('.payload')));
       expect(source, isNot(contains('notificationResponse')));
     });
+  });
+
+  testWidgets('/plan opens with no plan (the "Build your plan" editor)', (
+    tester,
+  ) async {
+    await pumpRouter(tester);
+    appRouter.go('/plan?redirect=https://evil.example.com&day=999');
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.byType(PlanPage), findsOneWidget);
+    expect(find.byKey(const Key('plan_add_first_day')), findsOneWidget);
+  });
+
+  testWidgets('/plan/<day>[/<exercise>]: unknown or crafted ids are safe', (
+    tester,
+  ) async {
+    await pumpRouter(tester);
+    const hostile = [
+      'not_a_day',
+      '%3Cscript%3Ealert(1)%3C%2Fscript%3E',
+      "x'%3B%20DROP%20TABLE%20plan%3B--",
+      '%F0%9F%92%A5',
+      '%00',
+    ];
+    for (final id in [...hostile, 'a' * 2000]) {
+      appRouter.go('/plan/$id');
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: id);
+      expect(find.byType(PlanDayPage), findsOneWidget, reason: id);
+      expect(find.text("This day isn't in your plan."), findsOneWidget);
+    }
+    for (final id in hostile) {
+      appRouter.go('/plan/day-1/$id');
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: id);
+      expect(find.byType(PlanExercisePage), findsOneWidget, reason: id);
+      expect(find.text("This exercise isn't in your plan."), findsOneWidget);
+    }
+  });
+
+  testWidgets('/plan with extra segments is not found, never a crash', (
+    tester,
+  ) async {
+    await pumpRouter(tester);
+    for (final path in [
+      '/plan/day-1/flat_db_press/extra',
+      '/plan/../settings/x/y',
+      '/plan/day-1/x/../../../etc/passwd',
+    ]) {
+      appRouter.go(path);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: path);
+    }
+  });
+
+  testWidgets('a crafted link can only open the editor, never change it', (
+    tester,
+  ) async {
+    await pumpRouter(tester);
+    appRouter.go('/plan/new?add=1&name=%3Cscript%3E&delete=day-1');
+    await tester.pumpAndSettle();
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString(LocalWorkoutRepository.planKey), isNull);
   });
 }

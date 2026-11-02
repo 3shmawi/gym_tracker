@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
+import 'package:gym_tracker/features/workout/domain/entities/chosen_day.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
@@ -10,7 +11,11 @@ void main() {
   const plan = PlanTemplates.fiveDaySplit;
 
   WorkoutSession session(int day, DateTime at, [List<LoggedSet>? sets]) =>
-      WorkoutSession(dayIndex: day, finishedAt: at, sets: sets ?? const []);
+      WorkoutSession(
+        dayId: legacyDayId(day),
+        finishedAt: at,
+        sets: sets ?? const [],
+      );
 
   test('starts at day 1 with no history', () {
     final next = get(plan, const [], now: DateTime(2026, 11, 2));
@@ -90,18 +95,23 @@ void main() {
       plan,
       [session(0, DateTime(2026, 11, 2))],
       now: DateTime(2026, 11, 9),
-      chosenDay: 2,
+      chosenDay: const ChosenDay('day-3'),
     );
     expect(next.dayIndex, 2);
     expect(next.waitingSince, isNull);
   });
 
-  test('an out-of-range chosen day is ignored', () {
-    for (final bad in [-1, 5, 999]) {
+  test('an unknown chosen day is ignored', () {
+    for (final bad in ['', 'day-0', 'day-6', "'; DROP TABLE plan;--"]) {
       expect(
-        get(plan, const [], now: DateTime(2026), chosenDay: bad).dayIndex,
+        get(
+          plan,
+          const [],
+          now: DateTime(2026),
+          chosenDay: ChosenDay(bad),
+        ).dayIndex,
         0,
-        reason: '$bad',
+        reason: bad,
       );
     }
   });
