@@ -7,7 +7,15 @@ import 'package:flutter_test/flutter_test.dart';
 /// Anything compiled into the app can be extracted, so only publishable
 /// keys may ever live in env files — and never in source code.
 void main() {
-  const scannedDirs = ['lib', 'android', 'ios', 'website', 'supabase', 'env'];
+  const scannedDirs = [
+    'lib',
+    'android',
+    'ios',
+    'website',
+    'supabase',
+    'env',
+    'scripts',
+  ];
   const skippedDirs = {
     'build',
     '.gradle',
@@ -20,7 +28,8 @@ void main() {
   const textExtensions = {
     '.dart', '.kt', '.kts', '.java', '.swift', '.m', '.xml', '.plist', //
     '.json', '.yaml', '.yml', '.properties', '.gradle', '.html', '.js',
-    '.css', '.sql', '.xcconfig', '.entitlements', '.toml', '.env',
+    '.css', '.sql', '.xcconfig', '.entitlements', '.toml', '.env', '.ts',
+    '.py', '.sh',
   };
 
   final forbidden = <String, RegExp>{
@@ -36,7 +45,8 @@ void main() {
   };
 
   // Only checked in client code: supabase/ legitimately names the role in
-  // config.toml and in policies (`to service_role`).
+  // config.toml and in policies (`to service_role`); scripts/ run on a
+  // developer's computer and may name it too.
   final clientOnly = <String, RegExp>{
     'Supabase service role': RegExp('service_role', caseSensitive: false),
   };
@@ -70,7 +80,8 @@ void main() {
       } on FileSystemException {
         continue;
       }
-      final isClient = !file.path.startsWith('supabase');
+      final isClient =
+          !file.path.startsWith('supabase') && !file.path.startsWith('scripts');
       final patterns = {...forbidden, if (isClient) ...clientOnly};
       for (final MapEntry(key: label, value: pattern) in patterns.entries) {
         if (pattern.hasMatch(content)) findings.add('$label → ${file.path}');
@@ -98,6 +109,8 @@ void main() {
       '*.jks',
       '*.p8',
       '*.p12',
+      'invites-*.pdf',
+      'supabase/functions/.env',
     ]) {
       expect(gitignore, contains(entry), reason: '$entry must be ignored');
     }

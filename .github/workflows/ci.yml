@@ -119,6 +119,33 @@ jobs:
           supabase db start
           supabase test db
 
+      # Edge Function (Deno) and invite tooling (Python) tests: no database,
+      # no secrets. Run when a PR touches them, and on every push to main.
+      - name: Backend code changes?
+        id: backend
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ -z "$BASE_REF" ] || git diff --name-only "origin/$BASE_REF...HEAD" | grep -qE '^(supabase/functions/|scripts/make_invites/)'; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No Edge Function or invite tooling changes — their tests are skipped."
+          fi
+
+      - name: Edge Function tests (Deno)
+        if: steps.backend.outputs.present == 'true'
+        run: |
+          docker run --rm -v "$PWD/supabase/functions/redeem_invite:/app" -w /app \
+            denoland/deno:2.9.6 sh -c 'deno lint && deno fmt --check && deno test --frozen --no-prompt'
+
+      - name: Invite tooling tests (Python, hash-pinned packages)
+        if: steps.backend.outputs.present == 'true'
+        run: |
+          python3 -m venv "$RUNNER_TEMP/make-invites"
+          "$RUNNER_TEMP/make-invites/bin/pip" install --quiet --require-hashes --only-binary=:all: \
+            -r scripts/make_invites/requirements.txt
+          "$RUNNER_TEMP/make-invites/bin/python" -m unittest discover -s scripts/make_invites
+
   # Whether the PR touches anything the app is built from. The iOS
   # integration job is the slow one (macOS runner, Xcode build), so a PR that
   # only changes docs, scripts or other workflows skips it. A skipped job
