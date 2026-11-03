@@ -170,6 +170,8 @@ void main() {
           'https://fonts.gstatic.com',
           // A plain link to Cloudflare's Turnstile Privacy Addendum.
           'https://www.cloudflare.com',
+          // A plain link to Cloudinary's privacy policy (exercise pictures).
+          'https://cloudinary.com',
         }),
         isEmpty,
         reason: name,

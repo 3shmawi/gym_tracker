@@ -7,7 +7,9 @@ members); captains work in the dashboard (decision doc §20).
 
 Design: https://claude.ai/artifact/26EDAr572B4Qr8eBLB4D75 (top row, approved
 Nov 2026). Pictures: all 23 exercises have a drawing (4 are drawings of a similar
-exercise; `docs/features/exercise_images.md`).
+exercise; `docs/features/exercise_images.md`). A gym's captain can choose
+other pictures (several per exercise, from the shared picture library); the
+exercise screen then shows them first: `docs/features/gym_exercise_images.md`.
 
 ## What it does
 - **Plan editor → "Add an exercise"** opens a sheet: *Pick from the library*

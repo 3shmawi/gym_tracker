@@ -7,6 +7,7 @@ template is `env/example.json`). Fill in:
 | Key | Where to find it |
 |---|---|
 | `TURNSTILE_SITE_KEY` | Cloudflare → Turnstile → the widget's **site key** (publishable; the secret goes only in Supabase → Authentication → Attack Protection). Empty = no captcha token is sent |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary → the product environment's **cloud name** (`azm`; public, it is in every picture URL). Empty = gym-chosen exercise pictures are off (bundled pictures only) |
 | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | Filled by `tool/setup_secrets.sh` when `SUPABASE_ADMIN_TOKEN` + `SUPABASE_ORG` are set (it creates the project); by hand: Supabase → Project settings → API Keys (`sb_publishable_…`) |
 | `POSTHOG_API_KEY`, `POSTHOG_HOST` | Filled by `tool/setup_secrets.sh` when `POSTHOG_PERSONAL_API_KEY` + `POSTHOG_REGION` are set; by hand: PostHog → Project settings → Project API key (`phc_…`, not a personal `phx_…` key). Host = your region's **ingestion** address: `https://eu.i.posthog.com` or `https://us.i.posthog.com` (not `eu.posthog.com`) |
 | `SENTRY_DSN` | Filled by `tool/setup_secrets.sh` (it creates the Sentry project if missing); by hand: Sentry → Project → Client keys |

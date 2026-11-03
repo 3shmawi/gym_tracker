@@ -160,6 +160,12 @@ Before the flag goes on in production:
    fitness, App activity, Device or other IDs (the install id), encrypted in
    transit, deletion URL `https://azmm.pages.dev/delete-account.html`
    (updated in PR C). The camera is used on the device only.
+   Gym-chosen exercise pictures (2026-11-03): the app downloads them from
+   Cloudinary, which sees the device's IP address while serving the file, as
+   any CDN does. Nothing is sent by us and nothing personal is stored. Apple:
+   not "collected" (served in real time, not kept by us); Google: "ephemeral
+   processing" (in the form, not shown on the listing). Owner's call whether
+   to declare it anyway; the privacy policy names Cloudinary.
 4. **App size.** `mobile_scanner` bundles the ML Kit barcode model on Android
    (about +3–10 MB); the unbundled variant is a one-line
    `android/gradle.properties` change (`dev.steenbakker.mobile_scanner.useUnbundled=true`)

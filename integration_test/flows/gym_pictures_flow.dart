@@ -20,6 +20,10 @@ Future<void> gymPicturesFlow(WidgetTester tester) async {
   }
 
   // The library: the gym's covers on its rows.
+  // The gym's choice arrives from the phone's copy a frame later.
+  for (var i = 0; i < 5; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
   expect(find.text('Pictures from your gym'), findsWidgets);
   await tester.tap(find.byKey(const Key('library_row_flat_db_press')));
   await settleShort();
@@ -47,7 +51,9 @@ Future<void> gymPicturesFlow(WidgetTester tester) async {
     await tester.drag(
       find.byKey(const Key('gym_pictures_pages')),
       Offset(
-        Directionality.of(tester.element(find.byType(Scaffold).last)) ==
+        Directionality.of(
+                  tester.element(find.byKey(const Key('gym_pictures_pages'))),
+                ) ==
                 TextDirection.rtl
             ? 250
             : -250,
