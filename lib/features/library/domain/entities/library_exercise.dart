@@ -57,7 +57,8 @@ class LibraryExercise {
   LocalizedName get name => defaults.name;
 
   /// The key of the picture: its files are `assets/exercises/<key>.webp` and
-  /// `<key>_thumb.webp` (see `ExerciseImages`), derived from the id, never typed.
+  /// `<key>_thumb.webp` (see `ExerciseImages`), derived from the id, never
+  /// typed.
   /// Without a picture the screens draw a placeholder.
   String get illustrationKey => id;
 
