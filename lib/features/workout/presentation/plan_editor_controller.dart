@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/core/network/result.dart';
+import 'package:gym_tracker/features/gym/domain/entities/gym_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/chosen_day.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
@@ -23,6 +24,7 @@ class PlanEditorState {
     this.nextDayId,
     this.lockedDayId,
     this.saveFailure,
+    this.permissions = PlanPermissions.solo,
   });
 
   /// The plan as edited; a new plan has no days until the first is added.
@@ -38,6 +40,10 @@ class PlanEditorState {
   /// saves it again.
   final AppFailure? saveFailure;
 
+  /// What the gym lets this member change (everything when training solo).
+  /// The screens hide and lock the rest; the controller refuses it too.
+  final PlanPermissions permissions;
+
   PlanEditorState copyWith({
     WorkoutPlan? plan,
     String? Function()? nextDayId,
@@ -47,6 +53,7 @@ class PlanEditorState {
     nextDayId: nextDayId == null ? this.nextDayId : nextDayId(),
     lockedDayId: lockedDayId,
     saveFailure: saveFailure == null ? this.saveFailure : saveFailure(),
+    permissions: permissions,
   );
 }
 
@@ -80,6 +87,13 @@ class PlanEditorController extends AsyncNotifier<PlanEditorState> {
 
   @override
   Future<PlanEditorState> build() async {
+    // A right taken away (or given) while the editor is open: start over from
+    // what is saved, with the screens locked to the new rights. A change the
+    // old rights allowed but the new ones refuse was not saved, so it goes.
+    ref.listen(planPermissionsProvider, (previous, next) {
+      if (previous != next) ref.invalidateSelf();
+    });
+    final permissions = ref.read(planPermissionsProvider);
     _saved = _unwrap(await _repo.loadPlan());
     _history = _unwrap(await _repo.loadHistory());
     _chosen = _unwrap(await _repo.loadChosenDay());
@@ -89,6 +103,7 @@ class PlanEditorController extends AsyncNotifier<PlanEditorState> {
       plan: plan,
       nextDayId: _nextDayId(plan),
       lockedDayId: draft?.dayId,
+      permissions: permissions,
     );
   }
 
@@ -105,6 +120,12 @@ class PlanEditorController extends AsyncNotifier<PlanEditorState> {
   Future<void> retrySave() async {
     final current = state.value;
     if (current == null) return;
+    // The captain's plan came in while this one was being edited: the edit
+    // is gone, show theirs.
+    if (current.saveFailure is PlanChangedFailure) {
+      await retry();
+      return;
+    }
     await _persist(current.plan);
   }
 
@@ -187,7 +208,7 @@ class PlanEditorController extends AsyncNotifier<PlanEditorState> {
       lockedDayId: locked,
     ),
     'plan_superset_changed',
-    {'on': withNext},
+    properties: {'on': withNext},
   );
 
   Future<PlanEditError?> setTargets(
@@ -209,7 +230,7 @@ class PlanEditorController extends AsyncNotifier<PlanEditorState> {
       lockedDayId: locked,
     ),
     'plan_targets_changed',
-    {
+    properties: {
       'field': sets != null
           ? 'sets'
           : reps != null
@@ -218,15 +239,25 @@ class PlanEditorController extends AsyncNotifier<PlanEditorState> {
           ? 'rest'
           : 'weight_step',
     },
+    targetsOnly: true,
   );
 
   Future<PlanEditError?> _apply(
     WorkoutPlan Function(WorkoutPlan plan, String? lockedDayId) edit,
-    String event, [
+    String event, {
     Map<String, Object> properties = const {},
-  ]) async {
+    bool targetsOnly = false,
+  }) async {
     final current = state.value;
     if (current == null) return PlanEditError.notFound;
+    if (!_allowed(targetsOnly: targetsOnly)) {
+      unawaited(
+        Analytics.capture('plan_change_refused', {
+          'kind': targetsOnly ? 'targets' : 'structure',
+        }),
+      );
+      return PlanEditError.notAllowed;
+    }
     final WorkoutPlan plan;
     try {
       plan = edit(current.plan, current.lockedDayId);
@@ -239,6 +270,15 @@ class PlanEditorController extends AsyncNotifier<PlanEditorState> {
     );
     await _persist(plan);
     return null;
+  }
+
+  /// Whether the member's gym lets them make this kind of change now. A
+  /// trainee may build the first plan when the captain made none.
+  bool _allowed({required bool targetsOnly}) {
+    final p = ref.read(planPermissionsProvider);
+    if (!p.canSave) return false;
+    final building = p.buildOwnPlan && _saved == null;
+    return building || (targetsOnly ? p.editTargets : p.editStructure);
   }
 
   Future<void> _persist(WorkoutPlan plan) async {

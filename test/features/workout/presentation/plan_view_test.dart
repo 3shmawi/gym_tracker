@@ -54,6 +54,35 @@ void main() {
       expect(find.byKey(const Key('plan_add_day')), findsOneWidget);
     });
 
+    testWidgets('read-only: no add, no ⋯, no drag; a note says why', (
+      tester,
+    ) async {
+      final calls = Calls();
+      await tester.pumpApp(view(const AsyncData(captainOnlyState), calls));
+      expect(find.byKey(const Key('plan_managed_banner')), findsOneWidget);
+      expect(find.byKey(const Key('plan_add_day')), findsNothing);
+      expect(find.byIcon(Icons.more_horiz), findsNothing);
+      expect(find.byIcon(Icons.drag_indicator), findsNothing);
+      // Still readable: a day opens.
+      await tester.tap(find.text('Legs'));
+      expect(calls.opened, ['day-3']);
+    });
+
+    testWidgets('targets only: the same lock on days', (tester) async {
+      await tester.pumpApp(view(const AsyncData(targetsOnlyState)));
+      expect(find.byKey(const Key('plan_add_day')), findsNothing);
+      expect(find.byIcon(Icons.drag_indicator), findsNothing);
+      expect(find.textContaining('sets, reps, rest'), findsOneWidget);
+    });
+
+    testWidgets('no plan yet and no right to make one: waiting', (
+      tester,
+    ) async {
+      await tester.pumpApp(view(const AsyncData(waitingState)));
+      expect(find.text(l10nEn.planWaitingTitle), findsOneWidget);
+      expect(find.byKey(const Key('plan_add_first_day')), findsNothing);
+    });
+
     testWidgets('tapping a day opens it', (tester) async {
       final calls = Calls();
       await tester.pumpApp(view(const AsyncData(planState), calls));
@@ -217,6 +246,9 @@ void main() {
     'plan': () => view(const AsyncData(planState)),
     'plan_locked': () => view(const AsyncData(lockedState)),
     'plan_empty': () => view(const AsyncData(emptyPlanState)),
+    'plan_captain_only': () => view(const AsyncData(captainOnlyState)),
+    'plan_targets_only': () => view(const AsyncData(targetsOnlyState)),
+    'plan_waiting_for_captain': () => view(const AsyncData(waitingState)),
     'plan_save_failed': () => view(
       const AsyncData(
         PlanEditorState(

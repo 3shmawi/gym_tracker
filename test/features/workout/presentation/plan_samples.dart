@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:gym_tracker/features/gym/domain/entities/gym_plan.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/presentation/plan_editor_controller.dart';
@@ -14,6 +15,34 @@ const lockedState = PlanEditorState(
   plan: PlanTemplates.fiveDaySplit,
   nextDayId: 'day-1',
   lockedDayId: 'day-1',
+);
+
+/// A gym member who may only follow the plan (the captain manages it).
+const captainOnlyState = PlanEditorState(
+  plan: PlanTemplates.fiveDaySplit,
+  nextDayId: 'day-1',
+  permissions: PlanPermissions(
+    editTargets: false,
+    editStructure: false,
+    buildOwnPlan: false,
+  ),
+);
+
+/// A gym member who may change sets, reps and rest, not days or exercises.
+const targetsOnlyState = PlanEditorState(
+  plan: PlanTemplates.fiveDaySplit,
+  nextDayId: 'day-1',
+  permissions: PlanPermissions(editStructure: false, buildOwnPlan: false),
+);
+
+/// A gym member whose captain has not made a plan, and who may not.
+const waitingState = PlanEditorState(
+  plan: WorkoutPlan(days: []),
+  permissions: PlanPermissions(
+    editTargets: false,
+    editStructure: false,
+    buildOwnPlan: false,
+  ),
 );
 
 /// A new plan with no days yet ("Build your plan").

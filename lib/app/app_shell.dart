@@ -4,6 +4,7 @@ import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_theme.dart';
 import 'package:gym_tracker/core/update/app_update_listener.dart';
 import 'package:gym_tracker/core/widgets/offline_banner.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
 import 'package:gym_tracker/features/settings/domain/entities/app_settings.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 
@@ -28,7 +29,9 @@ class AppShell extends StatelessWidget {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) => AppUpdateListener(
-          child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+          child: GymSyncHost(
+            child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+          ),
         ),
       ),
     );

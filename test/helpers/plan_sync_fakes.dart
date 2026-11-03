@@ -90,10 +90,16 @@ class FakeUploader implements SessionUploader {
   int calls = 0;
   final List<int> chunkSizes = [];
 
+  /// Memberships the server refuses (ended): a permanent failure.
+  final Set<String> denied = {};
+
   @override
   Future<Result<void>> upload(List<OutboxEntry> entries) async {
     calls++;
     chunkSizes.add(entries.length);
+    if (entries.any((e) => denied.contains(e.membershipId))) {
+      return const Failed(UnauthorizedFailure());
+    }
     if (script.isNotEmpty && script.removeAt(0) == 'fail') {
       return const Failed(NetworkFailure());
     }

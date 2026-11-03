@@ -75,6 +75,16 @@ void main() {
     expect(uploader.stored, hasLength(1));
   });
 
+  test('a gym that refuses its rows does not hold back the others', () async {
+    await queue(session(1));
+    await QueueSession(outbox)(session(2), gymId: 'g2', membershipId: 'm2');
+    uploader.denied.add('m1');
+    final r = await UploadSessions(outbox, uploader)();
+    expect((r as Success<int>).value, 1);
+    expect(uploader.stored.values.single.membershipId, 'm2');
+    expect(outbox.entries.single.membershipId, 'm1', reason: 'kept, not lost');
+  });
+
   test('an empty queue calls nothing', () async {
     await UploadSessions(outbox, uploader)();
     expect(uploader.calls, 0);

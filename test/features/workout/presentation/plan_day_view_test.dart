@@ -57,6 +57,19 @@ Finder plain(String text) => find.byWidgetPredicate(
 
 void main() {
   group('PlanDayView', () {
+    testWidgets('a gym that keeps the structure: no rename, add or ⋯', (
+      tester,
+    ) async {
+      await tester.pumpApp(
+        view(const AsyncData(targetsOnlyState), dayId: 'day-1'),
+      );
+      expect(find.byKey(const Key('plan_rename_day')), findsNothing);
+      expect(find.byKey(const Key('plan_add_exercise')), findsNothing);
+      expect(find.byKey(const Key('plan_managed_banner')), findsOneWidget);
+      expect(find.byIcon(Icons.more_horiz), findsNothing);
+      expect(find.byIcon(Icons.drag_indicator), findsNothing);
+    });
+
     testWidgets('exercises with targets, supersets as A/B pairs', (
       tester,
     ) async {
@@ -222,6 +235,8 @@ void main() {
 
   screensUiTests({
     'plan_day': () => view(const AsyncData(planState)),
+    'plan_day_captain_only': () =>
+        view(const AsyncData(captainOnlyState), dayId: 'day-1'),
     'plan_day_locked': () => view(const AsyncData(lockedState), dayId: 'day-1'),
     'plan_day_empty': () =>
         view(const AsyncData(emptyDayState), dayId: 'new-day'),

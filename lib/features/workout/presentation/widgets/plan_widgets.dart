@@ -3,6 +3,7 @@ import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
+import 'package:gym_tracker/features/gym/domain/entities/gym_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/plan_rules.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
@@ -605,4 +606,24 @@ Future<void> askName(
     initial: initial,
   );
   if (name != null) onName(name);
+}
+
+/// Why the plan can't be changed (or only partly): the gym's captain
+/// manages it. Shown at the top of the plan screens.
+class PlanManagedBanner extends StatelessWidget {
+  const new({required this.permissions, super.key});
+
+  final PlanPermissions permissions;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AppBanner(
+      key: const Key('plan_managed_banner'),
+      icon: Icons.lock_outline,
+      text: permissions.editTargets
+          ? l10n.planTargetsOnlyBody
+          : '${l10n.planManagedTitle}. ${l10n.planManagedBody}',
+    );
+  }
 }

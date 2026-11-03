@@ -79,10 +79,21 @@ void main() {
       'solo_import_started',
       'solo_import_done',
       'solo_import_failed',
+      'gym_plan_synced',
+      'gym_plan_updated_shown',
+      'gym_sessions_uploaded',
     });
     // `via`: scan | link | code. `reason`: a word. `to`: solo | gym. Never a
-    // code, a name, an id or an email.
-    expect(properties, {'via', 'reason', 'to'});
+    // code, a name, an id or an email. Sync: booleans and counts only.
+    expect(properties, {
+      'via',
+      'reason',
+      'to',
+      'replaced',
+      'deferred',
+      'count',
+      'left',
+    });
   });
 
   test('the scanner takes text only through InviteCode.fromScan', () {
