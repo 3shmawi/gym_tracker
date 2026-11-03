@@ -47,6 +47,7 @@ flutter:
   assets:
     - assets/fonts/Inter/LICENSE.txt
     - assets/fonts/Cairo/LICENSE.txt
+    - assets/exercises/
   fonts:
     - family: Inter
       fonts:

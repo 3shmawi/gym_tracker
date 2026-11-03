@@ -8,6 +8,11 @@ device. Arabic switches the whole UI to right-to-left.
 A **Workout** section at the top links to the plan editor ("Your plan",
 `/plan`, see workout.md → Plan editor).
 
+**About** shows the version and **Open-source licenses** (Flutter's licenses page:
+the fonts' licenses and the exercise pictures' attributions,
+`features/exercise_images.md`). The row is `SettingsView.onOpenLicenses`;
+`SettingsPage` opens `showLicensePage`.
+
 ## Architecture (layered, state: riverpod)
 - Model: `lib/features/settings/domain/entities/app_settings.dart`
 - Repository: `lib/features/settings/domain/repositories/settings_repository.dart` (SharedPreferences)

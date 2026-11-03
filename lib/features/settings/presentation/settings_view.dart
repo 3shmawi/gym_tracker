@@ -16,6 +16,7 @@ class SettingsView extends StatelessWidget {
     this.onOpenPlan,
     this.onOpenAccount,
     this.onJoinGym,
+    this.onOpenLicenses,
     super.key,
   });
 
@@ -30,6 +31,10 @@ class SettingsView extends StatelessWidget {
   /// "Join your gym". Both null (gym accounts off) hides the section.
   final VoidCallback? onOpenAccount;
   final VoidCallback? onJoinGym;
+
+  /// Opens the open-source licenses page (fonts, exercise pictures); the row
+  /// is hidden while null.
+  final VoidCallback? onOpenLicenses;
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +116,20 @@ class SettingsView extends StatelessWidget {
             ),
           ),
           SettingsSectionHeader(l10n.settingsAbout),
-          const AppCard(child: SettingsVersionTile()),
+          AppCard(
+            child: Column(
+              children: [
+                const SettingsVersionTile(),
+                if (onOpenLicenses != null)
+                  SettingsLinkTile(
+                    key: const Key('settings_licenses'),
+                    label: l10n.settingsLicenses,
+                    icon: Icons.description_outlined,
+                    onTap: onOpenLicenses!,
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );

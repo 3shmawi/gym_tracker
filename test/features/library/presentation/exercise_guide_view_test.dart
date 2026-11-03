@@ -6,6 +6,7 @@ import 'package:gym_tracker/features/library/presentation/exercise_guide_view.da
 
 import '../../../helpers/pump_app.dart';
 import '../../../helpers/ui_check.dart';
+import '../helpers/no_picture.dart';
 
 LibraryExercise exercise(String id) =>
     ExerciseCatalog.all.firstWhere((e) => e.id == id);
@@ -18,6 +19,7 @@ class Calls {
 Widget view({
   String id = 'flat_db_press',
   bool missing = false,
+  bool withoutPicture = false,
   String? dayName,
   bool alreadyInDay = false,
   bool canAdd = true,
@@ -25,7 +27,11 @@ Widget view({
 }) {
   final c = calls ?? Calls();
   return ExerciseGuideView(
-    exercise: missing ? null : exercise(id),
+    exercise: missing
+        ? null
+        : withoutPicture
+        ? noPicture
+        : exercise(id),
     onBack: () => c.backs++,
     dayName: dayName,
     alreadyInDay: alreadyInDay,
@@ -45,7 +51,21 @@ void main() {
       for (final step in exercise('flat_db_press').steps) {
         expect(find.text(step.en), findsOneWidget);
       }
+      // The picture: no placeholder, and the screen reader gets a label.
+      expect(find.byType(Image), findsOneWidget);
+      expect(find.text('Illustration coming soon'), findsNothing);
+      expect(
+        find.bySemanticsLabel('Illustration of Flat Dumbbell Press'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('an exercise with no picture shows the placeholder', (
+      tester,
+    ) async {
+      await tester.pumpApp(view(withoutPicture: true));
       expect(find.text('Illustration coming soon'), findsOneWidget);
+      expect(find.byType(Image), findsNothing);
     });
 
     testWidgets('reading only: no add button', (tester) async {
@@ -98,6 +118,7 @@ void main() {
     'exercise_guide_added': () =>
         view(dayName: 'Chest & Back', alreadyInDay: true, canAdd: false),
     'exercise_guide_long_steps': () => view(id: 'machine_calf_raise'),
+    'exercise_guide_no_picture': () => view(withoutPicture: true),
     'exercise_guide_not_found': () => view(missing: true),
   });
 }
