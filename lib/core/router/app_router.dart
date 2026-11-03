@@ -6,6 +6,7 @@ import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
 import 'package:gym_tracker/core/monitoring/monitoring.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
+import 'package:gym_tracker/core/router/link_guard.dart';
 import 'package:gym_tracker/core/router/not_found_page.dart';
 import 'package:gym_tracker/core/router/router_refresh.dart';
 import 'package:gym_tracker/features/gym/presentation/delete_account_page.dart';
@@ -71,7 +72,9 @@ Future<String?> _homeGate(BuildContext context, GoRouterState state) async {
 /// The app's router. Deep links are handled by go_router automatically.
 final appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
-  initialLocation: AppRoutes.home,
+  // The link that opened the app, if it can be decoded (`LinkGuard`).
+  initialLocation: LinkGuard.initialLocation(),
+  overridePlatformDefaultLocation: true,
   refreshListenable: routerRefresh,
   // Root navigator only. Tabs added later (StatefulShellBranch) need their
   // own `observers: Analytics.navigatorObservers` to be tracked.

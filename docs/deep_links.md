@@ -32,6 +32,10 @@ Plan links only open the editor: nothing in a link (query or path) can add,
 change or delete anything. Ids are encoded by `AppRoutes.planDay` /
 `planExercise`; crafted ids are covered in `test/security/deep_link_test.dart`.
 
+A link whose path, query or fragment has broken percent-encoding (`%FF`) opens
+nothing: `LinkGuard` drops it (running app) or starts the app at home (cold
+start). See `docs/security.md`.
+
 ## Custom scheme (works now)
 Scheme `azm://`, registered in `AndroidManifest.xml` and `ios/Runner/Info.plist`
 (`CFBundleURLTypes`, `FlutterDeepLinkingEnabled`). Every path above works:
