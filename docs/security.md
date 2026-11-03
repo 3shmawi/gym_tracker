@@ -11,6 +11,7 @@ Security is tested, not assumed. Three layers run on every pull request.
 | `well_known_test.dart` | `.well-known` files holding anything but app ids, package names and SHA-256 fingerprints (no secrets); wrong paths (only `/join/*`) or hosts; missing `application/json` headers; website, store texts, docs and app pointing to a host other than `azmm.pages.dev` (or still to the old one) |
 | `join_page_test.dart` | `website/join.html` using `innerHTML`/`document.write`/`eval`/navigation from the address, inline script or style, a third party or tracker, a store link different from the home page, a missing `/join/*` rewrite or `no-store` header, a `?c=` link |
 | `supabase_backend_test.dart` | a table without RLS or without its pgTAP file, a table that keeps `anon`/`authenticated` grants, a `security definer` function without a fixed `search_path` or open to `anon`, a literal (non-random) Vault secret in a migration, a plain `code` column on `invites`, the Edge Function logging request data / reading secrets / losing JWT verification or pinned dependencies, invite PDFs or function `.env` files not git-ignored |
+| `exercise_image_library_test.dart` | the picture table losing RLS or gaining a write policy or a licence outside the commercial list (no NC/ND), a seed row without its reviewed commit, author or attribution, SQL smuggled into the seed data, the upload script printing or hard-coding the Cloudinary secret, reading the unreviewed source folders, or accepting a crafted public id, a banned licence, a duplicate, a missing file or a cloud name that is not a plain name; the workflow's upload job not manual or not in the `cloudinary` environment |
 | `deep_link_test.dart` | crafted/unknown deep links crashing the app or reaching unexpected screens; open redirects via query parameters; a tapped notification opens only `/workout` (its payload is never read); the gym account screens: flag off → home, signed out → `/welcome`, a link never joins, signs out or deletes, `/join/joined` cannot be faked, `scan`/`joined` are never codes |
 | `gym_account_app_test.dart` | the session outside secure storage, a secret besides the session and install id, a `print` in gym code, an analytics event or property beyond the agreed ones (codes, names, ids, emails), the scanner opening a URL or returning the camera image, `signInAnonymously` outside redeem (never at launch), the router joining/signing out/deleting |
 
@@ -260,9 +261,26 @@ member's own plan), encoded when built (`AppRoutes.libraryFor` /
 (`test/security/deep_link_test.dart`). The search box text is cleaned, cut to
 60 characters and only compared; hostile text is covered by tests. The library
 has no network, storage or secret access and sends fixed words to analytics
-(`test/security/exercise_library_test.dart`). Known limit (go_router 18.1.2): a
-link whose query has invalid percent-encoding makes go_router throw before our
-code runs, for every route; see `docs/features/exercise_library.md`.
+(`test/security/exercise_library_test.dart`). Finding (go_router 18.1.2): a link
+whose query has invalid percent-encoding made go_router throw before our code
+ran, for every route. Solved by `LinkGuard` (`lib/core/router/link_guard.dart`):
+such links are dropped before go_router and Flutter see them.
+
+### Exercise picture library (migrations 0013/0014, Cloudinary)
+Docs read 2026-11-03: Cloudinary "Signed uploads / authentication signatures",
+"Upload images", "Transformation URL structure" and "Pricing"
+(`docs/features/exercise_image_library.md`). Map of what is secret:
+- `CLOUDINARY_API_SECRET` (signs uploads) and `CLOUDINARY_API_KEY`: GitHub
+  secrets of the `cloudinary` environment, read by `tool/exercise_images/upload.py`
+  through `env:` only, masked, never printed or put in a URL, an artifact, the
+  database, the app or the web page. If one leaks: rotate it in the Cloudinary
+  console first (see "If a key leaks").
+- `CLOUDINARY_CLOUD_NAME`: not secret (it is in every public picture URL).
+- The table `exercise_images` is public to read and writable only by the
+  service role; the pictures are public CC BY-SA files.
+No personal data is stored or sent. The package is built from one reviewed
+commit of `everkinetic/data` (`SOURCE_COMMIT`); the unreviewed folders
+(`images-png-unknown`, `images-ai`) are never read.
 
 ### Trainee dashboard views (migration 0012)
 Docs read 2026-11-03: Supabase "Row Level Security" and Postgres 15+

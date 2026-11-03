@@ -18,5 +18,6 @@ Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 - [Gym accounts — backend](features/gym_accounts_backend.md) (tables, RLS, `redeem_invite`, QR cards)
 - [Exercise library](features/exercise_library.md) (shared exercises, picker in the plan editor, exercise screen)
 - [Exercise pictures](features/exercise_images.md) (drawings for the library, sources and licences, how to add one)
+- [Exercise picture library](features/exercise_image_library.md) (all Everkinetic pictures on Cloudinary, searchable keywords in the database, upload workflow)
 - [Trainee dashboard data](features/trainee_dashboard_data.md) (SQL views the captain's dashboard will read; privacy)
 - [Gym accounts — the app](features/gym_account_app.md) (first screen, scanner, join, switcher, profile, delete account, solo data import)

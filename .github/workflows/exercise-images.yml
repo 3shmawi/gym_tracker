@@ -1,0 +1,86 @@
+# Builds the exercise picture package from everkinetic/data and, when asked,
+# uploads it to Cloudinary (docs/features/exercise_image_library.md).
+#
+# - Pull requests that touch the tool: build + validate only (no secrets).
+# - Run workflow with `upload` ticked: uploads. It runs in the `cloudinary`
+#   environment, so the secrets can be limited to it and an approval required.
+#   Secrets (only): CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY,
+#   CLOUDINARY_API_SECRET. They reach the script through `env:` only; the
+#   script never prints them.
+name: Exercise images
+
+on:
+  pull_request:
+    paths:
+      - 'tool/exercise_images/**'
+      - '.github/workflows/exercise-images.yml'
+      - 'supabase/migrations/0013_exercise_images.sql'
+      - 'supabase/migrations/0014_exercise_images_seed.sql'
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: Upload the pictures to Cloudinary (needs the secrets)
+        type: boolean
+        default: false
+
+# Read-only token; nothing here writes to the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: exercise-images-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    name: Build and validate the package
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Pillow
+        run: python3 -m pip install --no-cache-dir 'pillow==12.3.0'
+
+      - name: Build the package
+        run: tool/exercise_images/ci_build.sh "$RUNNER_TEMP/work"
+
+      - name: Validate (nothing is sent)
+        env:
+          CLOUDINARY_CLOUD_NAME: validate-only
+        run: python3 tool/exercise_images/upload.py --package "$RUNNER_TEMP/work/package" --dry-run
+
+  upload:
+    name: Upload to Cloudinary
+    if: github.event_name == 'workflow_dispatch' && inputs.upload
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: cloudinary
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Pillow
+        run: python3 -m pip install --no-cache-dir 'pillow==12.3.0'
+
+      - name: Build the package
+        run: tool/exercise_images/ci_build.sh "$RUNNER_TEMP/work"
+
+      - name: Upload
+        env:
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+        run: |
+          echo "::add-mask::$CLOUDINARY_API_SECRET"
+          echo "::add-mask::$CLOUDINARY_API_KEY"
+          python3 tool/exercise_images/upload.py --package "$RUNNER_TEMP/work/package"
+
+      - name: Check every picture is reachable
+        env:
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+        run: python3 tool/exercise_images/upload.py --package "$RUNNER_TEMP/work/package" --verify
