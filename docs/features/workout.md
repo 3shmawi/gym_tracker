@@ -144,7 +144,68 @@ each change ("Saves as you go"); there is no Save button.
   days get `day-1` … `day-n` (`legacyDayId`), sessions/drafts' `day` index
   and the old int chosen day map to the same ids. The template uses those
   ids too. Nothing is rewritten until the next save.
-- On-device only; Supabase sync comes with accounts.
+- **Solo = on this phone only.** In a gym workspace the plan lives on the
+  gym's server: see "In a gym" below.
+
+### In a gym (plan sync, rights, upload queue)
+Doc read 2026-11-03: Supabase `rpc` and upsert (`ignoreDuplicates`) in
+`supabase_flutter` 2.x as pinned in `pubspec.lock`; Flutter 3.47.8 overlay and
+`Semantics.liveRegion`; SharedPreferences (no secrets are stored in the plan
+copy or the queue).
+- **Where the plan comes from.** While a gym workspace is active the screens
+  read a copy of the gym plan kept on the phone (`PrefsGymPlanStore`, key
+  `gym.plan.<membership id>`; the solo plan is left alone and comes back when
+  the member goes solo). `GymWorkoutRepository` (a `WorkoutRepository`
+  decorator, put in `workoutRepositoryProvider` by `gymProviderOverrides`)
+  keeps history, the chosen day, the draft and the level where they were:
+  they belong to the person, in any workspace.
+- **When it syncs** (`GymSync`, started by `GymSyncHost` in `AppShell`): app
+  start, the active gym changes, the app comes back to the front, the network
+  returns, and after a workout ends. Offline: the copy is the plan, nothing
+  is shown as an error. First time in a gym and offline: no plan yet.
+- **The captain's change wins** (`SyncGymPlan`). A higher `version` replaces
+  the local plan. The waiting workout stays (`KeepNextWorkout`). **A workout
+  in progress is not touched**: the new plan waits (`pending`) and is applied
+  when the workout ends (`workoutFinishedHookProvider`). The toast **"Your
+  captain updated your plan"** (`AppToast`, 6 s, announced to screen readers,
+  never blocks a tap) shows once per version, only when someone else
+  (`updated_by` ≠ the member's own membership) made the change, and only when
+  the plan really changed on the screen (not while it waits).
+- **Saving goes to the server first** (`save_plan(membership, base_version,
+  body)`): online only; the copy on the phone changes after the server says
+  yes. If the captain saved in between (`plan_changed`), the member's change is
+  not saved, the captain's plan is loaded and the editor says so
+  (`errorPlanChanged`, *Retry* reloads). Offline: the usual "couldn't save"
+  with *Retry*.
+- **Rights** come from the membership (`PlanPermissions.of`): *edit targets*
+  (sets, reps, rest, weight step), *edit plan* (days and exercises, implies
+  targets), *build own plan* (make the first plan when the captain made
+  none; the server allows that once, with `base_version 0`). Without a right
+  the screens hide or lock it: no add, rename, delete, ⋯ or drag handle
+  (lock icons + a note "Your captain manages this plan" / "You can change
+  sets, reps, rest…"); with no plan and no right to build one, "Your captain
+  hasn't made your plan yet". The controller refuses the same change
+  (`PlanEditError.notAllowed`, event `plan_change_refused`) and the server's
+  RLS/`save_plan` refuse it a third time.
+- **A right revoked while the editor is open.** The editor watches the rights:
+  when they change it reloads from what is saved and locks to the new rights;
+  an edit still in flight is refused (`notAllowed`) and never reaches the
+  server. If the server refused first (`forbidden`), the editor shows the
+  usual save failure and nothing is stored.
+- **Finished workouts** (`QueueSession` + `UploadSessions`): saved on the phone
+  first, tagged with the membership, and added to an append-only queue
+  (`PrefsSessionOutbox`, key `gym.session_outbox`, ≤ 1000). The session id is
+  the hash of day, time and sets (same as the solo import), so sending twice
+  stores one row (`unique (person_id, client_id)`, `ignoreDuplicates`). Sent
+  oldest first, ≤ 50 per request, one membership at a time; an entry leaves
+  the queue only after the server confirmed. A transient failure keeps
+  everything and retries with a back-off (30 s, 1, 2, 4 … 15 min) and on the
+  next trigger; a membership the server refuses (ended) stays queued and does
+  not hold back other gyms. Solo workouts are never queued.
+- **Known limit:** the editor autosaves every change, and the server lets a
+  trainee with only *build own plan* save once (version 0). A member who may
+  only build their own plan can therefore start it, but later edits need
+  *edit plan*; the captain finishes it.
 
 ## Progress (history per exercise)
 How each exercise moved since the member started (design: board 3.3b,
@@ -277,6 +338,10 @@ Every event also carries `app` (`gym_tracker`) and `environment`
 | `plan_exercise_added` / `plan_exercise_renamed` / `plan_exercise_deleted` / `plan_exercise_moved` | An exercise changed | `days` |
 | `plan_superset_changed` | Superset switched | `on`, `days` |
 | `plan_targets_changed` | A target changed | `field` (`sets` / `reps` / `rest` / `weight_step`), `days` |
+| `plan_change_refused` | The gym's rights refused an edit (safety net) | `kind` (`structure` / `targets`) |
+| `gym_plan_synced` | The gym's plan was replaced, or set aside for a workout in progress | `replaced`, `deferred` |
+| `gym_plan_updated_shown` | The "Your captain updated your plan" toast was shown | none |
+| `gym_sessions_uploaded` | Queued workouts were sent | `count`, `left` |
 
 No names, ids or values typed by the member are sent.
 

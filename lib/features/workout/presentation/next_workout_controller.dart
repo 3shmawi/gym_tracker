@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
 import 'package:gym_tracker/core/network/result.dart';
+import 'package:gym_tracker/features/gym/domain/entities/gym_plan.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/domain/entities/chosen_day.dart';
 import 'package:gym_tracker/features/workout/domain/entities/level.dart';
@@ -14,9 +15,28 @@ import 'package:gym_tracker/features/workout/domain/repositories/workout_reposit
 import 'package:gym_tracker/features/workout/domain/usecases/get_level.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/get_next_workout.dart';
 
-/// Override in tests: `workoutRepositoryProvider.overrideWithValue(fake)`.
-final workoutRepositoryProvider = Provider<WorkoutRepository>(
+/// The workouts on this phone, whatever the workspace.
+final localWorkoutRepositoryProvider = Provider<WorkoutRepository>(
   (ref) => Dependencies.workoutRepository,
+);
+
+/// What the screens use. Override in tests:
+/// `workoutRepositoryProvider.overrideWithValue(fake)`. In a gym workspace
+/// the app replaces it with one whose plan comes from the gym (`App`).
+final workoutRepositoryProvider = Provider<WorkoutRepository>(
+  (ref) => ref.watch(localWorkoutRepositoryProvider),
+);
+
+/// Runs after a workout is saved (the app uploads it and applies a plan
+/// change that waited for it). Replaced by the gym feature.
+final workoutFinishedHookProvider = Provider<Future<void> Function()>(
+  (ref) => () async {},
+);
+
+/// What the member may change in the plan; everything, unless a gym says
+/// otherwise. Replaced by the gym feature.
+final planPermissionsProvider = Provider<PlanPermissions>(
+  (ref) => PlanPermissions.solo,
 );
 
 /// "Now", injectable so tests can pin dates (missed-day logic).

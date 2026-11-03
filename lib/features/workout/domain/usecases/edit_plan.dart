@@ -20,6 +20,10 @@ enum PlanEditError {
 
   /// [PlanLimits.maxDays] or [PlanLimits.maxExercisesPerDay] reached.
   tooMany,
+
+  /// The member's gym doesn't let them make this change (or took the right
+  /// away while the editor was open).
+  notAllowed,
 }
 
 class PlanEditException implements Exception {

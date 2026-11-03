@@ -158,6 +158,7 @@ extension AppFailureMessage on AppFailure {
       InviteProblem.throttled => l10n.joinThrottledTitle,
     },
     LastOwnerFailure() => l10n.errorLastOwner,
+    PlanChangedFailure() => l10n.errorPlanChanged,
     ServerFailure() || UnknownFailure() => l10n.errorUnknown,
   };
 }

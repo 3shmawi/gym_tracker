@@ -54,6 +54,15 @@ class PlanView extends StatelessWidget {
             onPressed: onRetrySave,
           ),
         ),
+        AsyncData(:final value)
+            when value.plan.days.isEmpty &&
+                !value.permissions.editStructure &&
+                !value.permissions.buildOwnPlan =>
+          EmptyView(
+            icon: Icons.hourglass_empty,
+            message: l10n.planWaitingTitle,
+            detail: l10n.planWaitingBody,
+          ),
         AsyncData(:final value) when value.plan.days.isEmpty => EmptyView(
           icon: Icons.fitness_center,
           message: l10n.planEmptyTitle,
@@ -163,6 +172,7 @@ class _Days extends StatelessWidget {
     final l10n = context.l10n;
     final palette = context.palette;
     final days = editor.plan.days;
+    final structure = editor.permissions.editStructure;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -170,14 +180,19 @@ class _Days extends StatelessWidget {
           child: ListView(
             padding: EdgeInsets.all(AppDimens.md),
             children: [
+              if (!structure) ...[
+                PlanManagedBanner(permissions: editor.permissions),
+                SizedBox(height: AppDimens.sm2),
+              ],
               PlanSubtitle(l10n.planAutosave),
               SizedBox(height: AppDimens.xs),
-              Text(
-                l10n.planHint,
-                style: AppTextStyles.caption.copyWith(
-                  color: palette.textSecondary,
+              if (structure)
+                Text(
+                  l10n.planHint,
+                  style: AppTextStyles.caption.copyWith(
+                    color: palette.textSecondary,
+                  ),
                 ),
-              ),
               SizedBox(height: AppDimens.sm2),
               PlanReorderableCard(
                 itemCount: days.length,
@@ -201,28 +216,32 @@ class _Days extends StatelessWidget {
                         : day.id == editor.nextDayId
                         ? AppBadge(label: l10n.planNext, tone: AppTone.keep)
                         : null,
+                    locked: !structure,
                     onTap: () => onOpenDay(day.id),
-                    onMore: () => unawaited(_more(context, i)),
+                    onMore: structure
+                        ? () => unawaited(_more(context, i))
+                        : null,
                   );
                 },
               ),
             ],
           ),
         ),
-        Padding(
-          padding: EdgeInsetsDirectional.fromSTEB(
-            AppDimens.md,
-            AppDimens.sm,
-            AppDimens.md,
-            AppDimens.md,
+        if (structure)
+          Padding(
+            padding: EdgeInsetsDirectional.fromSTEB(
+              AppDimens.md,
+              AppDimens.sm,
+              AppDimens.md,
+              AppDimens.md,
+            ),
+            child: AppSecondaryButton(
+              key: const Key('plan_add_day'),
+              label: l10n.planAddDay,
+              icon: Icons.add,
+              onPressed: days.length >= PlanLimits.maxDays ? null : onAddDay,
+            ),
           ),
-          child: AppSecondaryButton(
-            key: const Key('plan_add_day'),
-            label: l10n.planAddDay,
-            icon: Icons.add,
-            onPressed: days.length >= PlanLimits.maxDays ? null : onAddDay,
-          ),
-        ),
       ],
     );
   }

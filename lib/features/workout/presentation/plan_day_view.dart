@@ -8,6 +8,7 @@ import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
+import 'package:gym_tracker/features/gym/domain/entities/gym_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/plan_rules.dart';
 import 'package:gym_tracker/features/workout/presentation/plan_editor_controller.dart';
@@ -57,10 +58,14 @@ class PlanDayView extends StatelessWidget {
     final editor = state.value;
     final day = editor?.plan.dayById(dayId);
     final locked = day != null && editor?.lockedDayId == dayId;
+    final permissions = editor?.permissions ?? PlanPermissions.solo;
     return AppScaffold(
       title: day?.name.of(lang) ?? l10n.planTitle,
       actions: [
-        if (day != null && !locked && editor?.saveFailure == null)
+        if (day != null &&
+            !locked &&
+            permissions.editStructure &&
+            editor?.saveFailure == null)
           AppIconButton(
             key: const Key('plan_rename_day'),
             tooltip: l10n.planRenameDay,
@@ -96,22 +101,24 @@ class PlanDayView extends StatelessWidget {
               onPressed: onBackToPlan,
             ),
           ),
-          WorkoutDay(exercises: []) when !locked => EmptyView(
-            icon: Icons.format_list_bulleted,
-            message: l10n.planDayEmptyTitle,
-            detail: l10n.planDayEmptyBody,
-            action: AppPrimaryButton(
-              key: const Key('plan_add_exercise'),
-              label: l10n.planAddExercise,
-              icon: Icons.add,
-              onPressed: () => _addExercise(context),
+          WorkoutDay(exercises: []) when !locked && permissions.editStructure =>
+            EmptyView(
+              icon: Icons.format_list_bulleted,
+              message: l10n.planDayEmptyTitle,
+              detail: l10n.planDayEmptyBody,
+              action: AppPrimaryButton(
+                key: const Key('plan_add_exercise'),
+                label: l10n.planAddExercise,
+                icon: Icons.add,
+                onPressed: () => _addExercise(context),
+              ),
             ),
-          ),
           _ => _Exercises(
             day: day,
             dayIndex: value.plan.indexOfDay(dayId),
             totalDays: value.plan.days.length,
             locked: locked,
+            permissions: permissions,
             view: this,
             onAdd: () => _addExercise(context),
           ),
@@ -157,6 +164,7 @@ class _Exercises extends StatelessWidget {
     required this.dayIndex,
     required this.totalDays,
     required this.locked,
+    required this.permissions,
     required this.view,
     required this.onAdd,
   });
@@ -165,8 +173,13 @@ class _Exercises extends StatelessWidget {
   final int dayIndex;
   final int totalDays;
   final bool locked;
+  final PlanPermissions permissions;
   final PlanDayView view;
   final VoidCallback onAdd;
+
+  /// Days and exercises may be changed (the gym lets this member, and no
+  /// workout is in progress on this day).
+  bool get restructure => !locked && permissions.editStructure;
 
   /// "A", "B", … inside a superset group, null outside one.
   List<String?> _markers() {
@@ -260,9 +273,9 @@ class _Exercises extends StatelessWidget {
           name: e.name,
           marker: markers[i],
           detail: planExerciseDetail(l10n, e),
-          locked: locked,
+          locked: !restructure,
           onTap: () => view.onOpenExercise(e.id),
-          onMore: locked ? null : () => unawaited(_more(context, i)),
+          onMore: restructure ? () => unawaited(_more(context, i)) : null,
         ),
         if (e.supersetWithNext && i < day.exercises.length - 1)
           SupersetRail(
@@ -347,6 +360,20 @@ class _Exercises extends StatelessWidget {
                     color: palette.textSecondary,
                   ),
                 ),
+              ] else if (!restructure) ...[
+                PlanManagedBanner(permissions: permissions),
+                SizedBox(height: AppDimens.sm2),
+                AppCard(
+                  child: Column(
+                    children: [
+                      for (final (i, _) in day.exercises.indexed) ...[
+                        if (i > 0)
+                          Divider(height: 1, color: palette.fillSubtle),
+                        _row(context, i, markers),
+                      ],
+                    ],
+                  ),
+                ),
               ] else ...[
                 PlanReorderableCard(
                   itemCount: day.exercises.length,
@@ -365,7 +392,7 @@ class _Exercises extends StatelessWidget {
             ],
           ),
         ),
-        if (!locked)
+        if (restructure)
           Padding(
             padding: EdgeInsetsDirectional.fromSTEB(
               AppDimens.md,

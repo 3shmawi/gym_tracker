@@ -8,6 +8,7 @@ import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
+import 'package:gym_tracker/features/gym/domain/entities/gym_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/plan_rules.dart';
 import 'package:gym_tracker/features/workout/presentation/plan_editor_controller.dart';
@@ -96,6 +97,7 @@ class PlanExerciseView extends StatelessWidget {
       day: day,
       index: index,
       locked: editor.lockedDayId == dayId,
+      permissions: editor.permissions,
     );
   }
 }
@@ -106,12 +108,14 @@ class _Editor extends StatelessWidget {
     required this.day,
     required this.index,
     required this.locked,
+    required this.permissions,
   });
 
   final PlanExerciseView view;
   final WorkoutDay day;
   final int index;
   final bool locked;
+  final PlanPermissions permissions;
 
   Exercise get e => day.exercises[index];
 
@@ -133,7 +137,9 @@ class _Editor extends StatelessWidget {
     final palette = context.palette;
     final lang = Localizations.localeOf(context).languageCode;
     final hasNext = index < day.exercises.length - 1;
-    final edit = !locked;
+    // Targets and structure are separate rights in a gym.
+    final edit = !locked && permissions.editTargets;
+    final structure = !locked && permissions.editStructure;
     final steps = {...PlanLimits.weightSteps, e.weightStep}.toList()..sort();
     const restStep = PlanLimits.restStep;
 
@@ -166,6 +172,9 @@ class _Editor extends StatelessWidget {
             ),
           ),
           SizedBox(height: AppDimens.sm),
+        ] else if (!permissions.editStructure) ...[
+          PlanManagedBanner(permissions: permissions),
+          SizedBox(height: AppDimens.sm),
         ],
         AppCard(
           child: Row(
@@ -193,7 +202,7 @@ class _Editor extends StatelessWidget {
                   ],
                 ),
               ),
-              if (edit)
+              if (structure)
                 AppIconButton(
                   key: const Key('plan_rename_exercise'),
                   tooltip: l10n.planRename,
@@ -315,10 +324,10 @@ class _Editor extends StatelessWidget {
                   )
                 : l10n.planSupersetLast,
             value: e.supersetWithNext,
-            onChanged: edit && hasNext ? view.onSetSuperset : null,
+            onChanged: structure && hasNext ? view.onSetSuperset : null,
           ),
         ),
-        if (edit) ...[
+        if (structure) ...[
           SizedBox(height: AppDimens.sm),
           Center(
             child: TextButton.icon(

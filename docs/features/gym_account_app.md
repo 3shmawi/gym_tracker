@@ -105,11 +105,10 @@ without a join goes home. The router itself never joins, signs out or deletes
 
 ### Workspaces today
 The active workspace is stored on the phone (`gym:<membership id>` or `solo`),
-and refreshed from the server when the app opens while signed in. **Today still
-shows the on-device plan for every workspace**: a gym's plan (`save_plan`
-sync, the "captain updated your plan" toast) and the `gym_id` of new workouts
-are delivery step 4. Opening an ended gym's readable history is not built
-either.
+and refreshed from the server when the app opens while signed in. In a gym
+workspace the plan comes from the gym, the editor follows the membership's
+rights, and finished workouts are uploaded (PR D: see "In a gym" in
+`workout.md`). Opening an ended gym's readable history is not built.
 
 ## Solo data import (PR C)
 `ImportSoloData` (`domain/usecases/import_solo_data.dart`) → RPC
@@ -228,7 +227,7 @@ the Keychain and `app_settings` need a real phone.
 - Automatic deletion of the local copy after a confirmed import (decision §10).
 - An automatic resume at app start for an interrupted copy (today: *Retry* or
   the *My account* row).
-- Captain tools, plan sync, the "captain updated your plan" toast: step 4.
+- Captain tools: step 4 (plan sync, rights and the toast are done: `workout.md`).
 - Signing back in with the email added in Profile (an email one-time-code
   screen); today the email makes the account permanent and recoverable on the
   server, but the app has no sign-in screen for it.

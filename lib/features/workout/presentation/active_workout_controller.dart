@@ -200,6 +200,7 @@ class ActiveWorkoutController extends AsyncNotifier<ActiveWorkout?> {
     );
     state = const AsyncData(null);
     ref.invalidate(nextWorkoutControllerProvider);
+    unawaited(ref.read(workoutFinishedHookProvider)());
     return true;
   }
 

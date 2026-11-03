@@ -61,6 +61,42 @@ Finder inRow(String rowKey, String label) => find.descendant(
 
 void main() {
   group('PlanExerciseView', () {
+    testWidgets('targets only: steppers work, rename/delete/superset do not', (
+      tester,
+    ) async {
+      final calls = ExerciseCalls();
+      await tester.pumpApp(
+        view(
+          const AsyncData(targetsOnlyState),
+          dayId: 'day-1',
+          exerciseId: 'flat_db_press',
+          calls: calls,
+        ),
+      );
+      expect(find.byKey(const Key('plan_rename_exercise')), findsNothing);
+      expect(find.byKey(const Key('plan_delete_exercise')), findsNothing);
+      await tester.tap(find.bySemanticsLabel(l10nEn.planSetsMore));
+      expect(calls.targets, hasLength(1));
+    });
+
+    testWidgets('read-only: every stepper is off', (tester) async {
+      final calls = ExerciseCalls();
+      await tester.pumpApp(
+        view(
+          const AsyncData(captainOnlyState),
+          dayId: 'day-1',
+          exerciseId: 'flat_db_press',
+          calls: calls,
+        ),
+      );
+      await tester.tap(
+        find.bySemanticsLabel(l10nEn.planSetsMore),
+        warnIfMissed: false,
+      );
+      expect(calls.targets, isEmpty);
+      expect(find.byKey(const Key('plan_managed_banner')), findsOneWidget);
+    });
+
     testWidgets('names and every target', (tester) async {
       await tester.pumpApp(view(const AsyncData(planState)));
       expect(find.text('Exercise'), findsOneWidget);
@@ -270,6 +306,16 @@ void main() {
     'plan_exercise': () => view(const AsyncData(planState)),
     'plan_exercise_superset': () =>
         view(const AsyncData(planState), exerciseId: 'alternating_db_curl'),
+    'plan_exercise_captain_only': () => view(
+      const AsyncData(captainOnlyState),
+      dayId: 'day-1',
+      exerciseId: 'flat_db_press',
+    ),
+    'plan_exercise_targets_only': () => view(
+      const AsyncData(targetsOnlyState),
+      dayId: 'day-1',
+      exerciseId: 'flat_db_press',
+    ),
     'plan_exercise_locked': () => view(
       const AsyncData(lockedState),
       dayId: 'day-1',

@@ -5,16 +5,22 @@ import 'package:gym_tracker/core/notifications/local_notifications.dart';
 import 'package:gym_tracker/features/gym/data/datasources/secret_store.dart';
 import 'package:gym_tracker/features/gym/data/datasources/secure_install_id_store.dart';
 import 'package:gym_tracker/features/gym/data/repositories/in_memory_gym_local_repository.dart';
+import 'package:gym_tracker/features/gym/data/repositories/in_memory_plan_sync.dart';
 import 'package:gym_tracker/features/gym/data/repositories/in_memory_solo_import.dart';
 import 'package:gym_tracker/features/gym/data/repositories/prefs_gym_local_repository.dart';
+import 'package:gym_tracker/features/gym/data/repositories/prefs_gym_plan_store.dart';
 import 'package:gym_tracker/features/gym/data/repositories/prefs_solo_import_store.dart';
 import 'package:gym_tracker/features/gym/data/repositories/supabase_account_repository.dart';
+import 'package:gym_tracker/features/gym/data/repositories/supabase_gym_plan_repository.dart';
 import 'package:gym_tracker/features/gym/data/repositories/supabase_gym_repository.dart';
+import 'package:gym_tracker/features/gym/data/repositories/supabase_session_uploader.dart';
 import 'package:gym_tracker/features/gym/data/repositories/supabase_solo_import_repository.dart';
 import 'package:gym_tracker/features/gym/data/repositories/unconfigured_gym_repositories.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/account_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/gym_local_repository.dart';
+import 'package:gym_tracker/features/gym/domain/repositories/gym_plan_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/gym_repository.dart';
+import 'package:gym_tracker/features/gym/domain/repositories/session_outbox.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/solo_import_repository.dart';
 import 'package:gym_tracker/features/settings/data/repositories/shared_prefs_settings_repository.dart';
 import 'package:gym_tracker/features/settings/domain/repositories/settings_repository.dart';
@@ -41,6 +47,14 @@ abstract final class Dependencies {
       const UnconfiguredSoloImportRepository();
   static SoloImportStore soloImportStore = InMemorySoloImportStore();
 
+  /// The gym's plan (server + the phone's copy) and the queue of finished
+  /// workouts waiting to be uploaded.
+  static GymPlanRepository gymPlanRepository =
+      const UnconfiguredGymPlanRepository();
+  static GymPlanStore gymPlanStore = InMemoryGymPlanStore();
+  static SessionOutbox sessionOutbox = InMemorySessionOutbox();
+  static SessionUploader sessionUploader = const UnconfiguredSessionUploader();
+
   /// Silent until [init] runs (and in widget tests).
   static RestAlarm restAlarm = const SilentRestAlarm();
 
@@ -52,6 +66,8 @@ abstract final class Dependencies {
     restAlarm = NotificationRestAlarm(LocalNotifications(), prefs);
     gymLocalRepository = PrefsGymLocalRepository(prefs);
     soloImportStore = PrefsSoloImportStore(prefs);
+    gymPlanStore = PrefsGymPlanStore(prefs);
+    sessionOutbox = PrefsSessionOutbox(prefs);
     if (Backend.isConfigured && Backend.isReady) {
       gymRepository = SupabaseGymRepository(
         Backend.client,
@@ -62,10 +78,14 @@ abstract final class Dependencies {
       );
       accountRepository = SupabaseAccountRepository(Backend.client);
       soloImportRepository = SupabaseSoloImportRepository(Backend.client);
+      gymPlanRepository = SupabaseGymPlanRepository(Backend.client);
+      sessionUploader = SupabaseSessionUploader(Backend.client);
     } else {
       gymRepository = const UnconfiguredGymRepository();
       accountRepository = const UnconfiguredAccountRepository();
       soloImportRepository = const UnconfiguredSoloImportRepository();
+      gymPlanRepository = const UnconfiguredGymPlanRepository();
+      sessionUploader = const UnconfiguredSessionUploader();
     }
   }
 }

@@ -834,5 +834,12 @@
   "soloFailed": "Copying stopped. Nothing was lost, and you can try again.",
   "soloLater": "Later",
   "soloProfileRow": "Add my solo history to my account",
-  "soloProfileDone": "Your solo history is on your account"
+  "soloProfileDone": "Your solo history is on your account",
+  "errorPlanChanged": "Your captain changed this plan while you were editing. Your change was not saved; the new plan is shown.",
+  "planUpdatedByCaptain": "Your captain updated your plan",
+  "planManagedTitle": "Your captain manages this plan",
+  "planManagedBody": "You can follow it, but not change it.",
+  "planTargetsOnlyBody": "You can change sets, reps, rest and weight steps. Days and exercises are managed by your captain.",
+  "planWaitingTitle": "Your captain hasn't made your plan yet",
+  "planWaitingBody": "It will show up here as soon as they do."
 }
