@@ -11,8 +11,8 @@ import 'package:gym_tracker/core/router/link_guard.dart';
 import 'package:gym_tracker/core/router/router_refresh.dart';
 import 'package:gym_tracker/core/splash/animated_splash.dart';
 import 'package:gym_tracker/core/theme/app_fonts.dart';
-import 'package:gym_tracker/features/library/data/exercise_images.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
+import 'package:gym_tracker/features/library/data/exercise_images.dart';
 
 /// Starts monitoring first, then shows the animated splash at once while
 /// every core service initialises, then the app. Anything that fails during

@@ -42,7 +42,8 @@ abstract final class ExerciseImages {
   static String large(String exerciseId) => '$directory/$exerciseId.webp';
 
   /// The 160 px picture (list rows).
-  static String thumb(String exerciseId) => '$directory/${exerciseId}_thumb.webp';
+  static String thumb(String exerciseId) =>
+      '$directory/${exerciseId}_thumb.webp';
 
   /// Shows the pictures' attributions on the app's licenses page.
   static void registerLicenses() {
