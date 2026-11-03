@@ -42,8 +42,9 @@ A manual run (Actions → Release → Run workflow) can force patch/minor/major.
    that one file; it reaches other projects through `kit_sync.sh`.
 2. **Android** — signed release AAB (prod) → Play track `PLAY_TRACK`
    (default `internal`).
-3. **iOS** — signing files fetched from App Store Connect with the API key →
-   IPA → App Store Connect / TestFlight.
+3. **iOS** — signing files fetched from App Store Connect with the API key
+   (`scripts/fetch_signing_files.sh`: 3 attempts of at most 3 minutes each,
+   exact bundle id) → IPA → App Store Connect / TestFlight.
 4. **GitHub release** — tag `vX.Y.Z` with generated notes.
 
 ## After the stores approve
@@ -260,6 +261,35 @@ symbols** warning with Sentry's error, and the tag and GitHub release still
 happen. Commit linking is off (`commits: false` under `sentry:` in
 `pubspec.yaml`); turn it on only after connecting the Sentry GitHub
 integration.
+
+- **Release name.** The app reports `<package or bundle id>@<version>+<build>`
+  (sentry_flutter's `LoadReleaseIntegration`), e.g. `com.mohager.azm@0.16.0+33`.
+  The upload uses the same name: `release.yml` passes `SENTRY_APP_ID` with
+  `VERSION` and `BUILD`, and the script sets `SENTRY_RELEASE` / `SENTRY_DIST`.
+  Before 2026-11-03 the plugin fell back to the pubspec (`gym_tracker@0.1.0+1`),
+  a release that never received an event (Sentry's Releases page and release
+  health). Debug files are found by their debug id, so symbolication itself was
+  likely not affected.
+- **Readable issue titles.** Obfuscated builds also write
+  `build/app/obfuscation.map.json` (`--extra-gen-snapshot-options=--save-obfuscation-map`).
+  The plugin uploads it (`dart_symbol_map_path`, plugin ≥ 3.2.0), so exception
+  class names in issue titles are readable. The map is **not** kept in the
+  `symbols-*` artifact: it undoes the obfuscation.
+- Docs read 2026-11-03: Sentry "Dart Plugin" (Flutter debug symbols) and
+  "Releases & Health"; Flutter "Obfuscate Dart code"; the plugin's source
+  (3.4.0) and sentry_flutter 10.2.0 (`load_release_integration.dart`).
+
+## iOS signing hangs
+Release run 33 (2026-11-03) found the profiles and then waited on App Store
+Connect with no output until the 60-minute job timeout; the run before took
+6 seconds with the same code. `scripts/fetch_signing_files.sh` now stops an
+attempt after `SIGNING_TIMEOUT_SECONDS` (180) and the whole process group with
+it, retries up to `SIGNING_TRIES` (3), and the step has `timeout-minutes: 12`.
+It also passes `--strict-match-identifier`: without it `com.mohager.azm` also
+matched `com.mohager.azm.stg` and fetched the staging profile too
+(codemagic-cli-tools 0.70.2, latest on PyPI 2026-10-29, `fetch-signing-files`
+docs read 2026-11-03). If all attempts fail, re-run the job; check App Store
+Connect's status page and the API key's role.
 
 ## Pinned tools
 Actions are pinned to commits and kept current by Dependabot. These tools
