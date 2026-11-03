@@ -10,6 +10,7 @@ built to match. Code never invents its own look.
 | Plan editor: days, a day's exercises, targets, add/rename and delete sheets, reorder, empty/locked/error states, entry points (boards 5.0–5.9) | https://claude.ai/artifact/KSeCy8hrBAPfgERNc32Am1 (approved Nov 2026) |
 | Gym accounts: onboarding, scanner and its errors, enter code, Joined, solo-data question, gym switcher, profile (sign out, delete account), plan editor with permissions off, "captain updated your plan" toast, web join page, captain mobile companion, **web dashboard** for owners/captains (boards 1–12; decision: `docs/decisions/gym_accounts.md`) | https://claude.ai/artifact/XjCnp9ZLUVZ57o7pJ7odBu (approved Nov 2026) |
 | Exercise library (app: add-exercise sheet, picker, exercise screen, Arabic/no results) and plan sharing in the captain's web dashboard (copy, template, one change for one member) (approved Nov 2026) | https://claude.ai/artifact/26EDAr572B4Qr8eBLB4D75 |
+| Exercise media: gym-chosen pictures carousel (auto-advance rules, fallbacks, offline), how-to video card states, full player sheet (16:9 and Shorts), floating mini player over the workout and the rest timer (snap corners, no-go zones), library thumbnails, small phone / tablet (boards 1.1–5.3). Decisions: video thumbnail and title load when the screen opens; thumbnails go in the same temporary image cache as the pictures. **Waiting for approval** | https://claude.ai/artifact/VDxBpGdwNidSZgrGjfARJo |
 | App icon (logo directions, 1b chosen) | https://claude.ai/artifact/26UTiBL3xuXEB8pKjCjn3L |
 
 ## Tokens → code
