@@ -4,16 +4,22 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:gym_tracker/core/analytics/analytics.dart';
+import 'package:gym_tracker/core/config/env.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
+import 'package:gym_tracker/core/media/cloudinary_url.dart';
+import 'package:gym_tracker/core/media/media_cache.dart';
 import 'package:gym_tracker/core/network/connectivity.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/core/router/link_guard.dart';
 import 'package:gym_tracker/core/ui/app_toast.dart';
 import 'package:gym_tracker/features/gym/data/repositories/gym_workout_repository.dart';
+import 'package:gym_tracker/features/gym/domain/entities/gym_media.dart';
 import 'package:gym_tracker/features/gym/domain/entities/gym_plan.dart';
 import 'package:gym_tracker/features/gym/domain/entities/membership.dart';
+import 'package:gym_tracker/features/gym/domain/repositories/gym_media_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/gym_plan_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/session_outbox.dart';
+import 'package:gym_tracker/features/gym/domain/usecases/sync_gym_media.dart';
 import 'package:gym_tracker/features/gym/domain/usecases/sync_gym_plan.dart';
 import 'package:gym_tracker/features/gym/domain/usecases/upload_sessions.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
@@ -36,6 +42,52 @@ final sessionOutboxProvider = Provider<SessionOutbox>(
 final sessionUploaderProvider = Provider<SessionUploader>(
   (ref) => Dependencies.sessionUploader,
 );
+
+final gymMediaRepositoryProvider = Provider<GymMediaRepository>(
+  (ref) => Dependencies.gymMediaRepository,
+);
+final gymMediaStoreProvider = Provider<GymMediaStore>(
+  (ref) => Dependencies.gymMediaStore,
+);
+
+/// Whether gym-chosen pictures can show at all: they need the picture
+/// library's cloud name (`CLOUDINARY_CLOUD_NAME`). Off: bundled pictures only.
+final gymPicturesEnabledProvider = Provider<bool>(
+  (ref) => Env.cloudinaryCloudName.isNotEmpty,
+);
+
+/// Turns a picture library public id into an image, through the phone's
+/// picture cache; null when the id or the cloud name is refused (the screen
+/// then shows the bundled drawing). Override in tests with in-memory images.
+typedef GymPictureImage = ImageProvider? Function(
+  String publicId,
+  PictureSize size,
+);
+
+final gymPictureImageProvider = Provider<GymPictureImage>(
+  (ref) => (publicId, size) {
+    final url = CloudinaryUrl.picture(
+      cloudName: Env.cloudinaryCloudName,
+      publicId: publicId,
+      size: size,
+    );
+    return url == null ? null : CachedMediaImage(url);
+  },
+);
+
+/// What the active gym chose to show on exercise screens, from the phone's
+/// copy (works offline); [GymSync.syncMedia] refreshes it. Solo, or with the
+/// feature off: [GymMedia.empty]. Never an error.
+final activeGymMediaProvider = FutureProvider<GymMedia>((ref) async {
+  final membership = ref.watch(activeMembershipProvider);
+  if (membership == null || !ref.watch(gymPicturesEnabledProvider)) {
+    return GymMedia.empty;
+  }
+  return await SyncGymMedia(
+    ref.watch(gymMediaRepositoryProvider),
+    ref.watch(gymMediaStoreProvider),
+  ).read(membership.gym.id);
+});
 
 /// The membership of the active gym workspace, or null when training solo.
 /// Only changes when the membership itself does (not on every refresh).
@@ -126,6 +178,22 @@ class GymSync {
     )(membership.id);
     if (!_ref.mounted || result is! Success<PlanSyncOutcome>) return;
     _applied(result.value);
+  }
+
+  /// Refreshes the phone's copy of the active gym's media (pictures). A
+  /// failure keeps the copy; the screens never see an error.
+  Future<void> syncMedia() async {
+    final membership = _ref.read(activeMembershipProvider);
+    if (membership == null || !_ref.read(gymPicturesEnabledProvider)) return;
+    final result = await SyncGymMedia(
+      _ref.read(gymMediaRepositoryProvider),
+      _ref.read(gymMediaStoreProvider),
+    )(membership.gym.id);
+    if (!_ref.mounted || !result.changed) return;
+    // Still the same gym: show the new choice.
+    if (_ref.read(activeMembershipProvider)?.gym.id == membership.gym.id) {
+      _ref.invalidate(activeGymMediaProvider);
+    }
   }
 
   Future<void> afterWorkout() async {
@@ -234,6 +302,7 @@ class _GymSyncHostState extends ConsumerState<GymSyncHost>
     if (!mounted) return;
     final sync = ref.read(gymSyncProvider);
     unawaited(sync.syncPlan());
+    unawaited(sync.syncMedia());
     unawaited(sync.uploadPending());
   }
 

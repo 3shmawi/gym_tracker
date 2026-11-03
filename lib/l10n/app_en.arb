@@ -961,5 +961,26 @@
       }
     }
   },
-  "exerciseNotFound": "This exercise isn't in the library."
+  "exerciseNotFound": "This exercise isn't in the library.",
+  "exercisePicturePosition": "Picture {n} of {total}: {name}",
+  "@exercisePicturePosition": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "exercisePicturesPause": "Pause motion",
+  "exercisePicturesPlay": "Play motion",
+  "exercisePicturesCredit": "Everkinetic · CC BY-SA 4.0",
+  "exercisePicturesCreditLabel": "Picture credits: Everkinetic, CC BY-SA 4.0. Opens the licenses.",
+  "exercisePicturesOfflineHint": "Your gym's pictures show when you're back online",
+  "exercisePicturesSwipeHint": "Swipe for the next picture",
+  "libraryGymPictures": "Pictures from your gym"
 }

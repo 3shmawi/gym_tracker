@@ -24,6 +24,7 @@ Widget view({
   MuscleGroup? muscle,
   Equipment? equipment,
   Set<String> added = const {},
+  Map<String, ImageProvider> covers = const {},
   Calls? calls,
 }) {
   final c = calls ?? Calls();
@@ -45,11 +46,26 @@ Widget view({
     onOpen: c.opened.add,
     onAdd: c.added.add,
     onWriteOwn: c.own.add,
+    gymCovers: covers,
   );
 }
 
+/// The gym's first pictures, in tests: bundled drawings standing in.
+const Map<String, ImageProvider> gymCovers = {
+  'flat_db_press': AssetImage('assets/exercises/incline_machine_press.webp'),
+  'incline_machine_press': AssetImage('assets/exercises/flat_db_press.webp'),
+};
+
 void main() {
   group('LibraryView', () {
+    testWidgets("a gym's cover replaces the drawing and says so", (
+      tester,
+    ) async {
+      await tester.pumpApp(view(muscle: MuscleGroup.chest, covers: gymCovers));
+      expect(find.text('Pictures from your gym'), findsNWidgets(2));
+      expect(find.byIcon(Icons.shield_outlined), findsNWidgets(2));
+    });
+
     testWidgets('rows show both names, the muscle and the equipment', (
       tester,
     ) async {
@@ -181,6 +197,8 @@ void main() {
     'library_added': () =>
         view(muscle: MuscleGroup.chest, added: {'flat_db_press', 'pec_deck'}),
     'library_cable': () => view(equipment: Equipment.cable),
+    'library_gym_covers': () =>
+        view(muscle: MuscleGroup.chest, covers: gymCovers),
     'library_no_results': () => view(query: 'bulgarian split squat'),
     'add_exercise_sheet': () => SheetHost(
       background: view(muscle: MuscleGroup.chest),

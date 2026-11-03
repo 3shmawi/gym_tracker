@@ -57,9 +57,12 @@ void main() {
       'library_opened',
       'library_exercise_viewed',
       'library_custom_chosen',
+      'exercise_pictures_viewed',
     });
     // `muscle`: chest | back | shoulders | arms | legs | core.
-    expect(properties, {'muscle'});
+    // `count`: 1 | 2-3 | 4+; `source`: gym | bundled. Never an id, a name,
+    // a picture id or a URL.
+    expect(properties, {'muscle', 'count', 'source'});
   });
 
   test('the catalog is data: no code, links or markup in its text', () {

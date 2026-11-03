@@ -379,5 +379,13 @@
   "exerciseAddTo": "أضف لـ {day}",
   "exerciseAddedTo": "موجود في {day}",
   "exerciseStartsAt": "بيبدأ بـ {sets} مجموعات · {reps} عدّة · راحة {rest} ث. تقدر تغيّرهم بعد الإضافة.",
-  "exerciseNotFound": "التمرين ده مش في المكتبة."
+  "exerciseNotFound": "التمرين ده مش في المكتبة.",
+  "exercisePicturePosition": "صورة {n} من {total}: {name}",
+  "exercisePicturesPause": "وقّف الحركة",
+  "exercisePicturesPlay": "شغّل الحركة",
+  "exercisePicturesCredit": "Everkinetic · CC BY-SA 4.0",
+  "exercisePicturesCreditLabel": "حقوق الصور: Everkinetic، رخصة CC BY-SA 4.0. بيفتح صفحة الرخص.",
+  "exercisePicturesOfflineHint": "صور الجيم هتظهر لما ترجع أونلاين",
+  "exercisePicturesSwipeHint": "اسحب للصورة اللي بعدها",
+  "libraryGymPictures": "صور من الجيم"
 }

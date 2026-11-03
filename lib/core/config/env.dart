@@ -17,5 +17,12 @@ abstract final class Env {
   /// asked for (the project must then have captcha protection off).
   static const turnstileSiteKey = String.fromEnvironment('TURNSTILE_SITE_KEY');
   static const sentryDsn = String.fromEnvironment('SENTRY_DSN');
+
+  /// Cloudinary **cloud name** of the exercise picture library (public: it is
+  /// in every picture URL). Empty: gym-chosen pictures are off and the app
+  /// shows only its bundled pictures.
+  static const cloudinaryCloudName = String.fromEnvironment(
+    'CLOUDINARY_CLOUD_NAME',
+  );
   static const clarityProjectId = String.fromEnvironment('CLARITY_PROJECT_ID');
 }
