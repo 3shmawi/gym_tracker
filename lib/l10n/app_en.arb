@@ -982,5 +982,27 @@
   "exercisePicturesCreditLabel": "Picture credits: Everkinetic, CC BY-SA 4.0. Opens the licenses.",
   "exercisePicturesOfflineHint": "Your gym's pictures show when you're back online",
   "exercisePicturesSwipeHint": "Swipe for the next picture",
-  "libraryGymPictures": "Pictures from your gym"
+  "libraryGymPictures": "Pictures from your gym",
+  "exerciseWatchHow": "Watch how",
+  "videoPlay": "Play video: {title}",
+  "@videoPlay": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "videoPlayNoTitle": "Play video",
+  "videoOpenInYouTube": "Open in YouTube",
+  "videoOpenInYouTubeLabel": "Open the video in YouTube",
+  "videoEmbedDisabled": "The video's owner doesn't allow it to play here",
+  "videoOnlyOnYouTube": "This video can only be watched on YouTube",
+  "videoUnavailable": "Video unavailable",
+  "videoUnavailableDetail": "It was removed from YouTube or made private.",
+  "videoNeedsInternet": "Needs internet",
+  "videoNeedsInternetUnseen": "There's a video for this exercise. Needs internet",
+  "videoSheetTitle": "How-to video",
+  "videoClose": "Close video",
+  "videoYouTube": "YouTube",
+  "videoYouTubeShorts": "YouTube Shorts"
 }
