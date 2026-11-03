@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
+import 'package:gym_tracker/core/router/link_guard.dart';
 import 'package:gym_tracker/features/workout/domain/services/rest_alarm.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_view.dart';
@@ -20,7 +21,7 @@ class ActiveWorkoutPage extends ConsumerStatefulWidget {
 }
 
 class _ActiveWorkoutPageState extends ConsumerState<ActiveWorkoutPage>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, IgnoresLinks {
   late final RestAlarmSync _alarm;
 
   /// Read in build, used when the app leaves the front.

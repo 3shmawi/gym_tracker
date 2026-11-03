@@ -49,6 +49,17 @@ holds a one-time code, so it only **displays** it:
   link as untrusted input. Routes only open screens; nothing in a link's
   path or query changes data (`deep_link_test.dart`, incl. `/join/<code>`,
   where the code only fills the enter-code screen and never joins).
+- **Links that cannot be decoded are dropped** (`lib/core/router/link_guard.dart`,
+  docs read 2026-11-03 in go_router 18.1.2 and Flutter 3.47.8 sources). A link
+  with broken percent-encoding (`?day=%FF`, `/plan/%FF`) makes go_router, and
+  Flutter's default `WidgetsBindingObserver.didPushRouteInformation`, throw a
+  `FormatException`: no route can catch it. `LinkGuard.install()` (first thing
+  in `bootstrap`, before any observer) adds an observer that sees every link
+  first and consumes an unsafe one, so the app stays where it is and nothing
+  else sees it; the link that starts the app goes through
+  `LinkGuard.initialLocation` (unsafe: home). Every other
+  `WidgetsBindingObserver` in `lib/` mixes in `IgnoresLinks` (a test fails
+  otherwise). Tests: `test/core/router/link_guard_test.dart`.
 - https links are verified by Apple/Google against
   `https://azmm.pages.dev/.well-known/` (HTTPS, no redirect, JSON) and only
   `/join/*` is claimed. Whoever can change `website/` on `main` controls

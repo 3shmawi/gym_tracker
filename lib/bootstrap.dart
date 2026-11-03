@@ -7,6 +7,7 @@ import 'package:gym_tracker/core/di/dependencies.dart';
 import 'package:gym_tracker/core/monitoring/monitoring.dart';
 import 'package:gym_tracker/core/router/app_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
+import 'package:gym_tracker/core/router/link_guard.dart';
 import 'package:gym_tracker/core/router/router_refresh.dart';
 import 'package:gym_tracker/core/splash/animated_splash.dart';
 import 'package:gym_tracker/core/theme/app_fonts.dart';
@@ -19,6 +20,8 @@ import 'package:gym_tracker/core/ui/app_ui.dart';
 /// Completes when start-up work is done (the splash may still be playing).
 Future<void> bootstrap(Widget Function() builder) async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Before the router exists: unsafe links are dropped first.
+  LinkGuard.install();
   AppFonts.registerLicenses();
   Future<void>? ready;
   await Monitoring.run(() async {
