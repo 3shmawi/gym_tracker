@@ -19,7 +19,11 @@ abstract final class MediaCache {
   static const cacheKey = 'azm_media';
   static const maxFiles = 400;
   static const int maxBytes = 2 * 1024 * 1024;
-  static const Set<String> allowedHosts = {'res.cloudinary.com'};
+  static const Set<String> allowedHosts = {
+    'res.cloudinary.com',
+    // YouTube video thumbnails (the temporary cache the owner chose).
+    'i.ytimg.com',
+  };
 
   static final CacheManager _manager = CacheManager(
     Config(
