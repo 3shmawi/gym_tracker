@@ -142,6 +142,9 @@ Before the flag goes on in production:
    - **Order matters:** with captcha protection on in Supabase, a build without
      `TURNSTILE_SITE_KEY` cannot sign in anonymously (joining fails). With the
      key set and protection off, tokens are simply ignored.
+   - Invisible mode requires the privacy policy to reference Cloudflare's
+     Turnstile Privacy Addendum: done in `website/privacy.html` (EN + AR),
+     pinned by `store_pages_test.dart`. Keep it if you change the page.
    - The widget should be an *invisible* (or non-interactive) type: it runs
      without UI, so a Managed widget that decides to show a challenge cannot be
      completed and the join fails after 20 seconds. Check on the first staging

@@ -48,6 +48,8 @@ void main() {
         'guardian',
         'Cloudflare',
         'Turnstile',
+        'Cloudflare Turnstile Privacy Addendum',
+        'https://www.cloudflare.com/en-gb/turnstile-privacy-policy/',
         'Profile → Delete account',
         'Supabase',
         'PostHog',
@@ -76,6 +78,8 @@ void main() {
         'ولي الأمر',
         'Cloudflare',
         'Turnstile',
+        'ملحق خصوصية Cloudflare Turnstile',
+        'https://www.cloudflare.com/en-gb/turnstile-privacy-policy/',
         'حذف الحساب',
       ]) {
         expect(ar, contains(phrase), reason: phrase);
@@ -150,6 +154,8 @@ void main() {
         hosts.difference({
           'https://fonts.googleapis.com',
           'https://fonts.gstatic.com',
+          // A plain link to Cloudflare's Turnstile Privacy Addendum.
+          'https://www.cloudflare.com',
         }),
         isEmpty,
         reason: name,
