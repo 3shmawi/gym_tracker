@@ -167,6 +167,12 @@ Before the flag goes on in production:
    not "collected" (served in real time, not kept by us); Google: "ephemeral
    processing" (in the form, not shown on the listing). Owner's call whether
    to declare it anyway; the privacy policy names Cloudinary.
+   How-to videos (2026-11-03): the card loads the title (oEmbed) and the
+   thumbnail from YouTube when an exercise opens, so Google sees the device's
+   IP address; playing happens in YouTube's own player. We collect nothing
+   from it and send nothing personal. Same reading as above for both forms
+   (served in real time, not kept by us). The privacy policy and the terms
+   name YouTube with the links YouTube's Developer Policies require.
 4. **App size.** `mobile_scanner` bundles the ML Kit barcode model on Android
    (about +3–10 MB); the unbundled variant is a one-line
    `android/gradle.properties` change (`dev.steenbakker.mobile_scanner.useUnbundled=true`)
