@@ -6,7 +6,7 @@ import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
 import 'package:gym_tracker/features/library/domain/entities/library_exercise.dart';
 import 'package:gym_tracker/features/library/presentation/library_labels.dart';
-import 'package:gym_tracker/features/library/presentation/widgets/exercise_illustration.dart';
+import 'package:gym_tracker/features/library/presentation/widgets/exercise_pictures_view.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 
 /// One exercise of the library: the picture, names, muscle, equipment and the
@@ -20,6 +20,10 @@ class ExerciseGuideView extends StatelessWidget {
     this.dayName,
     this.alreadyInDay = false,
     this.onAdd,
+    this.gymPictures = const [],
+    this.movePair = false,
+    this.offline = false,
+    this.onOpenCredits,
     super.key,
   });
 
@@ -33,6 +37,17 @@ class ExerciseGuideView extends StatelessWidget {
 
   /// Null hides the add button (reading only, or the member may not add).
   final VoidCallback? onAdd;
+
+  /// The pictures the member's gym chose, cover first; empty: the bundled
+  /// drawing (or the placeholder). See [ExercisePicturesView].
+  final List<ImageProvider> gymPictures;
+
+  /// The gym's two pictures are the start and end of one move.
+  final bool movePair;
+  final bool offline;
+
+  /// Opens the licenses page from the picture credit.
+  final VoidCallback? onOpenCredits;
 
   @override
   Widget build(BuildContext context) {
@@ -67,8 +82,14 @@ class ExerciseGuideView extends StatelessWidget {
                 horizontal: AppDimens.md,
               ),
               children: [
-                ExerciseIllustration(exercise: e, large: true),
-                SizedBox(height: AppDimens.md),
+                ExercisePicturesView(
+                  exercise: e,
+                  gymPictures: gymPictures,
+                  movePair: movePair,
+                  offline: offline,
+                  onOpenCredits: onOpenCredits,
+                ),
+                SizedBox(height: AppDimens.sm),
                 Semantics(
                   header: true,
                   child: Text(

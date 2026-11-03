@@ -10,7 +10,10 @@ import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_theme.dart';
 import 'package:gym_tracker/core/ui/app_toast.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
+import 'package:gym_tracker/features/gym/domain/entities/gym_media.dart';
 import 'package:gym_tracker/features/gym/domain/entities/gym_plan.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
+import 'package:gym_tracker/features/library/presentation/library_providers.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
@@ -335,4 +338,77 @@ void main() {
       expect(find.byKey(const Key('plan_exercise_guide')), findsNothing);
     },
   );
+
+  group("the gym's pictures (real router and providers)", () {
+    final media = GymMedia.fromPictures(const [
+      GymExercisePicture(
+        exerciseId: 'flat_db_press',
+        publicId: 'exercises/ek-0055-tension',
+        position: 1,
+      ),
+      GymExercisePicture(
+        exerciseId: 'flat_db_press',
+        publicId: 'exercises/ek-0055-relaxation',
+        position: 2,
+      ),
+    ]);
+    // Bundled drawings stand in for Cloudinary; a refused id is null.
+    ImageProvider? fakeImage(String publicId, _) => publicId.endsWith('tension')
+        ? const AssetImage('assets/exercises/flat_db_press.webp')
+        : const AssetImage('assets/exercises/incline_machine_press.webp');
+
+    List<Override> withMedia(GymMedia m) => [
+      activeGymMediaProvider.overrideWith((ref) async => m),
+      gymPictureImageProvider.overrideWithValue(fakeImage),
+      deviceOnlineProvider.overrideWith((ref) => Stream.value(true)),
+    ];
+
+    testWidgets('the exercise screen shows the two frames and moves', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        at: AppRoutes.libraryExercise('flat_db_press'),
+        overrides: withMedia(media),
+      );
+      expect(find.text('\u20662 / 2\u2069'), findsOneWidget);
+      expect(find.text('Everkinetic · CC BY-SA 4.0'), findsOneWidget);
+    });
+
+    testWidgets('no gym pictures: the bundled drawing, no carousel', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        at: AppRoutes.libraryExercise('flat_db_press'),
+        overrides: withMedia(GymMedia.empty),
+      );
+      expect(find.byKey(const Key('gym_pictures_pages')), findsNothing);
+      expect(find.text('Everkinetic · CC BY-SA 4.0'), findsOneWidget);
+    });
+
+    testWidgets('without a cloud name no network picture is ever built', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        at: AppRoutes.libraryExercise('flat_db_press'),
+        overrides: [
+          activeGymMediaProvider.overrideWith((ref) async => media),
+          deviceOnlineProvider.overrideWith((ref) => Stream.value(true)),
+        ],
+      );
+      expect(find.byKey(const Key('gym_pictures_pages')), findsNothing);
+      expect(find.byKey(const Key('gym_picture_0')), findsNothing);
+    });
+
+    testWidgets("the library list shows the gym's cover", (tester) async {
+      await pumpApp(
+        tester,
+        at: AppRoutes.libraryFor('day-3'),
+        overrides: withMedia(media),
+      );
+      expect(find.text('Pictures from your gym'), findsOneWidget);
+    });
+  });
 }

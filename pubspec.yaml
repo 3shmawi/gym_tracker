@@ -32,6 +32,7 @@ dependencies:
   app_settings: 9.0.1
   crypto: ^3.0.8
   webview_flutter: 4.14.1
+  flutter_cache_manager: ^3.4.8
 dev_dependencies:
   flutter_test:
     sdk: flutter

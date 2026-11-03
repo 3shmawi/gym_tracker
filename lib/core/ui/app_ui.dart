@@ -245,9 +245,13 @@ extension on AppScaffold {
 }
 
 class AppCard extends StatelessWidget {
-  const new({required this.child, this.tall = false, super.key});
+  const new({required this.child, this.tall = false, this.padding, super.key});
 
   final Widget child;
+
+  /// Inside the card; null: the card's usual 16. A card that lays out its
+  /// own content edge to edge (the exercise picture stage) passes zero.
+  final EdgeInsetsGeometry? padding;
 
   /// For a card that can grow taller than the screen, like a whole history
   /// list: drawn as a flat card (how iOS draws long list cards) with no
@@ -263,10 +267,15 @@ class AppCard extends StatelessWidget {
         return GlassContainer.card(
           surfaceStyle: GlassSurfaceStyle.solid,
           shape: LiquidRoundedSuperellipse(borderRadius: AppDimens.radiusMd),
+          padding: padding ?? const EdgeInsets.all(16),
           child: child,
         );
       }
-      return GlassContainer.card(quality: AppUi.cardQuality, child: child);
+      return GlassContainer.card(
+        quality: AppUi.cardQuality,
+        padding: padding ?? const EdgeInsets.all(16),
+        child: child,
+      );
     }
     // Lite: a near-solid fill, no blur and no blurred shadow (cheap to draw,
     // even in software). Material, so ListTile / InkWell ink stays visible.
@@ -276,7 +285,10 @@ class AppCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppDimens.radiusMd),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Padding(padding: EdgeInsets.all(AppDimens.md), child: child),
+      child: Padding(
+        padding: padding ?? EdgeInsets.all(AppDimens.md),
+        child: child,
+      ),
     );
   }
 }

@@ -50,8 +50,27 @@ abstract final class ExerciseImages {
   static String thumb(String exerciseId) =>
       '$directory/${exerciseId}_thumb.webp';
 
+  /// What the licenses page says once for the picture library a gym can
+  /// choose from (538 Everkinetic drawings on Cloudinary): every picture has
+  /// the same author and licence; each row keeps its own `attribution` in the
+  /// database (docs/features/exercise_image_library.md).
+  static const pictureLibraryLicense =
+      'Exercise pictures chosen by your gym: drawings by Everkinetic '
+      '(Greg Priday), from https://github.com/everkinetic/data '
+      '(commit 446bb9a).\n\n'
+      'License: Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0), '
+      'https://creativecommons.org/licenses/by-sa/4.0/\n\n'
+      'Changed: made transparent (the dark lines kept, the paper removed), '
+      'resized to at most 1024 px and renamed; the app draws them in its text '
+      'colour. The changed pictures are shared under the same licence.';
+
   /// Shows the pictures' attributions on the app's licenses page.
   static void registerLicenses() {
+    LicenseRegistry.addLicense(() async* {
+      yield const LicenseEntryWithLineBreaks([
+        'Exercise picture library (Everkinetic)',
+      ], pictureLibraryLicense);
+    });
     LicenseRegistry.addLicense(() async* {
       final json = await rootBundle.loadString(manifestAsset);
       final manifest = ExerciseImageManifest.parse(json);

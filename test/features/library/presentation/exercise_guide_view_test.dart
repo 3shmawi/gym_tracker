@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gym_tracker/core/media/media_cache.dart';
 import 'package:gym_tracker/features/library/data/exercise_catalog.dart';
 import 'package:gym_tracker/features/library/domain/entities/library_exercise.dart';
 import 'package:gym_tracker/features/library/presentation/exercise_guide_view.dart';
@@ -23,6 +24,9 @@ Widget view({
   String? dayName,
   bool alreadyInDay = false,
   bool canAdd = true,
+  List<ImageProvider> gymPictures = const [],
+  bool movePair = false,
+  bool offline = false,
   Calls? calls,
 }) {
   final c = calls ?? Calls();
@@ -36,8 +40,21 @@ Widget view({
     dayName: dayName,
     alreadyInDay: alreadyInDay,
     onAdd: canAdd ? () => c.adds++ : null,
+    gymPictures: gymPictures,
+    movePair: movePair,
+    offline: offline,
+    onOpenCredits: () {},
   );
 }
+
+/// The gym's pictures in tests: bundled drawings standing in for Cloudinary.
+ImageProvider picture(String id) => AssetImage('assets/exercises/$id.webp');
+
+/// A picture that never loads (404, or offline with nothing cached).
+ImageProvider broken(String name) => CachedMediaImage(
+  Uri.parse('https://res.cloudinary.com/azm/$name.png'),
+  fetch: (_) => Future.error(StateError('404')),
+);
 
 void main() {
   group('ExerciseGuideView', () {
@@ -66,6 +83,37 @@ void main() {
       await tester.pumpApp(view(withoutPicture: true));
       expect(find.text('Illustration coming soon'), findsOneWidget);
       expect(find.byType(Image), findsNothing);
+    });
+
+    testWidgets("the gym's pictures come first, then the steps", (
+      tester,
+    ) async {
+      await tester.pumpApp(
+        view(
+          gymPictures: [picture('flat_db_press'), picture('pec_deck')],
+          movePair: true,
+        ),
+      );
+      expect(find.text('\u20661 / 2\u2069'), findsOneWidget);
+      expect(find.byTooltip('Pause motion'), findsOneWidget);
+      expect(find.text('Everkinetic · CC BY-SA 4.0'), findsOneWidget);
+      for (final step in exercise('flat_db_press').steps) {
+        expect(find.text(step.en), findsOneWidget);
+      }
+    });
+
+    testWidgets('offline with nothing cached: bundled drawing, steps stay', (
+      tester,
+    ) async {
+      await tester.pumpApp(view(gymPictures: [broken('a')], offline: true));
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(Image), findsOneWidget);
+      expect(
+        find.text("· Your gym's pictures show when you're back online"),
+        findsOneWidget,
+      );
+      expect(find.text(exercise('flat_db_press').steps.first.en), findsOne);
     });
 
     testWidgets('reading only: no add button', (tester) async {
@@ -119,6 +167,22 @@ void main() {
         view(dayName: 'Chest & Back', alreadyInDay: true, canAdd: false),
     'exercise_guide_long_steps': () => view(id: 'machine_calf_raise'),
     'exercise_guide_no_picture': () => view(withoutPicture: true),
+    'exercise_guide_gym_one_picture': () =>
+        view(gymPictures: [picture('incline_machine_press')]),
+    'exercise_guide_gym_move_pair': () => view(
+      gymPictures: [picture('flat_db_press'), picture('incline_machine_press')],
+      movePair: true,
+    ),
+    'exercise_guide_gym_four_pictures': () => view(
+      gymPictures: [
+        picture('incline_machine_press'),
+        picture('flat_db_press'),
+        picture('pec_deck'),
+        picture('reverse_pec_deck'),
+      ],
+    ),
+    'exercise_guide_gym_offline_nothing_cached': () =>
+        view(gymPictures: [broken('a'), broken('b')], offline: true),
     'exercise_guide_not_found': () => view(missing: true),
   });
 }

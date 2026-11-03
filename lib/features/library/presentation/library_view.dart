@@ -9,6 +9,7 @@ import 'package:gym_tracker/core/widgets/state_views.dart';
 import 'package:gym_tracker/features/library/domain/entities/library_exercise.dart';
 import 'package:gym_tracker/features/library/presentation/library_labels.dart';
 import 'package:gym_tracker/features/library/presentation/widgets/exercise_illustration.dart';
+import 'package:gym_tracker/features/library/presentation/widgets/gym_picture_tile.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 
 /// The exercise library: search, muscle chips, an equipment filter and the
@@ -29,6 +30,7 @@ class LibraryView extends StatelessWidget {
     required this.onOpen,
     required this.onAdd,
     required this.onWriteOwn,
+    this.gymCovers = const {},
     super.key,
   });
 
@@ -52,6 +54,10 @@ class LibraryView extends StatelessWidget {
 
   /// The fallback: write the exercise yourself, starting from [query].
   final ValueChanged<String> onWriteOwn;
+
+  /// The first picture the member's gym chose, by exercise id: shown as the
+  /// row's tile instead of the bundled drawing.
+  final Map<String, ImageProvider> gymCovers;
 
   Future<void> _pickEquipment(BuildContext context) async {
     final l10n = context.l10n;
@@ -181,6 +187,7 @@ class LibraryView extends StatelessWidget {
                   for (final (i, e) in exercises.indexed)
                     _ExerciseRow(
                       exercise: e,
+                      cover: gymCovers[e.id],
                       added: addedIds.contains(e.id),
                       divider: i < exercises.length - 1,
                       onOpen: () => onOpen(e.id),
@@ -269,9 +276,11 @@ class _ExerciseRow extends StatelessWidget {
     required this.divider,
     required this.onOpen,
     required this.onAdd,
+    this.cover,
   });
 
   final LibraryExercise exercise;
+  final ImageProvider? cover;
   final bool added;
   final bool divider;
   final VoidCallback onOpen;
@@ -286,9 +295,12 @@ class _ExerciseRow extends StatelessWidget {
     final meta = '$muscle · ${equipmentList(l10n, exercise.equipment)}';
     return AppListRow(
       key: Key('library_row_${exercise.id}'),
-      leading: ExerciseIllustration(exercise: exercise),
+      leading: cover == null
+          ? ExerciseIllustration(exercise: exercise)
+          : GymPictureTile(image: cover!, exercise: exercise),
       title: name.of(lang),
       detail: [name.other(lang), meta].join('\n'),
+      note: cover == null ? null : l10n.libraryGymPictures,
       onTap: onOpen,
       divider: divider,
       trailing: added

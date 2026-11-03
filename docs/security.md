@@ -295,6 +295,18 @@ trigger. `public.set_gym_exercise_images` is `security invoker` (RLS applies)
 and closed to `anon`. No secrets, no personal data beyond `people.id`.
 `supabase/tests/gym_exercise_images_rls.test.sql` proves each rule.
 
+### Gym-chosen pictures in the app
+`CLOUDINARY_CLOUD_NAME` is publishable (it is in every picture URL) and goes
+in `env/<flavor>.json` like the other public keys; empty turns the feature
+off. Picture URLs are built only from a library public id
+(`exercises/[a-z0-9-]`) and a checked cloud name, with fixed transformation
+words; anything else is refused before a request is made
+(`test/core/media/cloudinary_url_test.dart`: `../`, URLs, `javascript:`,
+upper case, look-alike letters, percent-encoding, long ids). The cache fetches
+only https on `res.cloudinary.com` (no port, no user info), keeps files only
+(no personal data, at most 400 × 2 MB). Cloudinary sees the device's IP when a
+picture loads; the privacy policy says so (EN + AR).
+
 ### Trainee dashboard views (migration 0012)
 Docs read 2026-11-03: Supabase "Row Level Security" and Postgres 15+
 `security_invoker` views. The four `member_*` views run **as the person

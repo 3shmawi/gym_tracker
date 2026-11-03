@@ -12,25 +12,34 @@ import 'package:gym_tracker/l10n/l10n.dart';
 /// dumbbell of the same size, so the screens never move. [large] is the hero
 /// on the exercise screen, otherwise the small tile of a list row.
 class ExerciseIllustration extends StatelessWidget {
-  const new({required this.exercise, this.large = false, super.key});
+  const new({
+    required this.exercise,
+    this.large = false,
+    this.height,
+    super.key,
+  });
 
   final LibraryExercise exercise;
   final bool large;
+
+  /// The large picture's height; null: 210 (scaled). The picture stage of
+  /// the exercise screen passes the room inside its card.
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
     final l10n = context.l10n;
     final size = AppDimens.scaled(52);
-    final height = large ? AppDimens.scaled(210) : size;
+    final height = large ? (this.height ?? AppDimens.scaled(210)) : size;
     final placeholder = _placeholder(context, size);
     if (!ExerciseImages.has(exercise.id)) return placeholder;
     final name = exercise.name.of(Localizations.localeOf(context).languageCode);
     // The drawing is a transparent mask: tinting it with the text colour
     // makes it right in dark and light, and it has no background.
     final picture = SizedBox(
-      width: large ? double.infinity : size,
-      height: height,
+      width: large ? double.infinity : null,
+      height: large ? height : null,
       child: Image.asset(
         large
             ? ExerciseImages.large(exercise.id)
@@ -41,9 +50,9 @@ class ExerciseIllustration extends StatelessWidget {
         errorBuilder: (_, _, _) => placeholder,
       ),
     );
-    // A list row's tile is decorative (the name beside it says what it is);
-    // the hero is described.
-    if (!large) return ExcludeSemantics(child: picture);
+    // A list row's tile is decorative (the name beside it says what it is):
+    // the drawing on a rounded tile (design board 5.1). The hero is described.
+    if (!large) return ExcludeSemantics(child: ExerciseTile(child: picture));
     return Semantics(
       image: true,
       label: l10n.exerciseIllustrationLabel(name),
@@ -65,7 +74,7 @@ class ExerciseIllustration extends StatelessWidget {
       excluding: !large,
       child: SizedBox(
         width: large ? double.infinity : size,
-        height: large ? AppDimens.scaled(210) : size,
+        height: large ? (height ?? AppDimens.scaled(210)) : size,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(
             large ? AppDimens.radiusXl : AppDimens.radiusMd,
@@ -114,6 +123,26 @@ class ExerciseIllustration extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The rounded tile of a library row (52, radius 14, the subtle fill), with
+/// the drawing inset 6 (design board 5.1).
+class ExerciseTile extends StatelessWidget {
+  const new({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: AppDimens.scaled(52),
+    height: AppDimens.scaled(52),
+    padding: EdgeInsets.all(AppDimens.scaled(6)),
+    decoration: BoxDecoration(
+      color: context.palette.fillSubtle,
+      borderRadius: BorderRadius.circular(AppDimens.scaled(14)),
+    ),
+    child: child,
+  );
 }
 
 class _Hatch extends CustomPainter {

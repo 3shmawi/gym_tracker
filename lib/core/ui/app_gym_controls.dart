@@ -154,6 +154,7 @@ class AppListRow extends StatelessWidget {
     required this.leading,
     required this.title,
     this.detail,
+    this.note,
     this.trailing,
     this.onTap,
     this.divider = true,
@@ -165,6 +166,10 @@ class AppListRow extends StatelessWidget {
   final Widget leading;
   final String title;
   final String? detail;
+
+  /// A last line in the calm blue (`trendKeep`), e.g. "Pictures from your
+  /// gym" (design board 5.1).
+  final String? note;
   final Widget? trailing;
   final VoidCallback? onTap;
 
@@ -222,6 +227,13 @@ class AppListRow extends StatelessWidget {
                             detail!,
                             style: AppTextStyles.caption.copyWith(
                               color: palette.textSecondary,
+                            ),
+                          ),
+                        if (note != null)
+                          Text(
+                            note!,
+                            style: AppTextStyles.caption.copyWith(
+                              color: palette.trendKeep,
                             ),
                           ),
                       ],

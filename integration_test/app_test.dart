@@ -33,6 +33,7 @@ import '../test/helpers/gym_app.dart' show FakeCamera;
 import '../test/helpers/gym_fakes.dart';
 import '../test/helpers/plan_sync_fakes.dart';
 import 'flows/build_plan_flow.dart';
+import 'flows/gym_pictures_flow.dart';
 import 'helpers/demo.dart';
 
 void main() {
@@ -487,4 +488,10 @@ Future<void> unlockPhone(WidgetTester tester) async {
     AppLifecycleState.resumed,
   ].forEach(tester.binding.handleAppLifecycleStateChanged);
   await tester.pumpAndSettle();
+
+  testWidgets("the gym's pictures: frames, swipe, offline from the cache", (
+    tester,
+  ) async {
+    await gymPicturesFlow(tester);
+  });
 }

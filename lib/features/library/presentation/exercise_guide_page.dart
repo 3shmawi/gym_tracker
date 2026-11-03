@@ -1,10 +1,15 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
+import 'package:gym_tracker/core/media/cloudinary_url.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
+import 'package:gym_tracker/features/gym/domain/entities/gym_media.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
+import 'package:gym_tracker/features/library/data/exercise_images.dart';
+import 'package:gym_tracker/features/library/domain/entities/exercise_pictures.dart';
 import 'package:gym_tracker/features/library/presentation/exercise_guide_view.dart';
 import 'package:gym_tracker/features/library/presentation/library_providers.dart';
 import 'package:gym_tracker/features/library/presentation/widgets/library_feedback.dart';
@@ -25,6 +30,8 @@ class ExerciseGuidePage extends ConsumerStatefulWidget {
 }
 
 class _ExerciseGuidePageState extends ConsumerState<ExerciseGuidePage> {
+  bool _picturesReported = false;
+
   @override
   void initState() {
     super.initState();
@@ -52,9 +59,52 @@ class _ExerciseGuidePageState extends ConsumerState<ExerciseGuidePage> {
     if (context.canPop()) context.pop();
   }
 
+  /// `exercise_pictures_viewed` once per screen, when the source is known:
+  /// how many pictures (bucketed) and whether the gym's or the bundled one.
+  /// No id, name or URL.
+  void _reportPictures(ExercisePictures pictures, int shown) {
+    if (_picturesReported) return;
+    _picturesReported = true;
+    final source = pictures.source;
+    if (source == PictureSource.placeholder) return;
+    unawaited(
+      Analytics.capture('exercise_pictures_viewed', {
+        'count': ExercisePictures.countBucket(
+          source == PictureSource.gym ? shown : 1,
+        ),
+        'source': source.name,
+      }),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final exercise = ref.watch(exerciseLibraryProvider).byId(widget.exerciseId);
+    final media = ref.watch(activeGymMediaProvider);
+    final toImage = ref.watch(gymPictureImageProvider);
+    // The gym's pictures that make a valid image, cover first.
+    final gym = [
+      for (final p in (media.value ?? GymMedia.empty).picturesFor(
+        widget.exerciseId,
+      ))
+        if (toImage(p.publicId, PictureSize.large) case final image?)
+          (
+            ref: LibraryPictureRef(
+              publicId: p.publicId,
+              exerciseKey: p.exerciseKey,
+              frame: p.frame,
+            ),
+            image: image,
+          ),
+    ];
+    final pictures = ExercisePictures(
+      gym: [for (final g in gym) g.ref],
+      hasBundled: ExerciseImages.has(widget.exerciseId),
+    );
+    if (exercise != null && !media.isLoading) {
+      _reportPictures(pictures, gym.length);
+    }
+    final offline = !(ref.watch(deviceOnlineProvider).value ?? true);
     final dayId = widget.dayId;
     final lang = Localizations.localeOf(context).languageCode;
     final editor = dayId == null
@@ -69,6 +119,10 @@ class _ExerciseGuidePageState extends ConsumerState<ExerciseGuidePage> {
       alreadyInDay:
           day?.exercises.any((e) => e.id == widget.exerciseId) ?? false,
       onAdd: canAdd ? () => unawaited(_add(day.id)) : null,
+      gymPictures: [for (final g in gym) g.image],
+      movePair: pictures.isMovePair,
+      offline: offline,
+      onOpenCredits: () => showLicensePage(context: context),
     );
   }
 }

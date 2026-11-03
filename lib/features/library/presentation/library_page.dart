@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
+import 'package:gym_tracker/core/media/cloudinary_url.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
 import 'package:gym_tracker/features/library/domain/entities/library_exercise.dart';
 import 'package:gym_tracker/features/library/domain/usecases/search_exercises.dart';
 import 'package:gym_tracker/features/library/presentation/library_providers.dart';
@@ -118,7 +120,17 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
       );
     }
     final all = ref.watch(exerciseLibraryProvider).all;
+    final media = ref.watch(activeGymMediaProvider).value;
+    final toImage = ref.watch(gymPictureImageProvider);
+    // Each exercise's cover (the gym's first picture) as its row tile.
+    final covers = <String, ImageProvider>{
+      if (media != null)
+        for (final e in all)
+          if (media.picturesFor(e.id).firstOrNull case final first?)
+            e.id: ?toImage(first.publicId, PictureSize.thumb),
+    };
     return LibraryView(
+      gymCovers: covers,
       exercises: _search(
         all,
         query: _query,

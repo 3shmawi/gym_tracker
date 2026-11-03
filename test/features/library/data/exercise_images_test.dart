@@ -201,5 +201,22 @@ void main() {
       expect(text, contains('https://creativecommons.org/licenses/by-sa/3.0/'));
       expect(text, contains('We changed them'));
     });
+
+    test('lists the gym picture library once: author, source, licence, '
+        'changes', () async {
+      ExerciseImages.registerLicenses();
+      final entries = await LicenseRegistry.licenses.toList();
+      final library = entries.where(
+        (e) => e.packages.contains('Exercise picture library (Everkinetic)'),
+      );
+      // registerLicenses ran twice in this file: one entry per call.
+      expect(library, isNotEmpty);
+      final text = library.first.paragraphs.map((p) => p.text).join('\n');
+      expect(text, contains('Everkinetic (Greg Priday)'));
+      expect(text, contains('https://github.com/everkinetic/data'));
+      expect(text, contains('CC BY-SA 4.0'));
+      expect(text, contains('https://creativecommons.org/licenses/by-sa/4.0/'));
+      expect(text, contains('Changed:'));
+    });
   });
 }
