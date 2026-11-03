@@ -46,6 +46,7 @@ class WorkoutSession {
     required this.finishedAt,
     required this.sets,
     this.membershipId,
+    this.startedAt,
   });
   factory fromJson(Map<String, Object?> json) => WorkoutSession(
     dayId: readDayId(json),
@@ -55,6 +56,10 @@ class WorkoutSession {
         LoggedSet.fromJson(s! as Map<String, Object?>),
     ],
     membershipId: json['membership_id'] as String?,
+    startedAt: switch (json['started_at']) {
+      final String s => DateTime.tryParse(s),
+      _ => null,
+    },
   );
 
   /// The plan day done ([WorkoutDay.id]).
@@ -67,6 +72,11 @@ class WorkoutSession {
   /// time and sets), only of where it is uploaded.
   final String? membershipId;
 
+  /// When the workout started (from the workout in progress); null for
+  /// workouts saved before this was kept. Only used for the gym dashboard's
+  /// duration; not part of the workout's identity.
+  final DateTime? startedAt;
+
   List<LoggedSet> setsFor(String exerciseId) => [
     for (final s in sets)
       if (s.exerciseId == exerciseId) s,
@@ -77,6 +87,7 @@ class WorkoutSession {
     'finished_at': finishedAt.toUtc().toIso8601String(),
     'sets': [for (final s in sets) s.toJson()],
     'membership_id': ?membershipId,
+    'started_at': ?startedAt?.toUtc().toIso8601String(),
   };
 }
 

@@ -150,6 +150,63 @@ void main() {
       expect(rows!.first['client_id'], entry(1).clientId);
     });
 
+    test('the start time goes up only when the server would accept it', () {
+      WorkoutSession at(DateTime? start) => WorkoutSession(
+        dayId: 'day-1',
+        finishedAt: DateTime.utc(2026, 10, 1, 12),
+        sets: const [],
+        startedAt: start,
+      );
+      expect(
+        SupabaseSessionUploader.startOf(at(DateTime.utc(2026, 10, 1, 11))),
+        '2026-10-01T11:00:00.000Z',
+      );
+      expect(SupabaseSessionUploader.startOf(at(null)), isNull);
+      expect(
+        SupabaseSessionUploader.startOf(at(DateTime.utc(2026, 10, 1, 13))),
+        isNull,
+        reason: 'after the end: a wrong clock',
+      );
+      expect(
+        SupabaseSessionUploader.startOf(at(DateTime.utc(2026, 9, 29))),
+        isNull,
+        reason: 'more than 24 h: a forgotten workout',
+      );
+    });
+
+    test('rows carry started_at (null when unknown)', () async {
+      List<Map<String, Object?>>? rows;
+      final up = SupabaseSessionUploader(
+        _Client(),
+        retries: 0,
+        personId: () async => 'p1',
+        insert: (r) async => rows = r,
+      );
+      await up.upload([entry(1)]);
+      expect(rows!.single.containsKey('started_at'), isTrue);
+      expect(rows!.single['started_at'], isNull);
+    });
+
+    test('a session keeps its start through JSON', () {
+      final s = WorkoutSession(
+        dayId: 'day-1',
+        finishedAt: DateTime.utc(2026, 10, 1, 12),
+        sets: const [],
+        startedAt: DateTime.utc(2026, 10, 1, 11),
+      );
+      final back = WorkoutSession.fromJson(s.toJson());
+      expect(back.startedAt, DateTime.utc(2026, 10, 1, 11));
+      expect(
+        WorkoutSession.fromJson(const {
+          'day_id': 'd',
+          'finished_at': '2026-10-01T12:00:00Z',
+          'sets': <Object?>[],
+          'started_at': 'not a date',
+        }).startedAt,
+        isNull,
+      );
+    });
+
     test('over 50 is refused before any call; a failure maps', () async {
       var called = 0;
       final up = SupabaseSessionUploader(

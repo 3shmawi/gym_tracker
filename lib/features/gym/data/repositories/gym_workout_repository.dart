@@ -85,6 +85,7 @@ class GymWorkoutRepository implements WorkoutRepository {
       finishedAt: session.finishedAt,
       sets: session.sets,
       membershipId: _id,
+      startedAt: session.startedAt,
     );
     final saved = await inner.saveSession(tagged);
     if (saved is Success<void>) {
