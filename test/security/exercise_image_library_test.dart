@@ -54,14 +54,14 @@ void main() {
       }
     });
 
-    test('the public id is a plain path under azm/exercises', () {
-      expect(migration, contains(r"'^azm/exercises/[a-z0-9-]+$'"));
+    test('the public id is a plain path under exercises', () {
+      expect(migration, contains(r"'^exercises/[a-z0-9-]+$'"));
     });
   });
 
   group('the seed', () {
     final rows = RegExp(
-      r"^\s+\('azm/exercises/(ek-\d{4})-(tension|relaxation)'",
+      r"^\s+\('exercises/(ek-\d{4})-(tension|relaxation)'",
       multiLine: true,
     ).allMatches(seed).toList();
 
@@ -175,7 +175,7 @@ void main() {
     tearDown(() => dir.deleteSync(recursive: true));
 
     String package({
-      String publicId = 'azm/exercises/ek-0001-tension',
+      String publicId = 'exercises/ek-0001-tension',
       String license = 'CC-BY-SA-4.0',
       int copies = 1,
       bool file = true,
@@ -225,9 +225,10 @@ void main() {
       if (!hasPython) return;
       final bad = <String Function()>[
         () => package(publicId: '../../evil'),
-        () => package(publicId: 'azm/exercises/../x'),
+        () => package(publicId: 'exercises/../x'),
+        () => package(publicId: 'azm/exercises/ek-0001-tension'),
         () => package(publicId: 'other/folder/x'),
-        () => package(publicId: 'azm/exercises/UPPER'),
+        () => package(publicId: 'exercises/UPPER'),
         () => package(license: 'CC-BY-NC-4.0'),
         () => package(license: 'CC-BY-ND-4.0'),
         () => package(license: ''),

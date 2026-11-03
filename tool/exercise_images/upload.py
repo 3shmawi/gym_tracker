@@ -11,7 +11,9 @@ GitHub secrets through `env:`):
 
 Signed upload as in Cloudinary's documentation (checked 2026-11-03,
 cloudinary.com/documentation/authentication_signatures and upload_images):
-POST https://api.cloudinary.com/v1_1/<cloud name>/image/upload with the
+POST https://api.cloudinary.com/v1_1/<cloud name>/image/upload (with
+`asset_folder` = the public id's folder, `exercises`, so the pictures sit in the
+Media Library folder of that name) with the
 fields to sign sorted by name as `name=value` joined by `&`, the API secret
 appended with no separator, hashed with SHA-1 (the default). `file`,
 `cloud_name`, `resource_type` and `api_key` are never part of the signed
@@ -37,10 +39,14 @@ from pathlib import Path
 API = "https://api.cloudinary.com/v1_1/{cloud}/image/upload"
 CDN = "https://res.cloudinary.com/{cloud}/image/upload/{public_id}.png"
 CLOUD_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{1,62}$")
-PUBLIC_ID_RE = re.compile(r"^azm/exercises/[a-z0-9-]+$")
+PUBLIC_ID_RE = re.compile(r"^exercises/[a-z0-9-]+$")
 ALLOWED_LICENSES = {"CC0-1.0", "CC-BY-4.0", "CC-BY-SA-3.0", "CC-BY-SA-4.0"}
 RETRIES = 3
 TIMEOUT = 60
+# Accounts in the older "fixed folder" mode reject `asset_folder` (the folder
+# then comes from the public id's path, which is the same `exercises`). The
+# first rejection turns it off for the rest of the run.
+USE_ASSET_FOLDER = {"on": True}
 
 
 def load_package(package: Path) -> list:
@@ -88,6 +94,7 @@ def upload_one(row: dict, package: Path, cloud: str, key: str, secret: str) -> s
     public_id = row["public_id"]
     path = package / "png" / (public_id.split("/")[-1] + ".png")
     last_error = ""
+    folder = public_id.rsplit("/", 1)[0]
     for attempt in range(1, RETRIES + 1):
         signed = {
             "overwrite": "false",
@@ -95,6 +102,8 @@ def upload_one(row: dict, package: Path, cloud: str, key: str, secret: str) -> s
             "tags": f"azm,exercise,{row['exercise_key']}",
             "timestamp": str(int(time.time())),
         }
+        if USE_ASSET_FOLDER["on"]:
+            signed["asset_folder"] = folder
         fields = dict(signed, api_key=key, signature=sign(signed, secret))
         body, content_type = multipart(fields, path.name, path.read_bytes())
         request = urllib.request.Request(
@@ -116,6 +125,9 @@ def upload_one(row: dict, package: Path, cloud: str, key: str, secret: str) -> s
             # Belt and braces: a credential never reaches a (public) log.
             for credential in (secret, key):
                 last_error = last_error.replace(credential, "***")
+            if "asset_folder" in last_error.lower() and USE_ASSET_FOLDER["on"]:
+                USE_ASSET_FOLDER["on"] = False
+                continue
             if error.code not in (429, 500, 502, 503, 504):
                 break
         except (urllib.error.URLError, TimeoutError) as error:

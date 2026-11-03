@@ -31,7 +31,7 @@ select throws_ok(
   $$ insert into public.exercise_images
        (public_id, exercise_key, frame, title_en, keywords, source_url,
         source_commit, license, author, attribution)
-     values ('azm/exercises/ek-9999-tension', 'ek-9999', 'tension', 'x',
+     values ('exercises/ek-9999-tension', 'ek-9999', 'tension', 'x',
              array['x'], 'https://example.org', 'c', 'CC-BY-NC-4.0', 'a', 'b') $$,
   '23514',
   null,
@@ -58,7 +58,7 @@ select throws_ok(
   $$ insert into public.exercise_images
        (public_id, exercise_key, frame, title_en, keywords, source_url,
         source_commit, license, author, attribution)
-     values ('azm/exercises/ek-9999-tension', 'ek-9999', 'tension', 'x',
+     values ('exercises/ek-9999-tension', 'ek-9999', 'tension', 'x',
              array['x'], 'https://example.org', 'c', 'CC0-1.0', 'a', 'b') $$,
   '42501',
   null,

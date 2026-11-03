@@ -14,7 +14,7 @@ dashboard's picker, the cache in the app and on the web, Arabic exercise names.
 everkinetic/data @ SOURCE_COMMIT  ──build.py──▶  package/{png/, images.json, seed.sql}
                                                    │             │
                               upload.py (workflow) ▼             ▼ committed
-                              Cloudinary azm/exercises/…     migration 0014 → table exercise_images
+                              Cloudinary exercises/…     migration 0014 → table exercise_images
 ```
 - **Source**: `src/exercises/<id>/` of [`everkinetic/data`](https://github.com/everkinetic/data),
   pinned to one commit (`SOURCE_COMMIT` in `tool/exercise_images/build.py`; the
@@ -24,7 +24,9 @@ everkinetic/data @ SOURCE_COMMIT  ──build.py──▶  package/{png/, images
   1024 px max), so the picture has no background and is tinted by the page or
   app. Names: `ek-<id>-tension.png` and `ek-<id>-relaxation.png` (the two
   positions of the move).
-- **Cloudinary**: public id `azm/exercises/ek-<id>-<frame>`. Public URL (from
+- **Cloudinary**: public id `exercises/ek-<id>-<frame>`, in the Media Library
+  folder `exercises` (the upload sends `asset_folder`; an account in the older
+  fixed-folder mode rejects that field, so the script then relies on the path). Public URL (from
   Cloudinary's docs):
   `https://res.cloudinary.com/<cloud name>/image/upload/<transformations>/<public id>.png`.
   Ask for the size and format in the URL, e.g. `w_400,f_auto,q_auto`; Cloudinary
@@ -46,7 +48,7 @@ the app's library), `muscles`, `equipment`, `exercise_type`, `source_url`,
   included: they need a person who writes them.
 - **RLS**: everyone can read; nobody but the service role can write (no write
   policy, no grant). Checks in the table refuse a licence outside CC0 / CC BY /
-  CC BY-SA, and a public id that is not `azm/exercises/<a-z0-9->`.
+  CC BY-SA, and a public id that is not `exercises/<a-z0-9->`.
   `supabase/tests/exercise_images_rls.test.sql` proves it.
 
 ## Licence (the pictures)

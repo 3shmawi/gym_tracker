@@ -7,7 +7,7 @@
 -- Everyone may read; nobody but the service role may write.
 create table if not exists public.exercise_images (
   public_id text primary key
-    check (public_id ~ '^azm/exercises/[a-z0-9-]+$'),
+    check (public_id ~ '^exercises/[a-z0-9-]+$'),
   exercise_key text not null check (exercise_key ~ '^ek-[0-9]{4}$'),
   frame text not null check (frame in ('tension', 'relaxation')),
   title_en text not null check (char_length(title_en) between 1 and 120),
