@@ -32,6 +32,8 @@ sealed class AppFailure implements Exception {
     ),
     FunctionException(:final status) when status >= 500 => ServerFailure(error),
     FunctionException() => UnknownFailure(error),
+    PostgrestException(code: 'P0001', message: 'plan_changed') =>
+      PlanChangedFailure(error),
     PostgrestException(code: 'PGRST116') => NotFoundFailure(error),
     PostgrestException(code: '42501') => UnauthorizedFailure(error),
     PostgrestException(:final String code) when code.startsWith('22') =>
@@ -114,4 +116,11 @@ final class LastOwnerFailure extends AppFailure {
   const new(this.gymNames, [super.cause]);
 
   final List<String> gymNames;
+}
+
+/// The gym's plan changed on the server since this phone last saw it
+/// (`save_plan` → `plan_changed`): the phone's edit was dropped, the captain's
+/// version wins (docs/decisions/gym_accounts.md §11).
+final class PlanChangedFailure extends AppFailure {
+  const new([super.cause]);
 }

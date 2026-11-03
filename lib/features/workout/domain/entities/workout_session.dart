@@ -45,6 +45,7 @@ class WorkoutSession {
     required this.dayId,
     required this.finishedAt,
     required this.sets,
+    this.membershipId,
   });
   factory fromJson(Map<String, Object?> json) => WorkoutSession(
     dayId: readDayId(json),
@@ -53,12 +54,18 @@ class WorkoutSession {
       for (final s in json['sets']! as List<Object?>)
         LoggedSet.fromJson(s! as Map<String, Object?>),
     ],
+    membershipId: json['membership_id'] as String?,
   );
 
   /// The plan day done ([WorkoutDay.id]).
   final String dayId;
   final DateTime finishedAt;
   final List<LoggedSet> sets;
+
+  /// The gym membership it was logged in (`gym:<id>` workspace); null = solo.
+  /// Not part of the workout's identity (the session id is a hash of the day,
+  /// time and sets), only of where it is uploaded.
+  final String? membershipId;
 
   List<LoggedSet> setsFor(String exerciseId) => [
     for (final s in sets)
@@ -69,6 +76,7 @@ class WorkoutSession {
     'day_id': dayId,
     'finished_at': finishedAt.toUtc().toIso8601String(),
     'sets': [for (final s in sets) s.toJson()],
+    'membership_id': ?membershipId,
   };
 }
 

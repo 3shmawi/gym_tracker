@@ -834,5 +834,6 @@
   "soloFailed": "Copying stopped. Nothing was lost, and you can try again.",
   "soloLater": "Later",
   "soloProfileRow": "Add my solo history to my account",
-  "soloProfileDone": "Your solo history is on your account"
+  "soloProfileDone": "Your solo history is on your account",
+  "errorPlanChanged": "Your captain changed this plan while you were editing. Your change was not saved; the new plan is shown."
 }
