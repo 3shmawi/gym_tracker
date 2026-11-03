@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
+import 'package:gym_tracker/features/library/presentation/library_providers.dart';
 import 'package:gym_tracker/features/workout/presentation/plan_editor_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/plan_exercise_view.dart';
 
@@ -38,6 +39,11 @@ class PlanExercisePage extends ConsumerWidget {
       ),
       onSetSuperset: (on) =>
           unawaited(controller.setSuperset(dayId, exerciseId, withNext: on)),
+      onOpenGuide: ref.read(exerciseLibraryProvider).byId(exerciseId) == null
+          ? null
+          : () => unawaited(
+              context.push<void>(AppRoutes.libraryExercise(exerciseId)),
+            ),
       onDelete: () async {
         // Leave first: this screen would show "not in your plan" for a
         // moment otherwise.

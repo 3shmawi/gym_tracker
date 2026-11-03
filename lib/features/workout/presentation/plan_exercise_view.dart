@@ -30,6 +30,7 @@ class PlanExerciseView extends StatelessWidget {
     required this.onSetTargets,
     required this.onSetSuperset,
     required this.onDelete,
+    this.onOpenGuide,
     super.key,
   });
 
@@ -51,6 +52,10 @@ class PlanExerciseView extends StatelessWidget {
 
   /// Called after the member confirmed.
   final VoidCallback onDelete;
+
+  /// Opens the library's steps for this exercise; null when it isn't in the
+  /// library (a custom exercise).
+  final VoidCallback? onOpenGuide;
 
   @override
   Widget build(BuildContext context) {
@@ -220,6 +225,23 @@ class _Editor extends StatelessWidget {
             ],
           ),
         ),
+        if (view.onOpenGuide != null)
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              key: const Key('plan_exercise_guide'),
+              onPressed: view.onOpenGuide,
+              icon: Icon(Icons.menu_book_outlined, size: AppDimens.iconMd),
+              label: Text(l10n.exerciseHowToLink),
+              style: TextButton.styleFrom(
+                minimumSize: const Size(
+                  AppDimens.minTouchTarget,
+                  AppDimens.minTouchTarget,
+                ),
+                textStyle: AppTextStyles.label,
+              ),
+            ),
+          ),
         _Section(l10n.planTargets),
         AppCard(
           child: Column(

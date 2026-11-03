@@ -47,6 +47,23 @@ abstract final class AppRoutes {
   static String planExercise(String dayId, String exerciseId) =>
       '${planDay(dayId)}/${Uri.encodeComponent(exerciseId)}';
 
+  /// The exercise library. With `?day=<dayId>` it picks an exercise for that
+  /// plan day (the "Add" buttons); without it, nothing can be added.
+  static const library = '/library';
+
+  /// The picker for one plan day. The id is encoded, so any id is safe.
+  static String libraryFor(String dayId) =>
+      '$library?day=${Uri.encodeQueryComponent(dayId)}';
+
+  /// One library exercise (picture and steps). With [dayId] it also offers to
+  /// add the exercise to that day. [exerciseId] and [dayId] are encoded.
+  static String libraryExercise(String exerciseId, {String? dayId}) {
+    final path = '$library/${Uri.encodeComponent(exerciseId)}';
+    return dayId == null
+        ? path
+        : '$path?day=${Uri.encodeQueryComponent(dayId)}';
+  }
+
   /// One exercise's history. [exerciseId] is encoded, so any id is safe.
   static String exerciseHistory(String exerciseId) =>
       '$progress/${Uri.encodeComponent(exerciseId)}';

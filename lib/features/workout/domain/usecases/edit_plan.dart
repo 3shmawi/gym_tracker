@@ -24,6 +24,10 @@ enum PlanEditError {
   /// The member's gym doesn't let them make this change (or took the right
   /// away while the editor was open).
   notAllowed,
+
+  /// The day already has this exercise (the same id twice in one day is
+  /// not allowed).
+  duplicate,
 }
 
 class PlanEditException implements Exception {
@@ -111,6 +115,25 @@ class EditPlan {
       );
     });
   }
+
+  /// Adds [exercise] as it is (its id, name and targets) to the day. Used by
+  /// the library: the id is the library's, so the member's earlier workouts
+  /// of it show up again. The same id may be in different days, not twice in
+  /// one.
+  WorkoutPlan addLibraryExercise(
+    WorkoutPlan plan,
+    String dayId,
+    Exercise exercise, {
+    String? lockedDayId,
+  }) => _updateDay(plan, dayId, lockedDayId, (day) {
+    if (day.exercises.any((e) => e.id == exercise.id)) {
+      throw const PlanEditException(PlanEditError.duplicate);
+    }
+    if (day.exercises.length >= PlanLimits.maxExercisesPerDay) {
+      throw const PlanEditException(PlanEditError.tooMany);
+    }
+    return day.copyWith(exercises: [...day.exercises, exercise]);
+  });
 
   WorkoutPlan renameExercise(
     WorkoutPlan plan,

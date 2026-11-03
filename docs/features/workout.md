@@ -103,6 +103,10 @@ Days: add, rename (Arabic + English), delete, reorder. Exercises in a day:
 add, rename, delete, reorder, superset with the next one. Targets: sets,
 reps, rest (s), weight step (kg). Everything is saved on the phone after
 each change ("Saves as you go"); there is no Save button.
+- **Adding an exercise** opens a sheet: *Pick from the library* (the shared
+  library, `docs/features/exercise_library.md`) or *Write your own* (the name
+  sheet, as before). A library exercise keeps the library's id, so earlier
+  workouts of it show up again.
 - **Screens:** `/plan` (days; "Next" and "In progress" badges),
   `/plan/<dayId>` (exercises; supersets as A/B with the rail and the pair's
   rest), `/plan/<dayId>/<exerciseId>` (names, steppers, weight step chips,
@@ -335,7 +339,7 @@ Every event also carries `app` (`gym_tracker`) and `environment`
 | `plan_opened` | Plan editor opened | none |
 | `plan_created` | First save of a plan built in the editor | `source: editor`, `days` |
 | `plan_day_added` / `plan_day_renamed` / `plan_day_deleted` / `plan_day_moved` | A day changed | `days` (count after) |
-| `plan_exercise_added` / `plan_exercise_renamed` / `plan_exercise_deleted` / `plan_exercise_moved` | An exercise changed | `days` |
+| `plan_exercise_added` / `plan_exercise_renamed` / `plan_exercise_deleted` / `plan_exercise_moved` | An exercise changed | `days`, and `source` (`library` / `custom`) on added |
 | `plan_superset_changed` | Superset switched | `on`, `days` |
 | `plan_targets_changed` | A target changed | `field` (`sets` / `reps` / `rest` / `weight_step`), `days` |
 | `plan_change_refused` | The gym's rights refused an edit (safety net) | `kind` (`structure` / `targets`) |

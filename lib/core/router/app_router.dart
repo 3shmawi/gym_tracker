@@ -14,6 +14,8 @@ import 'package:gym_tracker/features/gym/presentation/joined_page.dart';
 import 'package:gym_tracker/features/gym/presentation/profile_page.dart';
 import 'package:gym_tracker/features/gym/presentation/scanner_page.dart';
 import 'package:gym_tracker/features/gym/presentation/welcome_page.dart';
+import 'package:gym_tracker/features/library/presentation/exercise_guide_page.dart';
+import 'package:gym_tracker/features/library/presentation/library_page.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_page.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_page.dart';
 import 'package:gym_tracker/features/workout/presentation/exercise_history_page.dart';
@@ -178,6 +180,22 @@ final appRouter = GoRouter(
               ),
             ),
           ],
+        ),
+      ],
+    ),
+    GoRoute(
+      path: AppRoutes.library,
+      name: 'exercise_library',
+      builder: (context, state) =>
+          LibraryPage(dayId: state.uri.queryParameters['day']),
+      routes: [
+        GoRoute(
+          path: ':exerciseId',
+          name: 'library_exercise',
+          builder: (context, state) => ExerciseGuidePage(
+            exerciseId: state.pathParameters['exerciseId']!,
+            dayId: state.uri.queryParameters['day'],
+          ),
         ),
       ],
     ),

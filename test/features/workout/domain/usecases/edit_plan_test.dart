@@ -195,6 +195,74 @@ void main() {
     });
   });
 
+  group('adding an exercise of the library', () {
+    const squat = Exercise(
+      id: 'barbell_squat',
+      name: LocalizedName(ar: 'بار اسكوات حر', en: 'Barbell Back Squat'),
+      weightStep: 5,
+      restSeconds: 120,
+    );
+
+    test('keeps its id, name and starting targets', () {
+      final p = edit.addLibraryExercise(plan, 'b', squat);
+      expect(exIds(p, 'b'), ['b1', 'barbell_squat']);
+      final added = p.dayById('b')!.exercises.last;
+      expect(added.restSeconds, 120);
+      expect(added.weightStep, 5);
+      expect(added.name.en, 'Barbell Back Squat');
+      expect(validatePlan(p), isNull);
+    });
+
+    test('the same exercise may be in two days, not twice in one', () {
+      final p = edit.addLibraryExercise(plan, 'b', squat);
+      final both = edit.addLibraryExercise(p, 'c', squat);
+      expect(exIds(both, 'c'), ['c1', 'barbell_squat']);
+      expect(
+        () => edit.addLibraryExercise(p, 'b', squat),
+        refused(PlanEditError.duplicate),
+      );
+    });
+
+    test('a full day, a locked day and an unknown day are refused', () {
+      var p = plan;
+      for (var i = 0; i < PlanLimits.maxExercisesPerDay - 1; i++) {
+        p = edit.addExercise(p, 'b', n('e$i'), id: 'e$i');
+      }
+      expect(
+        () => edit.addLibraryExercise(p, 'b', squat),
+        refused(PlanEditError.tooMany),
+      );
+      expect(
+        () => edit.addLibraryExercise(plan, 'a', squat, lockedDayId: 'a'),
+        refused(PlanEditError.lockedDay),
+      );
+      expect(
+        () => edit.addLibraryExercise(plan, 'zzz', squat),
+        refused(PlanEditError.notFound),
+      );
+    });
+
+    test('an old workout of the exercise is matched again by its id', () {
+      // History written before: the same id.
+      final history = [
+        WorkoutSession(
+          dayId: 'b',
+          finishedAt: DateTime(2026, 10),
+          sets: const [
+            LoggedSet(exerciseId: 'barbell_squat', weight: 100, reps: 5),
+          ],
+        ),
+      ];
+      final p = edit.addLibraryExercise(plan, 'b', squat);
+      final taken = takenIds(p, history);
+      expect(taken, contains('barbell_squat'));
+      expect(
+        history.single.sets.single.exerciseId,
+        p.dayById('b')!.exercises.last.id,
+      );
+    });
+  });
+
   group('the day of the workout in progress is locked', () {
     test('no rename, delete or exercise changes', () {
       void locked(WorkoutPlan Function() change) =>

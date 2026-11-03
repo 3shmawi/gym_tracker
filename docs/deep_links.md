@@ -12,6 +12,8 @@ also a deep link.
 | `/plan` | Plan editor: the days in order (no plan: "Build your plan", an empty plan) |
 | `/plan/<dayId>` | One plan day's exercises (unknown ids: "This day isn't in your plan") |
 | `/plan/<dayId>/<exerciseId>` | An exercise's names and targets (unknown ids: "not in your plan") |
+| `/library?day=<dayId>` | The exercise library, picking an exercise for that plan day (no day or an unknown day: "This day isn't in your plan"; a gym that keeps exercises to the captain: no picker) |
+| `/library/<exerciseId>[?day=<dayId>]` | One library exercise: picture and steps (unknown ids: "isn't in the library"); with a valid day it offers *Add*, otherwise it only reads |
 | `/settings` | Settings |
 | `/welcome` | "How do you want to start?" (join a gym / train alone). Behind the `gym_join` flag |
 | `/join/scan` | The QR scanner. Reads nothing from its address. Behind the flag |
