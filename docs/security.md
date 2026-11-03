@@ -282,6 +282,19 @@ No personal data is stored or sent. The package is built from one reviewed
 commit of `everkinetic/data` (`SOURCE_COMMIT`); the unreviewed folders
 (`images-png-unknown`, `images-ai`) are never read.
 
+### Gym-chosen exercise pictures (migration 0015)
+Docs read 2026-11-03 (Supabase RLS, PostgreSQL 17 constraints/policies,
+PostgREST errors; read from their repositories, the sites were unreachable):
+`docs/features/gym_exercise_images.md`. `gym_exercise_images` is readable by
+the gym's active members only and writable by its owner/captain with a
+permanent session (`private.i_manage(gym_id)`); never by `anon`, an ended
+member or another gym. `exercise_id` is format-checked and never used for
+authorization. Limits live in the database: 6 pictures per exercise, 1200 per
+gym, `public_id` must be a library picture (FK), `updated_by` is stamped by a
+trigger. `public.set_gym_exercise_images` is `security invoker` (RLS applies)
+and closed to `anon`. No secrets, no personal data beyond `people.id`.
+`supabase/tests/gym_exercise_images_rls.test.sql` proves each rule.
+
 ### Trainee dashboard views (migration 0012)
 Docs read 2026-11-03: Supabase "Row Level Security" and Postgres 15+
 `security_invoker` views. The four `member_*` views run **as the person
