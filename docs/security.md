@@ -100,6 +100,9 @@ holds a one-time code, so it only **displays** it:
 
 ## 4. CI and secrets
 Treat every CI log and artifact as public: in a public repo they are.
+The Dart obfuscation map (`build/app/obfuscation.map.json`) goes to Sentry
+only and is never kept as an artifact: it would undo the obfuscation. The
+`symbols-*` artifacts hold only `build/symbols` (split debug info).
 GitHub hides a secret only where its **exact stored text** appears; a key
 decoded from base64 or read out of a JSON secret is different text and
 would be printed in full by any tool that echoes it in an error.

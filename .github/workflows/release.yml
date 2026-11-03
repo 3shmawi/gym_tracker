@@ -124,6 +124,7 @@ jobs:
           flutter build appbundle --release --flavor prod \
             --dart-define-from-file=env/prod.json \
             --obfuscate --split-debug-info=build/symbols \
+            --extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json \
             --build-name=$VERSION \
             --build-number=$BUILD
 
@@ -181,6 +182,8 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          # Must equal the release the app reports (sentry_flutter: <package>@<version>+<build>).
+          SENTRY_APP_ID: com.mohager.azm
         run: ./scripts/upload_symbols.sh
 
       - name: Keep obfuscation symbols
@@ -236,6 +239,8 @@ jobs:
           flutter gen-l10n
 
       - name: Code signing (your .p12 + profile from App Store Connect)
+        # 3 attempts x 3 min + pauses; the job timeout (60) is the last resort.
+        timeout-minutes: 12
         env:
           ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
           P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
@@ -258,7 +263,7 @@ jobs:
           echo "APP_STORE_CONNECT_PRIVATE_KEY=@file:$signing/asc.p8" >> "$GITHUB_ENV"
           keychain initialize
           keychain add-certificates --certificate "$signing/dist.p12" --certificate-password "@env:P12_PASSWORD"
-          app-store-connect fetch-signing-files "com.mohager.azm" --type IOS_APP_STORE --create
+          ./scripts/fetch_signing_files.sh "com.mohager.azm"
           keychain add-certificates
           xcode-project use-profiles
 
@@ -267,6 +272,7 @@ jobs:
           flutter build ipa --release --flavor prod \
             --dart-define-from-file=env/prod.json \
             --obfuscate --split-debug-info=build/symbols \
+            --extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json \
             --build-name=$VERSION \
             --build-number=$BUILD \
             --export-options-plist="$HOME/export_options.plist"
@@ -279,6 +285,8 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          # Must equal the release the app reports (sentry_flutter: <package>@<version>+<build>).
+          SENTRY_APP_ID: com.mohager.azm
         run: ./scripts/upload_symbols.sh
 
       - name: Keep obfuscation symbols

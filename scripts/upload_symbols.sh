@@ -19,6 +19,22 @@ if [ -z "${SENTRY_AUTH_TOKEN:-}" ] || [ -z "${SENTRY_ORG:-}" ] || [ -z "${SENTRY
   echo "::warning::SENTRY_AUTH_TOKEN / SENTRY_ORG / SENTRY_PROJECT not set — symbols not uploaded (run tool/setup_secrets.sh)."
   exit 0
 fi
+# The release must be the one the app reports, or Sentry files the upload
+# under a release that never gets an event. sentry_flutter names it
+# <package or bundle id>@<version>+<build> (LoadReleaseIntegration), the
+# plugin defaults to <pubspec name>@<pubspec version> (`gym_tracker@0.1.0+1`
+# before this fix). CI passes SENTRY_APP_ID, VERSION and BUILD.
+if [ -n "${SENTRY_APP_ID:-}" ] && [ -z "${SENTRY_RELEASE:-}" ]; then
+  if [[ "${SENTRY_APP_ID}" =~ ^[A-Za-z0-9._-]+$ ]] \
+     && [[ "${VERSION:-}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] \
+     && [[ "${BUILD:-}" =~ ^[0-9]+$ ]]; then
+    export SENTRY_RELEASE="${SENTRY_APP_ID}@${VERSION}+${BUILD}"
+    export SENTRY_DIST="$BUILD"
+    echo "Sentry release: $SENTRY_RELEASE (dist $SENTRY_DIST)"
+  else
+    echo "::warning title=Sentry symbols::SENTRY_APP_ID, VERSION or BUILD missing or malformed; the plugin falls back to the pubspec version."
+  fi
+fi
 out=$(mktemp)
 if dart run sentry_dart_plugin 2>&1 | tee "$out"; then
   rm -f "$out"

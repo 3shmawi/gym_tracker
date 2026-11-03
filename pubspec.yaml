@@ -79,3 +79,8 @@ sentry:
   # Linking commits needs the Sentry GitHub integration and full history.
   commits: false
   log_level: error
+  # Readable issue titles for obfuscated builds: release.yml writes this map
+  # with --extra-gen-snapshot-options=--save-obfuscation-map (Sentry docs,
+  # "Dart Plugin", read 2026-11-03). Kept out of the symbols artifact: it
+  # undoes the obfuscation.
+  dart_symbol_map_path: build/app/obfuscation.map.json

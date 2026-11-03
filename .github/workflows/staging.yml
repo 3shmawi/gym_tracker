@@ -220,6 +220,8 @@ jobs:
           flutter pub get
           flutter gen-l10n
       - name: Code signing (staging bundle id)
+        # 3 attempts x 3 min + pauses; the job timeout (60) is the last resort.
+        timeout-minutes: 12
         env:
           ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
           P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
@@ -240,7 +242,7 @@ jobs:
           echo "APP_STORE_CONNECT_PRIVATE_KEY=@file:$signing/asc.p8" >> "$GITHUB_ENV"
           keychain initialize
           keychain add-certificates --certificate "$signing/dist.p12" --certificate-password "@env:P12_PASSWORD"
-          app-store-connect fetch-signing-files "com.mohager.azm.stg" --type IOS_APP_STORE --create
+          ./scripts/fetch_signing_files.sh "com.mohager.azm.stg"
           keychain add-certificates
           xcode-project use-profiles
       - name: Build IPA
