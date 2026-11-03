@@ -191,9 +191,9 @@ class ExerciseImageManifest {
     final licenses = {for (final i in images) i.licenseUrl: i.license};
     return [
       'The exercise pictures are line drawings by Everkinetic, used under '
-          'Creative Commons licenses. We changed them (made transparent and '
-          'resized), and the changed pictures are shared under '
-          '$adaptedLicense: $adaptedLicenseUrl',
+      'Creative Commons licenses. We changed them (made transparent and '
+      'resized), and the changed pictures are shared under '
+      '$adaptedLicense: $adaptedLicenseUrl',
       '',
       for (final i in images) '- ${i.attribution}',
       '',
