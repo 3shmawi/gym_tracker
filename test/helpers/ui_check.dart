@@ -116,6 +116,21 @@ extension UiCheck on WidgetTester {
       ),
     );
     await pumpAndSettle();
+    await loadImages();
+  }
+
+  /// Decodes the pictures on screen. Images load asynchronously, so without
+  /// this a screenshot (and the layout checks) would see an empty box where
+  /// a picture goes, and differ from run to run.
+  Future<void> loadImages() async {
+    final elements = elementList(find.byType(Image)).toList();
+    if (elements.isEmpty) return;
+    await runAsync(() async {
+      for (final element in elements) {
+        await precacheImage((element.widget as Image).image, element);
+      }
+    });
+    await pumpAndSettle();
   }
 
   /// Fails when anything on screen is out of proportion or broken:

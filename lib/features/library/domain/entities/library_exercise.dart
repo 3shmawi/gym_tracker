@@ -56,8 +56,9 @@ class LibraryExercise {
   String get id => defaults.id;
   LocalizedName get name => defaults.name;
 
-  /// Where the picture will be (session 8): until then the screens draw a
-  /// placeholder. The asset path is derived from the id, never typed.
+  /// The key of the picture: its files are `assets/exercises/<key>.webp` and
+  /// `<key>_thumb.webp` (see `ExerciseImages`), derived from the id, never typed.
+  /// Without a picture the screens draw a placeholder.
   String get illustrationKey => id;
 
   /// Steps allowed per exercise.

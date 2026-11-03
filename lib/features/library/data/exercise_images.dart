@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:meta/meta.dart';
 
 /// The pictures bundled for library exercises (`assets/exercises/`).
 ///
@@ -27,6 +26,7 @@ abstract final class ExerciseImages {
     'db_shrug',
     'flat_db_press',
     'hammer_curl',
+    'incline_machine_press',
     'leg_curl',
     'leg_extension',
     'leg_press',
@@ -34,6 +34,7 @@ abstract final class ExerciseImages {
     'pec_deck',
     'rope_pushdown',
     'straight_arm_pulldown',
+    'wide_lat_pulldown',
   };
 
   static bool has(String exerciseId) => available.contains(exerciseId);
@@ -50,10 +51,9 @@ abstract final class ExerciseImages {
     LicenseRegistry.addLicense(() async* {
       final json = await rootBundle.loadString(manifestAsset);
       final manifest = ExerciseImageManifest.parse(json);
-      yield LicenseEntryWithLineBreaks(
-        const ['Exercise illustrations'],
-        manifest.licenseText(),
-      );
+      yield LicenseEntryWithLineBreaks(const [
+        'Exercise illustrations',
+      ], manifest.licenseText());
     });
   }
 }
@@ -78,7 +78,7 @@ class ExerciseImageEntry {
     required this.attribution,
   });
 
-  factory ExerciseImageEntry.fromJson(Object? json) {
+  factory fromJson(Object? json) {
     if (json is! Map<String, Object?>) {
       throw const FormatException('A manifest entry must be an object');
     }
@@ -148,7 +148,7 @@ class ExerciseImageManifest {
     required this.images,
   });
 
-  factory ExerciseImageManifest.parse(String source) {
+  factory parse(String source) {
     final json = jsonDecode(source);
     if (json is! Map<String, Object?>) {
       throw const FormatException('The manifest must be an object');
@@ -189,11 +189,13 @@ class ExerciseImageManifest {
   /// licence links.
   String licenseText() {
     final licenses = {for (final i in images) i.licenseUrl: i.license};
+    final notice =
+        'The exercise pictures are line drawings by Everkinetic, used under '
+        'Creative Commons licenses. We changed them (made transparent and '
+        'resized), and the changed pictures are shared under '
+        '$adaptedLicense: $adaptedLicenseUrl';
     return [
-      'The exercise pictures are line drawings by Everkinetic, used under '
-      'Creative Commons licenses. We changed them (made transparent and '
-      'resized), and the changed pictures are shared under '
-      '$adaptedLicense: $adaptedLicenseUrl',
+      notice,
       '',
       for (final i in images) '- ${i.attribution}',
       '',

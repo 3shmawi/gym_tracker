@@ -6,7 +6,8 @@ id, names in Arabic and English, a muscle group, the equipment it needs and
 members); captains work in the dashboard (decision doc §20).
 
 Design: https://claude.ai/artifact/26EDAr572B4Qr8eBLB4D75 (top row, approved
-Nov 2026). Illustrations are placeholders until session 8.
+Nov 2026). Pictures: 19 of the 23 exercises have a drawing, the other 4 show
+the placeholder (`docs/features/exercise_images.md`).
 
 ## What it does
 - **Plan editor → "Add an exercise"** opens a sheet: *Pick from the library*
@@ -46,6 +47,7 @@ lib/features/library/
   domain/usecases/search_exercises.dart   SearchExercises (normalizes, filters)
   data/exercise_catalog.dart              the content (23 exercises)
   data/catalog_exercise_library.dart      ExerciseLibrary over the catalog
+  data/exercise_images.dart               which exercises have a picture + the licence manifest
   presentation/                           LibraryView/Page, ExerciseGuideView/Page,
                                           add-exercise sheet, illustration
 ```
@@ -93,6 +95,9 @@ No search text, names or ids typed by the member are sent
   Search); no package was added.
 
 ## Tests
+- Pictures: `exercise_images_test.dart` (ids, manifest and files agree, complete
+  entries, no banned licence, the licenses page lists every attribution),
+  `exercise_illustration_test.dart` (picture or placeholder for every exercise).
 - Unit: catalog integrity and sync with `PlanTemplates`, `SearchExercises`
   (spellings, ranking, filters, hostile text), `EditPlan.addLibraryExercise`.
 - Widget: `LibraryView`, `ExerciseGuideView`, the add sheet (`screensUiTests`,
@@ -107,7 +112,8 @@ No search text, names or ids typed by the member are sent
   exercise by hand and picks one from the library.
 
 ## Not done here
-- Real illustrations (session 8): `LibraryExercise.illustrationKey` is the id.
+- Pictures for `reverse_pec_deck`, `reverse_wrist_curl`, `barbell_wrist_curl`
+  and `cable_kickback`: no free image fits (`exercise_images.md`).
 - A link to the steps from the workout screen.
 - Captain tools (copy a plan, templates, one change for one member): the
   dashboard, decision doc §20 (needs `plan_templates` and `plans.template_id`).

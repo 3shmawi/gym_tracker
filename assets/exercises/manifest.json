@@ -98,8 +98,8 @@
       "file": "assets/exercises/db_lunge.webp",
       "thumb": "assets/exercises/db_lunge_thumb.webp",
       "title": "Lunges: Dumbbell",
-      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0115/0115-tension.png",
-      "sourceFile": "src/exercises/0115/0115-tension.png at commit 446bb9a of everkinetic/data",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/images-web/dumbbell-lunges-2.png",
+      "sourceFile": "src/images-web/dumbbell-lunges-2.png at commit 446bb9a of everkinetic/data",
       "license": "CC-BY-SA-4.0",
       "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
       "author": "Everkinetic (Greg Priday)",
@@ -182,6 +182,24 @@
       "modified": true,
       "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
       "attribution": "\"Biceps Curl: Dumbbell (Hammer)\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
+    },
+    {
+      "exercise": "incline_machine_press",
+      "file": "assets/exercises/incline_machine_press.webp",
+      "thumb": "assets/exercises/incline_machine_press_thumb.webp",
+      "title": "Incline Chest Press",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/images-web/incline-chest-press-2.png",
+      "sourceFile": "src/images-web/incline-chest-press-2.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-03",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Incline Chest Press\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
     },
     {
       "exercise": "leg_curl",
@@ -308,6 +326,24 @@
       "modified": true,
       "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
       "attribution": "\"Straight Arm Push Down\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
+    },
+    {
+      "exercise": "wide_lat_pulldown",
+      "file": "assets/exercises/wide_lat_pulldown.webp",
+      "thumb": "assets/exercises/wide_lat_pulldown_thumb.webp",
+      "title": "Wide Grip Lat Pull Down",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/images-web/wide-grip-lat-pull-down-2.png",
+      "sourceFile": "src/images-web/wide-grip-lat-pull-down-2.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-03",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Wide Grip Lat Pull Down\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
     }
   ]
 }

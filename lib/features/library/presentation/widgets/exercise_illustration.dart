@@ -38,7 +38,6 @@ class ExerciseIllustration extends StatelessWidget {
         fit: BoxFit.contain,
         color: palette.textPrimary,
         colorBlendMode: BlendMode.srcIn,
-        filterQuality: FilterQuality.medium,
         errorBuilder: (_, _, _) => placeholder,
       ),
     );
