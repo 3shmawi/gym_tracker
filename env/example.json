@@ -4,5 +4,6 @@
   "POSTHOG_API_KEY": "",
   "POSTHOG_HOST": "https://eu.i.posthog.com",
   "SENTRY_DSN": "",
-  "CLARITY_PROJECT_ID": ""
+  "CLARITY_PROJECT_ID": "",
+  "TURNSTILE_SITE_KEY": ""
 }

@@ -800,5 +800,39 @@
   "settingsMyAccount": "My account",
   "joinErrorTitle": "We couldn't join right now",
   "joinErrorBody": "Something went wrong on our side. Try again in a moment.",
-  "commonBack": "Back"
+  "commonBack": "Back",
+  "soloTitle": "Your earlier workouts on this phone",
+  "soloBody": "You have {count} workouts saved here. What should we do with them?",
+  "@soloBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "soloBodyPlanOnly": "You have a workout plan saved here. What should we do with it?",
+  "soloKeep": "Keep them on this phone only",
+  "soloKeepDetail": "They stay in Solo. No gym can see them.",
+  "soloAdd": "Add them to my account",
+  "soloAddDetail": "We copy your history and plan to your account so you keep them. Your captain can't see them.",
+  "soloSkip": "Decide later",
+  "soloSkipDetail": "We'll ask again the next time you join a gym.",
+  "soloConfirm": "Confirm",
+  "soloCopying": "Copying {done} of {total}…",
+  "@soloCopying": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "soloDoneTitle": "Copied to your account",
+  "soloDoneBody": "Your workouts are on your account. They are still on this phone too.",
+  "soloFailed": "Copying stopped. Nothing was lost, and you can try again.",
+  "soloLater": "Later",
+  "soloProfileRow": "Add my solo history to my account",
+  "soloProfileDone": "Your solo history is on your account"
 }

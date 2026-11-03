@@ -27,20 +27,23 @@
   <article class="doc">
     <div data-lang="en">
       <h1>Privacy Policy</h1>
-      <p class="updated">Last updated: 2026-11-01</p>
+      <p class="updated">Last updated: 2026-11-02</p>
       <p>This policy explains what information <strong>Azm</strong> ("the app"), published by Mohamed Ashmawy, collects, why, and the choices you have.</p>
       <h2>Information we collect</h2>
       <ul>
-        <li><strong>Information you provide</strong> — for example your email address if you create an account, and content you choose to save in the app.</li>
+        <li><strong>Information you provide</strong> — for example your email address if you choose to add one to your account, and content you choose to save in the app.</li>
+        <li><strong>Gym accounts</strong> — only if you join a gym (see below): the display name your gym gives you, your role and permissions, your plan and your workout logs.</li>
         <li><strong>Usage information</strong> — which screens and features are used, app version, device type and operating system, collected to improve the app.</li>
         <li><strong>Diagnostics</strong> — crash and error reports so we can fix problems.</li>
       </ul>
       <h2>Service providers</h2>
       <ul>
         <li><strong>Supabase</strong> — hosts the app's data and accounts.</li>
+        <li><strong>Cloudflare</strong> — hosts this website, and provides Turnstile, a bot check used when you join a gym.</li>
         <li><strong>PostHog</strong> — product analytics and feature rollout (no advertising).</li>
         <li><strong>Sentry</strong> — crash reports and performance diagnostics (device model, OS version, app version, error details).</li>
       </ul>
+      <p>Turnstile runs invisibly when you join a gym. It is provided by Cloudflare and subject to the <a href="https://www.cloudflare.com/en-gb/turnstile-privacy-policy/" rel="noopener noreferrer">Cloudflare Turnstile Privacy Addendum</a>, which we reference here as Cloudflare requires.</p>
       <p>These providers process data only on our behalf. We do not sell your personal information and we do not use it for third-party advertising.</p>
       <h2>How we use information</h2>
       <ul>
@@ -49,12 +52,23 @@
         <li>To detect, investigate and fix errors.</li>
         <li>To respond to your requests.</li>
       </ul>
+      <h2>Gym accounts</h2>
+      <p>Azm works fully on your own, with no account: your workouts stay on your phone. If your gym gives you a QR code or a 6-character code, joining creates an account for you.</p>
+      <ul>
+        <li><strong>What your gym sees.</strong> The gym's owner and captains see the display name they gave you, your role and permissions, and the workouts you log <em>in that gym</em> while you are an active member. They can change your plan. They cannot see workouts you logged on your own or in another gym.</li>
+        <li><strong>Sign-in without email.</strong> A trainee account has no password, email or phone number. It is identified by a random account id and a random install id kept on your phone (not a device identifier). You can add an email in the app to make it easier to recover your account.</li>
+        <li><strong>Camera.</strong> The camera is used on your phone only, to read the gym's QR code. Images are not recorded, stored or sent. You can type the code instead.</li>
+        <li><strong>Invite codes.</strong> A code is stored only as a one-way hash, works once, and expires after 7 days.</li>
+        <li><strong>Failed attempts.</strong> To stop code guessing we keep failed join attempts with a hashed network address for 30 days, then delete them.</li>
+        <li><strong>Adding your solo history.</strong> You choose whether to copy the workouts and plan already on your phone to your account. If you do, they are not visible to any gym.</li>
+        <li><strong>Leaving a gym.</strong> Your data stays with you. The gym's setting decides whether you can still open that gym's history in the app or it is hidden; hidden is not deleted. Deleting your account removes it.</li>
+      </ul>
       <h2>Notifications</h2>
       <p>The rest timer can tell you when a rest is over while your phone is locked. The notification is scheduled on your device only: its content (the exercise and set number) is never sent anywhere, and no push token is created. The app asks for permission at your first rest, not at launch; on Android 14 and later it may also ask you to turn on "Alarms &amp; reminders" so it rings on time. You can turn notifications off at any time in your phone's settings.</p>
       <h2>Retention and deletion</h2>
-      <p>We keep personal data only as long as your account is active or as needed to provide the app. You can delete your account and its data at any time — see <a href="delete-account.html">Delete your account</a>.</p>
+      <p>We keep personal data only as long as your account is active or as needed to provide the app. You can delete your account and its data at any time, in the app (Profile → Delete account) or by request — see <a href="delete-account.html">Delete your account</a>.</p>
       <h2>Children</h2>
-      <p>The app is not directed to children under 13 and we do not knowingly collect their personal information.</p>
+      <p>The app is not directed to children under 13 and we do not knowingly collect their personal information. Gyms may enrol members under 18; the gym is responsible for obtaining a parent's or guardian's consent.</p>
       <h2>Security</h2>
       <p>Data is encrypted in transit (HTTPS) and access is restricted. No method of transmission or storage is 100% secure, but we work to protect your information.</p>
       <h2>Changes</h2>
@@ -64,20 +78,23 @@
     </div>
     <div data-lang="ar">
       <h1>سياسة الخصوصية</h1>
-      <p class="updated">آخر تحديث: 2026-11-01</p>
+      <p class="updated">آخر تحديث: 2026-11-02</p>
       <p>توضح هذه السياسة المعلومات التي يجمعها تطبيق <strong>Azm</strong> ("التطبيق") الذي ينشره Mohamed Ashmawy، وسبب جمعها، والخيارات المتاحة لك.</p>
       <h2>المعلومات التي نجمعها</h2>
       <ul>
-        <li><strong>معلومات تقدمها أنت</strong> — مثل بريدك الإلكتروني عند إنشاء حساب، والمحتوى الذي تختار حفظه في التطبيق.</li>
+        <li><strong>معلومات تقدمها أنت</strong> — مثل بريدك الإلكتروني إذا اخترت إضافته إلى حسابك، والمحتوى الذي تختار حفظه في التطبيق.</li>
+        <li><strong>حسابات الجيم</strong> — فقط إذا انضممت إلى جيم (انظر أدناه): الاسم الذي أعطاه لك الجيم، ودورك وصلاحياتك، وخطتك وسجل تمارينك.</li>
         <li><strong>معلومات الاستخدام</strong> — الشاشات والميزات المستخدمة، وإصدار التطبيق، ونوع الجهاز ونظام التشغيل، بهدف تحسين التطبيق.</li>
         <li><strong>بيانات التشخيص</strong> — تقارير الأعطال والأخطاء لنتمكن من إصلاحها.</li>
       </ul>
       <h2>مقدمو الخدمات</h2>
       <ul>
         <li><strong>Supabase</strong> — استضافة بيانات التطبيق والحسابات.</li>
+        <li><strong>Cloudflare</strong> — استضافة هذا الموقع، وخدمة Turnstile للتحقق من أنك لست برنامجاً آلياً عند الانضمام إلى جيم.</li>
         <li><strong>PostHog</strong> — تحليلات الاستخدام وتفعيل الميزات تدريجياً (بدون إعلانات).</li>
         <li><strong>Sentry</strong> — تقارير الأعطال وأداء التطبيق (نوع الجهاز، إصدار النظام، إصدار التطبيق، تفاصيل الخطأ).</li>
       </ul>
+      <p>يعمل Turnstile بشكل غير مرئي عند انضمامك إلى جيم. تقدّمه Cloudflare ويخضع لـ <a href="https://www.cloudflare.com/en-gb/turnstile-privacy-policy/" rel="noopener noreferrer">ملحق خصوصية Cloudflare Turnstile</a>، ونشير إليه هنا كما تشترط Cloudflare.</p>
       <p>يعالج هؤلاء المزودون البيانات نيابةً عنا فقط. نحن لا نبيع معلوماتك الشخصية ولا نستخدمها لإعلانات أطراف ثالثة.</p>
       <h2>كيف نستخدم المعلومات</h2>
       <ul>
@@ -86,12 +103,23 @@
         <li>لاكتشاف الأخطاء وإصلاحها.</li>
         <li>للرد على طلباتك.</li>
       </ul>
+      <h2>حسابات الجيم</h2>
+      <p>يعمل Azm بالكامل وحدك ودون حساب: تمارينك تبقى على هاتفك. إذا أعطاك جيمك رمز QR أو كوداً من 6 خانات، فإن الانضمام ينشئ لك حساباً.</p>
+      <ul>
+        <li><strong>ما الذي يراه جيمك.</strong> يرى مالك الجيم والكباتن الاسم الذي أعطوه لك، ودورك وصلاحياتك، والتمارين التي تسجلها <em>داخل ذلك الجيم</em> طالما أنت عضو نشط فيه. ويمكنهم تعديل خطتك. ولا يرون التمارين التي سجلتها وحدك أو في جيم آخر.</li>
+        <li><strong>الدخول بدون بريد إلكتروني.</strong> حساب المتدرّب ليس له كلمة مرور ولا بريد ولا رقم هاتف. يُعرَّف برقم حساب عشوائي ورقم تثبيت عشوائي محفوظ على هاتفك (ليس معرّفاً للجهاز). يمكنك إضافة بريد إلكتروني من التطبيق ليسهل استرجاع حسابك.</li>
+        <li><strong>الكاميرا.</strong> تُستخدم الكاميرا على هاتفك فقط لقراءة رمز QR الخاص بالجيم. لا تُسجَّل الصور ولا تُحفظ ولا تُرسل. يمكنك كتابة الكود بدلاً من ذلك.</li>
+        <li><strong>أكواد الدعوة.</strong> يُخزَّن الكود على شكل بصمة (hash) أحادية الاتجاه فقط، ويعمل مرة واحدة، وتنتهي صلاحيته بعد 7 أيام.</li>
+        <li><strong>المحاولات الفاشلة.</strong> لمنع تخمين الأكواد نحتفظ بمحاولات الانضمام الفاشلة مع بصمة (hash) لعنوان الشبكة لمدة 30 يوماً ثم نحذفها.</li>
+        <li><strong>إضافة تاريخك الفردي.</strong> أنت تختار هل تُنسخ التمارين والخطة الموجودة على هاتفك إلى حسابك. وإن فعلت فلا يراها أي جيم.</li>
+        <li><strong>مغادرة الجيم.</strong> بياناتك تبقى معك. وإعداد الجيم هو الذي يحدد هل تستطيع فتح سجل ذلك الجيم في التطبيق أم يُخفى؛ والإخفاء ليس حذفاً. وحذف حسابك يزيله.</li>
+      </ul>
       <h2>الإشعارات</h2>
       <p>يمكن لمؤقت الراحة أن ينبهك عند انتهاء الراحة وهاتفك مقفول. يُجدوَل الإشعار على جهازك فقط: محتواه (اسم التمرين ورقم المجموعة) لا يُرسل إلى أي مكان، ولا يُنشأ أي رمز للإشعارات عن بُعد. يطلب التطبيق الإذن عند أول راحة لك، وليس عند فتحه؛ وعلى أندرويد 14 وما بعده قد يطلب منك أيضاً تفعيل «المنبّهات والتذكيرات» ليرنّ في الوقت المحدد. يمكنك إيقاف الإشعارات في أي وقت من إعدادات هاتفك.</p>
       <h2>مدة الاحتفاظ والحذف</h2>
-      <p>نحتفظ بالبيانات الشخصية طالما كان حسابك نشطاً أو بالقدر اللازم لتقديم التطبيق. يمكنك حذف حسابك وبياناته في أي وقت — راجع <a href="delete-account.html">حذف الحساب</a>.</p>
+      <p>نحتفظ بالبيانات الشخصية طالما كان حسابك نشطاً أو بالقدر اللازم لتقديم التطبيق. يمكنك حذف حسابك وبياناته في أي وقت، من التطبيق (حسابي ← حذف الحساب) أو بطلب — راجع <a href="delete-account.html">حذف الحساب</a>.</p>
       <h2>الأطفال</h2>
-      <p>التطبيق غير موجه للأطفال دون 13 عاماً، ولا نجمع معلوماتهم الشخصية عن علم.</p>
+      <p>التطبيق غير موجه للأطفال دون 13 عاماً، ولا نجمع معلوماتهم الشخصية عن علم. قد تسجّل الجيمات أعضاء دون 18 عاماً، والجيم مسؤول عن الحصول على موافقة ولي الأمر.</p>
       <h2>الأمان</h2>
       <p>يتم تشفير البيانات أثناء نقلها (HTTPS) ويقتصر الوصول إليها على المصرح لهم. لا توجد وسيلة نقل أو تخزين آمنة بنسبة 100%، لكننا نعمل على حماية معلوماتك.</p>
       <h2>التغييرات</h2>

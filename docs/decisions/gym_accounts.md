@@ -485,3 +485,15 @@ Feature doc: [`features/gym_account_app.md`](../features/gym_account_app.md).
 | Email upgrade | "Add email" calls `updateUser(email)` (§16 #2). Signing back in with that email needs an email one-time-code screen, not built yet. |
 | Turnstile | Seam only (`captchaToken`, `null`); required before the flag goes on. |
 | Last-owner delete | An owner types the name of the first gym they own (alphabetical); the server decides about the rest (`409 last_owner`). |
+
+## 19. Solo data import as built (delivery step 5, PR C) — where it differs from §10
+
+| Point | Decision / difference |
+|---|---|
+| Choices | *Keep* (default, never asked again), *Add my solo history to my account*, and a third, *Decide later* (asked again at the next join; always in My account). |
+| Resume | Not a stored cursor: a run always restarts from the first workout and the server skips what it has (`client_id` is content-derived), so a stale cursor cannot lose a workout. |
+| Filter | Workouts the server's validation would refuse are kept on the phone and not sent, so one bad workout never blocks its chunk. |
+| Confirmation | `done` when `solo_total` ≥ the number of workouts sent. |
+| Local copy | **Never deleted automatically** (§10 said "after the user confirms or after 30 days"): not built; the person can erase it with Delete account. |
+| Offline | Retry; no background queue (§10 said "queued"). |
+

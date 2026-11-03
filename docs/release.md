@@ -130,12 +130,27 @@ shipping the build changes nothing for users until it is turned on. Turn it on
 for staging first (PostHog → Feature flags → `gym_join`, filter
 `app = gym_tracker`, `environment = staging`).
 Before the flag goes on in production:
-1. **Turnstile.** Cloudflare dashboard → Turnstile → a widget for the app; put
-   the **secret** in Supabase → Authentication → Attack Protection (Captcha
-   provider: Turnstile). The site key is publishable; the app code that asks
-   Turnstile for a token plugs into `SupabaseGymRepository.captchaToken`
-   (today `null`). Without it anonymous sign-in is open to scripts (Supabase
-   limits it to 30 per hour per IP by default).
+1. **Turnstile (built; needs your keys).** The app asks Turnstile for a token
+   before every anonymous sign-in (`lib/core/captcha/turnstile_captcha.dart`,
+   package `webview_flutter` 4.14.1: a 1-pixel web view that loads Cloudflare's script and may open only `challenges.cloudflare.com`).
+   - Cloudflare → Turnstile → the widget's **Domains** must include
+     `azmm.pages.dev` (the app uses it as the widget's origin).
+   - Put the **site key** (publishable) in every env file the build uses
+     (`TURNSTILE_SITE_KEY` in `env/staging.json`, `env/prod.json`, and the
+     `ENV_*_JSON` secrets). Put the **secret** only in Supabase → Authentication →
+     Attack Protection (Captcha provider: Turnstile). Never in an env file.
+   - **Order matters:** with captcha protection on in Supabase, a build without
+     `TURNSTILE_SITE_KEY` cannot sign in anonymously (joining fails). With the
+     key set and protection off, tokens are simply ignored.
+   - Invisible mode requires the privacy policy to reference Cloudflare's
+     Turnstile Privacy Addendum: done in `website/privacy.html` (EN + AR),
+     pinned by `store_pages_test.dart`. Keep it if you change the page.
+   - The widget should be an *invisible* (or non-interactive) type: it runs
+     without UI, so a Managed widget that decides to show a challenge cannot be
+     completed and the join fails after 20 seconds. Check on the first staging
+     build; if it happens, change the widget's mode in Cloudflare.
+   - Without captcha, anonymous sign-in is open to scripts (Supabase limits it
+     to 30 per hour per IP by default).
 2. **Camera strings.** `ios/Runner/{en,ar}.lproj/InfoPlist.strings` and
    `Info.plist` (`NSCameraUsageDescription`) hold the text App Review sees
    (decision doc §8). Edit all three together; `platform_config_test.dart`
@@ -155,6 +170,16 @@ Before the flag goes on in production:
 6. A real phone: scan a card from `scripts/make_invites` (staging), join, see
    Today, switch, sign out, delete the throwaway account.
 
+#### Website texts that must match the app (PR C)
+`website/privacy.html`, `terms.html` and `delete-account.html` (English and
+Arabic, "Last updated" 2026-11-02) describe gym accounts: no-email sign-in, the
+camera, hashed codes, hashed attempt logs kept 30 days, leaving a gym, deletion,
+minors, Cloudflare and **Turnstile**. The policy says Turnstile protects joining,
+so **turn Turnstile on before the `gym_join` flag** (step 1 above).
+`test/security/store_pages_test.dart` pins the promises. Cloudflare Pages deploys
+`website/` when this merges, so the texts are live before the flag: they describe
+a feature users cannot see yet, which is the safe order (never the reverse).
+
 #### Demo gym for App Review
 Apple (2.1) and Google need a way into the gym features without a real captain.
 The demo code is a **secret-like value that never goes in the repo, a chat or a
@@ -170,6 +195,9 @@ doc §8; re-read both consoles' pages before submitting).
 3. Paste the code and attach the QR image in the review notes: "Open Azm →
    Join your gym → type the code (or scan the QR). Solo mode needs no account."
    Then delete the PDF.
+   The demo code is a *reusable* code (kind `demo`): it needs the same attempt
+   throttling as every code and must never be pasted into a PR, an issue, a chat,
+   a log or the repo; if it leaks, run the script again (it rotates).
 4. The demo member is a trainee with all three permissions; its sessions and
    plans are wiped every night (`wipe_demo_data()`), so keep nothing real there.
 5. Schedule the nightly jobs once `pg_cron` is on (Database → Extensions →

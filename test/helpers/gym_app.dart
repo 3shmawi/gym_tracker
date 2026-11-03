@@ -11,16 +11,19 @@ import 'package:gym_tracker/core/router/router_refresh.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/features/gym/data/repositories/in_memory_gym_local_repository.dart';
+import 'package:gym_tracker/features/gym/data/repositories/in_memory_solo_import.dart';
 import 'package:gym_tracker/features/gym/domain/entities/account_session.dart';
 import 'package:gym_tracker/features/gym/presentation/scanner_camera.dart';
 import 'package:gym_tracker/features/settings/data/repositories/shared_prefs_settings_repository.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_controller.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'gym_fakes.dart';
+import 'solo_fakes.dart';
 
 /// A fake camera: tests call [scan] as if the camera had read a QR, or
 /// [fail] as if it could not start.
@@ -46,6 +49,7 @@ class GymApp {
   new({
     AccountSession session = AccountSession.signedOut,
     this.withPlan = true,
+    this.history = const [],
     bool onboardingDone = true,
     this._flagOn = true,
   }) : account = FakeAccountRepository(session),
@@ -59,12 +63,18 @@ class GymApp {
   final FakeCamera camera;
   final bool _flagOn;
   final bool withPlan;
+  final List<WorkoutSession> history;
+  final InMemorySoloImportStore soloStore = InMemorySoloImportStore();
+  final FakeSoloServer soloServer = FakeSoloServer();
   late SharedPreferences prefs;
 
   void tearDown() {
     FeatureFlags.overrides.clear();
     Dependencies.accountRepository = FakeAccountRepository();
     Dependencies.gymLocalRepository = InMemoryGymLocalRepository();
+    Dependencies.soloImportStore = InMemorySoloImportStore();
+    Dependencies.soloImportRepository =
+        const UnconfiguredSoloImportRepository();
   }
 
   Future<void> pump(
@@ -81,12 +91,18 @@ class GymApp {
     await tester.pumpWidget(const SizedBox.shrink());
     SharedPreferences.setMockInitialValues({
       if (withPlan) LocalWorkoutRepository.planKey: _planJson,
+      if (history.isNotEmpty)
+        LocalWorkoutRepository.historyKey: jsonEncode([
+          for (final s in history) s.toJson(),
+        ]),
     });
     prefs = await SharedPreferences.getInstance();
     FeatureFlags.overrides[Flags.gymJoin] = _flagOn;
     Dependencies.accountRepository = account;
     Dependencies.gymRepository = gyms;
     Dependencies.gymLocalRepository = local;
+    Dependencies.soloImportStore = soloStore;
+    Dependencies.soloImportRepository = soloServer;
     Dependencies.workoutRepository = LocalWorkoutRepository(prefs);
     routerRefresh.attach(account.sessionChanges);
     await tester.pumpWidget(

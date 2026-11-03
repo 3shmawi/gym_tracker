@@ -201,10 +201,12 @@ Design: [`features/gym_account_app.md`](features/gym_account_app.md).
   `first_unlock_this_device`; a Keychain session left by an earlier install is
   dropped on a fresh install. An unreadable store means "no session".
 - **Anonymous sign-in happens only when a code is redeemed**, never at launch
-  (solo users make no account); the `captchaToken` seam is `null` until
-  Cloudflare Turnstile is configured — **required before shipping** (decision
-  §16). Until then the 30-per-hour-per-IP limit of anonymous sign-ins and the
-  redeem throttles are the only guards.
+  (solo users make no account), and with a Cloudflare Turnstile token when
+  `TURNSTILE_SITE_KEY` is set (`lib/core/captcha/`). The site key is publishable
+  and lives in the env files; the **secret** is only in Supabase's Auth settings
+  (`gym_account_app_test.dart` fails on a `0x4…` key in `lib/` and keeps the
+  widget's origin to the website host without opening the site's CSP). A widget
+  that does not answer within 20 s fails the join (never a silent skip).
 - **A QR is untrusted input.** The scanner takes text only through
   `InviteCode.fromScan`: `https://azmm.pages.dev/join/<code>`,
   `azm://join/<code>` or the bare code; another host, a port, user info, a query,
@@ -224,6 +226,12 @@ Design: [`features/gym_account_app.md`](features/gym_account_app.md).
   gym's name first, and a sole owner is refused with the gym names.
 - **Add email** checks the address shape on the phone (ASCII, ≤ 254) and leaves
   the rest to Auth; the account keeps its id, so RLS and history are unchanged.
+- **Solo import** sends only workouts and the plan, in chunks of 50, with a
+  `client_id` that is a hash of the workout's own content (no device or account
+  id). The server validates everything again; imported workouts are solo, so no
+  captain sees them. The phone keeps its data; the import marks `done` only when
+  the server's total covers what was sent. `test/security/store_pages_test.dart`
+  checks the privacy/terms/delete pages keep promising what the app does.
 - Known, accepted: gym logos are initials only (no image request); the captain's
   name is not shown (RLS); `mobile_scanner` bundles the ML Kit model.
 

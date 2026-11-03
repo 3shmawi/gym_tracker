@@ -40,6 +40,12 @@
 - **Delete account** (board 4): what is lost, "also delete this phone's
   workouts" (off by default), an owner types the gym name, `delete-account
   {confirm:"delete"}`; `409 last_owner` says which gyms to hand over first.
+- **Solo data → account** (PR C, board 3 last phone): right after *Joined*, if the
+  phone has workouts or a plan and the person has not answered, a sheet asks
+  once: **Keep my solo data** (default), **Add my solo history to my account**,
+  **Decide later**. *Keep* sends nothing and is never asked again. *Add* copies
+  the workouts and the plan to the account (below). *Later* is asked again at the
+  next join, and *My account* always has a row for it until it is done.
 - **Settings** gets a *Gym* row: *My account* when signed in, *Join your gym*
   when not.
 
@@ -105,6 +111,50 @@ sync, the "captain updated your plan" toast) and the `gym_id` of new workouts
 are delivery step 4. Opening an ended gym's readable history is not built
 either.
 
+## Solo data import (PR C)
+`ImportSoloData` (`domain/usecases/import_solo_data.dart`) → RPC
+`import_solo_data(p_sessions, p_plan)` (migration 0009).
+- **What is sent:** the phone's finished workouts (≤ 200) that the server would
+  accept, once each, oldest first, in chunks of **50**; the plan with the first
+  call. `client_id` = `sha256(day_id|finished_at|sets)` (hex): `finished_at` is UTC
+  ISO-8601, `sets` the JSON of `[{exercise, weight, reps}]` in logged order, so a
+  workout always gets the same id. Workouts the server would refuse (finish time
+  before 2020 or more than a day ahead, a bad id, > 500 sets, > 64 KB) are
+  filtered on the phone first so they cannot sink a chunk of 50; they stay on the
+  phone and are not counted.
+- **Idempotent and resumable:** the server skips a `client_id` it already has. A
+  run always starts from the first workout, so no stale cursor can skip one; after
+  any failure (offline, dropped answer, app killed) the status stays `copying` and
+  *Retry*, or the *My account* row, runs it again. `nextIndex` is only the progress line.
+- **Nothing is lost:** the phone's workouts, plan, level and draft are never
+  touched; the copy is `done` only when the server's `solo_total` covers every
+  workout sent. (The "delete the local copy after the user confirms or after 30
+  days" step of decision §10 is **not built**: nothing is ever deleted
+  automatically; *Delete account → also erase this phone's workouts* is the one
+  way, and it is the person's choice.)
+- **Solo mode works signed out:** nothing here runs without an account, and the
+  question only appears after joining.
+- Sessions on the server stay *solo* (`gym_id` null): no captain sees them.
+
+Tests: `solo_import_test.dart` (ids, the server's rules, chunks, a plan with no
+workouts, a lost answer, a lying server, and **40 random histories with random
+interruptions**: the server ends with exactly the valid workouts, never a chunk
+it refuses, the phone keeps everything, a second run changes nothing),
+`solo_import_data_test.dart`, `solo_import_sheet_test.dart` (+ `screensUiTests`),
+`solo_import_flows_test.dart`.
+
+## Turnstile
+`TurnstileCaptcha` (`lib/core/captcha/`, `webview_flutter` 4.14.1 read on
+pub.dev 2026-11-02; Cloudflare's own docs were not reachable from the build
+environment; `cloudflare_turnstile` was tried first and dropped: its
+`flutter_inappwebview` 1.1.3 (last stable 2024) breaks the Android build with the
+current Gradle) gets a token from a 1-pixel web view (`appearance:
+'interaction-only'`; it cannot show a challenge) and feeds
+`SupabaseGymRepository.captchaToken`. Off (no token) when `TURNSTILE_SITE_KEY` is
+empty. Failures: no answer in 20 s → `TimeoutFailure`, retryable widget error →
+`NetworkFailure`, refusal → `UnknownFailure`; the join then shows its normal
+"couldn't join" / offline sheet.
+
 ## Analytics (no personal data)
 | Event | Properties |
 |---|---|
@@ -113,6 +163,8 @@ either.
 | `gym_join_failed` | `reason`: `invalid` \| `expired` \| `used` \| `conflict` \| `throttled` \| `offline` \| `error` |
 | `gym_switched` | `to`: `solo` \| `gym` |
 | `account_signed_out`, `account_deleted` | — |
+| `solo_import_started`, `solo_import_done` | — |
+| `solo_import_failed` | `reason` (same words as `gym_join_failed`) |
 
 Never a code, a name, an id or an email (`gym_account_app_test.dart` checks the
 event names and property keys). Sign out and delete call `Analytics.reset()`.
@@ -173,13 +225,14 @@ the Keychain and `app_settings` need a real phone.
   camera and a fake gym.
 
 ## Not done here (next steps)
-- Solo data → account ("Keep / Add my history / Skip"), website texts, demo gym
-  procedure: PR C.
+- Automatic deletion of the local copy after a confirmed import (decision §10).
+- An automatic resume at app start for an interrupted copy (today: *Retry* or
+  the *My account* row).
 - Captain tools, plan sync, the "captain updated your plan" toast: step 4.
 - Signing back in with the email added in Profile (an email one-time-code
   screen); today the email makes the account permanent and recoverable on the
   server, but the app has no sign-in screen for it.
-- Cloudflare Turnstile (`captchaToken` is `null`; required before shipping).
+- A visible Turnstile fallback (the widget runs invisibly; see `docs/release.md`).
 - Showing an ended gym's readable history; the captain's name; logo images.
 
 ## Demo & post
