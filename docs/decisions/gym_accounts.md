@@ -31,8 +31,10 @@ captain can shape the trainee's plan. Solo mode stays exactly as it is.
   **readable** or is **locked**.
 - **Two surfaces** (added after design review): the **mobile app is for
   trainees**; owners and captains run the gym from a **web dashboard**
-  (members, permissions, plans, invites, QR cards, gym settings). The phone
-  keeps only a small captain companion (quick add + show the QR card).
+  (members, permissions, plans, invites, QR cards, gym settings). ~~The phone
+  keeps only a small captain companion~~ **Changed 2026-11-03 (product
+  owner): the app has no captain tools at all.** Everything a captain needs,
+  including the QR cards and plan sharing (§20), is in the dashboard.
 
 ## 2. Things in the brief that need a decision or conflict with the repo
 
@@ -496,4 +498,38 @@ Feature doc: [`features/gym_account_app.md`](../features/gym_account_app.md).
 | Confirmation | `done` when `solo_total` ≥ the number of workouts sent. |
 | Local copy | **Never deleted automatically** (§10 said "after the user confirms or after 30 days"): not built; the person can erase it with Delete account. |
 | Offline | Retry; no background queue (§10 said "queued"). |
+
+## 20. Exercise library and plan sharing (2026-11-03)
+The app is for trainees only; the dashboard is where captains work.
+
+**In the app (built, `docs/features/exercise_library.md`):** a shared exercise
+library (stable ids, names in both languages, muscle, equipment, 2–3 steps,
+a placeholder picture until session 8). The plan editor's "Add an exercise"
+offers *Pick from the library* or *Write your own*. A member can add
+exercises only if the gym lets them (`edit_plan`, or `build_own_plan` for the
+first plan); the library never changes a gym plan by itself.
+
+**In the dashboard (specified here, not built; design boards "Dashboard 5, 6"
+of https://claude.ai/artifact/26EDAr572B4Qr8eBLB4D75):**
+- **Copy a member's plan to other members.** Each gets an independent copy
+  (later edits to one never change the others). A member who already has a
+  plan has it replaced, after a clear warning; history is never touched and
+  exercise ids stay as they are. Uses the existing `save_plan` per target
+  (a manager's write always wins and the member sees the toast), so no new
+  right is needed, only a loop in the dashboard.
+- **Gym templates.** "Save as a gym template" stores a plan body for every
+  captain of the gym to start from; "Replace with a template" applies one to a
+  member (same copy rule). **Needs a backend step:** a `plan_templates` table
+  (gym_id, name, body, created_by; RLS: the gym's managers read and write,
+  nobody else), the same body limits as `plans` (`private.plan_problem`), and
+  pgTAP.
+- **Change one exercise for one member.** The member's plan is edited in place
+  through `save_plan`; the dashboard shows what differs from the template the
+  plan started from. **Needs a backend step:** `plans.template_id` and
+  `plans.template_version` (nullable) set when a template is applied, so the
+  dashboard can diff and offer *Reset* per exercise. "Apply a change to
+  everyone on this template" is a loop over those plans, each through
+  `save_plan`, behind a confirmation that lists the members.
+- Library content in the dashboard (the same catalog) is read from the app's
+  list until it moves to the server; `ExerciseLibrary` is the seam.
 

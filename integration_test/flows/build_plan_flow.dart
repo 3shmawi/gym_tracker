@@ -9,7 +9,7 @@ import '../helpers/demo.dart';
 /// and the device-free run (test/features/workout/plan_editor_e2e_test.dart).
 Future<void> buildPlanFlow(WidgetTester tester) async {
   Future<void> tapAndSettle(Finder finder, [int pause = 900]) async {
-    await tester.ensureVisible(finder.hitTestable().first);
+    await tester.ensureVisible(finder.first);
     await tester.pumpAndSettle();
     await tester.tap(finder.hitTestable().first);
     await tester.pumpAndSettle();
@@ -37,11 +37,19 @@ Future<void> buildPlanFlow(WidgetTester tester) async {
   await typeName(ar: 'صدر وتراي', en: 'Chest & Triceps');
   expect(find.text('This day is empty'), findsOneWidget);
 
-  // Two exercises.
+  // Two exercises: one written by hand, one picked from the library.
   await tapAndSettle(find.byKey(const Key('plan_add_exercise')));
+  await tapAndSettle(find.byKey(const Key('add_custom')));
   await typeName(ar: 'بنش بار', en: 'Bench Press');
   await tapAndSettle(find.byKey(const Key('plan_add_exercise')));
-  await typeName(ar: 'حبل خلفي تراي', en: 'Rope Pushdown');
+  await tapAndSettle(find.byKey(const Key('add_from_library')));
+  await beat(tester, 1200);
+  await tester.enterText(find.byKey(const Key('library_search')), 'rope');
+  await tester.pumpAndSettle();
+  await beat(tester);
+  await tapAndSettle(find.byKey(const Key('muscle_arms')), 700);
+  await tapAndSettle(find.byKey(const Key('library_add_rope_pushdown')));
+  await tapAndSettle(find.byTooltip('Back'), 700);
   expect(find.text('Bench Press'), findsOneWidget);
   expect(find.text('Rope Pushdown'), findsOneWidget);
   await beat(tester, 1200);

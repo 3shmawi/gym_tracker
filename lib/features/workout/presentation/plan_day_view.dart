@@ -9,6 +9,7 @@ import 'package:gym_tracker/core/theme/app_text_styles.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
 import 'package:gym_tracker/features/gym/domain/entities/gym_plan.dart';
+import 'package:gym_tracker/features/library/presentation/widgets/add_exercise_sheet.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/plan_rules.dart';
 import 'package:gym_tracker/features/workout/presentation/plan_editor_controller.dart';
@@ -33,6 +34,7 @@ class PlanDayView extends StatelessWidget {
     required this.onMoveExercise,
     required this.onSetSuperset,
     required this.onResumeWorkout,
+    this.onPickFromLibrary,
     super.key,
   });
 
@@ -50,6 +52,10 @@ class PlanDayView extends StatelessWidget {
   final void Function(String exerciseId, {required bool withNext})
   onSetSuperset;
   final VoidCallback onResumeWorkout;
+
+  /// Opens the exercise library for this day. Null: "Add" goes straight to
+  /// writing a name.
+  final VoidCallback? onPickFromLibrary;
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +116,7 @@ class PlanDayView extends StatelessWidget {
                 key: const Key('plan_add_exercise'),
                 label: l10n.planAddExercise,
                 icon: Icons.add,
-                onPressed: () => _addExercise(context),
+                onPressed: () => _addExercise(context, day: day),
               ),
             ),
           _ => _Exercises(
@@ -120,7 +126,7 @@ class PlanDayView extends StatelessWidget {
             locked: locked,
             permissions: permissions,
             view: this,
-            onAdd: () => _addExercise(context),
+            onAdd: () => _addExercise(context, day: day),
           ),
         },
         AsyncError(:final error) => ErrorView(
@@ -132,14 +138,34 @@ class PlanDayView extends StatelessWidget {
     );
   }
 
-  void _addExercise(BuildContext context) => unawaited(
-    askName(
-      context,
-      title: context.l10n.planAddExercise,
-      confirmLabel: context.l10n.planAdd,
-      onName: onAddExercise,
-    ),
-  );
+  void _addExercise(BuildContext context, {WorkoutDay? day}) =>
+      unawaited(_askHow(context, day));
+
+  Future<void> _askHow(BuildContext context, WorkoutDay? day) async {
+    var choice = AddExerciseChoice.custom;
+    if (onPickFromLibrary != null) {
+      final lang = Localizations.localeOf(context).languageCode;
+      final picked = await showAddExerciseSheet(
+        context,
+        dayName: day?.name.of(lang) ?? '',
+        exerciseCount: day?.exercises.length ?? 0,
+      );
+      if (picked == null || !context.mounted) return;
+      choice = picked;
+    }
+    if (!context.mounted) return;
+    switch (choice) {
+      case AddExerciseChoice.library:
+        onPickFromLibrary?.call();
+      case AddExerciseChoice.custom:
+        await askName(
+          context,
+          title: context.l10n.planAddExercise,
+          confirmLabel: context.l10n.planAdd,
+          onName: onAddExercise,
+        );
+    }
+  }
 }
 
 /// The detail line of an exercise: "3×12 · rest 90 s · step 2.5 kg". The

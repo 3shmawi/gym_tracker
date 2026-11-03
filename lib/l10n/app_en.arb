@@ -841,5 +841,116 @@
   "planManagedBody": "You can follow it, but not change it.",
   "planTargetsOnlyBody": "You can change sets, reps, rest and weight steps. Days and exercises are managed by your captain.",
   "planWaitingTitle": "Your captain hasn't made your plan yet",
-  "planWaitingBody": "It will show up here as soon as they do."
+  "planWaitingBody": "It will show up here as soon as they do.",
+  "libraryTitle": "Exercise library",
+  "librarySearchHint": "Search in Arabic or English",
+  "librarySearchLabel": "Search exercises",
+  "libraryClearSearch": "Clear search",
+  "libraryAll": "All",
+  "muscleChest": "Chest",
+  "muscleBack": "Back",
+  "muscleShoulders": "Shoulders",
+  "muscleArms": "Arms",
+  "muscleLegs": "Legs",
+  "muscleCore": "Core",
+  "equipDumbbell": "Dumbbells",
+  "equipBarbell": "Barbell",
+  "equipBench": "Bench",
+  "equipRack": "Squat rack",
+  "equipMachine": "Machine",
+  "equipCable": "Cable",
+  "equipBodyweight": "No equipment",
+  "libraryAnyEquipment": "Any equipment",
+  "libraryEquipmentTitle": "Equipment",
+  "libraryCount": "{count} exercises",
+  "@libraryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryAdd": "Add",
+  "libraryAdded": "Added",
+  "libraryAddLabel": "Add {name}",
+  "@libraryAddLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryCustom": "Can't find it? Write your own",
+  "libraryNoResultsTitle": "No exercise with that name",
+  "libraryNoResultsBody": "Try another word, or write it yourself. It is saved in your plan without a picture and steps.",
+  "libraryWriteQuery": "Write “{query}” yourself",
+  "@libraryWriteQuery": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryAddSheetTitle": "Add an exercise",
+  "libraryAddSheetBody": "{day} · {count} exercises",
+  "@libraryAddSheetBody": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryPick": "Pick from the library",
+  "libraryPickBody": "Muscle, equipment and how-to steps",
+  "libraryWriteOwn": "Write your own",
+  "libraryWriteOwnBody": "Any name in Arabic or English. No picture or steps.",
+  "libraryDayFull": "This day already has the most exercises it can hold.",
+  "libraryAlreadyInDay": "That exercise is already in this day.",
+  "libraryNotAllowed": "Your captain manages the exercises in your plan.",
+  "exerciseGuideTitle": "Exercise",
+  "exerciseHowTo": "How to do it",
+  "exerciseHowToLink": "How to do this exercise",
+  "exerciseIllustrationSoon": "Illustration coming soon",
+  "exerciseStepLabel": "Step {n}",
+  "@exerciseStepLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "exerciseAddTo": "Add to {day}",
+  "@exerciseAddTo": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "exerciseAddedTo": "Already in {day}",
+  "@exerciseAddedTo": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "exerciseStartsAt": "Starts at {sets} sets · {reps} reps · {rest} s rest. Change them after adding.",
+  "@exerciseStartsAt": {
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      },
+      "reps": {
+        "type": "int"
+      },
+      "rest": {
+        "type": "int"
+      }
+    }
+  },
+  "exerciseNotFound": "This exercise isn't in the library."
 }

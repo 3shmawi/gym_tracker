@@ -160,9 +160,25 @@ class PlanEditorController extends AsyncNotifier<PlanEditorState> {
       (plan, locked) =>
           _edit.addExercise(plan, dayId, name, id: id, lockedDayId: locked),
       'plan_exercise_added',
+      properties: const {'source': 'custom'},
     );
     return error == null ? id : null;
   }
+
+  /// Adds an exercise of the library to the day, with its own id (so history
+  /// matches) and starting targets. Returns an error when refused (it is
+  /// already in that day, the day is full or locked, the gym doesn't allow it).
+  Future<PlanEditError?> addLibraryExercise(String dayId, Exercise exercise) =>
+      _apply(
+        (plan, locked) => _edit.addLibraryExercise(
+          plan,
+          dayId,
+          exercise,
+          lockedDayId: locked,
+        ),
+        'plan_exercise_added',
+        properties: const {'source': 'library'},
+      );
 
   Future<PlanEditError?> renameExercise(
     String dayId,

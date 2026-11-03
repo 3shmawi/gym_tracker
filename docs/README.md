@@ -16,5 +16,6 @@ Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 - [Splash and loading animation](features/splash_and_loading.md)
 - [Join a gym by link or code](features/gym_join.md) (web page `/join/<code>` + the app's enter-code screen)
 - [Gym accounts — backend](features/gym_accounts_backend.md) (tables, RLS, `redeem_invite`, QR cards)
+- [Exercise library](features/exercise_library.md) (shared exercises, picker in the plan editor, exercise screen)
 - [Trainee dashboard data](features/trainee_dashboard_data.md) (SQL views the captain's dashboard will read; privacy)
 - [Gym accounts — the app](features/gym_account_app.md) (first screen, scanner, join, switcher, profile, delete account, solo data import)

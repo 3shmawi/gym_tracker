@@ -241,6 +241,18 @@ key written to a file (so there is nothing for `scripts/mask_secrets.sh` to
 mask; if you ever run it where logs are collected, mask the key first), tools
 pinned (Python packages with hashes, `requirements.txt`).
 
+### Exercise library (app)
+New routes `/library` and `/library/<id>` take an exercise id and a day id from
+the link: both are only compared with known ids (the bundled catalog and the
+member's own plan), encoded when built (`AppRoutes.libraryFor` /
+`libraryExercise`), and a link can read but never add
+(`test/security/deep_link_test.dart`). The search box text is cleaned, cut to
+60 characters and only compared; hostile text is covered by tests. The library
+has no network, storage or secret access and sends fixed words to analytics
+(`test/security/exercise_library_test.dart`). Known limit (go_router 18.1.2): a
+link whose query has invalid percent-encoding makes go_router throw before our
+code runs, for every route; see `docs/features/exercise_library.md`.
+
 ### Trainee dashboard views (migration 0012)
 Docs read 2026-11-03: Supabase "Row Level Security" and Postgres 15+
 `security_invoker` views. The four `member_*` views run **as the person

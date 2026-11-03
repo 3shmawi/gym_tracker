@@ -35,6 +35,8 @@ class PlanDayPage extends ConsumerWidget {
       onSetSuperset: (id, {required withNext}) =>
           unawaited(controller.setSuperset(dayId, id, withNext: withNext)),
       onResumeWorkout: () => unawaited(context.push<void>(AppRoutes.workout)),
+      onPickFromLibrary: () =>
+          unawaited(context.push<void>(AppRoutes.libraryFor(dayId))),
     );
   }
 }

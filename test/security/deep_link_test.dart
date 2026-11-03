@@ -611,4 +611,87 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString(LocalWorkoutRepository.planKey), isNull);
   });
+
+  group('/library (exercise library)', () {
+    testWidgets('/library without a day: nothing to add to, no crash', (
+      tester,
+    ) async {
+      await pumpRouter(tester);
+      for (final path in [
+        '/library',
+        '/library?redirect=https://evil.example.com',
+        '/library?day=',
+        '/library?day=nope',
+        "/library?day=x'%3B%20DROP%20TABLE%20plan%3B--",
+        '/library?day=%3Cscript%3Ealert(1)%3C%2Fscript%3E',
+        '/library?day=${'a' * 3000}',
+        '/library?day=%00',
+        '/library?day=a&day=b',
+      ]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.text("This day isn't in your plan."), findsOneWidget);
+        expect(find.byKey(const Key('library_add_pec_deck')), findsNothing);
+      }
+    });
+
+    testWidgets('/library/<id>: unknown or crafted ids are safe', (
+      tester,
+    ) async {
+      await pumpRouter(tester);
+      for (final id in [
+        'not_an_exercise',
+        '%3Cscript%3Ealert(1)%3C%2Fscript%3E',
+        "x'%3B%20DROP%20TABLE%20plan%3B--",
+        '%F0%9F%92%A5',
+        '%00',
+        'FLAT_DB_PRESS',
+        'a' * 2000,
+      ]) {
+        appRouter.go('/library/$id');
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: id);
+        expect(
+          find.text("This exercise isn't in the library."),
+          findsOneWidget,
+          reason: id,
+        );
+      }
+    });
+
+    testWidgets('a link can read an exercise, never add one', (tester) async {
+      await pumpRouter(tester);
+      appRouter.go('/library/pec_deck?day=day-1&add=1&redirect=https://x.y');
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('Pec Deck'), findsOneWidget);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(LocalWorkoutRepository.planKey), isNull);
+    });
+
+    testWidgets('extra segments and look-alikes are not found', (tester) async {
+      await pumpRouter(tester);
+      for (final path in [
+        '/library/pec_deck/extra',
+        '/libraryx',
+        '/library/x/../../etc/passwd',
+        '/Library',
+      ]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.byType(NotFoundPage), findsOneWidget, reason: path);
+      }
+    });
+
+    test('built paths encode their ids', () {
+      expect(AppRoutes.libraryFor("a b&c=d'"), '/library?day=a+b%26c%3Dd%27');
+      expect(AppRoutes.libraryExercise('a/b'), '/library/a%2Fb');
+      expect(
+        AppRoutes.libraryExercise('x', dayId: '../y'),
+        '/library/x?day=..%2Fy',
+      );
+    });
+  });
 }
