@@ -1,6 +1,7 @@
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/session_outbox.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/solo_import_repository.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Inserts finished gym workouts into `workout_sessions` (RLS "log own
@@ -37,11 +38,23 @@ class SupabaseSessionUploader implements SessionUploader {
           'membership_id': e.membershipId,
           'day_id': e.session.dayId,
           'finished_at': e.session.finishedAt.toUtc().toIso8601String(),
+          'started_at': startOf(e.session),
           'sets': [for (final s in e.session.sets) s.toJson()],
         },
     ];
     await (insert ?? _insert)(rows);
   }, retries: retries);
+
+  /// The start time the server accepts (`workout_sessions_started_sane`: not
+  /// after the end, at most 24 h before it), else null: a bad clock on the
+  /// phone must not make the server refuse the whole batch.
+  static String? startOf(WorkoutSession session) {
+    final start = session.startedAt;
+    if (start == null) return null;
+    final length = session.finishedAt.difference(start);
+    if (length.isNegative || length > const Duration(hours: 24)) return null;
+    return start.toUtc().toIso8601String();
+  }
 
   Future<String> _readPerson() async {
     final row = await _client.from('people').select('id').single();

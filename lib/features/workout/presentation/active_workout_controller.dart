@@ -182,6 +182,7 @@ class ActiveWorkoutController extends AsyncNotifier<ActiveWorkout?> {
         dayId: current.day.id,
         finishedAt: _now(),
         sets: current.draft.sets,
+        startedAt: current.draft.startedAt,
       ),
     );
     if (saved is Failed<void>) {

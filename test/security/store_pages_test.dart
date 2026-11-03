@@ -17,11 +17,14 @@ void main() {
     return html.substring(start, end);
   }
 
-  final today = RegExp('2026-11-02');
-
   test('every page was re-dated for the gym accounts release', () {
-    for (final name in ['privacy.html', 'terms.html']) {
-      expect(today.allMatches(page(name)).length, 2, reason: name);
+    // Terms were last changed with the gym accounts release; the privacy
+    // policy again when the captain's progress view was added.
+    for (final (name, date) in [
+      ('privacy.html', '2026-11-03'),
+      ('terms.html', '2026-11-02'),
+    ]) {
+      expect(RegExp(date).allMatches(page(name)).length, 2, reason: name);
     }
   });
 
@@ -50,6 +53,12 @@ void main() {
         'Turnstile',
         'Cloudflare Turnstile Privacy Addendum',
         'https://www.cloudflare.com/en-gb/turnstile-privacy-policy/',
+        'Progress your captain sees',
+        'how many workouts you did each week',
+        'which planned exercises you skipped',
+        'your level and streak',
+        'never calculated from workouts you log on your own',
+        'The app tells you this when you join',
         'Profile → Delete account',
         'Supabase',
         'PostHog',
@@ -80,6 +89,11 @@ void main() {
         'Turnstile',
         'ملحق خصوصية Cloudflare Turnstile',
         'https://www.cloudflare.com/en-gb/turnstile-privacy-policy/',
+        'تقدّمك الذي يراه الكابتن',
+        'عدد تمارينك كل أسبوع',
+        'التمارين المخططة التي تخطيتها',
+        'مستواك وسلسلة أسابيعك',
+        'ولا يُحسب أبداً من تمارين سجلتها وحدك',
         'حذف الحساب',
       ]) {
         expect(ar, contains(phrase), reason: phrase);

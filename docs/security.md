@@ -241,6 +241,16 @@ key written to a file (so there is nothing for `scripts/mask_secrets.sh` to
 mask; if you ever run it where logs are collected, mask the key first), tools
 pinned (Python packages with hashes, `requirements.txt`).
 
+### Trainee dashboard views (migration 0012)
+Docs read 2026-11-03: Supabase "Row Level Security" and Postgres 15+
+`security_invoker` views. The four `member_*` views run **as the person
+asking**, so `workout_sessions`, `plans` and `memberships` policies decide who
+sees what: the trainee their own gym rows; an owner everyone's, a captain
+trainees', only while the membership is active; never solo sessions, another
+gym, an ended member or `anon` (grants are `select` to `authenticated` only).
+`supabase/tests/trainee_dashboard_views.test.sql` proves each of these.
+Anything new that reads these views must stay `security_invoker`.
+
 ## If a key leaks (log, chat, commit)
 1. **Revoke or rotate it first**, then clean up. Logs can be copied in the
    minutes they are public.

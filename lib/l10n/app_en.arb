@@ -693,7 +693,7 @@
   "joinedPermTargets": "Edit your targets: sets and reps",
   "joinedPermPlan": "Edit the whole plan",
   "joinedPermOwn": "Build your own plan",
-  "joinedPrivacy": "Your captain sees workouts you log in this gym only. Your other workouts stay private.",
+  "joinedPrivacy": "Your captain sees the workouts you log in this gym and what is worked out from them: attendance, time, sets, records, weights, level and streak. Your other workouts stay private.",
   "joinedStart": "Start training",
   "roleOwner": "Owner",
   "roleCaptain": "Captain",
