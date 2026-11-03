@@ -31,6 +31,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../test/helpers/fake_rest_alarm.dart';
 import '../test/helpers/gym_app.dart' show FakeCamera;
 import '../test/helpers/gym_fakes.dart';
+import '../test/helpers/plan_sync_fakes.dart';
 import 'flows/build_plan_flow.dart';
 import 'helpers/demo.dart';
 
@@ -391,6 +392,59 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ExercisePreviewRow), findsWidgets);
     await beat(tester, 2000);
+  });
+
+  testWidgets('in a gym: the captain changes the plan and the app says so', (
+    tester,
+  ) async {
+    FeatureFlags.overrides[Flags.gymJoin] = true;
+    addTearDown(FeatureFlags.overrides.clear);
+    await freshInstall(tester);
+    await app.main();
+    useFakeRestAlarm();
+    final camera = FakeCamera();
+    scannerCameraOverride = camera.builder;
+    addTearDown(() => scannerCameraOverride = null);
+    Dependencies.gymRepository = FakeGymRepository(
+      redeemResult: Success(joinedGym()),
+    );
+    final account = FakeAccountRepository();
+    Dependencies.accountRepository = account;
+    // The gym's server: the captain's plan, version 1.
+    final server = FakePlanServer()..plan = gymPlan(updatedBy: 'captain-m');
+    Dependencies.gymPlanRepository = server;
+    Dependencies.gymPlanStore = MemoryPlanStore();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('welcome_join')));
+    await tester.pumpAndSettle();
+    camera.scan('https://azmm.pages.dev/join/K7M2QX');
+    await tester.pumpAndSettle();
+    account.emit(anonymousSession);
+    await tester.pumpAndSettle();
+    await beat(tester, 1800);
+    await tester.tap(find.byKey(const Key('joined_start')));
+    await tester.pumpAndSettle();
+
+    // Today shows the captain's plan: no template to pick.
+    expect(find.byType(NextWorkoutPage), findsOneWidget);
+    expect(find.byKey(const Key('use_template_button')), findsNothing);
+    await beat(tester, 2000);
+
+    // The captain renames a day; the app notices when it comes back.
+    server.plan = gymPlan(
+      version: 2,
+      updatedBy: 'captain-m',
+      plan: renamedDay1(),
+    );
+    await lockPhone(tester);
+    await unlockPhone(tester);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Your captain updated your plan'), findsOneWidget);
+    await beat(tester, 2500);
+    // It goes away by itself.
+    await tester.pump(const Duration(seconds: 7));
+    expect(find.text('Your captain updated your plan'), findsNothing);
   });
 }
 
