@@ -84,9 +84,9 @@ No search text, names or ids typed by the member are sent
   routes and `state.uri.queryParameters`. Finding: go_router itself throws a
   `FormatException` for any link whose **query** has invalid percent-encoding
   (`?day=%FF`), inside `GoRouteInformationProvider._valueHasChanged`, before our
-  code runs, and for every route (not only `/library`). It cannot be caught in
-  a route builder. Our tests use valid encodings; a global guard (e.g. a
-  `routeInformationParser` wrapper) is a separate change.
+  code runs, and for every route. This was solved by `LinkGuard`
+  (`lib/core/router/link_guard.dart`, installed in `bootstrap.dart` before the
+  router exists): such links are dropped before go_router and Flutter see them.
 - **Flutter 3.47.8** `Semantics` / `ExcludeSemantics`: decorative pictures are
   excluded (the name beside them already says what it is).
 - Unicode: Arabic letter variants are unified by our own small table (see

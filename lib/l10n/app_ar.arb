@@ -372,6 +372,8 @@
   "exerciseGuideTitle": "التمرين",
   "exerciseHowTo": "إزاي تعمله",
   "exerciseHowToLink": "إزاي تعمل التمرين ده",
+  "exerciseIllustrationLabel": "رسم توضيحي لتمرين {name}",
+  "settingsLicenses": "تراخيص المصادر المفتوحة",
   "exerciseIllustrationSoon": "الصورة جاية قريب",
   "exerciseStepLabel": "الخطوة {n}",
   "exerciseAddTo": "أضف لـ {day}",

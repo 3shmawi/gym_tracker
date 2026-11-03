@@ -11,6 +11,7 @@ import 'package:gym_tracker/core/router/link_guard.dart';
 import 'package:gym_tracker/core/router/router_refresh.dart';
 import 'package:gym_tracker/core/splash/animated_splash.dart';
 import 'package:gym_tracker/core/theme/app_fonts.dart';
+import 'package:gym_tracker/features/library/data/exercise_images.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 
 /// Starts monitoring first, then shows the animated splash at once while
@@ -23,6 +24,7 @@ Future<void> bootstrap(Widget Function() builder) async {
   // Before the router exists: unsafe links are dropped first.
   LinkGuard.install();
   AppFonts.registerLicenses();
+  ExerciseImages.registerLicenses();
   Future<void>? ready;
   await Monitoring.run(() async {
     ready = _startServices();
