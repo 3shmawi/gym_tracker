@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
@@ -23,6 +23,7 @@ class SettingsPage extends ConsumerWidget {
     final gymsOn = ref.watch(gymJoinEnabledProvider).value ?? false;
     final signedIn = ref.watch(accountSessionProvider).isSignedIn;
     return SettingsView(
+      onOpenLicenses: () => showLicensePage(context: context),
       settings: ref.watch(settingsControllerProvider),
       onLocaleChanged: controller.setLocale,
       onThemeModeChanged: controller.setThemeMode,

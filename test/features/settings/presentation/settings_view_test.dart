@@ -50,6 +50,34 @@ void main() {
       expect(locale, const Locale('ar'));
     });
 
+    testWidgets('the licenses row opens the licenses page', (tester) async {
+      var opened = 0;
+      await tester.pumpApp(
+        SettingsView(
+          settings: const AppSettings(),
+          onLocaleChanged: (_) {},
+          onThemeModeChanged: (_) {},
+          onOpenLicenses: () => opened++,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.byKey(const Key('settings_licenses')));
+      await tester.tap(find.text(l10nEn.settingsLicenses));
+      expect(opened, 1);
+    });
+
+    testWidgets('no licenses callback: no licenses row', (tester) async {
+      await tester.pumpApp(
+        SettingsView(
+          settings: const AppSettings(),
+          onLocaleChanged: (_) {},
+          onThemeModeChanged: (_) {},
+        ),
+      );
+      expect(find.byKey(const Key('settings_licenses')), findsNothing);
+    });
+
     testWidgets('gym accounts off: no gym section', (tester) async {
       await tester.pumpApp(
         SettingsView(
@@ -144,6 +172,7 @@ void main() {
       onLocaleChanged: (_) {},
       onThemeModeChanged: (_) {},
       onOpenPlan: () {},
+      onOpenLicenses: () {},
     ),
   );
 }

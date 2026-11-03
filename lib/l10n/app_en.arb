@@ -913,6 +913,15 @@
   "exerciseGuideTitle": "Exercise",
   "exerciseHowTo": "How to do it",
   "exerciseHowToLink": "How to do this exercise",
+  "exerciseIllustrationLabel": "Illustration of {name}",
+  "@exerciseIllustrationLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLicenses": "Open-source licenses",
   "exerciseIllustrationSoon": "Illustration coming soon",
   "exerciseStepLabel": "Step {n}",
   "@exerciseStepLabel": {
