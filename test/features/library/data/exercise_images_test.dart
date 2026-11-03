@@ -107,6 +107,23 @@ void main() {
       }
     });
 
+    test('pictures of a similar exercise are marked, with a note', () {
+      final substitutes = {
+        for (final i in manifest.images)
+          if (i.substitute) i.exercise,
+      };
+      // Docs: docs/features/exercise_images.md. Change both together.
+      expect(substitutes, {
+        'reverse_pec_deck',
+        'cable_kickback',
+        'reverse_wrist_curl',
+        'barbell_wrist_curl',
+      });
+      for (final i in manifest.images) {
+        expect(i.substituteNote.isNotEmpty, i.substitute, reason: i.exercise);
+      }
+    });
+
     test('no entry has a licence we may not use in a store app', () {
       for (final i in manifest.images) {
         expect(
@@ -151,6 +168,10 @@ void main() {
         '{}',
         '{"images": 1, "adaptedLicense": "x", "adaptedLicenseUrl": "y"}',
         json(modified: '"yes"'),
+        json().replaceAll(
+          '"modified": true,',
+          '"modified": true, "substitute": 1,',
+        ),
         json().replaceAll('"author": "A",', ''),
         json().replaceAll('"title": "Crunches"', '"title": 5'),
         '{"adaptedLicense":"x","adaptedLicenseUrl":"y","images":[1]}',

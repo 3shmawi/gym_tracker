@@ -6,8 +6,8 @@ id, names in Arabic and English, a muscle group, the equipment it needs and
 members); captains work in the dashboard (decision doc §20).
 
 Design: https://claude.ai/artifact/26EDAr572B4Qr8eBLB4D75 (top row, approved
-Nov 2026). Pictures: 19 of the 23 exercises have a drawing, the other 4 show
-the placeholder (`docs/features/exercise_images.md`).
+Nov 2026). Pictures: all 23 exercises have a drawing (4 are drawings of a similar
+exercise; `docs/features/exercise_images.md`).
 
 ## What it does
 - **Plan editor → "Add an exercise"** opens a sheet: *Pick from the library*
@@ -112,8 +112,7 @@ No search text, names or ids typed by the member are sent
   exercise by hand and picks one from the library.
 
 ## Not done here
-- Pictures for `reverse_pec_deck`, `reverse_wrist_curl`, `barbell_wrist_curl`
-  and `cable_kickback`: no free image fits (`exercise_images.md`).
+- Real drawings for the 4 substitute pictures (`exercise_images.md`).
 - A link to the steps from the workout screen.
 - Captain tools (copy a plan, templates, one change for one member): the
   dashboard, decision doc §20 (needs `plan_templates` and `plans.template_id`).

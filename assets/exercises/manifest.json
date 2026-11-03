@@ -58,6 +58,46 @@
       "attribution": "\"Barbell Squat\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
     },
     {
+      "exercise": "barbell_wrist_curl",
+      "file": "assets/exercises/barbell_wrist_curl.webp",
+      "thumb": "assets/exercises/barbell_wrist_curl_thumb.webp",
+      "title": "Biceps Curl: Barbell",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0211/0211-tension.png",
+      "sourceFile": "src/exercises/0211/0211-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-03",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Biceps Curl: Barbell\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized.",
+      "substitute": true,
+      "substituteNote": "The picture shows a barbell curl (forearms work, but it is an elbow curl)."
+    },
+    {
+      "exercise": "cable_kickback",
+      "file": "assets/exercises/cable_kickback.webp",
+      "thumb": "assets/exercises/cable_kickback_thumb.webp",
+      "title": "Triceps Kickback with Dumbbell",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0204/0204-tension.png",
+      "sourceFile": "src/exercises/0204/0204-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-03",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Triceps Kickback with Dumbbell\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized.",
+      "substitute": true,
+      "substituteNote": "The picture shows a triceps kickback with a dumbbell (same movement and muscle, other equipment)."
+    },
+    {
       "exercise": "close_grip_row",
       "file": "assets/exercises/close_grip_row.webp",
       "thumb": "assets/exercises/close_grip_row_thumb.webp",
@@ -290,6 +330,46 @@
       "modified": true,
       "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour. Published here under CC BY-SA 4.0 (a later version, allowed by section 4(b) of CC BY-SA 3.0).",
       "attribution": "\"Butterfly (machine)\" by Everkinetic, https://wger.de, CC BY-SA 3.0. Changed: made transparent, resized; the adapted image is shared under CC BY-SA 4.0."
+    },
+    {
+      "exercise": "reverse_pec_deck",
+      "file": "assets/exercises/reverse_pec_deck.webp",
+      "thumb": "assets/exercises/reverse_pec_deck_thumb.webp",
+      "title": "Seated Rear Lateral Cable Raise",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0035/0035-tension.png",
+      "sourceFile": "src/exercises/0035/0035-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-03",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Seated Rear Lateral Cable Raise\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized.",
+      "substitute": true,
+      "substituteNote": "The picture shows a seated rear lateral raise with cables (same muscle: rear shoulder)."
+    },
+    {
+      "exercise": "reverse_wrist_curl",
+      "file": "assets/exercises/reverse_wrist_curl.webp",
+      "thumb": "assets/exercises/reverse_wrist_curl_thumb.webp",
+      "title": "Biceps Curl: Dumbbell (Reverse)",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0257/0257-tension.png",
+      "sourceFile": "src/exercises/0257/0257-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-03",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Biceps Curl: Dumbbell (Reverse)\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized.",
+      "substitute": true,
+      "substituteNote": "The picture shows a reverse dumbbell curl (palms down: forearm extensors, but an elbow curl)."
     },
     {
       "exercise": "rope_pushdown",

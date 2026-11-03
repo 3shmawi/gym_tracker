@@ -14,9 +14,20 @@ placeholder (hatched tile with a dumbbell), at the same size.
   pictures' attributions are listed there.
 
 ## Coverage (checked 2026-11-03)
-19 of 23 exercises have a picture. No free image fits the other 4, so they keep
-the placeholder: `reverse_pec_deck`, `reverse_wrist_curl`, `barbell_wrist_curl`,
-`cable_kickback` (the only close drawing shows an overhead movement).
+All 23 exercises have a picture. **4 are substitutes**: no free drawing of the
+exercise itself exists, so the picture shows a similar exercise for the same
+muscle (`substitute: true` and a `substituteNote` in the manifest):
+
+| Exercise | The picture shows |
+|---|---|
+| `reverse_pec_deck` | seated rear lateral raise with cables (rear shoulder) |
+| `cable_kickback` | triceps kickback with a dumbbell (same movement, other equipment) |
+| `reverse_wrist_curl` | reverse dumbbell curl (forearm extensors, but an elbow curl) |
+| `barbell_wrist_curl` | barbell curl (forearms work, but an elbow curl) |
+
+Replace a substitute when a real drawing is found (remove its `substitute`
+fields). The test `pictures of a similar exercise are marked, with a note`
+lists the four ids: change it with this table.
 
 ## Where the pictures come from
 Line drawings by **Everkinetic** (Greg Priday), from
@@ -60,7 +71,9 @@ NC, ND, watermarks, undocumented origin. CC BY-SA is allowed with its duties.
    `thumb`, `title`, `sourceUrl`, `sourceFile`, `license` (SPDX), `licenseUrl`,
    `author`, `dateChecked` (today), `licenseEvidence` (pages that show the
    licence of this image), `modified`, `modification`, `attribution` (shown on
-   the licenses page: title, author, source, licence, "Changed: …").
+   the licenses page: title, author, source, licence, "Changed: …"). If the
+   picture shows a similar exercise, not this one: `substitute: true` and a
+   `substituteNote`.
 4. Add the id to `ExerciseImages.available`
    (`lib/features/library/data/exercise_images.dart`).
 5. Run `flutter test` (`exercise_images_test.dart` fails when anything drifts)
@@ -73,8 +86,8 @@ NC, ND, watermarks, undocumented origin. CC BY-SA is allowed with its duties.
   licence); no licence outside the allowed list (NC, ND, unknown refused);
   hostile or broken manifests are refused; the licenses page lists every
   attribution and the licence links.
-- `exercise_illustration_test.dart`: every library exercise shows its picture or
-  the placeholder; no box behind the picture, tinted with the text colour.
+- `exercise_illustration_test.dart`: every library exercise shows its picture; an
+  exercise without one shows the placeholder (`test/features/library/helpers/no_picture.dart`); no box behind the picture, tinted with the text colour.
 - Guide and library screens: `screensUiTests` with the real pictures
   (`test/helpers/ui_check.dart` decodes images before layout checks and
   screenshots: before, goldens showed an empty box), plus `exercise_guide_no_picture`.

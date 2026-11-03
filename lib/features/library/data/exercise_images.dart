@@ -19,6 +19,8 @@ abstract final class ExerciseImages {
     'abs',
     'alternating_db_curl',
     'barbell_squat',
+    'barbell_wrist_curl',
+    'cable_kickback',
     'close_grip_row',
     'db_front_raise',
     'db_lunge',
@@ -32,6 +34,8 @@ abstract final class ExerciseImages {
     'leg_press',
     'machine_calf_raise',
     'pec_deck',
+    'reverse_pec_deck',
+    'reverse_wrist_curl',
     'rope_pushdown',
     'straight_arm_pulldown',
     'wide_lat_pulldown',
@@ -76,6 +80,8 @@ class ExerciseImageEntry {
     required this.modified,
     required this.modification,
     required this.attribution,
+    this.substitute = false,
+    this.substituteNote = '',
   });
 
   factory fromJson(Object? json) {
@@ -97,6 +103,11 @@ class ExerciseImageEntry {
         'Manifest entry: bad "licenseEvidence" or "modified"',
       );
     }
+    final substitute = json['substitute'] ?? false;
+    final note = json['substituteNote'] ?? '';
+    if (substitute is! bool || note is! String) {
+      throw const FormatException('Manifest entry: bad "substitute" fields');
+    }
     return ExerciseImageEntry(
       exercise: text('exercise'),
       file: text('file'),
@@ -112,6 +123,8 @@ class ExerciseImageEntry {
       modified: modified,
       modification: text('modification'),
       attribution: text('attribution'),
+      substitute: substitute,
+      substituteNote: note,
     );
   }
 
@@ -137,6 +150,11 @@ class ExerciseImageEntry {
 
   /// The text shown on the licenses page.
   final String attribution;
+
+  /// The picture shows a similar exercise for the same muscle, not this very
+  /// one (the note says which).
+  final bool substitute;
+  final String substituteNote;
 }
 
 /// `assets/exercises/manifest.json`: every bundled picture and its licence.
