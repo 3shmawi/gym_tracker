@@ -14,7 +14,7 @@
 # Needs what the caller already exports: APP_STORE_CONNECT_ISSUER_ID,
 # APP_STORE_CONNECT_KEY_IDENTIFIER, APP_STORE_CONNECT_PRIVATE_KEY and
 # CERTIFICATE_PRIVATE_KEY (as @file: paths, already masked). Nothing secret is
-# printed here; no `set -x`.
+# printed here, and shell tracing stays off.
 set -euo pipefail
 
 bundle_id="${1:?usage: fetch_signing_files.sh <bundle id>}"
