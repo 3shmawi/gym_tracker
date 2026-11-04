@@ -78,8 +78,10 @@ class LocalNotifications {
     await _androidPlugin?.requestExactAlarmsPermission();
   }
 
-  /// Shows [title] / [body] at [at]. Skipped (false) when [at] has passed,
-  /// or when Android can't ring on time.
+  /// Shows [title] / [body] at [at]. Skipped (false) when [at] has passed.
+  /// On Android without "Alarms & reminders" it is scheduled inexact
+  /// (`inexactAllowWhileIdle`): it may be late, but it still rings, which
+  /// beats never ringing (field test 2026-11-03).
   Future<bool> schedule({
     required int id,
     required DateTime at,
@@ -89,7 +91,8 @@ class LocalNotifications {
     required String channelName,
     Color? color,
   }) async {
-    if (!await canRingOnTime()) return false;
+    final onTime = await canRingOnTime();
+    if (!await _init()) return false;
     final when = tz.TZDateTime.from(at, tz.UTC);
     if (!when.isAfter(tz.TZDateTime.now(tz.UTC))) return false;
     await _plugin.zonedSchedule(
@@ -97,30 +100,69 @@ class LocalNotifications {
       scheduledDate: when,
       title: title,
       body: body,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      notificationDetails: NotificationDetails(
-        android: AndroidNotificationDetails(
-          channelId,
-          channelName,
-          icon: androidIcon,
-          color: color,
-          importance: Importance.high,
-          priority: Priority.high,
-          category: AndroidNotificationCategory.reminder,
-          visibility: NotificationVisibility.public,
-        ),
-        iOS: DarwinNotificationDetails(
-          presentAlert: true,
-          presentBanner: true,
-          presentList: true,
-          presentSound: true,
-          threadIdentifier: channelId,
-          interruptionLevel: InterruptionLevel.active,
-        ),
+      androidScheduleMode: onTime
+          ? AndroidScheduleMode.exactAllowWhileIdle
+          : AndroidScheduleMode.inexactAllowWhileIdle,
+      notificationDetails: _details(channelId, channelName, color),
+    );
+    return true;
+  }
+
+  /// Rings now while the app is on screen: the sound (and on Android a
+  /// short heads-up that goes away by itself). On iOS no banner covers
+  /// the screen: sound only.
+  Future<bool> ringNow({
+    required int id,
+    required String title,
+    required String body,
+    required String channelId,
+    required String channelName,
+    Color? color,
+  }) async {
+    if (!await _init()) return false;
+    await _plugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: _details(
+        channelId,
+        channelName,
+        color,
+        inFront: true,
       ),
     );
     return true;
   }
+
+  static NotificationDetails _details(
+    String channelId,
+    String channelName,
+    Color? color, {
+    bool inFront = false,
+  }) => NotificationDetails(
+    android: AndroidNotificationDetails(
+      channelId,
+      channelName,
+      icon: androidIcon,
+      color: color,
+      importance: Importance.high,
+      priority: Priority.high,
+      category: AndroidNotificationCategory.reminder,
+      visibility: NotificationVisibility.public,
+      timeoutAfter: inFront ? ringTimeout.inMilliseconds : null,
+    ),
+    iOS: DarwinNotificationDetails(
+      presentAlert: !inFront,
+      presentBanner: !inFront,
+      presentList: !inFront,
+      presentSound: true,
+      threadIdentifier: channelId,
+      interruptionLevel: InterruptionLevel.active,
+    ),
+  );
+
+  /// How long the in-app ring stays in the Android notification shade.
+  static const ringTimeout = Duration(seconds: 5);
 
   /// Removes notification [id], scheduled or already shown.
   Future<void> cancel(int id) async {

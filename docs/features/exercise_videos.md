@@ -14,7 +14,7 @@ gets black bands above and below.
 | V-A | Link parser + shared test vectors, library videos, the card, the player sheet, privacy, store forms | done (#40) |
 | V-B | The gym's own video (table, pgTAP, offline copy) | this change (migration 0017) |
 | V-C | Floating mini player | later (the board's mini player must grow to 200×200) |
-| V-D | Outside the app (picture-in-picture): a decision doc | later |
+| V-D | Outside the app (picture-in-picture): [decision](../decisions/video_outside_app.md): no PiP or background play; the player pauses when the app leaves the screen | done |
 
 ## What the trainee sees (board 3.1–3.3)
 - Under the exercise's name: **Watch how** and the video card: thumbnail with a

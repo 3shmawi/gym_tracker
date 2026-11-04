@@ -38,6 +38,64 @@ void main() {
     expect(alarm.scheduled, isNull);
   });
 
+  group('the rest ends on screen', () {
+    test('rings right away (field test 2026-11-03)', () async {
+      var clock = now;
+      final screen = RestAlarmSync(alarm, now: () => clock)
+        ..lifecycle(AppLifecycleState.resumed)
+        ..rest(notice());
+      clock = now.add(const Duration(seconds: 90, milliseconds: 250));
+      screen.rest(null);
+      await screen.idle;
+      expect(alarm.rung, [notice()]);
+    });
+
+    test('skipped early: silent', () async {
+      var clock = now;
+      final screen = RestAlarmSync(alarm, now: () => clock)
+        ..lifecycle(AppLifecycleState.resumed)
+        ..rest(notice());
+      clock = now.add(const Duration(seconds: 30));
+      screen.rest(null);
+      await screen.idle;
+      expect(alarm.rung, isEmpty);
+    });
+
+    test('over long ago (it rang in the background): silent', () async {
+      var clock = now;
+      final screen = RestAlarmSync(alarm, now: () => clock)
+        ..rest(notice())
+        ..lifecycle(AppLifecycleState.paused);
+      clock = now.add(const Duration(minutes: 5));
+      screen
+        ..lifecycle(AppLifecycleState.resumed)
+        ..rest(null);
+      await screen.idle;
+      expect(alarm.rung, isEmpty);
+    });
+
+    test('a new rest (a set logged) does not ring', () async {
+      var clock = now;
+      final screen = RestAlarmSync(alarm, now: () => clock)
+        ..lifecycle(AppLifecycleState.resumed)
+        ..rest(notice());
+      clock = now.add(const Duration(seconds: 91));
+      screen.rest(notice(seconds: 200));
+      await screen.idle;
+      expect(alarm.rung, isEmpty);
+    });
+
+    test('closed screen: silent', () async {
+      var clock = now;
+      final screen = RestAlarmSync(alarm, now: () => clock)
+        ..lifecycle(AppLifecycleState.resumed)
+        ..rest(notice());
+      clock = now.add(const Duration(seconds: 90));
+      await screen.close();
+      expect(alarm.rung, isEmpty);
+    });
+  });
+
   test('locked or in the background during a rest: scheduled', () async {
     for (final state in [
       AppLifecycleState.inactive,

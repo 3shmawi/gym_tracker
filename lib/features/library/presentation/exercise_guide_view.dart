@@ -21,6 +21,7 @@ class ExerciseGuideView extends StatelessWidget {
     this.dayName,
     this.alreadyInDay = false,
     this.onAdd,
+    this.onChoosePictures,
     this.gymPictures = const [],
     this.movePair = false,
     this.offline = false,
@@ -52,6 +53,10 @@ class ExerciseGuideView extends StatelessWidget {
 
   /// Opens the licenses page from the picture credit.
   final VoidCallback? onOpenCredits;
+
+  /// A solo member chooses this exercise's pictures (no captain to do it);
+  /// null in a gym.
+  final VoidCallback? onChoosePictures;
 
   /// The how-to video (the gym's, else the library's); null: no video section.
   final ExerciseVideoCardData? video;
@@ -98,6 +103,18 @@ class ExerciseGuideView extends StatelessWidget {
                   offline: offline,
                   onOpenCredits: onOpenCredits,
                 ),
+                if (onChoosePictures case final choose?)
+                  Padding(
+                    padding: EdgeInsetsDirectional.only(top: AppDimens.sm),
+                    child: AppSecondaryButton(
+                      key: const Key('guide_choose_pictures'),
+                      icon: Icons.photo_library_outlined,
+                      label: gymPictures.isEmpty
+                          ? l10n.picturesChoose
+                          : l10n.picturesChange,
+                      onPressed: choose,
+                    ),
+                  ),
                 SizedBox(height: AppDimens.sm),
                 Semantics(
                   header: true,

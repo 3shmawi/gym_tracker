@@ -269,6 +269,10 @@ jobs:
 
       - name: Build IPA
         run: |
+          # The obfuscation map goes to build/app/, which only the Android
+          # (Gradle) build creates: without it the AOT snapshot fails
+          # ("Unable to write file: build/app/obfuscation.map.json").
+          mkdir -p build/app
           flutter build ipa --release --flavor prod \
             --dart-define-from-file=env/prod.json \
             --obfuscate --split-debug-info=build/symbols \

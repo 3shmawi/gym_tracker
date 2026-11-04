@@ -176,6 +176,34 @@ network and fail offline).
 in `env/<flavor>.json`. Empty: the feature is off and only bundled pictures
 show. Solo trainees never see gym pictures.
 
+## Solo members choose their own (field test 2026-11-03)
+A member training **solo** (no gym, so no captain) picks pictures from the same
+library on the exercise screen: **Choose pictures** (or **Change pictures**)
+under the pictures opens a sheet (`ChoosePicturesSheet` →
+`ChoosePicturesView`). In a gym the button is not shown: the captain chooses
+in the dashboard.
+- **Search**: the sheet starts with the exercise's English name. Words go
+  through `CatalogQuery.words` (lower case, Latin/Arabic letters and digits
+  only, at most 5 words of at most 30 characters) and are sent as values of
+  the "any word" filter (`keywords=ov.{…}`), never as SQL;
+  `SupabasePictureCatalogRepository` refuses words that weren't cleaned.
+  Explicit columns, 60 rows at most; rows outside the rules are dropped
+  (`CatalogPicture.tryParse`; titles lose control and bidi characters).
+  `exercise_images` is public read (0013), so no account is needed.
+- **Choose**: tap to add or remove, numbered in order, first = cover, at most
+  6 (the rest turn off). **Save pictures** keeps them; **Remove my pictures**
+  clears them.
+- **Kept on the phone only** (`SoloPictures`, the same store and shape as a
+  gym's copy, under the key `solo`): no table, no upload, works offline
+  after saving (the pictures go through the same image cache). Joining a gym
+  shows the gym's choices instead; the solo choices stay for when the member
+  is solo again.
+- **States**: idle hint, grey tiles while loading, nothing found, error with
+  **Try again**, offline ("Searching pictures needs internet").
+- **Privacy**: the words typed are exercise names, sent to our backend
+  (Supabase) like any request; nothing about the member is sent or stored.
+- Event: `solo_pictures_saved` (`count`).
+
 ## Security and privacy
 - No personal data: `updated_by` is a `people.id`, readable only by the gym's
   members (as with the gym plan). Nothing here goes to analytics.
@@ -240,6 +268,7 @@ were read from their repositories:
 | Event | When | Properties |
 |---|---|---|
 | `exercise_pictures_viewed` | An exercise screen shows its pictures (once per screen) | `count` (`1` / `2-3` / `4+`), `source` (`gym` / `bundled`) |
+| `solo_pictures_saved` | A solo member saves (or removes) their pictures for an exercise | `count` (0–6) |
 
 No exercise id, name, picture id or URL (`test/security/exercise_library_test.dart`).
 

@@ -9,6 +9,7 @@ import 'package:gym_tracker/core/media/media_cache.dart';
 import 'package:gym_tracker/core/media/video_info.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/features/gym/domain/entities/gym_media.dart';
+import 'package:gym_tracker/features/gym/presentation/choose_pictures_sheet.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
 import 'package:gym_tracker/features/library/data/exercise_images.dart';
 import 'package:gym_tracker/features/library/data/exercise_videos.dart';
@@ -137,6 +138,16 @@ class _ExerciseGuidePageState extends ConsumerState<ExerciseGuidePage> {
       movePair: pictures.isMovePair,
       offline: offline,
       onOpenCredits: () => showLicensePage(context: context),
+      onChoosePictures: exercise != null && ref.watch(canChoosePicturesProvider)
+          ? () => unawaited(
+              showChoosePicturesSheet(
+                context: context,
+                exerciseId: exercise.id,
+                exerciseName: exercise.name.of(lang),
+                search: exercise.name.en,
+              ),
+            )
+          : null,
       video: video == null
           ? null
           : ExerciseVideoCardData(

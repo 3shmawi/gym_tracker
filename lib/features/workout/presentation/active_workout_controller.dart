@@ -96,7 +96,7 @@ class ActiveWorkoutController extends AsyncNotifier<ActiveWorkout?> {
       previews: next.exercises,
       cursor: _flow.next(next.day, draft.sets, {
         for (final p in next.exercises) p.exercise.id: p.lastSets,
-      }),
+      }, focus: draft.focusId),
       summary: _summarize(
         draft.sets,
         _history,
@@ -126,14 +126,41 @@ class ActiveWorkoutController extends AsyncNotifier<ActiveWorkout?> {
       ),
     ];
     final allDone = _flow.next(current.day, sets, const {}) == null;
+    final focusDone =
+        current.draft.focusId == exercise.id &&
+        sets.where((s) => s.exerciseId == exercise.id).length >=
+            exercise.targetSets;
     await _save(
       current.draft.copyWith(
         sets: sets,
+        focusId: focusDone ? () => null : null,
         restEndsAt: () => cursor.restAfter > 0 && !allDone
             ? _now().add(Duration(seconds: cursor.restAfter))
             : null,
       ),
     );
+  }
+
+  /// Does the exercise at [index] now, out of the planned order (field test
+  /// 2026-11-03: alternating a back and a bench exercise). The rest, if
+  /// any, keeps running. A finished exercise can't be picked.
+  Future<void> pick(int index) {
+    final current = state.value;
+    if (current == null || index < 0 || index >= current.day.exercises.length) {
+      return Future.value();
+    }
+    final exercise = current.day.exercises[index];
+    if (current.draft.setsFor(exercise.id).length >= exercise.targetSets ||
+        current.cursor?.exerciseIndex == index) {
+      return Future.value();
+    }
+    unawaited(
+      Analytics.capture('workout_exercise_picked', {
+        'position': index + 1,
+        'exercises': current.day.exercises.length,
+      }),
+    );
+    return _save(current.draft.copyWith(focusId: () => exercise.id));
   }
 
   /// Fixes a logged set ([index] in the draft's sets).

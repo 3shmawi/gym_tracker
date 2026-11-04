@@ -10,7 +10,7 @@ enum RestAlarmAccess {
   denied,
 
   /// Notifications on, but Android 14+ needs "Alarms & reminders" turned on
-  /// for them to ring on time; until then none is scheduled.
+  /// for them to ring on time; until then they ring late (inexact).
   needsOnTime,
 
   /// Asked before; nothing to show.
@@ -51,9 +51,10 @@ class RestAlarmNotice {
   int get hashCode => Object.hash(at, title, body, channelName);
 }
 
-/// Rings when a rest is over while the phone is locked or the app is in the
-/// background. Implemented with local notifications (nothing leaves the
-/// phone); wired in `core/di/dependencies.dart`.
+/// Rings when a rest is over: scheduled while the phone is locked or the app
+/// is in the background, and right away when it ends on screen. Local
+/// notifications (nothing leaves the phone); wired in
+/// `core/di/dependencies.dart`.
 abstract interface class RestAlarm {
   /// Asks for permission the first time only (the first rest, never at
   /// launch); later calls answer [RestAlarmAccess.alreadyAsked].
@@ -64,6 +65,9 @@ abstract interface class RestAlarm {
 
   /// Schedules [notice], replacing the one scheduled before.
   Future<void> schedule(RestAlarmNotice notice);
+
+  /// Rings [notice] now (the rest ended while the app is on screen).
+  Future<void> ringNow(RestAlarmNotice notice);
 
   /// Removes the scheduled (or shown) notice, if any.
   Future<void> cancel();
@@ -84,6 +88,9 @@ class SilentRestAlarm implements RestAlarm {
 
   @override
   Future<void> schedule(RestAlarmNotice notice) async {}
+
+  @override
+  Future<void> ringNow(RestAlarmNotice notice) async {}
 
   @override
   Future<void> cancel() async {}
