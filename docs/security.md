@@ -310,6 +310,16 @@ only https on `res.cloudinary.com` (no port, no user info), keeps files only
 (no personal data, at most 400 × 2 MB). Cloudinary sees the device's IP when a
 picture loads; the privacy policy says so (EN + AR).
 
+### How-to videos (YouTube)
+Only an 11-character id is ever stored or used; links are parsed by
+`YouTubeLink` (55 shared hostile vectors) and every URL the app loads or
+opens is built from the id: the player (privacy-enhanced, origin
+`https://com.mohager.azm`), the thumbnail (`i.ytimg.com`, allowed in
+`MediaCache`), oEmbed and "Open in YouTube"
+(`https://www.youtube.com/watch?v=<id>`). Text from YouTube is shown as plain
+text, cleaned of control and bidi characters and capped.
+`test/security/exercise_video_test.dart`.
+
 ### Trainee dashboard views (migration 0012)
 Docs read 2026-11-03: Supabase "Row Level Security" and Postgres 15+
 `security_invoker` views. The four `member_*` views run **as the person

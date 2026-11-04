@@ -1,6 +1,7 @@
 import 'package:gym_tracker/core/backend/backend.dart';
 import 'package:gym_tracker/core/captcha/turnstile_captcha.dart';
 import 'package:gym_tracker/core/config/env.dart';
+import 'package:gym_tracker/core/media/video_info.dart';
 import 'package:gym_tracker/core/notifications/local_notifications.dart';
 import 'package:gym_tracker/features/gym/data/datasources/secret_store.dart';
 import 'package:gym_tracker/features/gym/data/datasources/secure_install_id_store.dart';
@@ -65,6 +66,10 @@ abstract final class Dependencies {
       const UnconfiguredGymMediaRepository();
   static GymMediaStore gymMediaStore = InMemoryGymMediaStore();
 
+  /// The phone's copy of video titles (null until [init], and in widget
+  /// tests: the card then only knows what oEmbed answers).
+  static VideoInfoStore? videoInfoStore;
+
   /// Silent until [init] runs (and in widget tests).
   static RestAlarm restAlarm = const SilentRestAlarm();
 
@@ -78,6 +83,7 @@ abstract final class Dependencies {
     soloImportStore = PrefsSoloImportStore(prefs);
     gymPlanStore = PrefsGymPlanStore(prefs);
     gymMediaStore = PrefsGymMediaStore(prefs);
+    videoInfoStore = VideoInfoStore(prefs);
     sessionOutbox = PrefsSessionOutbox(prefs);
     if (Backend.isConfigured && Backend.isReady) {
       gymRepository = SupabaseGymRepository(
