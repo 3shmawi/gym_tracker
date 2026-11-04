@@ -12,6 +12,14 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 abstract final class Monitoring {
   static bool get _enabled => Env.sentryDsn.isNotEmpty;
 
+  /// Starts Flutter with Sentry's binding. Call it instead of
+  /// `WidgetsFlutterBinding.ensureInitialized()`: with the plain binding
+  /// Sentry's frame tracking turns itself off ("incompatible binding"), and
+  /// no slow or frozen frames reach Sentry. When a binding already exists
+  /// (tests) it is kept.
+  static WidgetsBinding ensureBinding() =>
+      SentryWidgetsFlutterBinding.ensureInitialized();
+
   /// Builds the app inside Sentry's zone so start-up errors are captured.
   static Future<void> run(Future<Widget> Function() appBuilder) async {
     if (!_enabled) {

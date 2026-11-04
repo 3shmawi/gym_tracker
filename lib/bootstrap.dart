@@ -20,7 +20,9 @@ import 'package:gym_tracker/features/library/data/exercise_images.dart';
 ///
 /// Completes when start-up work is done (the splash may still be playing).
 Future<void> bootstrap(Widget Function() builder) async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // Sentry's binding, not WidgetsFlutterBinding: with the plain one Sentry
+  // switches off frame tracking (slow / frozen frames per screen).
+  Monitoring.ensureBinding();
   // Before the router exists: unsafe links are dropped first.
   LinkGuard.install();
   AppFonts.registerLicenses();

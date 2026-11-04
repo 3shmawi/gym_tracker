@@ -60,11 +60,26 @@ while scrolling. Raster red while UI is fine = the GPU work (glass, blur,
 **In CI, on demand:** add the **`perf`** label to a PR or run Actions →
 **Performance**. It runs the test with glass, with `GLASS_LITE=true`, and
 with glass on the base branch's `lib/` (same machine: before vs after), on
-an Android emulator (profile, software GPU) and an iPhone simulator
-(debug: simulators can't run profile). Tables go to the run summary, files
-to the `perf-*` artifacts (frame times only, no secrets). Emulator and
-simulator numbers are only good for **comparing** runs on the same
-machine, never as "how fast the app is".
+an iPhone simulator (debug: simulators can't run profile). Tables go to
+the run summary, files to the `perf-ios` artifact (frame times only, no
+secrets). Simulator numbers are only good for **comparing** runs on the
+same machine, never as "how fast the app is". There is no Android
+emulator job: GitHub's emulator has no GPU, drew glass at ~930 ms a frame
+and went offline mid-run (run 41775084842, 2026-11-04).
+
+**From real phones, with no setup (Sentry):** staging sends every
+transaction and prod 20% (`tracesSampleRate`), and the screen observer
+opens one per screen. Sentry adds slow frames (over the frame budget),
+frozen frames (over 700 ms) and frame delay to each. In Sentry:
+Insights → Mobile → Screen Rendering (or Performance → a screen
+transaction), filter `environment:staging` or `prod` and the release.
+Compare the release before this change with the one after, per screen
+and per device. Until 2026-11-04 this was **off**: `bootstrap.dart`
+called `WidgetsFlutterBinding.ensureInitialized()`, so Sentry's
+`FramesTrackingIntegration` disabled itself ("incompatible binding").
+It now calls `Monitoring.ensureBinding()` (Sentry's binding);
+`test/core/monitoring/monitoring_binding_test.dart` keeps it that way.
+Builds from before that change report no frame data.
 
 ## What we found (code review, 2026-11-03)
 | Suspect | Finding |
@@ -150,14 +165,41 @@ What it shows:
   glass (smaller glass cards on a scrolling page; the bar); their cards are
   now without blur too. Measure again to see what the bar still costs.
 
-### After the fix, and Android
-Not measured yet. The Android emulator job failed on the first run (the
-API 34 system image didn't download; now API 33), and GitHub Actions has
-not started any run for this PR since (not the `perf` label, not CI on
-push). Re-run Actions → **Performance** (or re-add the `perf` label): it
-measures glass, lite and the base branch on both machines.
+### iOS simulator (CI, debug), before vs after the fix
+Performance run 41775084842, 2026-11-04, `macos-latest`, newest
+"iPhone NN" simulator, **debug**. Same machine, one after the other:
+"before" is glass on `main` at #47 (`155bd6d`), "after" is glass on this
+PR (`d13a344`, every card without blur), "lite" is `GLASS_LITE=true`.
+Average raster time in ms, and frames over 16 ms out of all frames.
+
+| flow | before raster avg | after raster avg | lite raster avg | before missed | after missed | lite missed |
+|---|---:|---:|---:|---:|---:|---:|
+| home | 25.3 | 10.7 | 4.3 | 82 / 171 | 25 / 182 | 7 / 184 |
+| plan_day | 25.1 | 10.0 | 1.7 | 92 / 170 | 29 / 184 | 4 / 184 |
+| library | 12.9 | 2.5 | 1.7 | 40 / 203 | 3 / 212 | 4 / 214 |
+| exercise_screen | 12.5 | 7.7 | 2.3 | 45 / 176 | 25 / 184 | 2 / 184 |
+| progress | 1.0 | 2.5 | 1.1 | 1 / 191 | 6 / 190 | 2 / 191 |
+| exercise_history | 4.3 | 7.0 | 1.1 | 6 / 184 | 20 / 183 | 0 / 185 |
+| active_workout | 13.8 | 8.2 | 1.9 | 45 / 182 | 16 / 184 | 3 / 184 |
+
+What it shows:
+- Home and plan day draw ~2.4× faster and miss less than a third of the
+  frames; the library is close to lite; the workout and exercise screen
+  roughly halve.
+- Progress and history got slower here. Progress's list card was already
+  flat; history's summary card is now glass without blur instead of
+  blurred glass. One run is not enough to tell noise from a real cost:
+  measure again (and on a phone) before acting.
+- Lite is still cheaper everywhere: what is left is the shader on the
+  cards and the blurred bar.
+
+### Android
+Not measured: there is no GPU in CI's emulator (see above). Use Sentry
+from the Play internal build, or a phone.
 
 ### Real phones
-Not measured yet: this needs a device (`./scripts/perf.sh` and
-`./scripts/perf.sh --name before` on `main`). Add the table here with the
-phone model, Android/iOS version and build mode.
+Not measured yet. Two ways: Sentry's screen rendering data from the
+TestFlight / Play internal builds made after 2026-11-04 (above), or
+`./scripts/perf.sh` on a phone plugged into a computer (with
+`git checkout origin/main -- lib` and `--name before` for the old code).
+Add the numbers here with the phone model, OS version and build mode.

@@ -2,12 +2,13 @@
 # to a PR, or Actions → Performance → Run workflow. Never on push, so CI
 # stays as fast as before. It runs integration_test/perf/scroll_perf.dart
 # with glass and with GLASS_LITE=true, then with glass on the base branch's
-# lib/ (same test, same machine: before vs after), on:
-#   - an Android emulator (profile build, software GPU: compare glass with
-#     lite and before with after; the absolute numbers are not a phone's),
-#   - an iPhone simulator (debug build: simulators can't run profile).
-# Real numbers come from a phone: ./scripts/perf.sh. Results are the job
-# summary and the `perf-*` artifacts (frame times only, no secrets).
+# lib/ (same test, same machine: before vs after), on an iPhone simulator
+# (debug build: simulators can't run profile; compare runs, not absolutes).
+# No Android emulator: GitHub's has no GPU, drew glass at ~930 ms a frame
+# and went offline mid-run (2026-11-04), like docs/release.md describes.
+# Real numbers come from phones: Sentry's slow/frozen frames per screen, or
+# ./scripts/perf.sh. Results are the job summary and the `perf-ios`
+# artifact (frame times only, no secrets).
 name: Performance
 
 on:
@@ -27,67 +28,6 @@ defaults:
     shell: bash
 
 jobs:
-  android:
-    name: Scroll performance (Android emulator)
-    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'perf'
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-
-      - uses: $/.github/actions/setup-flutter
-        with:
-          java: 'true'
-          gradle-cache: 'true'
-
-      # The emulator needs hardware acceleration (README of
-      # android-emulator-runner, checked 2026-11-03).
-      - name: Enable KVM
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      # API 33: the API 34 google_apis image failed to download on the
-      # runner ("Error on ZipFile unknown archive", 2026-11-03).
-      - name: Measure (glass, lite, then glass on the base branch)
-        env:
-          BASE_REF: ${{ github.base_ref || 'main' }}
-        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
-        with:
-          api-level: 33
-          target: google_apis
-          arch: x86_64
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
-          disable-animations: false
-          script: |
-            bash -o pipefail -c './scripts/perf.sh --name glass 2>&1 | tee perf-glass.log'
-            bash -o pipefail -c './scripts/perf.sh --lite --name lite 2>&1 | tee perf-lite.log'
-            git checkout "origin/$BASE_REF" -- lib
-            bash -o pipefail -c './scripts/perf.sh --name glass-base 2>&1 | tee perf-glass-base.log'
-            git checkout HEAD -- lib
-
-      - name: Summary
-        if: always()
-        run: |
-          echo "## Android emulator (profile, software GPU)" >> "$GITHUB_STEP_SUMMARY"
-          for f in build/perf/glass.md build/perf/lite.md build/perf/glass-base.md; do
-            if [ -f "$f" ]; then { cat "$f"; echo; } >> "$GITHUB_STEP_SUMMARY"; fi
-          done
-
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: always()
-        with:
-          name: perf-android
-          path: |
-            build/perf/
-            perf-*.log
-          retention-days: 30
-          if-no-files-found: warn
-
   ios:
     name: Scroll performance (iOS simulator)
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'perf'
