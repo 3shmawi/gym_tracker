@@ -24,7 +24,7 @@ export function Footer() {
   const { t } = useI18n();
   return (
     <footer class="ftr">
-      <span>{t('footer.copyright')}</span>
+      <span dir="ltr">{t('footer.copyright')}</span>
       <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
       <a href="https://azmm.pages.dev/privacy">{t('footer.privacy')}</a>
       <a href="https://azmm.pages.dev/terms">{t('footer.terms')}</a>
