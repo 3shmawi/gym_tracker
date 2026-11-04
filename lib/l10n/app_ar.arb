@@ -387,5 +387,7 @@
   "exercisePicturesCreditLabel": "حقوق الصور: Everkinetic، رخصة CC BY-SA 4.0. بيفتح صفحة الرخص.",
   "exercisePicturesOfflineHint": "صور الجيم هتظهر لما ترجع أونلاين",
   "exercisePicturesSwipeHint": "اسحب للصورة اللي بعدها",
-  "libraryGymPictures": "صور من الجيم"
+  "libraryGymPictures": "صور من الجيم",
+  "workoutPickHint": "دوس على أي تمرين عشان تعمله دلوقتي",
+  "workoutDoNow": "اعمل التمرين ده دلوقتي"
 }

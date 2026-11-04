@@ -82,17 +82,28 @@ class WorkoutFlow {
   }
 
   /// The next set to do, or null when every planned set is logged.
+  ///
+  /// [focus] (an `Exercise.id`) is the exercise the member picked to do
+  /// now, out of order (alternating two machines, a busy bench): its next
+  /// set comes first while it has sets left. Unknown or finished: ignored.
   SetCursor? next(
     WorkoutDay day,
     List<LoggedSet> logged,
-    Map<String, List<LoggedSet>> lastTime,
-  ) {
+    Map<String, List<LoggedSet>> lastTime, {
+    String? focus,
+  }) {
     final count = <String, int>{};
     for (final s in logged) {
       count[s.exerciseId] = (count[s.exerciseId] ?? 0) + 1;
     }
     final allGroups = groups(day);
-    for (final (index, setNumber) in order(day)) {
+    final picked = day.exercises.indexWhere((e) => e.id == focus);
+    final planned = order(day);
+    final steps =
+        picked >= 0 && (count[focus] ?? 0) < day.exercises[picked].targetSets
+        ? [(picked, (count[focus] ?? 0) + 1), ...planned]
+        : planned;
+    for (final (index, setNumber) in steps) {
       final exercise = day.exercises[index];
       if ((count[exercise.id] ?? 0) >= setNumber) continue;
 

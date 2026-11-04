@@ -112,4 +112,28 @@ void main() {
     final c = flow.next(day1, [set('pec_deck')], const {})!;
     expect((c.exerciseIndex, c.setNumber), (0, 1));
   });
+
+  group('picked out of order', () {
+    test('the picked exercise comes first, at its next set', () {
+      final b = day1.exercises[1].id;
+      final c = flow.next(
+        day1,
+        [set(day1.exercises[0].id), set(b)],
+        const {},
+        focus: b,
+      )!;
+      expect((c.exerciseIndex, c.setNumber), (1, 2));
+      expect(c.weight, 20, reason: "today's last set of it");
+    });
+
+    test('finished or unknown picks are ignored', () {
+      final a = day1.exercises[0];
+      final done = [for (var i = 0; i < a.targetSets; i++) set(a.id)];
+      expect(flow.next(day1, done, const {}, focus: a.id)!.exerciseIndex, 1);
+      expect(
+        flow.next(day1, const [], const {}, focus: '<script>')!.exerciseIndex,
+        0,
+      );
+    });
+  });
 }

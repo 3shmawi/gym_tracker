@@ -21,6 +21,7 @@ import 'package:gym_tracker/l10n/l10n.dart';
 class ActiveWorkoutActions {
   const new({
     required this.onLog,
+    required this.onPick,
     required this.onEditSet,
     required this.onDeleteSet,
     required this.onAdd15,
@@ -31,6 +32,9 @@ class ActiveWorkoutActions {
   });
 
   final void Function(double weight, int reps) onLog;
+
+  /// Do the exercise at this index now, out of the planned order.
+  final ValueChanged<int> onPick;
 
   /// `index` is the set's position in the workout's logged sets.
   final void Function(int index, double weight, int reps) onEditSet;
@@ -206,6 +210,21 @@ class _WorkoutState extends State<_Workout> {
             scrollCacheExtent: const ScrollCacheExtent.pixels(10000),
             padding: EdgeInsets.all(AppDimens.md),
             children: [
+              if (workout.previews.indexed.any(
+                (e) => e.$1 != current && e.$1 != partner && !_done(e.$2),
+              ))
+                Padding(
+                  padding: EdgeInsetsDirectional.only(
+                    start: AppDimens.xs,
+                    bottom: AppDimens.xs,
+                  ),
+                  child: Text(
+                    l10n.workoutPickHint,
+                    style: AppTextStyles.caption.copyWith(
+                      color: palette.textSecondary,
+                    ),
+                  ),
+                ),
               for (final (i, preview) in workout.previews.indexed)
                 Padding(
                   key: i == current ? _currentKey : null,
@@ -219,9 +238,13 @@ class _WorkoutState extends State<_Workout> {
                           onEditSet: (index) => _edit(context, index),
                         )
                       : _ExerciseLine(
+                          key: Key('exercise_line_${preview.exercise.id}'),
                           number: i + 1,
                           preview: preview,
                           logged: workout.draft.setsFor(preview.exercise.id),
+                          onPick: _done(preview)
+                              ? null
+                              : () => actions.onPick(i),
                         ),
                 ),
             ],
@@ -248,6 +271,9 @@ class _WorkoutState extends State<_Workout> {
       ],
     );
   }
+
+  bool _done(ExercisePreview p) =>
+      workout.draft.setsFor(p.exercise.id).length >= p.exercise.targetSets;
 
   Widget _dock(BuildContext context) {
     final l10n = context.l10n;
@@ -344,17 +370,21 @@ class _WorkoutState extends State<_Workout> {
   }
 }
 
-/// A done or upcoming exercise: one line.
+/// A done or upcoming exercise: one line. An unfinished one is a button:
+/// tapping it makes it the exercise to do now.
 class _ExerciseLine extends StatelessWidget {
   const new({
     required this.number,
     required this.preview,
     required this.logged,
+    this.onPick,
+    super.key,
   });
 
   final int number;
   final ExercisePreview preview;
   final List<LoggedSet> logged;
+  final VoidCallback? onPick;
 
   @override
   Widget build(BuildContext context) {
@@ -363,43 +393,58 @@ class _ExerciseLine extends StatelessWidget {
     final exercise = preview.exercise;
     final done = logged.length >= exercise.targetSets;
     final weight = preview.suggestion.weight;
-    return MergeSemantics(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: AppDimens.minTouchTarget),
-        child: Padding(
-          padding: EdgeInsetsDirectional.symmetric(horizontal: AppDimens.xs),
-          child: Row(
-            spacing: AppDimens.sm2,
-            children: [
-              _NumberDot(number: number, done: done),
-              Expanded(
-                child: Text(
-                  exercise.name.of(lang),
-                  style: AppTextStyles.body.copyWith(
-                    color: done ? palette.textPrimary : palette.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
+    final line = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: AppDimens.minTouchTarget),
+      child: Padding(
+        padding: EdgeInsetsDirectional.symmetric(horizontal: AppDimens.xs),
+        child: Row(
+          spacing: AppDimens.sm2,
+          children: [
+            _NumberDot(number: number, done: done),
+            Expanded(
+              child: Text(
+                exercise.name.of(lang),
+                style: AppTextStyles.body.copyWith(
+                  color: done ? palette.textPrimary : palette.textSecondary,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              if (done)
-                Text(
-                  WorkoutFormat.ltr(WorkoutFormat.sets(logged)),
-                  style: AppTextStyles.caption.copyWith(
-                    color: palette.textSecondary,
-                  ),
-                )
-              else if (weight != null)
-                Text(
-                  WorkoutFormat.ltr(WorkoutFormat.weight(weight)),
-                  style: AppTextStyles.label.copyWith(
-                    color: palette.textSecondary,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
+            ),
+            if (done || logged.isNotEmpty)
+              Text(
+                WorkoutFormat.ltr(WorkoutFormat.sets(logged)),
+                style: AppTextStyles.caption.copyWith(
+                  color: palette.textSecondary,
                 ),
-            ],
-          ),
+              )
+            else if (weight != null)
+              Text(
+                WorkoutFormat.ltr(WorkoutFormat.weight(weight)),
+                style: AppTextStyles.label.copyWith(
+                  color: palette.textSecondary,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+          ],
         ),
       ),
+    );
+    final pick = onPick;
+    return MergeSemantics(
+      child: pick == null
+          ? line
+          : Semantics(
+              button: true,
+              hint: context.l10n.workoutDoNow,
+              child: Material(
+                type: MaterialType.transparency,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+                  onTap: pick,
+                  child: line,
+                ),
+              ),
+            ),
     );
   }
 }
