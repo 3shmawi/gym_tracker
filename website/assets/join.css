@@ -59,8 +59,7 @@ html[lang="en"] [data-lang="en"], html[lang="ar"] [data-lang="ar"] { display: re
 .web { max-width: 480px; min-height: 100vh; margin: 0 auto; padding: 20px 20px 26px; display: flex;
   flex-direction: column; gap: 18px; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; }
-.logo { width: 36px; height: 36px; border-radius: 11px; background: linear-gradient(135deg, #22C55E, #0B6B33);
-  display: grid; place-items: center; color: #04210F; font: 800 18px "Inter", sans-serif; flex: none; }
+.logo { width: 36px; height: 36px; border-radius: 11px; display: block; object-fit: cover; flex: none; }
 .lang { display: none; }
 .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 

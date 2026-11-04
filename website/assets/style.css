@@ -43,8 +43,7 @@ header.site .wrap { display: flex; align-items: center; justify-content: space-b
 .brand:hover { text-decoration: none; }
 .logo {
   width: 34px; height: 34px; border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 55%, #ffffff));
-  display: grid; place-items: center; color: #fff; font-weight: 800;
+  display: block; object-fit: cover;
 }
 nav.links { display: flex; align-items: center; gap: 18px; font-size: 15px; }
 nav.links a { color: var(--muted); }
