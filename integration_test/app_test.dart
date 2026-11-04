@@ -408,6 +408,10 @@ void main() {
     addTearDown(() => scannerCameraOverride = null);
     Dependencies.gymRepository = FakeGymRepository(
       redeemResult: Success(joinedGym()),
+      // The server knows the membership: without it the app's refresh
+      // finds none and (rightly) moves the person back to solo, so home
+      // showed the solo template instead of the captain's plan.
+      memberships: Success([member()]),
     );
     final account = FakeAccountRepository();
     Dependencies.accountRepository = account;
@@ -446,6 +450,15 @@ void main() {
     // It goes away by itself.
     await tester.pump(const Duration(seconds: 7));
     expect(find.text('Your captain updated your plan'), findsNothing);
+  });
+
+  // Was nested inside unlockPhone (a merge in #38), so it was declared while
+  // another test ran ("Can't call test() once tests have begun running")
+  // and never ran on its own.
+  testWidgets("the gym's pictures: frames, swipe, offline from the cache", (
+    tester,
+  ) async {
+    await gymPicturesFlow(tester);
   });
 }
 
@@ -499,10 +512,4 @@ Future<void> unlockPhone(WidgetTester tester) async {
     AppLifecycleState.resumed,
   ].forEach(tester.binding.handleAppLifecycleStateChanged);
   await tester.pumpAndSettle();
-
-  testWidgets("the gym's pictures: frames, swipe, offline from the cache", (
-    tester,
-  ) async {
-    await gymPicturesFlow(tester);
-  });
 }
