@@ -24,3 +24,6 @@ for iOS 6.9", 1080×1920+ for Android), export PNGs and put them in:
 - `store/android/<locale>/images/phoneScreenshots/1.png, 2.png …`
 - `store/ios/screenshots/<locale>/1_iphone69.png …`
 The workflow uploads screenshots only when the folders contain images.
+
+## Privacy forms
+What to answer in Google Play **Data safety** and Apple **App Privacy**: [`privacy_forms.md`](privacy_forms.md).

@@ -17,6 +17,8 @@ class SettingsView extends StatelessWidget {
     this.onOpenAccount,
     this.onJoinGym,
     this.onOpenLicenses,
+    this.onOpenPrivacy,
+    this.onOpenTerms,
     super.key,
   });
 
@@ -35,6 +37,11 @@ class SettingsView extends StatelessWidget {
   /// Opens the open-source licenses page (fonts, exercise pictures); the row
   /// is hidden while null.
   final VoidCallback? onOpenLicenses;
+
+  /// The privacy policy and the terms on the website: always one tap away
+  /// (YouTube API Services Developer Policies III.A).
+  final VoidCallback? onOpenPrivacy;
+  final VoidCallback? onOpenTerms;
 
   @override
   Widget build(BuildContext context) {
@@ -120,6 +127,20 @@ class SettingsView extends StatelessWidget {
             child: Column(
               children: [
                 const SettingsVersionTile(),
+                if (onOpenPrivacy != null)
+                  SettingsLinkTile(
+                    key: const Key('settings_privacy'),
+                    label: l10n.legalPrivacy,
+                    icon: Icons.privacy_tip_outlined,
+                    onTap: onOpenPrivacy!,
+                  ),
+                if (onOpenTerms != null)
+                  SettingsLinkTile(
+                    key: const Key('settings_terms'),
+                    label: l10n.legalTerms,
+                    icon: Icons.gavel_outlined,
+                    onTap: onOpenTerms!,
+                  ),
                 if (onOpenLicenses != null)
                   SettingsLinkTile(
                     key: const Key('settings_licenses'),

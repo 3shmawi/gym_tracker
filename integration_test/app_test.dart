@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
 import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
+import 'package:gym_tracker/core/legal/legal.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/core/router/app_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
@@ -42,8 +43,8 @@ void main() {
   testWidgets('first launch: pick the 5-day plan and see the next workout', (
     tester,
   ) async {
-    // A fresh install: no plan, no history.
-    await freshInstall(tester);
+    // A fresh install: no plan, no history, nothing agreed yet.
+    await freshInstall(tester, agreed: false);
 
     // The animated splash opens the demo: the first launch of the day plays
     // the full logo animation while start-up runs, then hands off.
@@ -56,6 +57,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(AzmLogoAnimation), findsNothing);
     await beat(tester, 1500);
+
+    // Once, before anything: the Terms and Privacy Policy.
+    expect(find.byKey(const Key('consent_agree')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('consent_agree')));
+    await tester.pumpAndSettle();
+    await beat(tester);
 
     expect(find.byType(NextWorkoutPage), findsOneWidget);
     await tester.tap(find.byKey(const Key('use_template_button')));
@@ -453,13 +460,19 @@ void main() {
 /// with the same root widget would keep its state, e.g. the ProviderScope),
 /// send the app-wide router back home and clear everything saved on the
 /// device.
-Future<void> freshInstall(WidgetTester tester) async {
+/// [agreed]: the Terms and Privacy Policy were accepted (every test but
+/// the first-launch one, which shows that screen).
+Future<void> freshInstall(WidgetTester tester, {bool agreed = true}) async {
   // Pop back home while the previous app is still mounted, so no page of
   // it (e.g. Settings) is left in the router to cover the new one.
   appRouter.go(AppRoutes.home);
   await tester.pumpAndSettle();
   await tester.pumpWidget(const SizedBox.shrink());
-  await (await SharedPreferences.getInstance()).clear();
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+  if (agreed) {
+    await prefs.setString(PrefsConsentStore.key, ConsentStore.current);
+  }
 }
 
 /// The phone's notification center can't be driven from a test (and iOS

@@ -438,5 +438,13 @@
   "videoResume": "شغّل الفيديو",
   "videoExpand": "كبّر الفيديو",
   "miniPlayerLabel": "مشغّل الفيديو الصغير: {title}",
-  "miniPlayerLabelNoTitle": "مشغّل الفيديو الصغير"
+  "miniPlayerLabelNoTitle": "مشغّل الفيديو الصغير",
+  "consentTitle": "قبل ما تبدأ",
+  "consentBody": "تمارينك بتفضل على موبايلك إلا لو دخلت جيم. عشان التطبيق يشتغل ويتحسن بيستخدم كام خدمة: Supabase للحسابات، Sentry لتقارير الأعطال، PostHog لإحصائيات الاستخدام، YouTube لتشغيل فيديوهات طريقة التمرين. سياسة الخصوصية بتشرح كل خدمة بتاخد إيه. شروط الاستخدام، ومعاها شروط خدمة YouTube، هي قواعد استخدام التطبيق.",
+  "consentNote": "لما تدوس «موافق ومكمّل» تبقى موافق على شروط الاستخدام وسياسة الخصوصية.",
+  "consentAgree": "موافق ومكمّل",
+  "legalPrivacy": "سياسة الخصوصية",
+  "legalTerms": "شروط الاستخدام",
+  "legalYouTubeTerms": "شروط خدمة YouTube",
+  "legalGooglePrivacy": "سياسة خصوصية Google"
 }

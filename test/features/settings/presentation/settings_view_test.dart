@@ -67,6 +67,27 @@ void main() {
       expect(opened, 1);
     });
 
+    testWidgets('privacy policy and terms are always one tap away', (
+      tester,
+    ) async {
+      final opened = <String>[];
+      await tester.pumpApp(
+        SettingsView(
+          settings: const AppSettings(),
+          onLocaleChanged: (_) {},
+          onThemeModeChanged: (_) {},
+          onOpenPrivacy: () => opened.add('privacy'),
+          onOpenTerms: () => opened.add('terms'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      for (final key in ['settings_privacy', 'settings_terms']) {
+        await tester.ensureVisible(find.byKey(Key(key)));
+        await tester.tap(find.byKey(Key(key)));
+      }
+      expect(opened, ['privacy', 'terms']);
+    });
+
     testWidgets('no licenses callback: no licenses row', (tester) async {
       await tester.pumpApp(
         SettingsView(

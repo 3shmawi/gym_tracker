@@ -156,7 +156,7 @@ Before the flag goes on in production:
    `Info.plist` (`NSCameraUsageDescription`) hold the text App Review sees
    (decision doc §8). Edit all three together; `platform_config_test.dart`
    pins them.
-3. **Store forms.** Apple App Privacy: Name, User ID, Health & Fitness, Diagnostics,
+3. **Store forms** (full answers: `store/privacy_forms.md`, 2026-11-04). Apple App Privacy: Name, User ID, Health & Fitness, Diagnostics,
    none used for tracking; Google Data safety: Personal info (name), Health and
    fitness, App activity, Device or other IDs (the install id), encrypted in
    transit, deletion URL `https://azmm.pages.dev/delete-account.html`
