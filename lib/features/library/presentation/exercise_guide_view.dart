@@ -57,6 +57,7 @@ class ExerciseGuideView extends StatelessWidget {
   /// A solo member chooses this exercise's pictures (no captain to do it);
   /// null in a gym.
   final VoidCallback? onChoosePictures;
+
   /// The how-to video (the gym's, else the library's); null: no video section.
   final ExerciseVideoCardData? video;
   final VoidCallback? onPlayVideo;

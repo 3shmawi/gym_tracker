@@ -71,6 +71,7 @@ abstract final class Dependencies {
   /// The shared picture library, searched by solo members.
   static PictureCatalogRepository pictureCatalog =
       const UnconfiguredPictureCatalogRepository();
+
   /// The phone's copy of video titles (null until [init], and in widget
   /// tests: the card then only knows what oEmbed answers).
   static VideoInfoStore? videoInfoStore;
