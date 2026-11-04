@@ -1,0 +1,305 @@
+{
+  "description": "Shared test vectors for YouTube links (app: lib/core/media/youtube_link.dart; dashboard: the same rules). valid=false means the link is refused. The id below is only a test string.",
+  "vectors": [
+    {
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "note": "watch"
+    },
+    {
+      "input": "https://youtube.com/watch?v=dQw4w9WgXcQ",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "note": "no www"
+    },
+    {
+      "input": "https://m.youtube.com/watch?v=dQw4w9WgXcQ",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "note": "mobile host"
+    },
+    {
+      "input": "https://WWW.YouTube.com/watch?v=dQw4w9WgXcQ",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "note": "host is case-insensitive"
+    },
+    {
+      "input": "https://youtu.be/dQw4w9WgXcQ",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "note": "short link"
+    },
+    {
+      "input": "https://youtu.be/dQw4w9WgXcQ?si=AbCdEf123",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "note": "share parameter ignored"
+    },
+    {
+      "input": "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "note": "Shorts"
+    },
+    {
+      "input": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "note": "embed"
+    },
+    {
+      "input": "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "note": "privacy-enhanced embed"
+    },
+    {
+      "input": "https://youtube-nocookie.com/embed/dQw4w9WgXcQ",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "note": "nocookie without www"
+    },
+    {
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PL123&index=2&feature=share",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "note": "extra parameters ignored"
+    },
+    {
+      "input": "  https://youtu.be/dQw4w9WgXcQ  ",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "note": "spaces around are trimmed"
+    },
+    {
+      "input": "https://youtu.be/dQw4w9WgXcQ?t=90",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "start": 90,
+      "note": "t in seconds"
+    },
+    {
+      "input": "https://youtu.be/dQw4w9WgXcQ?t=90s",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "start": 90,
+      "note": "t with s"
+    },
+    {
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=1m30s",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "start": 90,
+      "note": "t minutes and seconds"
+    },
+    {
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=1h2m3s",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "start": 3723,
+      "note": "t hours"
+    },
+    {
+      "input": "https://www.youtube.com/embed/dQw4w9WgXcQ?start=45&end=80",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "start": 45,
+      "end": 80,
+      "note": "start and end"
+    },
+    {
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=0",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "note": "start 0 is no start"
+    },
+    {
+      "input": "https://www.youtube.com/shorts/dQw4w9WgXcQ/",
+      "valid": true,
+      "id": "dQw4w9WgXcQ",
+      "note": "trailing slash on a path"
+    },
+    {
+      "input": "http://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "valid": false,
+      "note": "http"
+    },
+    {
+      "input": "javascript:alert('dQw4w9WgXcQ')",
+      "valid": false,
+      "note": "javascript"
+    },
+    {
+      "input": "www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "valid": false,
+      "note": "no scheme"
+    },
+    {
+      "input": "//www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "valid": false,
+      "note": "scheme-relative"
+    },
+    {
+      "input": "https://www.youtube.com:8443/watch?v=dQw4w9WgXcQ",
+      "valid": false,
+      "note": "port"
+    },
+    {
+      "input": "https://user@www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "valid": false,
+      "note": "user info"
+    },
+    {
+      "input": "https://youtube.com@evil.example/watch?v=dQw4w9WgXcQ",
+      "valid": false,
+      "note": "youtube.com as user info of another host"
+    },
+    {
+      "input": "https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ",
+      "valid": false,
+      "note": "look-alike sub-domain"
+    },
+    {
+      "input": "https://evil.example/www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "valid": false,
+      "note": "host in the path"
+    },
+    {
+      "input": "https://www.youtube.com\\@evil.example/watch?v=dQw4w9WgXcQ",
+      "valid": false,
+      "note": "backslash"
+    },
+    {
+      "input": "https://www.yоutube.com/watch?v=dQw4w9WgXcQ",
+      "valid": false,
+      "note": "Cyrillic o in the host"
+    },
+    {
+      "input": "https://www.xn--yutube-wqf.com/watch?v=dQw4w9WgXcQ",
+      "valid": false,
+      "note": "punycode look-alike"
+    },
+    {
+      "input": "https://music.youtube.com/watch?v=dQw4w9WgXcQ",
+      "valid": false,
+      "note": "YouTube Music"
+    },
+    {
+      "input": "https://www.youtube.com/live/dQw4w9WgXcQ",
+      "valid": false,
+      "note": "live"
+    },
+    {
+      "input": "https://www.youtube-nocookie.com/watch?v=dQw4w9WgXcQ",
+      "valid": false,
+      "note": "nocookie only embeds"
+    },
+    {
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgXc",
+      "valid": false,
+      "note": "10-character id"
+    },
+    {
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQQ",
+      "valid": false,
+      "note": "12-character id"
+    },
+    {
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgX%63Q",
+      "valid": false,
+      "note": "percent-encoded id"
+    },
+    {
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgX.Q",
+      "valid": false,
+      "note": "dot in id"
+    },
+    {
+      "input": "https://www.youtube.com/%77atch?v=dQw4w9WgXcQ",
+      "valid": false,
+      "note": "percent-encoded path"
+    },
+    {
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&v=aaaaaaaaaaa",
+      "valid": false,
+      "note": "two ids"
+    },
+    {
+      "input": "https://www.youtube.com/watch",
+      "valid": false,
+      "note": "no id"
+    },
+    {
+      "input": "https://www.youtube.com/channel/UC1234567890",
+      "valid": false,
+      "note": "channel"
+    },
+    {
+      "input": "https://www.youtube.com/playlist?list=PL123",
+      "valid": false,
+      "note": "playlist"
+    },
+    {
+      "input": "https://www.youtube.com/Shorts/dQw4w9WgXcQ",
+      "valid": false,
+      "note": "path is case-sensitive"
+    },
+    {
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=abc",
+      "valid": false,
+      "note": "bad t"
+    },
+    {
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=99999999",
+      "valid": false,
+      "note": "t too large"
+    },
+    {
+      "input": "https://www.youtube.com/embed/dQw4w9WgXcQ?start=80&end=45",
+      "valid": false,
+      "note": "end before start"
+    },
+    {
+      "input": "https://www.youtube.com/embed/dQw4w9WgXcQ?start=-5",
+      "valid": false,
+      "note": "negative start"
+    },
+    {
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=10&start=20",
+      "valid": false,
+      "note": "both t and start"
+    },
+    {
+      "input": "https://youtu.be/dQw4w9WgXcQ?t=",
+      "valid": false,
+      "note": "empty t"
+    },
+    {
+      "input": "https://youtu.be/dQw4w9WgXcQ?x=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "valid": false,
+      "note": "longer than 2048"
+    },
+    {
+      "input": "",
+      "valid": false,
+      "note": "empty"
+    },
+    {
+      "input": "https://youtu.be/dQw4w9WgXcQ​",
+      "valid": false,
+      "note": "zero-width space"
+    },
+    {
+      "input": "ftp://youtu.be/dQw4w9WgXcQ",
+      "valid": false,
+      "note": "ftp"
+    },
+    {
+      "input": "https://youtu.be/dQw4w9WgXcQ/extra",
+      "valid": false,
+      "note": "extra path on youtu.be"
+    }
+  ]
+}

@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gym_tracker/core/media/video_info.dart';
+import 'package:gym_tracker/core/media/youtube_link.dart';
+import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/core/router/app_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
@@ -14,6 +17,7 @@ import 'package:gym_tracker/features/gym/domain/entities/gym_media.dart';
 import 'package:gym_tracker/features/gym/domain/entities/gym_plan.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
 import 'package:gym_tracker/features/library/presentation/library_providers.dart';
+import 'package:gym_tracker/features/video/presentation/video_providers.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
@@ -411,4 +415,79 @@ void main() {
       expect(find.text('Pictures from your gym'), findsOneWidget);
     });
   });
+
+  group('the how-to video (real router, fake YouTube)', () {
+    final opened = <Uri>[];
+
+    List<Override> fakeYouTube(VideoInfo info) => [
+      videoInfoRepositoryProvider.overrideWithValue(_FakeInfo(info)),
+      videoSurfaceProvider.overrideWithValue(
+        (v, {required onProblem}) =>
+            ColoredBox(key: Key('fake_player_${v.id}'), color: Colors.black),
+      ),
+      externalOpenerProvider.overrideWithValue((url) async {
+        opened.add(url);
+        return true;
+      }),
+      deviceOnlineProvider.overrideWith((ref) => Stream.value(true)),
+    ];
+
+    setUp(opened.clear);
+
+    testWidgets("the library's video: card, play, the player sheet", (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        at: AppRoutes.libraryExercise('flat_db_press'),
+        overrides: fakeYouTube(
+          const VideoInfo(
+            availability: VideoAvailability.available,
+            title: 'Bench',
+            channel: 'Coach',
+          ),
+        ),
+      );
+      expect(find.text('Watch how'), findsOneWidget);
+      expect(find.text('Bench'), findsOneWidget);
+      // Never plays by itself.
+      expect(find.byKey(const Key('fake_player_mCEIUZySRPY')), findsNothing);
+      await tester.ensureVisible(find.byKey(const Key('video_play')));
+      await tester.tap(find.byKey(const Key('video_play')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('fake_player_mCEIUZySRPY')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('video_open_in_youtube')).last);
+      expect(opened, [
+        Uri.parse('https://www.youtube.com/watch?v=mCEIUZySRPY'),
+      ]);
+      await tester.tap(find.byKey(const Key('video_close')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('fake_player_mCEIUZySRPY')), findsNothing);
+    });
+
+    testWidgets('embedding off: Open in YouTube from the card', (tester) async {
+      await pumpApp(
+        tester,
+        at: AppRoutes.libraryExercise('flat_db_press'),
+        overrides: fakeYouTube(
+          const VideoInfo(availability: VideoAvailability.embedDisabled),
+        ),
+      );
+      await tester.ensureVisible(
+        find.byKey(const Key('video_open_in_youtube')),
+      );
+      await tester.tap(find.byKey(const Key('video_open_in_youtube')));
+      expect(opened.single.host, 'www.youtube.com');
+      expect(opened.single.queryParameters['v'], 'mCEIUZySRPY');
+    });
+  });
+}
+
+class _FakeInfo implements VideoInfoRepository {
+  const new(this.info);
+
+  final VideoInfo info;
+
+  @override
+  Future<Result<VideoInfo>> fetch(YouTubeVideoRef video) async => Success(info);
 }
