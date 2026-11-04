@@ -4,7 +4,7 @@ import type { AppConfig } from './config';
 /**
  * The one Supabase client. Auth options (supabase.com/docs/reference/javascript/initializing,
  * read 2026-11-04):
- * - persistSession: the session lives in localStorage under sb-<ref>-auth-token
+ * - persistSession: supabase-js keeps the session in the browser under sb-<ref>-auth-token
  *   (the only personal data the dashboard keeps in the browser);
  * - autoRefreshToken: keeps the permanent session alive;
  * - detectSessionInUrl: false, sign-in is by typed code, never a link, so a
