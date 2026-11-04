@@ -6,3 +6,6 @@
 # config check in tests and e2e; they belong to no Supabase project.
 0143b248024cc01552ff4c6c66bca9f225bf0e82:dashboard/playwright.config.ts:generic-api-key:8
 0143b248024cc01552ff4c6c66bca9f225bf0e82:dashboard/test/config.test.ts:generic-api-key:5
+# The same two placeholders in the squash commit of #53 on main.
+98c97723fb6d20262f160d99a7533c9b8b15e3a3:dashboard/playwright.config.ts:generic-api-key:8
+98c97723fb6d20262f160d99a7533c9b8b15e3a3:dashboard/test/config.test.ts:generic-api-key:5
