@@ -28,6 +28,15 @@ class FakeRestAlarm implements RestAlarm {
     scheduled = notice;
   }
 
+  /// Notices rung on screen, oldest first.
+  final rung = <RestAlarmNotice>[];
+
+  @override
+  Future<void> ringNow(RestAlarmNotice notice) async {
+    calls.add('ring');
+    rung.add(notice);
+  }
+
   @override
   Future<void> cancel() async {
     calls.add('cancel');

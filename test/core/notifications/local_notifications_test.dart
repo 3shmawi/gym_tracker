@@ -83,12 +83,40 @@ void main() {
       expect(details['icon'], LocalNotifications.androidIcon);
     });
 
-    test('no exact alarms (Android 14+ default): nothing scheduled', () async {
+    test('no exact alarms (Android 14+ default): still rings, inexact '
+        '(field test 2026-11-03: it never rang)', () async {
       answers['canScheduleExactNotifications'] = false;
       final n = LocalNotifications();
       expect(await n.canRingOnTime(), isFalse);
-      expect(await scheduleIn(n, const Duration(seconds: 90)), isFalse);
-      expect(methods(), isNot(contains('zonedSchedule')));
+      expect(await scheduleIn(n, const Duration(seconds: 90)), isTrue);
+      final call = calls.singleWhere((c) => c.method == 'zonedSchedule');
+      final args = call.arguments as Map<Object?, Object?>;
+      final details = args['platformSpecifics']! as Map<Object?, Object?>;
+      expect(details['scheduleMode'], 'inexactAllowWhileIdle');
+    });
+
+    test('rings now in front: a heads-up that goes away by itself', () async {
+      final n = LocalNotifications();
+      expect(
+        await n.ringNow(
+          id: 1,
+          title: 'Rest over',
+          body: 'Squat · set 2',
+          channelId: 'rest_timer',
+          channelName: 'Rest timer',
+        ),
+        isTrue,
+      );
+      final call = calls.singleWhere((c) => c.method == 'show');
+      final args = call.arguments as Map<Object?, Object?>;
+      expect(args['title'], 'Rest over');
+      final details = args['platformSpecifics']! as Map<Object?, Object?>;
+      expect(details['channelId'], 'rest_timer');
+      expect(
+        details['timeoutAfter'],
+        LocalNotifications.ringTimeout.inMilliseconds,
+      );
+      expect(details['importance'], Importance.high.value);
     });
 
     test('a moment already past is skipped', () async {
@@ -132,6 +160,35 @@ void main() {
       expect(init['requestAlertPermission'], isFalse);
       expect(init['requestSoundPermission'], isFalse);
       expect(init['requestBadgePermission'], isFalse);
+    });
+
+    test('in front: sound only, no banner over the timer', () async {
+      await LocalNotifications().ringNow(
+        id: 1,
+        title: 'Rest over',
+        body: 'Squat · set 2',
+        channelId: 'rest_timer',
+        channelName: 'Rest timer',
+      );
+      final call = calls.singleWhere((c) => c.method == 'show');
+      final args = call.arguments as Map<Object?, Object?>;
+      final details = args['platformSpecifics']! as Map<Object?, Object?>;
+      expect(
+        (
+          details['presentSound'],
+          details['presentBanner'],
+          details['presentAlert'],
+        ),
+        (true, false, false),
+      );
+    });
+
+    test('in the background: banner, list and sound', () async {
+      await scheduleIn(LocalNotifications(), const Duration(seconds: 60));
+      final call = calls.singleWhere((c) => c.method == 'zonedSchedule');
+      final args = call.arguments as Map<Object?, Object?>;
+      final details = args['platformSpecifics']! as Map<Object?, Object?>;
+      expect((details['presentSound'], details['presentBanner']), (true, true));
     });
 
     test('always on time; no settings page to open', () async {

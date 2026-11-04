@@ -1005,6 +1005,14 @@
   "videoClose": "Close video",
   "videoYouTube": "YouTube",
   "videoYouTubeShorts": "YouTube Shorts",
+  "workoutPickHint": "Tap any exercise to do it now",
+  "workoutDoNow": "Do this exercise now",
+  "@workoutPickHint": {
+    "description": "Above the exercise list of the active workout: any unfinished exercise can be done out of order."
+  },
+  "@workoutDoNow": {
+    "description": "Screen-reader hint on an unfinished exercise line: makes it the current exercise."
+  },
   "picturesChoose": "Choose pictures",
   "@picturesChoose": {
     "description": "Exercise screen, solo members only: pick pictures from the shared library."
