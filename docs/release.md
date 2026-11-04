@@ -33,6 +33,10 @@ A manual run (Actions → Release → Run workflow) can force patch/minor/major.
    packages and `build/ios`, not DerivedData (several GB: saving and restoring cost about what it saves) (`actions/cache` v6.1.0, checked
    2026-11-01; saved after green runs only), so later builds are
    incremental.
+   Scroll performance is **not** measured on every PR (it is a second
+   macOS run): add the **`perf`** label or run
+   Actions → **Performance** (`.github/workflows/perf.yml`,
+   `docs/performance.md`).
    Every job sets up Flutter through one shared action,
    `.github/actions/setup-flutter`: the version from `.fvmrc`, the SDK and
    pub packages cached (`subosito/flutter-action` v2.23.0), and for Android

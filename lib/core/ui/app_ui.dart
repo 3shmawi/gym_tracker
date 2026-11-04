@@ -32,6 +32,21 @@ abstract final class AppUi {
   /// premium is for static, non-scrolling surfaces only.
   static const GlassQuality cardQuality = GlassQuality.standard;
 
+  /// The glass look of the whole app (`GlassThemeData.simple`).
+  static const double glassBlur = 10;
+  static const double glassThickness = 30;
+
+  /// Every glass card is glass with no blur. The blur is a `BackdropFilter`:
+  /// on Impeller it stops the render pass and copies the screen behind the
+  /// card, on every scroll frame, over the card's whole visible area, which
+  /// made scrolling heavy (docs/performance.md). Behind cards is only the
+  /// soft brand gradient, which a blur barely changes; the shader (tint,
+  /// rim, highlight) stays. Bars, buttons and sheets keep their blur.
+  static const cardSettings = LiquidGlassSettings(
+    blur: 0,
+    thickness: glassThickness,
+  );
+
   static Future<void> initialize() => lite
       ? LiquidGlassWidgets.initialize(warmUpMode: GlassWarmUpMode.never)
       : LiquidGlassWidgets.initialize();
@@ -41,8 +56,8 @@ abstract final class AppUi {
       child: app,
       brightnessResolver: Theme.maybeBrightnessOf,
       theme: GlassThemeData.simple(
-        blur: 10,
-        thickness: 30,
+        blur: glassBlur,
+        thickness: glassThickness,
         quality: defaultTargetPlatform == TargetPlatform.iOS
             ? GlassQuality.premium
             : GlassQuality.standard,
@@ -273,6 +288,10 @@ class AppCard extends StatelessWidget {
       }
       return GlassContainer.card(
         quality: AppUi.cardQuality,
+        // Per-card settings only apply on the card's own layer (it is one
+        // anyway inside GlassScaffold).
+        useOwnLayer: true,
+        settings: AppUi.cardSettings,
         padding: padding ?? const EdgeInsets.all(16),
         child: child,
       );

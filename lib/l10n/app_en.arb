@@ -1158,6 +1158,8 @@
   "@videoMinimize": {
     "description": "Player sheet: shrink the video to a floating mini player and keep using the app."
   },
+  "miniPlayerHide": "Hide the video at the edge",
+  "miniPlayerShow": "Show the video",
   "consentTitle": "Before you start",
   "consentBody": "Your workouts stay on your phone unless you join a gym. To work and improve, Azm uses a few services: Supabase for accounts, Sentry for crash reports, PostHog for usage statistics, and YouTube to play how-to videos. The Privacy Policy explains what each one gets; the Terms of Use, which include YouTube's Terms of Service, are the rules for using the app.",
   "consentNote": "By tapping Agree and continue, you agree to the Terms of Use and the Privacy Policy.",

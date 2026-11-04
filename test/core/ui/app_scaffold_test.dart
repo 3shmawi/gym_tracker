@@ -358,4 +358,40 @@ void main() {
     );
     expect(fill.decoration, isA<ShapeDecoration>());
   });
+
+  // Heavy scrolling: a blurred glass card re-blurred the screen behind it on
+  // every scroll frame (docs/performance.md). Every card is glass, no blur.
+  for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
+    testWidgets('a card is glass with no blur on ${platform.name}', (
+      tester,
+    ) async {
+      await _pumpGlass(
+        tester,
+        AppScaffold(
+          body: ListView(
+            children: [
+              AppCard(
+                key: const Key('list'),
+                child: Column(
+                  children: [for (var i = 0; i < 30; i++) Text('row $i')],
+                ),
+              ),
+            ],
+          ),
+        ),
+        platform: platform,
+      );
+      expect(tester.takeException(), isNull);
+      final glass = tester.widget<GlassContainer>(
+        find.descendant(
+          of: find.byKey(const Key('list')),
+          matching: find.byType(GlassContainer),
+        ),
+      );
+      expect(glass.quality, GlassQuality.standard);
+      expect(glass.settings?.blur, 0);
+      expect(glass.settings, AppUi.cardSettings);
+      expect(glass.settings?.thickness, AppUi.glassThickness);
+    });
+  }
 }

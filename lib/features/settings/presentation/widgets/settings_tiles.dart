@@ -64,7 +64,8 @@ class SettingsChoiceTile extends StatelessWidget {
   }
 }
 
-/// A row that opens another screen (chevron at the end, mirrored in RTL).
+/// A row that opens another screen (chevron at the end, pointing toward the
+/// end edge: right in English, left in Arabic).
 class SettingsLinkTile extends StatelessWidget {
   const new({
     required this.label,
@@ -89,12 +90,10 @@ class SettingsLinkTile extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
-      trailing: Icon(
-        Directionality.of(context) == TextDirection.rtl
-            ? Icons.chevron_left
-            : Icons.chevron_right,
-        color: scheme.outline,
-      ),
+      // chevron_right mirrors itself in RTL (matchTextDirection). Picking
+      // chevron_left for Arabic as well flipped it twice: it pointed the
+      // wrong way.
+      trailing: Icon(Icons.chevron_right, color: scheme.outline),
       onTap: onTap,
     );
   }

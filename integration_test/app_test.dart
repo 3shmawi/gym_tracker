@@ -415,6 +415,10 @@ void main() {
     addTearDown(() => scannerCameraOverride = null);
     Dependencies.gymRepository = FakeGymRepository(
       redeemResult: Success(joinedGym()),
+      // The server knows the membership: without it the app's refresh
+      // finds none and (rightly) moves the person back to solo, so home
+      // showed the solo template instead of the captain's plan.
+      memberships: Success([member()]),
     );
     final account = FakeAccountRepository();
     Dependencies.accountRepository = account;
@@ -454,6 +458,15 @@ void main() {
     await tester.pump(const Duration(seconds: 7));
     expect(find.text('Your captain updated your plan'), findsNothing);
   });
+
+  // Was nested inside unlockPhone (a merge in #38), so it was declared while
+  // another test ran ("Can't call test() once tests have begun running")
+  // and never ran on its own.
+  testWidgets("the gym's pictures: frames, swipe, offline from the cache", (
+    tester,
+  ) async {
+    await gymPicturesFlow(tester);
+  });
 }
 
 /// A fresh install for each test: unmount the previous test's app (runApp
@@ -463,6 +476,10 @@ void main() {
 /// [agreed]: the Terms and Privacy Policy were accepted (every test but
 /// the first-launch one, which shows that screen).
 Future<void> freshInstall(WidgetTester tester, {bool agreed = true}) async {
+  // In front again: a test that failed while the phone was "locked" would
+  // leave the app paused, and with frames off every pump of the next test
+  // waits forever (see lockPhone).
+  tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
   // Pop back home while the previous app is still mounted, so no page of
   // it (e.g. Settings) is left in the router to cover the new one.
   appRouter.go(AppRoutes.home);
@@ -491,7 +508,14 @@ Future<void> lockPhone(WidgetTester tester) async {
     AppLifecycleState.hidden,
     AppLifecycleState.paused,
   ].forEach(tester.binding.handleAppLifecycleStateChanged);
-  await tester.pumpAndSettle();
+  // No pump here: while hidden or paused the engine draws no frames
+  // (SchedulerBinding.framesEnabled is false), and on a device a pump waits
+  // for a frame, so it never returned and CI hit its 75-minute limit. The
+  // app reacts to the lifecycle without a frame (RestAlarmSync); give its
+  // futures real time to run instead.
+  await tester.runAsync(
+    () => Future<void>.delayed(const Duration(milliseconds: 300)),
+  );
 }
 
 Future<void> unlockPhone(WidgetTester tester) async {
@@ -501,10 +525,4 @@ Future<void> unlockPhone(WidgetTester tester) async {
     AppLifecycleState.resumed,
   ].forEach(tester.binding.handleAppLifecycleStateChanged);
   await tester.pumpAndSettle();
-
-  testWidgets("the gym's pictures: frames, swipe, offline from the cache", (
-    tester,
-  ) async {
-    await gymPicturesFlow(tester);
-  });
 }

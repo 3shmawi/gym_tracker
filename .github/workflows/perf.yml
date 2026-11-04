@@ -1,0 +1,76 @@
+# Scroll performance, on demand (docs/performance.md): add the `perf` label
+# to a PR, or Actions → Performance → Run workflow. Never on push, so CI
+# stays as fast as before. It runs integration_test/perf/scroll_perf.dart
+# with glass and with GLASS_LITE=true, then with glass on the base branch's
+# lib/ (same test, same machine: before vs after), on an iPhone simulator
+# (debug build: simulators can't run profile; compare runs, not absolutes).
+# No Android emulator: GitHub's has no GPU, drew glass at ~930 ms a frame
+# and went offline mid-run (2026-11-04), like docs/release.md describes.
+# Real numbers come from phones: Sentry's slow/frozen frames per screen, or
+# ./scripts/perf.sh. Results are the job summary and the `perf-ios`
+# artifact (frame times only, no secrets).
+name: Performance
+
+on:
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: perf-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  ios:
+    name: Scroll performance (iOS simulator)
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'perf'
+    runs-on: macos-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - uses: $/.github/actions/setup-flutter
+
+      - name: Measure (glass, lite, then glass on the base branch)
+        env:
+          BASE_REF: ${{ github.base_ref || 'main' }}
+        run: |
+          udid=$(xcrun simctl list devices available -j | jq -r \
+            '[.devices | to_entries[] | select(.key | test("iOS")) | .value[] | select(.name | test("^iPhone [0-9]+( Pro)?$"))] | last | .udid')
+          if [ -z "$udid" ] || [ "$udid" = null ]; then echo "::error::No iPhone simulator on this runner."; exit 1; fi
+          xcrun simctl boot "$udid" 2>/dev/null || true
+          xcrun simctl bootstatus "$udid" -b > /dev/null
+          set -o pipefail
+          ./scripts/perf.sh --debug --name glass -d "$udid" 2>&1 | tee perf-glass.log
+          ./scripts/perf.sh --debug --lite --name lite -d "$udid" 2>&1 | tee perf-lite.log
+          git checkout "origin/$BASE_REF" -- lib
+          ./scripts/perf.sh --debug --name glass-base -d "$udid" 2>&1 | tee perf-glass-base.log
+          git checkout HEAD -- lib
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## iOS simulator (debug: compare glass with lite only)" >> "$GITHUB_STEP_SUMMARY"
+          for f in build/perf/glass.md build/perf/lite.md build/perf/glass-base.md; do
+            if [ -f "$f" ]; then { cat "$f"; echo; } >> "$GITHUB_STEP_SUMMARY"; fi
+          done
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: perf-ios
+          path: |
+            build/perf/
+            perf-*.log
+          retention-days: 30
+          if-no-files-found: warn

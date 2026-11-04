@@ -41,14 +41,21 @@ gets black bands above and below.
   (`VideoPlayback` reports YouTube's position; `atSecond` keeps it inside the
   clip's end).
 - The card: YouTube's player, **200×200** (YouTube's minimum; the board's
-  184-wide card grew to 212), nothing drawn over it; under it **pause/play**
-  (YouTube's IFrame API `pauseVideo` / `playVideo`), **expand** (back to the
-  sheet, same second) and **close**, 48×48 each.
-- Corners: top-end by default; drag and it snaps to the nearest corner
-  (`nearestCorner`, RTL-aware), kept for the next video. Never over the
-  status bar and app bar, nor over the workout dock: the dock reports its
-  real height (`ActiveWorkoutView.onDockHeight` →
-  `miniPlayerBottomReserveProvider`), reset when the workout screen closes.
+  184-wide card grew to 212), nothing drawn over it (no overlay buttons: YouTube's
+  Required Minimum Functionality); under it **expand** (back to the sheet,
+  same second) and **close**, 48×48 each. No pause button: YouTube's player
+  has its own (owner, 2026-11-04).
+- Corners: top-end by default; drag and it snaps to the corner nearest
+  where it was dropped (`nearestCorner`, RTL-aware; until 2026-11-04 it
+  always snapped back because the drag offset was left out), kept for the
+  next video. Never over the status bar and app bar, nor over the workout
+  dock: the dock reports its real height (`ActiveWorkoutView.onDockHeight`
+  → `miniPlayerBottomReserveProvider`), reset when the workout screen closes.
+- **Hide at the edge:** dragged past a side, it hides there and a tab
+  (48×72, "Show the video") stays at the screen's edge; tap it to bring it
+  back. Hiding **pauses** the video and showing it plays again (a player that
+  isn't on screen must not play, V-D). Screen readers get the custom action
+  "Hide the video at the edge".
 - One player at a time: playing another video closes the mini player.
 - Leaving the app pauses it like the sheet (V-D).
 - Event: `video_minimized` (`source`).
