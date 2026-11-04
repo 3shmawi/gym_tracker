@@ -100,6 +100,7 @@ class _ActiveWorkoutPageState extends ConsumerState<ActiveWorkoutPage>
       now: ref.watch(clockProvider),
       actions: ActiveWorkoutActions(
         onLog: (w, r) => unawaited(controller.logSet(weight: w, reps: r)),
+        onPick: (i) => unawaited(controller.pick(i)),
         onEditSet: (i, w, r) =>
             unawaited(controller.editSet(i, weight: w, reps: r)),
         onDeleteSet: (i) => unawaited(controller.deleteSet(i)),

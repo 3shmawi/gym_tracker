@@ -103,6 +103,7 @@ ActiveWorkout allDone() {
 
 class Calls {
   final logs = <(double, int)>[];
+  final picks = <int>[];
   final edits = <(int, double, int)>[];
   final deletes = <int>[];
   int add15 = 0;
@@ -113,6 +114,7 @@ class Calls {
 
   ActiveWorkoutActions get actions => ActiveWorkoutActions(
     onLog: (w, r) => logs.add((w, r)),
+    onPick: picks.add,
     onEditSet: (i, w, r) => edits.add((i, w, r)),
     onDeleteSet: deletes.add,
     onAdd15: () => add15++,
@@ -142,6 +144,20 @@ void main() {
       expect(find.text('Set 2 of 3'), findsOneWidget);
       await tester.tap(find.byKey(const Key('log_set_button')));
       expect(calls.logs, [(52.5, 12)]);
+    });
+
+    testWidgets('tap an upcoming exercise to do it now', (tester) async {
+      final calls = Calls();
+      final w = logging();
+      await tester.pumpApp(view(AsyncData(w), calls: calls));
+      expect(find.text('Tap any exercise to do it now'), findsOneWidget);
+      final upcoming = w.day.exercises[2].id;
+      await tester.tap(find.byKey(Key('exercise_line_$upcoming')));
+      expect(calls.picks, [2]);
+      // A finished exercise is not a button.
+      final done = w.day.exercises[0].id;
+      await tester.tap(find.byKey(Key('exercise_line_$done')));
+      expect(calls.picks, [2]);
     });
 
     testWidgets('steppers adjust weight by the exercise step', (tester) async {

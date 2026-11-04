@@ -103,6 +103,54 @@ void main() {
     expect(state(c).previews[1].suggestion.weight, 52.5);
   });
 
+  group('out of order (field test 2026-11-03)', () {
+    test('alternate two exercises: A1, B1, A2, B2…', () async {
+      final c = await start(0);
+      await ctl(c).logSet(weight: 20, reps: 12); // A1
+      await ctl(c).pick(1);
+      expect(state(c).cursor!.exerciseIndex, 1, reason: 'B now');
+      expect(state(c).draft.restEndsAt, isNotNull, reason: 'rest kept');
+      await ctl(c).logSet(weight: 50, reps: 12); // B1
+      expect(
+        (state(c).cursor!.exerciseIndex, state(c).cursor!.setNumber),
+        (1, 2),
+        reason: 'stays on the picked exercise',
+      );
+      await ctl(c).pick(0);
+      expect(
+        (state(c).cursor!.exerciseIndex, state(c).cursor!.setNumber),
+        (0, 2),
+      );
+      // Kept on the phone: survives a killed app.
+      expect(ok(await repo.loadDraft())!.focusId, state(c).day.exercises[0].id);
+    });
+
+    test('a finished pick goes back to the plan', () async {
+      final c = await start(0);
+      await ctl(c).pick(1);
+      final b = state(c).day.exercises[1];
+      for (var i = 0; i < b.targetSets; i++) {
+        await ctl(c).logSet(weight: 50, reps: 12);
+      }
+      expect(state(c).draft.focusId, isNull);
+      expect(state(c).cursor!.exerciseIndex, 0);
+    });
+
+    test('finished, current or out-of-range picks are ignored', () async {
+      final c = await start(0);
+      final a = state(c).day.exercises[0];
+      for (var i = 0; i < a.targetSets; i++) {
+        await ctl(c).logSet(weight: 20, reps: 12);
+      }
+      final before = state(c).draft;
+      await ctl(c).pick(0);
+      await ctl(c).pick(-1);
+      await ctl(c).pick(999);
+      await ctl(c).pick(state(c).cursor!.exerciseIndex);
+      expect(state(c).draft.focusId, before.focusId);
+    });
+  });
+
   test('+15 s and skip change the rest', () async {
     final c = await start(0);
     await ctl(c).logSet(weight: 20, reps: 12);

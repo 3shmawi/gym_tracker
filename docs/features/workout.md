@@ -68,6 +68,15 @@ Status: slice 3 started (rest notification), plus levels.
   workout was finished today, Start first asks "You already trained today"
   (Start another / Cancel). Resuming a workout in progress doesn't ask. The
   plan moves on as usual.
+- **Any order** (field test 2026-11-03: alternating a back and a bench
+  exercise wasn't possible). "Tap any exercise to do it now" sits above
+  the list; tapping an unfinished exercise makes it the current one
+  (`ActiveWorkoutController.pick` → `WorkoutDraft.focusId`, stored as
+  `focus`, so a killed app keeps it). It stays current until another is
+  picked or all its sets are logged, then the plan's order resumes. A
+  running rest keeps running. Sets are counted per exercise, so the
+  summary, records and "next" are right whatever the order. Event:
+  `workout_exercise_picked` (`position`, `exercises`; no personal data).
 - **Rest** starts after each set with the exercise's rest time; none inside
   a superset round or after the last set of the day. Stored as an end time,
   so it is right after the app was in the background or killed.
@@ -333,6 +342,7 @@ plugin README.
 | `next_day_chosen` | Member picks the next day | `day` (1-based) |
 | `workout_started` | A new workout starts | `day` (1-based) |
 | `workout_finished` | Finish confirmed | `day`, `sets`, `planned_sets`, `minutes`, `records` |
+| `workout_exercise_picked` | An exercise is picked out of the planned order | `position` (1-based), `exercises` |
 | `progress_opened` | Progress screen opened | none |
 | `exercise_history_opened` | An exercise's history opened | none (the id comes from a link) |
 | `level_reached` | A new best level (once per level) | `level` (`intermediate` / `pro`) |
