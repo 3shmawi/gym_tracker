@@ -67,6 +67,34 @@ void main() {
       expect(opened, 1);
     });
 
+    // Regression: in Arabic the "Your plan" arrow pointed right. The chevron
+    // mirrors itself in RTL, and the row also swapped it for Arabic: two
+    // flips. It must be the self-mirroring chevron_right in both languages,
+    // so it points to the end edge (left in Arabic).
+    for (final lang in ['en', 'ar']) {
+      testWidgets('the "Your plan" arrow points to the end edge ($lang)', (
+        tester,
+      ) async {
+        await tester.pumpApp(
+          SettingsView(
+            settings: const AppSettings(),
+            onLocaleChanged: (_) {},
+            onThemeModeChanged: (_) {},
+            onOpenPlan: () {},
+          ),
+          locale: Locale(lang),
+        );
+        final arrow = find.byIcon(Icons.chevron_right);
+        expect(arrow, findsWidgets);
+        expect(find.byIcon(Icons.chevron_left), findsNothing);
+        expect(Icons.chevron_right.matchTextDirection, isTrue);
+        expect(
+          Directionality.of(tester.element(arrow.first)),
+          lang == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+        );
+      });
+    }
+
     testWidgets('no licenses callback: no licenses row', (tester) async {
       await tester.pumpApp(
         SettingsView(

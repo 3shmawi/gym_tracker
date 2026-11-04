@@ -47,6 +47,15 @@ Screens use `lib/core/ui/app_ui.dart` (`AppScaffold`, `AppCard`,
   (a whole history list) is `AppCard(tall: true)`: a flat card, no glass.
   One tall premium glass card on the history page used so much memory
   that iOS killed the app while scrolling (Sentry GYM_TRACKER-12).
+  **Every glass card has no blur** (`AppUi.cardSettings`; the shader's
+  tint, rim and highlight stay); bars, buttons and sheets keep theirs. The
+  blur is a `BackdropFilter`: it re-blurred the screen behind each card's
+  whole visible area on every scroll frame, which made scrolling heavy,
+  worst under whole lists (`docs/performance.md`). Behind cards is only
+  the brand gradient, which the blur barely changed: light looks the same;
+  in dark cards are a little greyer and more see-through (approved by the
+  owner, Nov 2026). `test/core/ui/app_scaffold_test.dart` checks it on
+  Android and iOS. Progress and history stay `tall: true` (flat).
 - Text on glass must stay ≥ 4.5:1 — test on the busiest photo, in light and
   dark, and with iOS 27's transparency slider at "clear".
 - Accessibility: Reduce Motion and Increase Contrast are respected

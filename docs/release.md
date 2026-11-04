@@ -33,6 +33,10 @@ A manual run (Actions → Release → Run workflow) can force patch/minor/major.
    packages and `build/ios`, not DerivedData (several GB: saving and restoring cost about what it saves) (`actions/cache` v6.1.0, checked
    2026-11-01; saved after green runs only), so later builds are
    incremental.
+   Scroll performance is **not** measured on every PR (it is a second
+   macOS run plus an Android emulator): add the **`perf`** label or run
+   Actions → **Performance** (`.github/workflows/perf.yml`,
+   `docs/performance.md`).
    Every job sets up Flutter through one shared action,
    `.github/actions/setup-flutter`: the version from `.fvmrc`, the SDK and
    pub packages cached (`subosito/flutter-action` v2.23.0), and for Android
@@ -314,6 +318,7 @@ are pinned by hand — bump them here and in the kit together:
 | zizmor | CI `security` job | 1.31.1 |
 | gitleaks | CI `security` job | v8.30.1 |
 | OSV-Scanner | CI `security` job | v2.7.0 |
+| Android emulator image (API 33, `google_apis`, x86_64) | Performance workflow (`reactivecircus/android-emulator-runner` v2.38.0, checked 2026-11-03) | — |
 | Supabase CLI | Supabase workflows | 2.120.0 |
 | Deno (`denoland/deno` image) | CI Edge Function tests | 2.9.6 |
 | `@supabase/server`, `@std/assert` | `supabase/functions/redeem_invite/deno.json` + `deno.lock` | 1.9.2, 1.0.19 |
