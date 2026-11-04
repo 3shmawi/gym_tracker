@@ -44,6 +44,16 @@ class NotificationRestAlarm implements RestAlarm {
   );
 
   @override
+  Future<void> ringNow(RestAlarmNotice notice) => _notifications.ringNow(
+    id: notificationId,
+    title: notice.title,
+    body: notice.body,
+    channelId: channelId,
+    channelName: notice.channelName,
+    color: AppColors.primary,
+  );
+
+  @override
   Future<void> cancel() => _notifications.cancel(notificationId);
 
   @override
