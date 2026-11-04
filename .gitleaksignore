@@ -1,3 +1,8 @@
 # A made-up Turnstile token in a unit test of the page's message parser
 # (not a secret). Fixed in the next commit; history still holds it.
 255ee53b2caa2a01c55da18e95d00b6463115f21:test/core/captcha/turnstile_page_test.dart:generic-api-key:70
+
+# Captain dashboard: fake publishable-key placeholders that only satisfy the
+# config check in tests and e2e; they belong to no Supabase project.
+0143b248024cc01552ff4c6c66bca9f225bf0e82:dashboard/playwright.config.ts:generic-api-key:8
+0143b248024cc01552ff4c6c66bca9f225bf0e82:dashboard/test/config.test.ts:generic-api-key:5

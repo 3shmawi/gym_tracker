@@ -61,10 +61,10 @@ void main() {
     expect(config, contains('sb_publishable_'));
     expect(config, contains("startsWith('sb_secret_')"));
     final example = read('dashboard/.env.example');
-    final keys = RegExp(r'^([A-Z_]+)=', multiLine: true)
-        .allMatches(example)
-        .map((m) => m.group(1))
-        .toSet();
+    final keys = RegExp(
+      r'^([A-Z_]+)=',
+      multiLine: true,
+    ).allMatches(example).map((m) => m.group(1)).toSet();
     expect(keys, {
       'VITE_SUPABASE_URL',
       'VITE_SUPABASE_PUBLISHABLE_KEY',
