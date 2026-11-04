@@ -478,7 +478,14 @@ Future<void> lockPhone(WidgetTester tester) async {
     AppLifecycleState.hidden,
     AppLifecycleState.paused,
   ].forEach(tester.binding.handleAppLifecycleStateChanged);
-  await tester.pumpAndSettle();
+  // No pump here: while hidden or paused the engine draws no frames
+  // (SchedulerBinding.framesEnabled is false), and on a device a pump waits
+  // for a frame, so it never returned and CI hit its 75-minute limit. The
+  // app reacts to the lifecycle without a frame (RestAlarmSync); give its
+  // futures real time to run instead.
+  await tester.runAsync(
+    () => Future<void>.delayed(const Duration(milliseconds: 300)),
+  );
 }
 
 Future<void> unlockPhone(WidgetTester tester) async {
