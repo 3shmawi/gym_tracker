@@ -8,7 +8,6 @@ import type { ManagedGym } from '../src/gyms/gyms';
 import { I18nContext, makeI18n, messageTables } from '../src/i18n';
 import type { Lang } from '../src/core/prefs';
 import { GymPickerPage } from '../src/pages/GymPickerPage';
-import { MembersPage } from '../src/pages/MembersPage';
 import { SignInPage } from '../src/pages/SignInPage';
 import { Shell } from '../src/ui/Shell';
 import { ErrorView, ForbiddenView, LoadingView, NoGymView, NotFoundView, SessionEndedView } from '../src/ui/states';
@@ -257,7 +256,7 @@ const gym = (n: number, role: 'owner' | 'captain', name: string): ManagedGym => 
   name,
   role,
   memberCount: n * 10,
-  logoPath: null,
+  logoPath: null, historyAfterEnd: 'readable',
 });
 
 describe('GymPickerPage', () => {
@@ -277,14 +276,6 @@ describe('GymPickerPage', () => {
     expect(links[1]?.querySelector('.lg.amber')).not.toBeNull();
     await click(links[1] ?? null);
     expect(onPick).toHaveBeenCalledWith(gyms[1]);
-  });
-});
-
-describe('MembersPage', () => {
-  it('shows the placeholder', async () => {
-    await mount(<MembersPage gym={gym(1, 'owner', 'Power Gym')} />);
-    expect(q('h1')?.textContent).toBe('Members');
-    expect(text()).toContain(messageTables.en['members.comingSoon']);
   });
 });
 

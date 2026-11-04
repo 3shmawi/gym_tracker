@@ -73,6 +73,9 @@ export function toFailure(error: unknown, online: boolean = typeof navigator ===
     case '42501':
       return { kind: 'forbidden', ...reasonOf(message) };
     case '23514':
+      // memberships_guard (0005): "a gym needs at least one active owner".
+      if (/active owner/i.test(message)) return { kind: 'conflict', reason: 'last_owner' };
+      return { kind: 'conflict', ...reasonOf(message) };
     case '23505':
     case 'P0001':
       return { kind: 'conflict', ...reasonOf(message) };

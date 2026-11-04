@@ -7,7 +7,7 @@ import { Icon, type IconName } from './icons';
 import { ContactLink, plainClick, withSlot } from './rich';
 import { Footer } from './Shell';
 
-function StateBlock({ icon, tone, title, children }: { readonly icon: IconName; readonly tone?: 'err'; readonly title: string; readonly children: ComponentChildren }) {
+export function StateBlock({ icon, tone, title, children }: { readonly icon: IconName; readonly tone?: 'err'; readonly title: string; readonly children: ComponentChildren }) {
   return (
     <section class="state">
       <div class={`ic${tone ? ` ${tone}` : ''}`}>

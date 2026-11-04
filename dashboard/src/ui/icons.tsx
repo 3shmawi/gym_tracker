@@ -15,6 +15,10 @@ const PATHS = {
   signOut: 'M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3',
   search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4',
   language: 'M3 5h18M3 12h18M3 19h10',
+  plus: 'M12 5v14M5 12h14',
+  check: 'M20 6L9 17l-5-5',
+  info: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v5M12 8h.01',
+  chevronLeft: 'M15 18l-6-6 6-6',
   gear: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM19 12h2M3 12h2M12 3v2M12 19v2',
 } as const;
 
