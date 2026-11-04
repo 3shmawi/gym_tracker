@@ -62,4 +62,20 @@ void main() {
     expect(surface, isNot(contains('privacyEnhancedMode: false')));
     expect(surface, isNot(contains('autoplay')));
   });
+
+  test('no background play: the player pauses when the app leaves the '
+      'screen, and nothing enables background audio or PiP', () {
+    final surface = File(
+      'lib/features/video/presentation/widgets/youtube_surface.dart',
+    ).readAsStringSync();
+    expect(surface, contains('didChangeAppLifecycleState'));
+    expect(surface, contains('AppLifecycleState.resumed'));
+    expect(surface, contains('pauseVideo()'));
+    final plist = File('ios/Runner/Info.plist').readAsStringSync();
+    expect(plist, isNot(contains('UIBackgroundModes')));
+    final manifest = File('android/app/src/main/AndroidManifest.xml')
+        .readAsStringSync();
+    expect(manifest, isNot(contains('supportsPictureInPicture="true"')));
+    expect(manifest, isNot(contains('FOREGROUND_SERVICE_MEDIA_PLAYBACK')));
+  });
 }

@@ -1013,6 +1013,47 @@
   "@workoutDoNow": {
     "description": "Screen-reader hint on an unfinished exercise line: makes it the current exercise."
   },
+  "picturesChoose": "Choose pictures",
+  "@picturesChoose": {
+    "description": "Exercise screen, solo members only: pick pictures from the shared library."
+  },
+  "picturesChange": "Change pictures",
+  "picturesChooseTitle": "Pictures for this exercise",
+  "picturesSearchLabel": "Search the picture library",
+  "picturesSearchHint": "Search by the exercise's name or muscle, in English or Arabic",
+  "picturesNoResults": "No pictures for that. Try another word.",
+  "picturesNeedInternet": "Searching pictures needs internet. Your chosen pictures still show offline.",
+  "picturesChosenCount": "{count} of {max} chosen · the first is the cover",
+  "@picturesChosenCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "picturesChosenFull": "{max} chosen, the most there can be",
+  "@picturesChosenFull": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "picturesChosenNumber": "chosen, number {n}",
+  "@picturesChosenNumber": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "picturesFrameStart": "start of the move",
+  "picturesFrameEnd": "end of the move",
+  "picturesSave": "Save pictures",
+  "picturesRemoveAll": "Remove my pictures",
   "unitPlate": "plate",
   "@unitPlate": {
     "description": "Unit after a machine plate (pin) number in the weight stepper."
