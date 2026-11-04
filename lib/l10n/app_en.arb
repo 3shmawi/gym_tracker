@@ -982,5 +982,46 @@
   "exercisePicturesCreditLabel": "Picture credits: Everkinetic, CC BY-SA 4.0. Opens the licenses.",
   "exercisePicturesOfflineHint": "Your gym's pictures show when you're back online",
   "exercisePicturesSwipeHint": "Swipe for the next picture",
-  "libraryGymPictures": "Pictures from your gym"
+  "libraryGymPictures": "Pictures from your gym",
+  "picturesChoose": "Choose pictures",
+  "@picturesChoose": {
+    "description": "Exercise screen, solo members only: pick pictures from the shared library."
+  },
+  "picturesChange": "Change pictures",
+  "picturesChooseTitle": "Pictures for this exercise",
+  "picturesSearchLabel": "Search the picture library",
+  "picturesSearchHint": "Search by the exercise's name or muscle, in English or Arabic",
+  "picturesNoResults": "No pictures for that. Try another word.",
+  "picturesNeedInternet": "Searching pictures needs internet. Your chosen pictures still show offline.",
+  "picturesChosenCount": "{count} of {max} chosen · the first is the cover",
+  "@picturesChosenCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "picturesChosenFull": "{max} chosen, the most there can be",
+  "@picturesChosenFull": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "picturesChosenNumber": "chosen, number {n}",
+  "@picturesChosenNumber": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "picturesFrameStart": "start of the move",
+  "picturesFrameEnd": "end of the move",
+  "picturesSave": "Save pictures",
+  "picturesRemoveAll": "Remove my pictures"
 }

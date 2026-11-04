@@ -387,5 +387,19 @@
   "exercisePicturesCreditLabel": "حقوق الصور: Everkinetic، رخصة CC BY-SA 4.0. بيفتح صفحة الرخص.",
   "exercisePicturesOfflineHint": "صور الجيم هتظهر لما ترجع أونلاين",
   "exercisePicturesSwipeHint": "اسحب للصورة اللي بعدها",
-  "libraryGymPictures": "صور من الجيم"
+  "libraryGymPictures": "صور من الجيم",
+  "picturesChoose": "اختار صور",
+  "picturesChange": "غيّر الصور",
+  "picturesChooseTitle": "صور التمرين ده",
+  "picturesSearchLabel": "دوّر في مكتبة الصور",
+  "picturesSearchHint": "دوّر باسم التمرين أو العضلة، بالعربي أو الإنجليزي",
+  "picturesNoResults": "مفيش صور للكلمة دي. جرّب كلمة تانية.",
+  "picturesNeedInternet": "البحث عن صور محتاج إنترنت. الصور اللي اخترتها بتظهر من غير نت.",
+  "picturesChosenCount": "اخترت {count} من {max} · أول واحدة هي الغلاف",
+  "picturesChosenFull": "اخترت {max}، ده أقصى عدد",
+  "picturesChosenNumber": "مختارة، رقم {n}",
+  "picturesFrameStart": "بداية الحركة",
+  "picturesFrameEnd": "نهاية الحركة",
+  "picturesSave": "احفظ الصور",
+  "picturesRemoveAll": "شيل صوري"
 }
