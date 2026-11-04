@@ -498,13 +498,18 @@ class AppSegmentedProgress extends StatelessWidget {
 Future<T?> showAppSheet<T>({
   required BuildContext context,
   required WidgetBuilder builder,
+  bool dismissible = true,
 }) {
   final palette = context.palette;
   return showModalBottomSheet<T>(
     context: context,
     useSafeArea: true,
     isScrollControlled: true,
-    showDragHandle: true,
+    // Not dismissible: no handle, no swipe, no tap outside (only its own
+    // button closes it).
+    showDragHandle: dismissible,
+    isDismissible: dismissible,
+    enableDrag: dismissible,
     backgroundColor: palette.surfaceSolid,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(

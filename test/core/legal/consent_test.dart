@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/legal/consent_gate.dart';
 import 'package:gym_tracker/core/legal/consent_view.dart';
 import 'package:gym_tracker/core/legal/legal.dart';
+import 'package:gym_tracker/core/router/app_routes.dart';
+import 'package:gym_tracker/core/theme/app_dimens.dart';
+import 'package:gym_tracker/core/theme/app_theme.dart';
+import 'package:gym_tracker/core/ui/app_ui.dart';
+import 'package:gym_tracker/l10n/l10n.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../helpers/pump_app.dart';
 import '../../helpers/ui_check.dart';
 
 class _MemoryStore implements ConsentStore {
@@ -20,53 +25,116 @@ class _MemoryStore implements ConsentStore {
   Future<void> accept(String version) async => value = version;
 }
 
-Widget view() => ConsentView(
-  onAgree: () {},
-  onOpenPrivacy: () {},
-  onOpenTerms: () {},
-  onOpenYouTubeTerms: () {},
-  onOpenGooglePrivacy: () {},
+Widget view() => AppScaffold(
+  body: Align(
+    alignment: Alignment.bottomCenter,
+    child: ConsentView(
+      onAgree: () {},
+      onOpenPrivacy: () {},
+      onOpenTerms: () {},
+      onOpenYouTubeTerms: () {},
+      onOpenGooglePrivacy: () {},
+    ),
+  ),
 );
 
 void main() {
   group(ConsentGate, () {
-    Widget gate(ConsentStore store, {List<Uri>? opened}) => ConsentGate(
-      store: store,
-      open: (url) async => opened?.add(url),
-      child: const Text('the app'),
-    );
+    Future<void> pumpGate(
+      WidgetTester tester,
+      ConsentStore store, {
+      String at = '/',
+      List<Uri>? opened,
+    }) async {
+      final navigatorKey = GlobalKey<NavigatorState>();
+      final router = GoRouter(
+        navigatorKey: navigatorKey,
+        initialLocation: at,
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => const Text('home')),
+          GoRoute(
+            path: AppRoutes.welcome,
+            builder: (context, _) => TextButton(
+              onPressed: () => context.go('/'),
+              child: const Text('welcome'),
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        AppUi.testWrap(
+          AppScreenScale(
+            builder: (context) => MaterialApp.router(
+              routerConfig: router,
+              theme: AppTheme.light,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              builder: (context, child) => ConsentGate(
+                store: store,
+                router: router,
+                navigatorKey: navigatorKey,
+                open: (url) async => opened?.add(url),
+                child: child!,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
 
-    testWidgets('first launch: the app waits until the member agrees', (
+    testWidgets('not agreed yet: a sheet over the screen, once', (
       tester,
     ) async {
       final store = _MemoryStore();
-      await tester.pumpApp(gate(store));
-      expect(find.text('the app'), findsNothing);
-      expect(find.text('Before you start'), findsOneWidget);
+      await pumpGate(tester, store);
+      expect(find.text('home'), findsOneWidget);
+      expect(find.byType(ConsentView), findsOneWidget);
       await tester.tap(find.byKey(const Key('consent_agree')));
       await tester.pumpAndSettle();
-      expect(find.text('the app'), findsOneWidget);
+      expect(find.byType(ConsentView), findsNothing);
       expect(store.value, ConsentStore.current);
     });
 
-    testWidgets('agreed to this version: straight to the app', (tester) async {
-      await tester.pumpApp(gate(_MemoryStore(ConsentStore.current)));
-      expect(find.text('the app'), findsOneWidget);
+    testWidgets("it can't be swiped, tapped or backed away", (tester) async {
+      await pumpGate(tester, _MemoryStore());
+      await tester.tapAt(const Offset(10, 10)); // the barrier
+      await tester.pumpAndSettle();
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(ConsentView), findsOneWidget);
+    });
+
+    testWidgets('agreed to this version: nothing shows', (tester) async {
+      await pumpGate(tester, _MemoryStore(ConsentStore.current));
       expect(find.byType(ConsentView), findsNothing);
     });
 
-    testWidgets('agreed to an older version, or a hostile value: asked again', (
+    for (final old in ['2026-01-01', '', "x'; drop --"]) {
+      testWidgets('an older or hostile stored value ($old): asked again', (
+        tester,
+      ) async {
+        await pumpGate(tester, _MemoryStore(old));
+        expect(find.byType(ConsentView), findsOneWidget);
+      });
+    }
+
+    testWidgets('on the welcome screen it waits (choosing agrees there)', (
       tester,
     ) async {
-      for (final old in ['2026-01-01', '', "x'; drop --"]) {
-        await tester.pumpApp(gate(_MemoryStore(old)));
-        expect(find.byType(ConsentView), findsOneWidget, reason: old);
-      }
+      final store = _MemoryStore();
+      await pumpGate(tester, store, at: AppRoutes.welcome);
+      expect(find.byType(ConsentView), findsNothing);
+      // Left the welcome screen without agreeing: asked then.
+      await tester.tap(find.text('welcome'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ConsentView), findsOneWidget);
     });
 
     testWidgets('the four links open exactly these pages', (tester) async {
       final opened = <Uri>[];
-      await tester.pumpApp(gate(_MemoryStore(), opened: opened));
+      await pumpGate(tester, _MemoryStore(), opened: opened);
       for (final key in [
         'consent_privacy',
         'consent_terms',
@@ -76,12 +144,26 @@ void main() {
         await tester.tap(find.byKey(Key(key)));
       }
       expect(opened, [
-        Uri.parse('https://azmm.pages.dev/privacy.html'),
-        Uri.parse('https://azmm.pages.dev/terms.html'),
-        Uri.parse('https://www.youtube.com/t/terms'),
-        Uri.parse('https://www.google.com/policies/privacy'),
+        LegalLinks.privacy,
+        LegalLinks.terms,
+        LegalLinks.youTubeTerms,
+        LegalLinks.googlePrivacy,
       ]);
+      expect(
+        LegalLinks.privacy.toString(),
+        'https://azmm.pages.dev/privacy.html',
+      );
+      expect(
+        LegalLinks.youTubeTerms.toString(),
+        'https://www.youtube.com/t/terms',
+      );
     });
+  });
+
+  test('acceptTerms records the current version once', () async {
+    final store = _MemoryStore();
+    await acceptTerms(store, via: 'welcome');
+    expect(store.value, ConsentStore.current);
   });
 
   test('the phone copy: only a string counts', () async {

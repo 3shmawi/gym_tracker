@@ -112,10 +112,20 @@ Notes for the form:
   are named in the privacy policy.
 
 ## In the app (YouTube API Services Developer Policies III.A, checked 2026-11-04)
-- The member must agree to the privacy policy **before** using the app.
-  `ConsentGate` (`lib/core/legal/`) shows "Before you start" once. It links
-  the Privacy Policy, the Terms of Use (which bind users to YouTube's Terms
-  of Service), YouTube's Terms of Service and the Google Privacy Policy.
+- The member must agree to the privacy policy **before** using the app
+  (`lib/core/legal/`):
+  - **New members** see the welcome screen. Under the choices: "By continuing,
+    you agree to the Terms of Use, the Privacy Policy and YouTube's Terms of
+    Service", with the three links. Choosing join, code or solo records the
+    agreement (`acceptTerms(via: welcome)`), with no extra screen.
+  - **Everyone else** (members from before, or the welcome screen not
+    shown): `ConsentGate` opens a one-time sheet "Before you start" over the
+    screen, with the four links (Privacy Policy, Terms of Use, YouTube Terms
+    of Service, Google Privacy Policy) and **Agree and continue**. It can't be
+    swiped, tapped or backed away. On the welcome screen it waits.
+  - Never behind a feature flag or shown only during store review: that would
+    be misleading the reviewers (App Store Review Guideline 2.3.1, Google
+    Play's Deceptive Behavior policy), and YouTube's rule is for every user.
 - The member must agree again when the policy changes:
   `ConsentStore.current` equals the policy's "Last updated" date, and
   `test/security/store_pages_test.dart` fails if they drift apart.
