@@ -10,6 +10,8 @@ export interface ManagedGym {
   readonly role: ManagerRole;
   /** Storage path in bucket gym-logos (<gym_id>/logo.png|jpg|jpeg), or null. */
   readonly logoPath: string | null;
+  /** What a member who leaves can still read of this gym's history (gyms.history_after_end). */
+  readonly historyAfterEnd: 'readable' | 'locked';
   /** Members that are active or waiting to join. */
   readonly memberCount: number;
 }
@@ -43,7 +45,7 @@ export class GymsRepository {
       const rows = unwrap(
         await this.supabase
           .from('memberships')
-          .select('role, gym:gyms(id, name, logo_path)')
+          .select('role, gym:gyms(id, name, logo_path, history_after_end)')
           .eq('person_id', person.id)
           .eq('status', 'active')
           .in('role', ['owner', 'captain'])
@@ -55,7 +57,8 @@ export class GymsRepository {
         const role = row.role;
         if (!gym || !isGymId(gym.id) || (role !== 'owner' && role !== 'captain')) return [];
         const logoPath = typeof gym.logo_path === 'string' && LOGO_PATH.test(gym.logo_path) && gym.logo_path.startsWith(`${gym.id}/`) ? gym.logo_path : null;
-        return [{ id: gym.id, name: cleanName(gym.name), role, logoPath }];
+        const historyAfterEnd = gym.history_after_end === 'locked' ? 'locked' : 'readable';
+        return [{ id: gym.id, name: cleanName(gym.name), role, logoPath, historyAfterEnd }];
       });
 
       const counted = await Promise.all(
@@ -83,4 +86,5 @@ interface GymRow {
   id: string;
   name: unknown;
   logo_path?: unknown;
+  history_after_end?: unknown;
 }

@@ -44,18 +44,43 @@ export function pathOf(route: Route): string {
   }
 }
 
+// While codes are on screen (shown once), leaving asks first. A page sets the
+// guard; navigate() and the browser's Back/Forward both go through it.
+let leaveGuard: (() => boolean) | null = null;
+
+export function setLeaveGuard(guard: (() => boolean) | null): void {
+  leaveGuard = guard;
+}
+
+/** Leaves without asking (the page already asked in its own dialog). */
+export function navigateNow(route: Route, replace = false): void {
+  leaveGuard = null;
+  navigate(route, replace);
+}
+
+const INTERNAL = { azmInternal: true } as const;
+
 export function navigate(route: Route, replace = false): void {
+  if (leaveGuard && !leaveGuard()) return;
   const path = pathOf(route);
   if (replace) window.history.replaceState(null, '', path);
   else window.history.pushState(null, '', path);
-  window.dispatchEvent(new PopStateEvent('popstate'));
+  window.dispatchEvent(new PopStateEvent('popstate', { state: INTERNAL }));
 }
 
 export function useRoute(): Route {
   const [route, setRoute] = useState(() => parsePath(window.location.pathname));
   useEffect(() => {
-    const onPop = () => {
-      setRoute(parsePath(window.location.pathname));
+    let current = window.location.pathname;
+    const onPop = (event: PopStateEvent) => {
+      const internal = (event.state as { azmInternal?: boolean } | null)?.azmInternal === true;
+      if (!internal && leaveGuard && !leaveGuard()) {
+        // Back/Forward while codes are shown: stay on this page.
+        window.history.pushState(null, '', current);
+        return;
+      }
+      current = window.location.pathname;
+      setRoute(parsePath(current));
     };
     window.addEventListener('popstate', onPop);
     return () => {
