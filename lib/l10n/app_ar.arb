@@ -418,5 +418,19 @@
   "picturesFrameStart": "بداية الحركة",
   "picturesFrameEnd": "نهاية الحركة",
   "picturesSave": "احفظ الصور",
-  "picturesRemoveAll": "شيل صوري"
+  "picturesRemoveAll": "شيل صوري",
+  "unitPlate": "بلاطة",
+  "workoutPlateUp": "البلاطة اللي بعدها",
+  "workoutPlateDown": "البلاطة اللي قبلها",
+  "workoutLogReps": "سجّل {reps} عدّة",
+  "workoutSetDonePlateLabel": "مجموعة {set}، بلاطة {plate}، {reps} عدة، متسجلة. اضغط للتعديل",
+  "workoutSetDoneRepsLabel": "مجموعة {set}، {reps} عدة، متسجلة. اضغط للتعديل",
+  "planUnitTitle": "بيتسجل بـ",
+  "planUnitKg": "وزن (كجم)",
+  "planUnitPlate": "رقم البلاطة",
+  "planUnitReps": "عدّات بس",
+  "planUnitHint": "رقم البلاطة: الرقم اللي على عمود أوزان الجهاز. عدّات بس: من غير وزن.",
+  "weightPlate": "بلاطة {plate}",
+  "planExerciseMetaUnit": "{target} · راحة {rest} ث · {unit}",
+  "planExerciseMetaSupersetUnit": "{target} · {unit}"
 }

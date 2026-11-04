@@ -87,8 +87,8 @@ class _ProgressRow extends StatelessWidget {
     final detail = p.started
         ? [
             l10n.progressFromTo(
-              ProgressFormat.kg(l10n, p.first!.topWeight),
-              ProgressFormat.kg(l10n, p.latest!.topWeight),
+              ProgressFormat.kg(l10n, p.first!.topWeight, p.exercise.unit),
+              ProgressFormat.kg(l10n, p.latest!.topWeight, p.exercise.unit),
             ),
             l10n.progressWorkouts(p.workouts),
           ].join(' · ')

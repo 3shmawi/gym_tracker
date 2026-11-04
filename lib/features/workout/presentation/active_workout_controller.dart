@@ -102,6 +102,7 @@ class ActiveWorkoutController extends AsyncNotifier<ActiveWorkout?> {
         _history,
         startedAt: draft.startedAt,
         now: _now(),
+        units: {for (final e in next.day.exercises) e.id: e.unit},
       ),
     );
   }

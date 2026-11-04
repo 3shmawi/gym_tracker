@@ -111,8 +111,16 @@ class _History extends StatelessWidget {
                   Expanded(
                     child: Text(
                       l10n.progressFromTo(
-                        ProgressFormat.kg(l10n, p.first!.topWeight),
-                        ProgressFormat.kg(l10n, p.latest!.topWeight),
+                        ProgressFormat.kg(
+                          l10n,
+                          p.first!.topWeight,
+                          history.exercise.unit,
+                        ),
+                        ProgressFormat.kg(
+                          l10n,
+                          p.latest!.topWeight,
+                          history.exercise.unit,
+                        ),
                       ),
                       style: AppTextStyles.numM.copyWith(
                         color: palette.textPrimary,
@@ -126,7 +134,11 @@ class _History extends StatelessWidget {
                 [
                   l10n.progressBest(
                     WorkoutFormat.ltr(
-                      '${WorkoutFormat.weight(best.weight)}×${best.reps}',
+                      WorkoutFormat.set(
+                        best.weight,
+                        best.reps,
+                        history.exercise.unit,
+                      ),
                     ),
                   ),
                   l10n.progressWorkouts(p.workouts),
@@ -149,7 +161,7 @@ class _History extends StatelessWidget {
               ),
               for (final (i, e) in history.entries.indexed) ...[
                 if (i > 0) Divider(height: 1, color: palette.fillSubtle),
-                _EntryRow(entry: e, now: now),
+                _EntryRow(entry: e, now: now, unit: history.exercise.unit),
               ],
             ],
           ),
@@ -177,10 +189,11 @@ Map<LocalizedName, List<int>> _byName(List<PlanDayRef> days) {
 }
 
 class _EntryRow extends StatelessWidget {
-  const new({required this.entry, required this.now});
+  const new({required this.entry, required this.now, required this.unit});
 
   final HistoryEntry entry;
   final DateTime now;
+  final ExerciseUnit unit;
 
   @override
   Widget build(BuildContext context) {
@@ -209,10 +222,7 @@ class _EntryRow extends StatelessWidget {
                   Text(
                     WorkoutFormat.ltr(
                       entry.sets
-                          .map(
-                            (s) =>
-                                '${WorkoutFormat.weight(s.weight)}×${s.reps}',
-                          )
+                          .map((s) => WorkoutFormat.set(s.weight, s.reps, unit))
                           .join(' · '),
                     ),
                     style: AppTextStyles.caption.copyWith(

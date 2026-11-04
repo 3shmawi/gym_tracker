@@ -234,6 +234,7 @@ class PlanEditorController extends AsyncNotifier<PlanEditorState> {
     int? reps,
     int? restSeconds,
     double? weightStep,
+    ExerciseUnit? unit,
   }) => _apply(
     (plan, locked) => _edit.setTargets(
       plan,
@@ -243,6 +244,7 @@ class PlanEditorController extends AsyncNotifier<PlanEditorState> {
       reps: reps,
       restSeconds: restSeconds,
       weightStep: weightStep,
+      unit: unit,
       lockedDayId: locked,
     ),
     'plan_targets_changed',
@@ -253,6 +255,8 @@ class PlanEditorController extends AsyncNotifier<PlanEditorState> {
           ? 'reps'
           : restSeconds != null
           ? 'rest'
+          : unit != null
+          ? 'unit'
           : 'weight_step',
     },
     targetsOnly: true,

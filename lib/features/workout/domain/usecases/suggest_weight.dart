@@ -9,6 +9,9 @@ import 'package:gym_tracker/features/workout/domain/entities/workout_session.dar
 ///   (22.5×12, 22.5×12, 22.5×11 → 22.5);
 /// - further off → [Trend.down]: one step lighter, never below 0;
 /// - no history → [Trend.firstTime].
+///
+/// Units ([Exercise.unit]): a plate exercise moves one plate; a reps-only
+/// one keeps weight 0 (the trend still says whether to push the reps).
 class SuggestWeight {
   const new();
 
@@ -21,6 +24,8 @@ class SuggestWeight {
         if (s.reps > 0) s,
     ];
     if (sets.isEmpty) return const WeightSuggestion(trend: Trend.firstTime);
+    // Plates move one plate at a time; reps only has no weight to change.
+    final step = exercise.step;
 
     final working = sets.map((s) => s.weight).reduce((a, b) => a > b ? a : b);
     final atWorking = sets.where((s) => s.weight == working).toList();
@@ -29,10 +34,7 @@ class SuggestWeight {
         atWorking.length >= exercise.targetSets &&
         atWorking.every((s) => s.reps >= exercise.targetReps);
     if (hitAll) {
-      return WeightSuggestion(
-        weight: working + exercise.weightStep,
-        trend: Trend.up,
-      );
+      return WeightSuggestion(weight: working + step, trend: Trend.up);
     }
 
     final averageReps =
@@ -40,7 +42,7 @@ class SuggestWeight {
     if (averageReps >= exercise.targetReps - keepMargin) {
       return WeightSuggestion(weight: working, trend: Trend.keep);
     }
-    final lighter = working - exercise.weightStep;
+    final lighter = working - step;
     return WeightSuggestion(
       weight: lighter < 0 ? 0 : lighter,
       trend: Trend.down,

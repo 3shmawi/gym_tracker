@@ -4,6 +4,7 @@ import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/presentation/workout_format.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 
@@ -36,7 +37,9 @@ class ExercisePreviewRow extends StatelessWidget {
       ),
       if (preview.lastSets.isNotEmpty)
         l10n.exerciseLast(
-          WorkoutFormat.ltr(WorkoutFormat.sets(preview.lastSets)),
+          WorkoutFormat.ltr(
+            WorkoutFormat.sets(preview.lastSets, exercise.unit),
+          ),
         ),
     ].join(' · ');
 
@@ -115,9 +118,16 @@ class ExercisePreviewRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               spacing: AppDimens.xs,
               children: [
-                if (suggestion.weight != null)
+                if (suggestion.weight != null &&
+                    exercise.unit != ExerciseUnit.reps)
                   Text(
-                    l10n.weightKg(WorkoutFormat.weight(suggestion.weight!)),
+                    exercise.unit == ExerciseUnit.plate
+                        ? l10n.weightPlate(
+                            WorkoutFormat.weight(suggestion.weight!),
+                          )
+                        : l10n.weightKg(
+                            WorkoutFormat.weight(suggestion.weight!),
+                          ),
                     style: AppTextStyles.numM.copyWith(
                       color: palette.textPrimary,
                     ),

@@ -1,4 +1,5 @@
 import 'package:gym_tracker/core/ui/app_ui.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/presentation/workout_format.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 import 'package:intl/intl.dart';
@@ -32,7 +33,14 @@ abstract final class ProgressFormat {
     return (l10n.progressSame, AppTone.keep);
   }
 
-  /// "52.5 kg", isolated for Arabic text.
-  static String kg(AppLocalizations l10n, double weight) =>
-      l10n.weightKg(WorkoutFormat.weight(weight));
+  /// "52.5 kg", "plate 7", or "Reps only" (no weight to show).
+  static String kg(
+    AppLocalizations l10n,
+    double weight, [
+    ExerciseUnit unit = ExerciseUnit.kg,
+  ]) => switch (unit) {
+    ExerciseUnit.kg => l10n.weightKg(WorkoutFormat.weight(weight)),
+    ExerciseUnit.plate => l10n.weightPlate(WorkoutFormat.weight(weight)),
+    ExerciseUnit.reps => l10n.planUnitReps,
+  };
 }
