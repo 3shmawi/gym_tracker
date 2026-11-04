@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:gym_tracker/core/media/youtube_link.dart';
+import 'package:gym_tracker/core/router/link_guard.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 /// What can go wrong while playing, as the sheet shows it.
@@ -48,13 +49,19 @@ class YouTubeSurface extends StatefulWidget {
   State<YouTubeSurface> createState() => _YouTubeSurfaceState();
 }
 
-class _YouTubeSurfaceState extends State<YouTubeSurface> {
+/// Pauses as soon as the app leaves the screen: YouTube's Developer Policies
+/// forbid playing "from a background player, meaning a player that is not
+/// displayed in the page, tab, or screen that the user is viewing"
+/// (docs/decisions/video_outside_app.md).
+class _YouTubeSurfaceState extends State<YouTubeSurface>
+    with WidgetsBindingObserver, IgnoresLinks {
   late final YoutubePlayerController _controller;
   StreamSubscription<YoutubePlayerValue>? _values;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     final v = widget.video;
     _controller = YoutubePlayerController.fromVideoId(
       videoId: v.id,
@@ -82,7 +89,13 @@ class _YouTubeSurfaceState extends State<YouTubeSurface> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) unawaited(_controller.pauseVideo());
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     unawaited(_values?.cancel());
     unawaited(_controller.close());
     super.dispose();
