@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:gym_tracker/core/media/youtube_link.dart';
 import 'package:gym_tracker/core/router/link_guard.dart';
+import 'package:gym_tracker/features/video/presentation/video_playback.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 /// What can go wrong while playing, as the sheet shows it.
@@ -23,6 +24,7 @@ enum VideoProblem {
 typedef VideoSurfaceBuilder = Widget Function(
   YouTubeVideoRef video, {
   required ValueChanged<VideoProblem> onProblem,
+  VideoPlayback? playback,
 });
 
 /// YouTube's official embedded player (youtube_player_iframe), in the
@@ -32,18 +34,25 @@ typedef VideoSurfaceBuilder = Widget Function(
 /// visible (the trainee tapped play); YouTube's own controls and branding are
 /// untouched and nothing is drawn over the player.
 class YouTubeSurface extends StatefulWidget {
-  const new({required this.video, required this.onProblem, super.key});
+  const new({
+    required this.video,
+    required this.onProblem,
+    this.playback,
+    super.key,
+  });
 
   /// The app's identity for YouTube (`https://<application id>`).
   static const origin = 'https://com.mohager.azm';
 
   final YouTubeVideoRef video;
   final ValueChanged<VideoProblem> onProblem;
+  final VideoPlayback? playback;
 
   static Widget build(
     YouTubeVideoRef video, {
     required ValueChanged<VideoProblem> onProblem,
-  }) => YouTubeSurface(video: video, onProblem: onProblem);
+    VideoPlayback? playback,
+  }) => YouTubeSurface(video: video, onProblem: onProblem, playback: playback);
 
   @override
   State<YouTubeSurface> createState() => _YouTubeSurfaceState();
@@ -57,6 +66,7 @@ class _YouTubeSurfaceState extends State<YouTubeSurface>
     with WidgetsBindingObserver, IgnoresLinks {
   late final YoutubePlayerController _controller;
   StreamSubscription<YoutubePlayerValue>? _values;
+  StreamSubscription<YoutubeVideoState>? _position;
 
   @override
   void initState() {
@@ -85,7 +95,18 @@ class _YouTubeSurfaceState extends State<YouTubeSurface>
         _ => VideoProblem.failed,
       };
       if (problem != null && mounted) widget.onProblem(problem);
+      widget.playback?.report(paused: value.playerState == PlayerState.paused);
     });
+    final playback = widget.playback;
+    if (playback != null) {
+      playback.attach(
+        pause: () => unawaited(_controller.pauseVideo()),
+        play: () => unawaited(_controller.playVideo()),
+      );
+      _position = _controller.videoStateStream.listen(
+        (s) => playback.report(seconds: s.position.inSeconds),
+      );
+    }
   }
 
   @override
@@ -97,6 +118,8 @@ class _YouTubeSurfaceState extends State<YouTubeSurface>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_values?.cancel());
+    unawaited(_position?.cancel());
+    widget.playback?.detach();
     unawaited(_controller.close());
     super.dispose();
   }

@@ -6,6 +6,7 @@ import 'package:gym_tracker/core/update/app_update_listener.dart';
 import 'package:gym_tracker/core/widgets/offline_banner.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
 import 'package:gym_tracker/features/settings/domain/entities/app_settings.dart';
+import 'package:gym_tracker/features/video/presentation/mini_player_host.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 
 /// The MaterialApp, configured once: screen scaling, themes, localization
@@ -30,7 +31,9 @@ class AppShell extends StatelessWidget {
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) => AppUpdateListener(
           child: GymSyncHost(
-            child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+            child: OfflineBanner(
+              child: MiniPlayerHost(child: child ?? const SizedBox.shrink()),
+            ),
           ),
         ),
       ),

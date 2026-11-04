@@ -1012,5 +1012,21 @@
   },
   "@workoutDoNow": {
     "description": "Screen-reader hint on an unfinished exercise line: makes it the current exercise."
+  },
+  "videoMinimize": "Keep watching while you train",
+  "videoPause": "Pause the video",
+  "videoResume": "Play the video",
+  "videoExpand": "Make the video bigger",
+  "miniPlayerLabel": "Mini video player: {title}",
+  "miniPlayerLabelNoTitle": "Mini video player",
+  "@miniPlayerLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@videoMinimize": {
+    "description": "Player sheet: shrink the video to a floating mini player and keep using the app."
   }
 }

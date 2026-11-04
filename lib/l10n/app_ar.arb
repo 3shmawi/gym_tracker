@@ -404,5 +404,11 @@
   "videoYouTube": "YouTube",
   "videoYouTubeShorts": "YouTube Shorts",
   "workoutPickHint": "دوس على أي تمرين عشان تعمله دلوقتي",
-  "workoutDoNow": "اعمل التمرين ده دلوقتي"
+  "workoutDoNow": "اعمل التمرين ده دلوقتي",
+  "videoMinimize": "كمّل وانت بتتمرن",
+  "videoPause": "وقّف الفيديو",
+  "videoResume": "شغّل الفيديو",
+  "videoExpand": "كبّر الفيديو",
+  "miniPlayerLabel": "مشغّل الفيديو الصغير: {title}",
+  "miniPlayerLabelNoTitle": "مشغّل الفيديو الصغير"
 }

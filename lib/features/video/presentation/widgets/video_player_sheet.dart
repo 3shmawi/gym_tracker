@@ -7,6 +7,7 @@ import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
+import 'package:gym_tracker/features/video/presentation/video_playback.dart';
 import 'package:gym_tracker/features/video/presentation/widgets/exercise_video_card.dart';
 import 'package:gym_tracker/features/video/presentation/widgets/youtube_surface.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
@@ -38,6 +39,8 @@ class VideoPlayerSheet extends StatefulWidget {
     required this.onClose,
     required this.onOpenInYouTube,
     this.info,
+    this.playback,
+    this.onMinimize,
     super.key,
   });
 
@@ -46,6 +49,12 @@ class VideoPlayerSheet extends StatefulWidget {
   final VideoSurfaceBuilder surface;
   final VoidCallback onClose;
   final VoidCallback onOpenInYouTube;
+
+  /// Where the player is (to carry it to the mini player).
+  final VideoPlayback? playback;
+
+  /// "Keep watching while you train": the mini player (V-C); null hides it.
+  final VoidCallback? onMinimize;
 
   @override
   State<VideoPlayerSheet> createState() => _VideoPlayerSheetState();
@@ -112,6 +121,7 @@ class _VideoPlayerSheetState extends State<VideoPlayerSheet> {
                         ? widget.surface(
                             widget.video,
                             onProblem: (p) => setState(() => _problem = p),
+                            playback: widget.playback,
                           )
                         : _ProblemView(problem: _problem!),
                   ),
@@ -149,6 +159,14 @@ class _VideoPlayerSheetState extends State<VideoPlayerSheet> {
                     style: AppTextStyles.caption.copyWith(
                       color: palette.textSecondary,
                     ),
+                  ),
+                if (widget.onMinimize case final minimize?
+                    when _problem == null)
+                  AppSecondaryButton(
+                    key: const Key('video_minimize'),
+                    icon: Icons.picture_in_picture_alt_rounded,
+                    label: l10n.videoMinimize,
+                    onPressed: minimize,
                   ),
                 OpenInYouTubeButton(onPressed: widget.onOpenInYouTube),
               ],
@@ -213,13 +231,22 @@ Future<void> showVideoPlayerSheet({
   required VideoInfo? info,
   required VideoSurfaceBuilder surface,
   required VoidCallback onOpenInYouTube,
+  VideoPlayback? playback,
+  VoidCallback? onMinimize,
 }) => showAppSheet<void>(
   context: context,
   builder: (sheet) => VideoPlayerSheet(
     video: video,
     info: info,
     surface: surface,
+    playback: playback,
     onClose: () => Navigator.of(sheet).pop(),
     onOpenInYouTube: onOpenInYouTube,
+    onMinimize: onMinimize == null
+        ? null
+        : () {
+            onMinimize();
+            Navigator.of(sheet).pop();
+          },
   ),
 );
