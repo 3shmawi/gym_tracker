@@ -41,7 +41,7 @@ void main() {
       "frame-ancestors 'none'",
       r"connect-src 'self' ${supabaseUrl} ${ws}",
       'Strict-Transport-Security: max-age=31536000',
-      "! Access-Control-Allow-Origin",
+      '! Access-Control-Allow-Origin',
     ]) {
       expect(headers, contains(rule), reason: rule);
     }
@@ -62,7 +62,7 @@ void main() {
     expect(config, contains("startsWith('sb_secret_')"));
     final example = read('dashboard/.env.example');
     final keys = RegExp(
-      r'^([A-Z_]+)=',
+      '^([A-Z_]+)=',
       multiLine: true,
     ).allMatches(example).map((m) => m.group(1)).toSet();
     expect(keys, {
