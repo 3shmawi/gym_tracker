@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gym_tracker/core/legal/consent_gate.dart';
 import 'package:gym_tracker/core/router/app_router.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_theme.dart';
@@ -30,9 +31,12 @@ class AppShell extends StatelessWidget {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) => AppUpdateListener(
-          child: GymSyncHost(
-            child: OfflineBanner(
-              child: MiniPlayerHost(child: child ?? const SizedBox.shrink()),
+          // Nothing of the app opens before the member agreed (III.A).
+          child: ConsentGate(
+            child: GymSyncHost(
+              child: OfflineBanner(
+                child: MiniPlayerHost(child: child ?? const SizedBox.shrink()),
+              ),
             ),
           ),
         ),

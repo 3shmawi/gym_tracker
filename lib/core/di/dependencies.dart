@@ -1,6 +1,7 @@
 import 'package:gym_tracker/core/backend/backend.dart';
 import 'package:gym_tracker/core/captcha/turnstile_captcha.dart';
 import 'package:gym_tracker/core/config/env.dart';
+import 'package:gym_tracker/core/legal/legal.dart';
 import 'package:gym_tracker/core/media/video_info.dart';
 import 'package:gym_tracker/core/notifications/local_notifications.dart';
 import 'package:gym_tracker/features/gym/data/datasources/secret_store.dart';
@@ -41,6 +42,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// each domain interface. Add new repositories / services here.
 abstract final class Dependencies {
   static late SettingsRepository settingsRepository;
+
+  /// Whether the member agreed to the Terms and Privacy Policy.
+  static ConsentStore consentStore = const AcceptedConsentStore();
   static late WorkoutRepository workoutRepository;
 
   /// Gym accounts. Until [init] runs, in widget tests and without Supabase
@@ -83,6 +87,7 @@ abstract final class Dependencies {
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     settingsRepository = SharedPrefsSettingsRepository(prefs);
+    consentStore = PrefsConsentStore(prefs);
     workoutRepository = LocalWorkoutRepository(prefs);
     restAlarm = NotificationRestAlarm(LocalNotifications(), prefs);
     gymLocalRepository = PrefsGymLocalRepository(prefs);

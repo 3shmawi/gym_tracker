@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gym_tracker/core/legal/legal.dart';
 
 /// The privacy policy, terms and delete-account pages must keep telling the
 /// truth about gym accounts (App Review and Google Play read them), in both
@@ -18,15 +19,25 @@ void main() {
   }
 
   test('every page carries its last change date, in both languages', () {
-    // Both last changed 2026-11-03: the privacy policy for the captain's
-    // progress view, gym pictures (Cloudinary) and YouTube videos; the terms
-    // for YouTube's Terms of Service (YouTube Developer Policies III.A).
+    // The privacy policy last changed 2026-11-04 (solo picture search, the
+    // rest sound on screen); it must equal ConsentStore.current, so a change
+    // asks members to agree again. The terms: 2026-11-03 (YouTube's Terms of
+    // Service, YouTube Developer Policies III.A).
     for (final (name, date) in [
-      ('privacy.html', '2026-11-03'),
+      ('privacy.html', '2026-11-04'),
       ('terms.html', '2026-11-03'),
     ]) {
       expect(RegExp(date).allMatches(page(name)).length, 2, reason: name);
     }
+  });
+
+  test('a changed privacy policy asks members to agree again', () {
+    // ConsentStore.current is the version members agree to in the app.
+    expect(
+      RegExp(ConsentStore.current).allMatches(page('privacy.html')).length,
+      2,
+      reason: 'bump ConsentStore.current with the policy date',
+    );
   });
 
   group('privacy policy', () {

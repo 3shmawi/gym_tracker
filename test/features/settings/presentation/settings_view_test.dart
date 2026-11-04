@@ -67,6 +67,27 @@ void main() {
       expect(opened, 1);
     });
 
+    testWidgets('privacy policy and terms are always one tap away', (
+      tester,
+    ) async {
+      final opened = <String>[];
+      await tester.pumpApp(
+        SettingsView(
+          settings: const AppSettings(),
+          onLocaleChanged: (_) {},
+          onThemeModeChanged: (_) {},
+          onOpenPrivacy: () => opened.add('privacy'),
+          onOpenTerms: () => opened.add('terms'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      for (final key in ['settings_privacy', 'settings_terms']) {
+        await tester.ensureVisible(find.byKey(Key(key)));
+        await tester.tap(find.byKey(Key(key)));
+      }
+      expect(opened, ['privacy', 'terms']);
+    });
+
     // Regression: in Arabic the "Your plan" arrow pointed right. The chevron
     // mirrors itself in RTL, and the row also swapped it for Arabic: two
     // flips. It must be the self-mirroring chevron_right in both languages,
