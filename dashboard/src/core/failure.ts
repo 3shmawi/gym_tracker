@@ -99,3 +99,14 @@ function reasonOf(message: string): { reason?: string } {
   const first = message.split(':')[0]?.trim() ?? '';
   return REASON.test(first) ? { reason: first } : {};
 }
+
+/** An error with a Postgres/PostgREST-style code, for answers we refuse ourselves. */
+export class CodedError extends Error {
+  constructor(
+    readonly code: string,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'CodedError';
+  }
+}

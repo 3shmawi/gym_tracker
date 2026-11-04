@@ -20,7 +20,10 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",
-    "preact": "11.0.1"
+    "fflate": "0.8.3",
+    "jsqr": "1.4.0",
+    "preact": "11.0.1",
+    "qrcode-generator": "2.0.4"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
