@@ -17,6 +17,7 @@ import 'package:gym_tracker/features/gym/domain/entities/gym_media.dart';
 import 'package:gym_tracker/features/gym/domain/entities/gym_plan.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
 import 'package:gym_tracker/features/library/presentation/library_providers.dart';
+import 'package:gym_tracker/features/video/presentation/mini_player_host.dart';
 import 'package:gym_tracker/features/video/presentation/video_providers.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
@@ -57,6 +58,7 @@ void main() {
               theme: AppTheme.light,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
+              builder: (context, child) => MiniPlayerHost(child: child!),
             ),
           ),
         ),
@@ -422,7 +424,7 @@ void main() {
     List<Override> fakeYouTube(VideoInfo info) => [
       videoInfoRepositoryProvider.overrideWithValue(_FakeInfo(info)),
       videoSurfaceProvider.overrideWithValue(
-        (v, {required onProblem}) =>
+        (v, {required onProblem, playback}) =>
             ColoredBox(key: Key('fake_player_${v.id}'), color: Colors.black),
       ),
       externalOpenerProvider.overrideWithValue((url) async {
@@ -499,6 +501,47 @@ void main() {
       expect(find.byKey(const Key('fake_player_mCEIUZySRPY')), findsNothing);
       await tester.tap(find.byKey(const Key('video_open_in_youtube')).last);
       expect(opened.single.queryParameters['v'], 'amgXq2ThD0c');
+    });
+
+    testWidgets('keep watching while you train: the mini player, then back', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        at: AppRoutes.libraryExercise('flat_db_press'),
+        overrides: fakeYouTube(
+          const VideoInfo(
+            availability: VideoAvailability.available,
+            title: 'Bench',
+            channel: 'Coach',
+          ),
+        ),
+      );
+      await tester.ensureVisible(find.byKey(const Key('video_play')));
+      await tester.tap(find.byKey(const Key('video_play')));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('video_minimize')));
+      await tester.tap(find.byKey(const Key('video_minimize')));
+      await tester.pumpAndSettle();
+      // The sheet is gone; the video floats over the app, 200×200.
+      expect(find.byKey(const Key('video_close')), findsNothing);
+      expect(find.byKey(const Key('fake_player_mCEIUZySRPY')), findsOneWidget);
+      expect(
+        tester.getSize(find.byKey(const Key('mini_player_box'))),
+        const Size(200, 200),
+      );
+      // It stays while the member moves on in the app.
+      appRouter.go(AppRoutes.plan);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('mini_player_box')), findsOneWidget);
+      // Bigger again: the sheet; the mini player goes.
+      await tester.tap(find.byKey(const Key('mini_expand')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('video_close')), findsOneWidget);
+      expect(find.byKey(const Key('mini_player_box')), findsNothing);
+      await tester.tap(find.byKey(const Key('video_close')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('fake_player_mCEIUZySRPY')), findsNothing);
     });
 
     testWidgets('embedding off: Open in YouTube from the card', (tester) async {

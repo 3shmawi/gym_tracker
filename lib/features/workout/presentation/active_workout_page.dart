@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/router/link_guard.dart';
+import 'package:gym_tracker/features/video/presentation/mini_player.dart';
 import 'package:gym_tracker/features/workout/domain/services/rest_alarm.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_view.dart';
@@ -23,6 +24,7 @@ class ActiveWorkoutPage extends ConsumerStatefulWidget {
 class _ActiveWorkoutPageState extends ConsumerState<ActiveWorkoutPage>
     with WidgetsBindingObserver, IgnoresLinks {
   late final RestAlarmSync _alarm;
+  late final MiniPlayerReserveController _reserve;
 
   /// Read in build, used when the app leaves the front.
   AppLocalizations? _l10n;
@@ -36,6 +38,8 @@ class _ActiveWorkoutPageState extends ConsumerState<ActiveWorkoutPage>
       now: ref.read(clockProvider),
     );
     WidgetsBinding.instance.addObserver(this);
+    // Read now: ref can't be used in dispose.
+    _reserve = ref.read(miniPlayerBottomReserveProvider.notifier);
     _alarm.lifecycle(
       WidgetsBinding.instance.lifecycleState ?? AppLifecycleState.resumed,
     );
@@ -50,6 +54,10 @@ class _ActiveWorkoutPageState extends ConsumerState<ActiveWorkoutPage>
 
   @override
   void dispose() {
+    // The dock is gone: the floating video may use the bottom again (after
+    // this frame: providers can't change while the tree is being built).
+    final reserve = _reserve;
+    scheduleMicrotask(() => reserve.set(0));
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_alarm.close());
     super.dispose();
@@ -98,6 +106,7 @@ class _ActiveWorkoutPageState extends ConsumerState<ActiveWorkoutPage>
     return ActiveWorkoutView(
       state: ref.watch(activeWorkoutControllerProvider),
       now: ref.watch(clockProvider),
+      onDockHeight: ref.reserveBottom,
       actions: ActiveWorkoutActions(
         onLog: (w, r) => unawaited(controller.logSet(weight: w, reps: r)),
         onPick: (i) => unawaited(controller.pick(i)),

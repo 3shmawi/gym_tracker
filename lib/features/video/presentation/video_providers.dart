@@ -7,6 +7,8 @@ import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
 import 'package:gym_tracker/core/media/video_info.dart';
 import 'package:gym_tracker/core/media/youtube_link.dart';
+import 'package:gym_tracker/features/video/presentation/mini_player.dart';
+import 'package:gym_tracker/features/video/presentation/video_playback.dart';
 import 'package:gym_tracker/features/video/presentation/widgets/video_player_sheet.dart';
 import 'package:gym_tracker/features/video/presentation/widgets/youtube_surface.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -61,13 +63,26 @@ class VideoActions {
     VideoInfo? info,
   }) async {
     unawaited(Analytics.capture('video_played', {'source': source.name}));
+    // One player at a time: the sheet takes over from the mini player.
+    _ref.read(miniPlayerProvider.notifier).close();
+    final playback = VideoPlayback();
     await showVideoPlayerSheet(
       context: context,
       video: video,
       info: info,
       surface: _ref.read(videoSurfaceProvider),
+      playback: playback,
       onOpenInYouTube: () => unawaited(openInYouTube(video, source)),
+      onMinimize: () {
+        unawaited(
+          Analytics.capture('video_minimized', {'source': source.name}),
+        );
+        _ref
+            .read(miniPlayerProvider.notifier)
+            .show(video, source, at: playback.seconds, info: info);
+      },
     );
+    playback.dispose();
   }
 
   Future<void> openInYouTube(YouTubeVideoRef video, VideoSource source) async {

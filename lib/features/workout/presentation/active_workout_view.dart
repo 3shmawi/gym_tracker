@@ -55,8 +55,13 @@ class ActiveWorkoutView extends StatelessWidget {
     required this.state,
     required this.actions,
     required this.now,
+    this.onDockHeight,
     super.key,
   });
+
+  /// The dock's height (logging, rest or finish) whenever it changes, so
+  /// the floating video stays above it (board 4.3).
+  final ValueChanged<double>? onDockHeight;
 
   /// null value: no workout in progress.
   final AsyncValue<ActiveWorkout?> state;
@@ -95,6 +100,7 @@ class ActiveWorkoutView extends StatelessWidget {
           actions: actions,
           now: now,
           onFinish: () => _showFinish(context, w),
+          onDockHeight: onDockHeight,
         ),
         AsyncData() => EmptyView(
           icon: Icons.fitness_center,
@@ -129,8 +135,10 @@ class _Workout extends StatefulWidget {
     required this.actions,
     required this.now,
     required this.onFinish,
+    this.onDockHeight,
   });
 
+  final ValueChanged<double>? onDockHeight;
   final ActiveWorkout workout;
   final ActiveWorkoutActions actions;
   final DateTime Function() now;
@@ -251,20 +259,23 @@ class _WorkoutState extends State<_Workout> {
             ],
           ),
         ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: palette.surfaceSolid,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(AppDimens.radiusSheet),
+        _ReportHeight(
+          onHeight: widget.onDockHeight,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: palette.surfaceSolid,
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(AppDimens.radiusSheet),
+              ),
             ),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: EdgeInsets.all(AppDimens.md),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: _dock(context),
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: EdgeInsets.all(AppDimens.md),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: _dock(context),
+                ),
               ),
             ),
           ),
@@ -876,5 +887,35 @@ class _FinishSheet extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Calls [onHeight] after layout whenever [child]'s height changes.
+class _ReportHeight extends StatefulWidget {
+  const new({required this.child, this.onHeight});
+
+  final Widget child;
+  final ValueChanged<double>? onHeight;
+
+  @override
+  State<_ReportHeight> createState() => _ReportHeightState();
+}
+
+class _ReportHeightState extends State<_ReportHeight> {
+  double? _last;
+
+  @override
+  Widget build(BuildContext context) {
+    final onHeight = widget.onHeight;
+    if (onHeight != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final h = mounted ? context.size?.height : null;
+        if (h != null && h != _last) {
+          _last = h;
+          onHeight(h);
+        }
+      });
+    }
+    return widget.child;
   }
 }
