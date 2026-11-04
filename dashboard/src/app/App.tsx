@@ -7,6 +7,9 @@ import { loadPrefs, savePrefs, type Prefs } from '../core/prefs';
 import type { GymsRepository, ManagedGym } from '../gyms/gyms';
 import { I18nContext, makeI18n } from '../i18n';
 import { GymPickerPage } from '../pages/GymPickerPage';
+import type { MembersRepository } from '../members/members';
+import { AddMembersPage } from '../pages/AddMembersPage';
+import { MemberPage } from '../pages/MemberPage';
 import { MembersPage } from '../pages/MembersPage';
 import { SignInPage } from '../pages/SignInPage';
 import { Shell, type ShellProps } from '../ui/Shell';
@@ -18,6 +21,9 @@ export interface AppServices {
   readonly gyms: GymsRepository;
   /** Turnstile, when a site key is configured; otherwise null. */
   readonly captcha: Captcha | null;
+  readonly members: MembersRepository;
+  /** The bitmap for the middle of the QR: the gym's logo, else the app icon. */
+  readonly loadLogo: (logoPath: string | null) => Promise<ImageBitmap | null>;
 }
 
 type Session =
@@ -153,7 +159,9 @@ export function App({ services }: { readonly services: AppServices }) {
           </Shell>
         );
       }
-      case 'members': {
+      case 'members':
+      case 'member':
+      case 'add_members': {
         const gym = list.find((g) => g.id === route.gymId);
         if (!gym) {
           return (
@@ -164,7 +172,13 @@ export function App({ services }: { readonly services: AppServices }) {
         }
         return (
           <Shell {...shellBase} gyms={list} gym={gym} nav="members">
-            <MembersPage gym={gym} />
+            {route.name === 'members' && <MembersPage gym={gym} members={services.members} />}
+            {route.name === 'member' && (
+              <MemberPage gym={gym} memberId={route.memberId} members={services.members} loadLogo={services.loadLogo} />
+            )}
+            {route.name === 'add_members' && (
+              <AddMembersPage gym={gym} role={route.role} userId={session.user.userId} members={services.members} loadLogo={services.loadLogo} />
+            )}
           </Shell>
         );
       }
