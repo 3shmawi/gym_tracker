@@ -6,6 +6,8 @@ export type Route =
   | { readonly name: 'sign_in' }
   | { readonly name: 'gyms' }
   | { readonly name: 'members'; readonly gymId: string }
+  | { readonly name: 'member'; readonly gymId: string; readonly memberId: string }
+  | { readonly name: 'add_members'; readonly gymId: string; readonly role: 'trainee' | 'captain' }
   | { readonly name: 'not_found' };
 
 /** Paths are fixed strings; a gym id must be a UUID. Anything else is not found. */
@@ -16,6 +18,10 @@ export function parsePath(pathname: string): Route {
   if (path === '/gyms') return { name: 'gyms' };
   const members = /^\/g\/([^/]+)\/members$/.exec(path) ?? /^\/g\/([^/]+)$/.exec(path);
   if (members?.[1] && isGymId(members[1])) return { name: 'members', gymId: members[1] };
+  const add = /^\/g\/([^/]+)\/members\/(add|add-captain)$/.exec(path);
+  if (add?.[1] && isGymId(add[1])) return { name: 'add_members', gymId: add[1], role: add[2] === 'add-captain' ? 'captain' : 'trainee' };
+  const member = /^\/g\/([^/]+)\/members\/([^/]+)$/.exec(path);
+  if (member?.[1] && member[2] && isGymId(member[1]) && isGymId(member[2])) return { name: 'member', gymId: member[1], memberId: member[2] };
   return { name: 'not_found' };
 }
 
@@ -29,6 +35,10 @@ export function pathOf(route: Route): string {
       return '/gyms';
     case 'members':
       return `/g/${route.gymId}/members`;
+    case 'member':
+      return `/g/${route.gymId}/members/${route.memberId}`;
+    case 'add_members':
+      return `/g/${route.gymId}/members/${route.role === 'captain' ? 'add-captain' : 'add'}`;
     case 'not_found':
       return '/';
   }
