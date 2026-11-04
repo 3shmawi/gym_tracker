@@ -105,7 +105,8 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
       const body = route.request().postDataJSON() as Record<string, unknown>;
       mock.verifyRequests.push(body);
       if (body.token === GOOD_CODE) return json(route, 200, fakeSession(typeof body.email === 'string' ? body.email : EMAIL));
-      return options.wrongCode === 'otp_expired'
+      // The real server answers otp_expired for wrong codes too (verify.go).
+      return options.wrongCode !== 'invalid'
         ? json(route, 403, { code: 'otp_expired', error_code: 'otp_expired', msg: 'Token has expired or is invalid' })
         : json(route, 403, { code: 'otp_invalid', error_code: 'otp_invalid', msg: 'Token has expired or is invalid' });
     }
