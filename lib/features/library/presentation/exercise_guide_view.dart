@@ -7,6 +7,7 @@ import 'package:gym_tracker/core/widgets/state_views.dart';
 import 'package:gym_tracker/features/library/domain/entities/library_exercise.dart';
 import 'package:gym_tracker/features/library/presentation/library_labels.dart';
 import 'package:gym_tracker/features/library/presentation/widgets/exercise_pictures_view.dart';
+import 'package:gym_tracker/features/video/presentation/widgets/exercise_video_card.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 
 /// One exercise of the library: the picture, names, muscle, equipment and the
@@ -24,6 +25,9 @@ class ExerciseGuideView extends StatelessWidget {
     this.movePair = false,
     this.offline = false,
     this.onOpenCredits,
+    this.video,
+    this.onPlayVideo,
+    this.onOpenVideoInYouTube,
     super.key,
   });
 
@@ -48,6 +52,11 @@ class ExerciseGuideView extends StatelessWidget {
 
   /// Opens the licenses page from the picture credit.
   final VoidCallback? onOpenCredits;
+
+  /// The how-to video (the gym's, else the library's); null: no video section.
+  final ExerciseVideoCardData? video;
+  final VoidCallback? onPlayVideo;
+  final VoidCallback? onOpenVideoInYouTube;
 
   @override
   Widget build(BuildContext context) {
@@ -121,6 +130,18 @@ class ExerciseGuideView extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (video != null) ...[
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: AppSectionLabel(l10n.exerciseWatchHow),
+                  ),
+                  SizedBox(height: AppDimens.xs),
+                  ExerciseVideoCard(
+                    data: video!,
+                    onPlay: onPlayVideo ?? () {},
+                    onOpenInYouTube: onOpenVideoInYouTube ?? () {},
+                  ),
+                ],
                 // Hugs its text: a full-width header box on a tablet is mostly
                 // background, which the contrast check misreads.
                 Align(
