@@ -192,6 +192,8 @@ void main() {
           // The Turnstile Privacy Addendum, which the privacy policy must name.
           'www.cloudflare.com',
           'cloudinary.com',
+          // YouTube's Terms of Service (YouTube Developer Policies III.A).
+          'www.youtube.com',
         };
         for (final file in files('website', ext: {'.html', '.js', '.css'})) {
           for (final m in linkPattern.allMatches(file.readAsStringSync())) {

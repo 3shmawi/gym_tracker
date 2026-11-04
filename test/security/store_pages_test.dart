@@ -17,12 +17,13 @@ void main() {
     return html.substring(start, end);
   }
 
-  test('every page was re-dated for the gym accounts release', () {
-    // Terms were last changed with the gym accounts release; the privacy
-    // policy again when the captain's progress view was added.
+  test('every page carries its last change date, in both languages', () {
+    // Both last changed 2026-11-03: the privacy policy for the captain's
+    // progress view, gym pictures (Cloudinary) and YouTube videos; the terms
+    // for YouTube's Terms of Service (YouTube Developer Policies III.A).
     for (final (name, date) in [
       ('privacy.html', '2026-11-03'),
-      ('terms.html', '2026-11-02'),
+      ('terms.html', '2026-11-03'),
     ]) {
       expect(RegExp(date).allMatches(page(name)).length, 2, reason: name);
     }
@@ -172,6 +173,9 @@ void main() {
           'https://www.cloudflare.com',
           // A plain link to Cloudinary's privacy policy (exercise pictures).
           'https://cloudinary.com',
+          // Plain links that YouTube's Developer Policies require.
+          'https://policies.google.com',
+          'https://www.youtube.com',
         }),
         isEmpty,
         reason: name,

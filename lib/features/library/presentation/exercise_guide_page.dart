@@ -5,14 +5,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/media/cloudinary_url.dart';
+import 'package:gym_tracker/core/media/media_cache.dart';
+import 'package:gym_tracker/core/media/video_info.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/features/gym/domain/entities/gym_media.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
 import 'package:gym_tracker/features/library/data/exercise_images.dart';
+import 'package:gym_tracker/features/library/data/exercise_videos.dart';
 import 'package:gym_tracker/features/library/domain/entities/exercise_pictures.dart';
 import 'package:gym_tracker/features/library/presentation/exercise_guide_view.dart';
 import 'package:gym_tracker/features/library/presentation/library_providers.dart';
 import 'package:gym_tracker/features/library/presentation/widgets/library_feedback.dart';
+import 'package:gym_tracker/features/video/presentation/video_providers.dart';
+import 'package:gym_tracker/features/video/presentation/widgets/exercise_video_card.dart';
 import 'package:gym_tracker/features/workout/presentation/plan_editor_controller.dart';
 
 /// `/library/<exerciseId>[?day=<dayId>]`: the picture and steps of one
@@ -105,6 +110,11 @@ class _ExerciseGuidePageState extends ConsumerState<ExerciseGuidePage> {
       _reportPictures(pictures, gym.length);
     }
     final offline = !(ref.watch(deviceOnlineProvider).value ?? true);
+    // The how-to video: the library's (the gym's own comes in V-B).
+    final video = ExerciseVideos.of(widget.exerciseId);
+    final videoInfo = video == null
+        ? null
+        : ref.watch(videoInfoProvider(video.id));
     final dayId = widget.dayId;
     final lang = Localizations.localeOf(context).languageCode;
     final editor = dayId == null
@@ -123,6 +133,33 @@ class _ExerciseGuidePageState extends ConsumerState<ExerciseGuidePage> {
       movePair: pictures.isMovePair,
       offline: offline,
       onOpenCredits: () => showLicensePage(context: context),
+      video: video == null
+          ? null
+          : ExerciseVideoCardData(
+              thumbnail: CachedMediaImage(VideoInfo.thumbnail(video.id)),
+              info: videoInfo?.value,
+              loading: videoInfo?.isLoading ?? false,
+              offline: offline,
+            ),
+      onPlayVideo: video == null
+          ? null
+          : () => unawaited(
+              ref
+                  .read(videoActionsProvider)
+                  .play(
+                    context,
+                    video,
+                    VideoSource.library,
+                    info: videoInfo?.value,
+                  ),
+            ),
+      onOpenVideoInYouTube: video == null
+          ? null
+          : () => unawaited(
+              ref
+                  .read(videoActionsProvider)
+                  .openInYouTube(video, VideoSource.library),
+            ),
     );
   }
 }
