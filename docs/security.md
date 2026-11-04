@@ -330,6 +330,76 @@ gym, an ended member or `anon` (grants are `select` to `authenticated` only).
 `supabase/tests/trainee_dashboard_views.test.sql` proves each of these.
 Anything new that reads these views must stay `security_invoker`.
 
+### Captain dashboard (`dashboard/`, azmm-dash.pages.dev)
+Docs read 2026-11-04: Supabase email OTP
+(https://supabase.com/docs/guides/auth/auth-email-passwordless), Cloudflare
+Pages headers and Git integration. Feature doc:
+[features/dashboard.md](features/dashboard.md).
+- **Separate origin.** The dashboard is its own Pages project, so the
+  website's CSP (`connect-src 'none'`, `website/_headers`) is unchanged and
+  `join.html` never shares an origin with code that talks to Supabase.
+- **Headers** are written to `dist/_headers` by `dashboard/build/headers.ts`
+  at build time, for every path (`/*`). The CSP, with the real project ref in
+  place of `<project-ref>`:
+  `default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://<project-ref>.supabase.co wss://<project-ref>.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests`.
+  With `VITE_TURNSTILE_SITE_KEY` set, the build adds
+  `https://challenges.cloudflare.com` to `script-src` and replaces
+  `frame-src 'none'` with `frame-src https://challenges.cloudflare.com`
+  (Cloudflare's Turnstile CSP guidance, read 2026-11-04); nothing else
+  changes. The site key is publishable; the Turnstile secret lives only in
+  Supabase → Authentication → Attack Protection.
+  Also: `Strict-Transport-Security: max-age=31536000; includeSubDomains`,
+  `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+  `Referrer-Policy: no-referrer`, `Cross-Origin-Opener-Policy: same-origin`,
+  `Cross-Origin-Resource-Policy: same-origin`, `Permissions-Policy` with
+  camera, microphone, geolocation, payment, usb and interest-cohort off,
+  `X-Robots-Tag: noindex, nofollow`, and Pages' default
+  `Access-Control-Allow-Origin: *` removed. `index.html` and `/` are
+  `no-store`; `/assets/*` is immutable.
+- **No inline script or style, no `data:` URIs**: the CSP has no
+  `'unsafe-inline'`; Vite builds with `assetsInlineLimit: 0` and no module
+  preload polyfill.
+- **Publishable keys only.** The build reads `VITE_SUPABASE_URL` and
+  `VITE_SUPABASE_PUBLISHABLE_KEY` and **fails** if the URL is not
+  `https://<ref>.supabase.co` or the key is `sb_secret_…`, mentions
+  `service_role`, or is not `sb_publishable_…`. The error never prints the
+  value. No secret exists in GitHub or Cloudflare for D0.
+- **Session.** supabase-js keeps the session in `localStorage`
+  (`sb-<project-ref>-auth-token`) with auto refresh and
+  `detectSessionInUrl: false`, so an address can't plant a session. Sign-out is
+  `scope: 'local'`. The only other stored value is
+  `azm.dashboard.prefs.v1` (language, theme). The CSP and the no-third-party
+  rule are what protect the stored token: any script injection would read it,
+  which is why there is no inline script and no HTML injection (text is always
+  rendered as text).
+- **Sign-in leaks nothing.** `signInWithOtp` uses `shouldCreateUser: false`;
+  an unknown address (HTTP 422 `otp_disabled`) shows the same "check your
+  email" screen as a known one. Codes are 6 digits, one request per address per
+  60 s, valid 1 hour (Supabase defaults). Supabase's built-in email service
+  allows 2 emails per hour: use custom SMTP before real use.
+- **Anonymous sessions never manage.** `private.i_manage` requires a permanent
+  JWT. If the dashboard finds an anonymous session it signs it out locally.
+  RLS (migration 0005) stays the real gate: the dashboard hides nothing the
+  server would allow, and allows nothing the server refuses.
+- **Untrusted text.** Names from the database are cleaned of bidi and control
+  characters (`cleanName`) and shown as text.
+- **Router.** Only `/`, `/sign-in`, `/gyms` and `/g/<uuid>/members` exist; a
+  gym id must match the UUID pattern, anything else is "not found".
+- **Previews** (`*.azmm-dash.pages.dev`) are `noindex` but public unless
+  Cloudflare Access is on, and use the same Supabase project.
+- **First owner** is created by hand in the Supabase SQL Editor (runbook in the
+  feature doc); that SQL runs with the editor's privileges and is never run
+  from CI.
+- **Tests:** `dashboard/test/` (config rejects secret/odd keys, failure
+  mapping, text cleaning, hostile router paths, no-enumeration sign-in,
+  anonymous refused, exact CSP and `_headers` limits) and the Playwright run
+  with axe; `test/security/dashboard_test.dart` (static guards: no secrets in
+  `dashboard/`, no inline script/style, no third-party hosts).
+- **Dependencies.** The CI `security` job's OSV-Scanner scans
+  `dashboard/package-lock.json` next to `pubspec.lock`, and the `dashboard` job
+  runs `npm audit --audit-level=low`. Vulnerable packages are fixed or
+  upgraded (e.g. vitest 4.1.12, `minimatch` overridden to 11.0.3), not ignored.
+
 ## If a key leaks (log, chat, commit)
 1. **Revoke or rotate it first**, then clean up. Logs can be copied in the
    minutes they are public.

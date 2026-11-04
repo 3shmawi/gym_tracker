@@ -533,3 +533,19 @@ of https://claude.ai/artifact/26EDAr572B4Qr8eBLB4D75):**
 - Library content in the dashboard (the same catalog) is read from the app's
   list until it moves to the server; `ExerciseLibrary` is the seam.
 
+
+## 21. Captain dashboard D0 as built (2026-11-04)
+Feature doc: [`features/dashboard.md`](../features/dashboard.md). Board:
+https://claude.ai/artifact/8dPMf6CPxewxFRgtjovg1P (D0 + D1, approved
+2026-11-04; boards 10–12 of the gym-accounts board could not be opened, so it
+was drawn from the Design System and the exercise media board).
+
+| Point | Decision / difference |
+|---|---|
+| Deploy | Cloudflare Pages' own **Git integration** (project `azmm-dash`, root `dashboard`), like the website: no deploy workflow and no Cloudflare token in GitHub. |
+| Turnstile (§7) | Optional: used only when `VITE_TURNSTILE_SITE_KEY` is set. Supabase CAPTCHA protection covers sign-in, so the key must be set before protection is turned on; the CSP adds `challenges.cloudflare.com` only then. |
+| `end_membership` (§3) | There is no such RPC. Ending a membership is `update memberships set status = 'ended'`, which the column grant, the "managers update members" policy and `memberships_guard` already allow (D1). |
+| First owner | No RPC creates an owner. A runbook in the feature doc: the owner adds the auth user in Supabase and runs two inserts in the SQL editor by hand. Captains join in the app, add an email, then sign in to the dashboard. |
+| Unknown email | `shouldCreateUser: false`; Supabase answers 422 `otp_disabled`, and the dashboard shows the same "check your email" screen (no enumeration). |
+| Members page | D0 ships the shell with a placeholder; the list comes with D1. |
+| Release | `scripts/next_version.sh` ignores commits that touch only `dashboard/`. |

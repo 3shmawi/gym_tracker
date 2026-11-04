@@ -8,6 +8,8 @@
 #         "!" after the type or "BREAKING CHANGE" → major
 #         First release (no tag yet) → the version in pubspec.yaml
 #         If pubspec.yaml was bumped higher by hand, that version wins.
+#         Commits that touch only dashboard/ are ignored.
+# Tested by test/scripts/next_version.test.mjs (node --test).
 set -euo pipefail
 mode=${1:-auto}
 
@@ -15,8 +17,18 @@ pubspec_version=$(sed -n 's/^version:[[:space:]]*\([0-9][0-9.]*\).*/\1/p' pubspe
 last_tag=$(git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || true)
 if [ -n "$last_tag" ]; then range="$last_tag..HEAD"; else range="HEAD"; fi
 
-subjects=$(git log --format=%s "$range")
-bodies=$(git log --format=%B "$range")
+# Commits that change only dashboard/ (the captain web dashboard, deployed on
+# its own by Cloudflare Pages) never release the mobile app.
+subjects=""
+bodies=""
+for sha in $(git rev-list "$range"); do
+  if ! git diff-tree --no-commit-id --name-only -r --root "$sha" | grep -qv '^dashboard/'; then
+    continue
+  fi
+  subjects+="$(git log -1 --format=%s "$sha")"$'\n'
+  bodies+="$(git log -1 --format=%B "$sha")"$'\n'
+done
+subjects=${subjects%$'\n'}
 if [ -z "$subjects" ]; then echo skip; exit 0; fi
 
 if [ "$mode" != auto ]; then

@@ -399,6 +399,27 @@ API token in this repo. Every PR gets a preview URL from Cloudflare.
 Pages redirects `/privacy.html` to `/privacy` (308), so store listings use
 the clean URLs (`/privacy`, `/terms`, `/delete-account`).
 
+## Captain dashboard (Cloudflare Pages)
+`dashboard/` (a Vite + Preact web app, [feature doc](features/dashboard.md))
+is deployed by Cloudflare Pages' own Git integration, like the website:
+project `azmm-dash` (https://azmm-dash.pages.dev), production branch `main`,
+build command `npm run build`, output directory `dist`, **root directory
+`dashboard`**, Build watch paths include `dashboard/*`. Environment variables
+for Production and Preview (publishable values only): `VITE_SUPABASE_URL`,
+`VITE_SUPABASE_PUBLISHABLE_KEY`; the build fails if they are missing or the
+key looks secret. Node comes from `dashboard/.node-version` (22). No GitHub
+workflow, no Cloudflare API token, **no GitHub secret**. Supabase side: the
+Magic Link email template must contain `{{ .Token }}` (not
+`{{ .ConfirmationURL }}`), Email OTP expiry 3600 and length 6, and custom SMTP
+before real use (built-in: 2 emails per hour). Click-by-click steps (read from
+the docs on 2026-11-04) and the first-owner SQL runbook are in the feature doc.
+Commits that change only `dashboard/` do not make a store release
+(`scripts/next_version.sh`).
+**Turnstile:** when CAPTCHA protection is on in Supabase it covers the
+dashboard's sign-in too. Before turning it on, add `azmm-dash.pages.dev` to the
+Turnstile widget's Domains and set `VITE_TURNSTILE_SITE_KEY` (site key,
+publishable) in the Pages project, then redeploy (feature doc → Deploy → C).
+
 ## Universal Links / App Links (manual store steps)
 Host `azmm.pages.dev`, path `/join/*` (see `docs/deep_links.md`). Do once,
 after the first Play upload and before relying on the links:

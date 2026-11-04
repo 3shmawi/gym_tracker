@@ -15,6 +15,7 @@ void main() {
     'supabase',
     'env',
     'scripts',
+    'dashboard',
   ];
   const skippedDirs = {
     'build',
@@ -24,12 +25,16 @@ void main() {
     'ephemeral',
     '.dart_tool',
     'gen',
+    'node_modules',
+    'dist',
+    'test-results',
+    'playwright-report',
   };
   const textExtensions = {
     '.dart', '.kt', '.kts', '.java', '.swift', '.m', '.xml', '.plist', //
     '.json', '.yaml', '.yml', '.properties', '.gradle', '.html', '.js',
     '.css', '.sql', '.xcconfig', '.entitlements', '.toml', '.env', '.ts',
-    '.py', '.sh',
+    '.py', '.sh', '.tsx', '.mjs',
   };
 
   final forbidden = <String, RegExp>{
