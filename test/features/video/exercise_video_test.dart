@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/media/video_info.dart';
 import 'package:gym_tracker/core/media/youtube_link.dart';
+import 'package:gym_tracker/features/video/presentation/video_playback.dart';
 import 'package:gym_tracker/features/video/presentation/widgets/exercise_video_card.dart';
 import 'package:gym_tracker/features/video/presentation/widgets/video_player_sheet.dart';
 import 'package:gym_tracker/features/video/presentation/widgets/youtube_surface.dart';
@@ -61,6 +62,7 @@ Widget card(
 Widget fakeSurface(
   YouTubeVideoRef v, {
   required ValueChanged<VideoProblem> onProblem,
+  VideoPlayback? playback,
 }) => ColoredBox(
   key: const Key('fake_player'),
   color: Colors.black,
@@ -237,7 +239,7 @@ void main() {
     'video_sheet_short': () => sheet(short),
     'video_sheet_problem': () => sheet(
       wide,
-      surface: (v, {required onProblem}) {
+      surface: (v, {required onProblem, playback}) {
         WidgetsBinding.instance.addPostFrameCallback(
           (_) => onProblem(VideoProblem.onlyOnYouTube),
         );

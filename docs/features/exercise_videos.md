@@ -13,7 +13,7 @@ gets black bands above and below.
 |---|---|---|
 | V-A | Link parser + shared test vectors, library videos, the card, the player sheet, privacy, store forms | done (#40) |
 | V-B | The gym's own video (table, pgTAP, offline copy) | this change (migration 0017) |
-| V-C | Floating mini player | later (the board's mini player must grow to 200×200) |
+| V-C | Floating mini player | this change |
 | V-D | Outside the app (picture-in-picture): [decision](../decisions/video_outside_app.md): no PiP or background play; the player pauses when the app leaves the screen | done |
 
 ## What the trainee sees (board 3.1–3.3)
@@ -33,6 +33,27 @@ gets black bands above and below.
   internet".
 - No duration on the card: oEmbed does not give one, and the YouTube Data API
   would need a key (the board's `[m:ss]` placeholder is left out).
+
+## The mini player (V-C, board 4.1–4.3)
+- The sheet's **Keep watching while you train** shrinks the video into a
+  floating card over every screen (`MiniPlayerHost`, under the app's router,
+  with its own `Overlay`). It continues from the same second
+  (`VideoPlayback` reports YouTube's position; `atSecond` keeps it inside the
+  clip's end).
+- The card: YouTube's player, **200×200** (YouTube's minimum; the board's
+  184-wide card grew to 212), nothing drawn over it; under it **pause/play**
+  (YouTube's IFrame API `pauseVideo` / `playVideo`), **expand** (back to the
+  sheet, same second) and **close**, 48×48 each.
+- Corners: top-end by default; drag and it snaps to the nearest corner
+  (`nearestCorner`, RTL-aware), kept for the next video. Never over the
+  status bar and app bar, nor over the workout dock: the dock reports its
+  real height (`ActiveWorkoutView.onDockHeight` →
+  `miniPlayerBottomReserveProvider`), reset when the workout screen closes.
+- One player at a time: playing another video closes the mini player.
+- Leaving the app pauses it like the sheet (V-D).
+- Event: `video_minimized` (`source`).
+- Not done: the integration demo (needs a device run; the flow is covered on
+  the real router in `library_flows_test`).
 
 ## Where videos come from
 Order: the gym's video (V-B), then the library's, then none (pictures and

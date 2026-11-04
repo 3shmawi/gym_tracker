@@ -1141,5 +1141,21 @@
         "type": "String"
       }
     }
+  },
+  "videoMinimize": "Keep watching while you train",
+  "videoPause": "Pause the video",
+  "videoResume": "Play the video",
+  "videoExpand": "Make the video bigger",
+  "miniPlayerLabel": "Mini video player: {title}",
+  "miniPlayerLabelNoTitle": "Mini video player",
+  "@miniPlayerLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@videoMinimize": {
+    "description": "Player sheet: shrink the video to a floating mini player and keep using the app."
   }
 }

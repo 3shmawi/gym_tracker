@@ -432,5 +432,11 @@
   "planUnitHint": "رقم البلاطة: الرقم اللي على عمود أوزان الجهاز. عدّات بس: من غير وزن.",
   "weightPlate": "بلاطة {plate}",
   "planExerciseMetaUnit": "{target} · راحة {rest} ث · {unit}",
-  "planExerciseMetaSupersetUnit": "{target} · {unit}"
+  "planExerciseMetaSupersetUnit": "{target} · {unit}",
+  "videoMinimize": "كمّل وانت بتتمرن",
+  "videoPause": "وقّف الفيديو",
+  "videoResume": "شغّل الفيديو",
+  "videoExpand": "كبّر الفيديو",
+  "miniPlayerLabel": "مشغّل الفيديو الصغير: {title}",
+  "miniPlayerLabelNoTitle": "مشغّل الفيديو الصغير"
 }
