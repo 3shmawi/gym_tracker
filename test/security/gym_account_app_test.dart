@@ -82,6 +82,8 @@ void main() {
       'gym_plan_synced',
       'gym_plan_updated_shown',
       'gym_sessions_uploaded',
+      // A solo member saved their own pictures for an exercise: the count.
+      'solo_pictures_saved',
     });
     // `via`: scan | link | code. `reason`: a word. `to`: solo | gym. Never a
     // code, a name, an id or an email. Sync: booleans and counts only.

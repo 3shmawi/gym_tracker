@@ -404,5 +404,19 @@
   "videoYouTube": "YouTube",
   "videoYouTubeShorts": "YouTube Shorts",
   "workoutPickHint": "دوس على أي تمرين عشان تعمله دلوقتي",
-  "workoutDoNow": "اعمل التمرين ده دلوقتي"
+  "workoutDoNow": "اعمل التمرين ده دلوقتي",
+  "picturesChoose": "اختار صور",
+  "picturesChange": "غيّر الصور",
+  "picturesChooseTitle": "صور التمرين ده",
+  "picturesSearchLabel": "دوّر في مكتبة الصور",
+  "picturesSearchHint": "دوّر باسم التمرين أو العضلة، بالعربي أو الإنجليزي",
+  "picturesNoResults": "مفيش صور للكلمة دي. جرّب كلمة تانية.",
+  "picturesNeedInternet": "البحث عن صور محتاج إنترنت. الصور اللي اخترتها بتظهر من غير نت.",
+  "picturesChosenCount": "اخترت {count} من {max} · أول واحدة هي الغلاف",
+  "picturesChosenFull": "اخترت {max}، ده أقصى عدد",
+  "picturesChosenNumber": "مختارة، رقم {n}",
+  "picturesFrameStart": "بداية الحركة",
+  "picturesFrameEnd": "نهاية الحركة",
+  "picturesSave": "احفظ الصور",
+  "picturesRemoveAll": "شيل صوري"
 }

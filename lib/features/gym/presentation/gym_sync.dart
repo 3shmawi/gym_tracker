@@ -18,7 +18,9 @@ import 'package:gym_tracker/features/gym/domain/entities/gym_plan.dart';
 import 'package:gym_tracker/features/gym/domain/entities/membership.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/gym_media_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/gym_plan_repository.dart';
+import 'package:gym_tracker/features/gym/domain/repositories/picture_catalog_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/session_outbox.dart';
+import 'package:gym_tracker/features/gym/domain/usecases/solo_pictures.dart';
 import 'package:gym_tracker/features/gym/domain/usecases/sync_gym_media.dart';
 import 'package:gym_tracker/features/gym/domain/usecases/sync_gym_plan.dart';
 import 'package:gym_tracker/features/gym/domain/usecases/upload_sessions.dart';
@@ -78,11 +80,27 @@ final gymPictureImageProvider = Provider<GymPictureImage>(
 /// What the active gym chose to show on exercise screens, from the phone's
 /// copy (works offline); [GymSync.syncMedia] refreshes it. Solo, or with the
 /// feature off: [GymMedia.empty]. Never an error.
+final pictureCatalogProvider = Provider<PictureCatalogRepository>(
+  (ref) => Dependencies.pictureCatalog,
+);
+
+/// The solo member's own picture choices (on the phone only).
+final soloPicturesProvider = Provider<SoloPictures>(
+  (ref) => SoloPictures(ref.watch(gymMediaStoreProvider)),
+);
+
+/// A solo member (no gym, so no captain) chooses pictures themselves;
+/// in a gym the captain does, in the dashboard.
+final canChoosePicturesProvider = Provider<bool>(
+  (ref) =>
+      ref.watch(activeMembershipProvider) == null &&
+      ref.watch(gymPicturesEnabledProvider),
+);
+
 final activeGymMediaProvider = FutureProvider<GymMedia>((ref) async {
   final membership = ref.watch(activeMembershipProvider);
-  if (membership == null || !ref.watch(gymPicturesEnabledProvider)) {
-    return GymMedia.empty;
-  }
+  if (!ref.watch(gymPicturesEnabledProvider)) return GymMedia.empty;
+  if (membership == null) return await ref.watch(soloPicturesProvider).load();
   return await SyncGymMedia(
     ref.watch(gymMediaRepositoryProvider),
     ref.watch(gymMediaStoreProvider),
