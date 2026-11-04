@@ -383,8 +383,35 @@ Pages headers and Git integration. Feature doc:
   server would allow, and allows nothing the server refuses.
 - **Untrusted text.** Names from the database are cleaned of bidi and control
   characters (`cleanName`) and shown as text.
-- **Router.** Only `/`, `/sign-in`, `/gyms` and `/g/<uuid>/members` exist; a
-  gym id must match the UUID pattern, anything else is "not found".
+- **Invite codes (D1).** A code is shown once and lives only in component
+  memory: never in the URL, `localStorage`, `sessionStorage`, a cookie, a log or
+  an event (`e2e/members-security.spec.ts` checks storage and the URL after
+  making codes). Leaving the page, the tab or the browser's Back while codes are
+  shown asks first. The server keeps only an HMAC; the dashboard never selects
+  `code_hmac` (it has no select grant either). A code is checked against the
+  server's alphabet before any QR is drawn.
+- **QR re-decode rule.** Every QR is decoded again with `jsQR` before a card can
+  be printed; a card that does not read back is never printed. Level H, logo box
+  18 % of the symbol (20 % is the hard limit).
+- **File import (names).** Browser only, nothing uploaded. 1 MB limit before and
+  after reading; `.xlsx` is unzipped through a filter (only the workbook, rels,
+  shared strings and sheets) with a 20 MB unzipped cap (zip bomb); OLE files
+  (old `.xls`, password-protected workbooks) are detected by magic bytes and
+  refused; XML goes through `DOMParser` as data only (no entity loading, parser
+  errors refuse the file); first sheet only, 5000 rows, 26 columns. Every cell is
+  cleaned (`cleanName`) and rendered as text.
+- **Logo drawn from a bitmap.** The gym logo (private bucket `gym-logos`,
+  512 KB, PNG or JPEG) is decoded with `createImageBitmap` and drawn on a
+  canvas, as is the QR. No `blob:` or `data:` URL is ever put in the page, so the
+  CSP (`img-src 'self'`) is unchanged.
+- **RLS refusals are messages.** A write that RLS or a guard refuses (no row
+  came back, `42501`, the last-owner `23514`, `person_in_other_gym`) shows a fixed
+  message; nothing is retried blindly and the server's text is never shown. The UI
+  hides what the server would refuse (captains cannot change captains or owners,
+  only owners add captains) but allows nothing the server refuses.
+- **Router.** Only `/`, `/sign-in`, `/gyms`, `/g/<uuid>/members`,
+  `/g/<uuid>/members/<uuid>`, `/g/<uuid>/members/add` and `/add-captain` exist; ids
+  must match the UUID pattern, anything else is "not found".
 - **Previews** (`*.azmm-dash.pages.dev`) are `noindex` but public unless
   Cloudflare Access is on, and use the same Supabase project.
 - **First owner** is created by hand in the Supabase SQL Editor (runbook in the
@@ -392,8 +419,9 @@ Pages headers and Git integration. Feature doc:
   from CI.
 - **Tests:** `dashboard/test/` (config rejects secret/odd keys, failure
   mapping, text cleaning, hostile router paths, no-enumeration sign-in,
-  anonymous refused, exact CSP and `_headers` limits) and the Playwright run
-  with axe; `test/security/dashboard_test.dart` (static guards: no secrets in
+  anonymous refused, exact CSP and `_headers` limits, QR round trip, hostile
+  files) and the Playwright run with axe (`members-security.spec.ts`: hostile
+  names render as text, no request leaves the site, no code in storage); `test/security/dashboard_test.dart` (static guards: no secrets in
   `dashboard/`, no inline script/style, no third-party hosts).
 - **Dependencies.** The CI `security` job's OSV-Scanner scans
   `dashboard/package-lock.json` next to `pubspec.lock`, and the `dashboard` job

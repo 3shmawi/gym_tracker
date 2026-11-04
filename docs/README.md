@@ -22,6 +22,6 @@ Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 - [Exercise picture library](features/exercise_image_library.md) (all Everkinetic pictures on Cloudinary, searchable keywords in the database, upload workflow)
 - [Gym-chosen exercise pictures](features/gym_exercise_images.md) (table, RLS, limits, the dashboard contract; app side next)
 - [How-to videos](features/exercise_videos.md) (YouTube: link parser and shared vectors, library videos, the card and the player, privacy)
-- [Captain web dashboard](features/dashboard.md) (`dashboard/`, own origin `azmm-dash.pages.dev`; D0: email-code sign-in, my gyms; deploy, owner bootstrap)
+- [Captain web dashboard](features/dashboard.md) (`dashboard/`, own origin `azmm-dash.pages.dev`; D0: email-code sign-in, my gyms; D1: members, invite codes, QR cards, names from Excel; deploy, owner bootstrap)
 - [Trainee dashboard data](features/trainee_dashboard_data.md) (SQL views the captain's dashboard will read; privacy)
 - [Gym accounts — the app](features/gym_account_app.md) (first screen, scanner, join, switcher, profile, delete account, solo data import)

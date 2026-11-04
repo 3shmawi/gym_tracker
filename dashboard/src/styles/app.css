@@ -217,7 +217,7 @@ table.codes-t{min-width:480px}
 .av{width:36px;height:36px;border-radius:18px;display:inline-grid;place-items:center;flex:none;font-family:"Inter","Cairo",sans-serif;font-size:13px;font-weight:800;color:var(--t1);background:color-mix(in srgb,var(--p) 22%,var(--surface))}
 .av.big{width:56px;height:56px;border-radius:28px;font-size:18px}
 .badges{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px}
-.badge.warn{color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent)}
+.badge.warn{color:var(--down);background:color-mix(in srgb,var(--warn) 14%,transparent)}
 .badge.err{color:var(--err);background:color-mix(in srgb,var(--err) 12%,transparent)}
 .banner.info{background:color-mix(in srgb,var(--keep) 12%,var(--surface))}
 .banner.ok{background:color-mix(in srgb,var(--up) 14%,var(--surface))}

@@ -415,6 +415,14 @@ before real use (built-in: 2 emails per hour). Click-by-click steps (read from
 the docs on 2026-11-04) and the first-owner SQL runbook are in the feature doc.
 Commits that change only `dashboard/` do not make a store release
 (`scripts/next_version.sh`).
+**D1 (members and invite codes) needs nothing new from you:** no new
+environment variable, secret, migration or Cloudflare setting (it uses
+migrations 0005, 0006 and 0008 that are already applied). The one step that is
+yours: trainees can only join with the cards once the app's PostHog flag
+`gym_join` is on, so turn it on when D1 is live, staging first, after the
+checklist in [Gym accounts in the app](#gym-accounts-in-the-app-gym_join-flag)
+(see also [features/gym_join.md](features/gym_join.md)). Until then the cards
+open the join page, but the app does not show the join screens.
 **Turnstile:** when CAPTCHA protection is on in Supabase it covers the
 dashboard's sign-in too. Before turning it on, add `azmm-dash.pages.dev` to the
 Turnstile widget's Domains and set `VITE_TURNSTILE_SITE_KEY` (site key,

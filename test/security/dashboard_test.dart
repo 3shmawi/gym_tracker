@@ -103,7 +103,12 @@ void main() {
     final hidden = RegExp(
       '[\u061C\u200B-\u200F\u202A-\u202E\u2060\u2066-\u2069\uFEFF]',
     );
-    for (final dir in ['dashboard/src', 'dashboard/test', 'dashboard/build']) {
+    for (final dir in [
+      'dashboard/src',
+      'dashboard/test',
+      'dashboard/build',
+      'dashboard/e2e',
+    ]) {
       if (!Directory(dir).existsSync()) continue;
       for (final file in sources(dir)) {
         expect(
