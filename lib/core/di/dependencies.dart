@@ -17,6 +17,7 @@ import 'package:gym_tracker/features/gym/data/repositories/supabase_account_repo
 import 'package:gym_tracker/features/gym/data/repositories/supabase_gym_media_repository.dart';
 import 'package:gym_tracker/features/gym/data/repositories/supabase_gym_plan_repository.dart';
 import 'package:gym_tracker/features/gym/data/repositories/supabase_gym_repository.dart';
+import 'package:gym_tracker/features/gym/data/repositories/supabase_picture_catalog_repository.dart';
 import 'package:gym_tracker/features/gym/data/repositories/supabase_session_uploader.dart';
 import 'package:gym_tracker/features/gym/data/repositories/supabase_solo_import_repository.dart';
 import 'package:gym_tracker/features/gym/data/repositories/unconfigured_gym_repositories.dart';
@@ -25,6 +26,7 @@ import 'package:gym_tracker/features/gym/domain/repositories/gym_local_repositor
 import 'package:gym_tracker/features/gym/domain/repositories/gym_media_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/gym_plan_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/gym_repository.dart';
+import 'package:gym_tracker/features/gym/domain/repositories/picture_catalog_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/session_outbox.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/solo_import_repository.dart';
 import 'package:gym_tracker/features/settings/data/repositories/shared_prefs_settings_repository.dart';
@@ -66,6 +68,10 @@ abstract final class Dependencies {
       const UnconfiguredGymMediaRepository();
   static GymMediaStore gymMediaStore = InMemoryGymMediaStore();
 
+  /// The shared picture library, searched by solo members.
+  static PictureCatalogRepository pictureCatalog =
+      const UnconfiguredPictureCatalogRepository();
+
   /// The phone's copy of video titles (null until [init], and in widget
   /// tests: the card then only knows what oEmbed answers).
   static VideoInfoStore? videoInfoStore;
@@ -98,6 +104,7 @@ abstract final class Dependencies {
       gymPlanRepository = SupabaseGymPlanRepository(Backend.client);
       sessionUploader = SupabaseSessionUploader(Backend.client);
       gymMediaRepository = SupabaseGymMediaRepository(Backend.client);
+      pictureCatalog = SupabasePictureCatalogRepository(Backend.client);
     } else {
       gymRepository = const UnconfiguredGymRepository();
       accountRepository = const UnconfiguredAccountRepository();
@@ -105,6 +112,7 @@ abstract final class Dependencies {
       gymPlanRepository = const UnconfiguredGymPlanRepository();
       sessionUploader = const UnconfiguredSessionUploader();
       gymMediaRepository = const UnconfiguredGymMediaRepository();
+      pictureCatalog = const UnconfiguredPictureCatalogRepository();
     }
   }
 }

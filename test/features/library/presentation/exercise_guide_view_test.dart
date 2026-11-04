@@ -15,6 +15,7 @@ LibraryExercise exercise(String id) =>
 class Calls {
   int adds = 0;
   int backs = 0;
+  int choose = 0;
 }
 
 Widget view({
@@ -27,6 +28,7 @@ Widget view({
   List<ImageProvider> gymPictures = const [],
   bool movePair = false,
   bool offline = false,
+  bool solo = false,
   Calls? calls,
 }) {
   final c = calls ?? Calls();
@@ -44,6 +46,7 @@ Widget view({
     movePair: movePair,
     offline: offline,
     onOpenCredits: () {},
+    onChoosePictures: solo ? () => c.choose++ : null,
   );
 }
 
@@ -58,6 +61,24 @@ ImageProvider broken(String name) => CachedMediaImage(
 
 void main() {
   group('ExerciseGuideView', () {
+    testWidgets('solo: choose pictures (no captain to do it)', (tester) async {
+      final calls = Calls();
+      await tester.pumpApp(view(solo: true, calls: calls));
+      expect(find.text('Choose pictures'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('guide_choose_pictures')));
+      expect(calls.choose, 1);
+
+      await tester.pumpApp(
+        view(solo: true, gymPictures: [picture('flat_db_press')]),
+      );
+      expect(find.text('Change pictures'), findsOneWidget);
+    });
+
+    testWidgets('in a gym: no button (the captain chooses)', (tester) async {
+      await tester.pumpApp(view());
+      expect(find.byKey(const Key('guide_choose_pictures')), findsNothing);
+    });
+
     testWidgets('names, muscle, equipment, the steps in order', (tester) async {
       await tester.pumpApp(view());
       expect(find.text('Flat Dumbbell Press'), findsOneWidget);

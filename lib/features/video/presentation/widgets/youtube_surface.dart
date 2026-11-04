@@ -115,6 +115,11 @@ class _YouTubeSurfaceState extends State<YouTubeSurface>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) unawaited(_controller.pauseVideo());
+  }
+
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_values?.cancel());
