@@ -11,8 +11,8 @@ gets black bands above and below.
 
 | Stage | What | Status |
 |---|---|---|
-| V-A | Link parser + shared test vectors, library videos, the card, the player sheet, privacy, store forms | this change |
-| V-B | The gym's own video (table, pgTAP, offline copy) | next |
+| V-A | Link parser + shared test vectors, library videos, the card, the player sheet, privacy, store forms | done (#40) |
+| V-B | The gym's own video (table, pgTAP, offline copy) | this change (migration 0017) |
 | V-C | Floating mini player | later (the board's mini player must grow to 200×200) |
 | V-D | Outside the app (picture-in-picture): [decision](../decisions/video_outside_app.md): no PiP or background play; the player pauses when the app leaves the screen | done |
 
@@ -40,6 +40,41 @@ steps only). Library videos: `lib/features/library/data/exercise_videos.dart`,
 approved by the owner on 2026-11-03 from
 [`exercise_video_candidates.md`](exercise_video_candidates.md) (Arabic first;
 every id checked with oEmbed that day).
+
+## The gym's own video (V-B, migration `0017_gym_exercise_videos.sql`)
+One video per exercise per gym, set by the owner or a captain in the
+dashboard; the gym's active members read it. Only the id is stored, never a
+URL: the dashboard turns a pasted link into the id with the parser rules
+below (same test vectors).
+
+| Column | Rule |
+|---|---|
+| `gym_id` | the gym; **the only column used for authorization** |
+| `exercise_id` | same rule as `gym_exercise_images` (library id or plan id, ≤ 64) |
+| `video_id` | exactly 11 of `[A-Za-z0-9_-]` (`23514` otherwise) |
+| `start_seconds`, `end_seconds` | optional; 0 ≤ start < end ≤ 43200 (12 h) |
+| `updated_by`, `created_at`, `updated_at` | set by the database |
+
+- `unique (gym_id, exercise_id)`: one video per exercise; changing it is an
+  `UPDATE` of `video_id`/`start_seconds`/`end_seconds` (the only columns that
+  may be updated). At most **300** per gym (trigger, advisory lock).
+- RLS like the pictures (0015): read = `private.my_role_in(gym_id) is not
+  null`; insert/update/delete = `private.i_manage(gym_id)` (permanent session).
+  `anon` has no grant. pgTAP: `supabase/tests/gym_exercise_videos_rls.test.sql`
+  (34 checks: every role, hostile ids, ranges, the 300 cap).
+- **Backward compatible**: a new table only. The published app doesn't read
+  it; this app reads it with the pictures and, if the table isn't there yet
+  (`PGRST205` / `42P01`), carries on with no videos.
+- **App**: `SupabaseGymMediaRepository` reads `exercise_id, video_id,
+  start_seconds, end_seconds` (explicit columns, limit 300) with the
+  pictures; rows outside the rules are dropped (`GymExerciseVideo.tryParse`).
+  The phone's copy (`gym.media.<gymId>`) gains an optional `videos` list; a
+  copy saved before has none. The exercise screen shows the gym's video,
+  else the library's (`VideoSource.gym` / `library` in the events).
+- **Dashboard**: upsert on `(gym_id, exercise_id)` with
+  `Prefer: resolution=merge-duplicates`, or delete the row to fall back to
+  the library's video. Errors: `42501` not a manager, `23514` bad id/range or
+  `too_many_videos_in_gym`, `23505` only if inserting twice without upsert.
 
 ## Video links (the parser; the dashboard implements the same rules)
 `lib/core/media/youtube_link.dart`; test vectors shared with the dashboard:
