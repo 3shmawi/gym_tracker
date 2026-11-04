@@ -7,8 +7,9 @@ import 'package:gym_tracker/features/video/presentation/widgets/youtube_surface.
 import 'package:gym_tracker/l10n/l10n.dart';
 
 /// The floating mini player (board 4.1–4.2, grown to YouTube's 200×200
-/// minimum): YouTube's own player, untouched, and under it pause/play,
-/// expand and close (48×48 each). Pure UI.
+/// minimum): YouTube's own player, untouched (it has its own play/pause),
+/// and under it expand and close (48×48 each); nothing is drawn over the
+/// player (YouTube Required Minimum Functionality). Pure UI.
 class MiniPlayerView extends StatelessWidget {
   const new({
     required this.video,
@@ -68,37 +69,22 @@ class MiniPlayerView extends StatelessWidget {
                   ),
                 ),
               ),
-              ListenableBuilder(
-                listenable: playback,
-                builder: (context, _) => Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    AppIconButton(
-                      key: const Key('mini_pause'),
-                      icon: playback.paused
-                          ? Icons.play_arrow_rounded
-                          : Icons.pause_rounded,
-                      tooltip: playback.paused
-                          ? l10n.videoResume
-                          : l10n.videoPause,
-                      onPressed: playback.paused
-                          ? playback.play
-                          : playback.pause,
-                    ),
-                    AppIconButton(
-                      key: const Key('mini_expand'),
-                      icon: Icons.open_in_full_rounded,
-                      tooltip: l10n.videoExpand,
-                      onPressed: onExpand,
-                    ),
-                    AppIconButton(
-                      key: const Key('mini_close'),
-                      icon: Icons.close_rounded,
-                      tooltip: l10n.videoClose,
-                      onPressed: onClose,
-                    ),
-                  ],
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  AppIconButton(
+                    key: const Key('mini_expand'),
+                    icon: Icons.open_in_full_rounded,
+                    tooltip: l10n.videoExpand,
+                    onPressed: onExpand,
+                  ),
+                  AppIconButton(
+                    key: const Key('mini_close'),
+                    icon: Icons.close_rounded,
+                    tooltip: l10n.videoClose,
+                    onPressed: onClose,
+                  ),
+                ],
               ),
             ],
           ),
