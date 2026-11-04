@@ -144,6 +144,7 @@ void main() {
           _Client(),
           retries: 0,
           readRows: (_) async => rows,
+          readVideoRows: (_) async => const [],
         );
 
     test('reads the rows, dropping any outside the rules', () async {
@@ -171,6 +172,10 @@ void main() {
           asked = true;
           return const [];
         },
+        readVideoRows: (_) async {
+          asked = true;
+          return const [];
+        },
       ).fetch("x' or 1=1 --");
       expect(r, isA<Failed<GymMedia>>());
       expect(asked, isFalse);
@@ -181,8 +186,99 @@ void main() {
         _Client(),
         retries: 0,
         readRows: (_) async => throw const SocketLikeException(),
+        readVideoRows: (_) async => const [],
       ).fetch(gymId);
       expect(r, isA<Failed<GymMedia>>());
+    });
+  });
+
+  group('gym videos (0017)', () {
+    Map<String, Object?> video(
+      String exercise,
+      Object? id, {
+      Object? start,
+      Object? end,
+    }) => {
+      'exercise_id': exercise,
+      'video_id': id,
+      'start_seconds': start,
+      'end_seconds': end,
+    };
+
+    test('a good row, with and without start/end', () {
+      final v = GymExerciseVideo.tryParse(
+        video('flat_db_press', 'mCEIUZySRPY', start: 10, end: 70),
+      )!;
+      expect((v.video.id, v.video.start, v.video.end), ('mCEIUZySRPY', 10, 70));
+      expect(
+        GymExerciseVideo.tryParse(video('ex-m3k9w2a1b', 'amgXq2ThD0c')),
+        isNotNull,
+      );
+    });
+
+    test('rows outside the rules are dropped', () {
+      for (final bad in [
+        video('flat_db_press', 'https://youtu.be/mCEIUZySRPY'),
+        video('flat_db_press', 'mCEIUZySRP'),
+        video('flat_db_press', "x';drop--xx"),
+        video('flat_db_press', 42),
+        video('../plans', 'mCEIUZySRPY'),
+        video('flat_db_press', 'mCEIUZySRPY', start: 90, end: 30),
+        video('flat_db_press', 'mCEIUZySRPY', start: -1),
+        video('flat_db_press', 'mCEIUZySRPY', end: 43201),
+        video('flat_db_press', 'mCEIUZySRPY', start: '10'),
+        'not a row',
+      ]) {
+        expect(GymExerciseVideo.tryParse(bad), isNull, reason: '$bad');
+      }
+    });
+
+    test('the repository reads videos with the pictures', () async {
+      final r = await SupabaseGymMediaRepository(
+        _Client(),
+        retries: 0,
+        readRows: (_) async => const [],
+        readVideoRows: (_) async => [
+          video('flat_db_press', 'mCEIUZySRPY'),
+          video('flat_db_press', 'amgXq2ThD0c'), // a second one: ignored
+          video('pec_deck', 'bad'),
+        ],
+      ).fetch(gymId);
+      final media = (r as Success<GymMedia>).value;
+      expect(media.videoFor('flat_db_press')!.video.id, 'mCEIUZySRPY');
+      expect(media.videoFor('pec_deck'), isNull);
+    });
+
+    test('before 0017 is live: no table means no videos', () {
+      expect(SupabaseGymMediaRepository.missingTable('PGRST205'), isTrue);
+      expect(SupabaseGymMediaRepository.missingTable('42P01'), isTrue);
+      expect(SupabaseGymMediaRepository.missingTable('42501'), isFalse);
+    });
+
+    test('the phone copy keeps videos; a copy from before has none', () {
+      final media = GymMedia.fromPictures(
+        const [],
+        videos: [
+          GymExerciseVideo.tryParse(
+            video('flat_db_press', 'mCEIUZySRPY', start: 5),
+          )!,
+        ],
+      );
+      final back = GymMedia.fromJson(media.toJson());
+      expect(back, media);
+      expect(back.videoFor('flat_db_press')!.video.start, 5);
+      expect(
+        GymMedia.fromJson(const {'v': 1, 'pictures': <Object>[]}).allVideos,
+        isEmpty,
+      );
+      expect(
+        GymMedia.fromJson(const {
+          'v': 1,
+          'pictures': <Object>[],
+          'videos': 'junk',
+        }).allVideos,
+        isEmpty,
+      );
     });
   });
 

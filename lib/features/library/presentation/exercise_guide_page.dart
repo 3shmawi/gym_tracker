@@ -110,8 +110,12 @@ class _ExerciseGuidePageState extends ConsumerState<ExerciseGuidePage> {
       _reportPictures(pictures, gym.length);
     }
     final offline = !(ref.watch(deviceOnlineProvider).value ?? true);
-    // The how-to video: the library's (the gym's own comes in V-B).
-    final video = ExerciseVideos.of(widget.exerciseId);
+    // The how-to video: the gym's own (0017), else the library's.
+    final gymVideo = (media.value ?? GymMedia.empty)
+        .videoFor(widget.exerciseId)
+        ?.video;
+    final video = gymVideo ?? ExerciseVideos.of(widget.exerciseId);
+    final source = gymVideo != null ? VideoSource.gym : VideoSource.library;
     final videoInfo = video == null
         ? null
         : ref.watch(videoInfoProvider(video.id));
@@ -146,19 +150,12 @@ class _ExerciseGuidePageState extends ConsumerState<ExerciseGuidePage> {
           : () => unawaited(
               ref
                   .read(videoActionsProvider)
-                  .play(
-                    context,
-                    video,
-                    VideoSource.library,
-                    info: videoInfo?.value,
-                  ),
+                  .play(context, video, source, info: videoInfo?.value),
             ),
       onOpenVideoInYouTube: video == null
           ? null
           : () => unawaited(
-              ref
-                  .read(videoActionsProvider)
-                  .openInYouTube(video, VideoSource.library),
+              ref.read(videoActionsProvider).openInYouTube(video, source),
             ),
     );
   }
