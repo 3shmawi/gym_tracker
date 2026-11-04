@@ -107,18 +107,12 @@ void main() {
       expect(find.bySemanticsLabel('Mini video player: Bench'), findsOneWidget);
     });
 
-    testWidgets('pause / play follow the player; expand; close', (
+    testWidgets('expand and close; no pause (YouTube has its own)', (
       tester,
     ) async {
       final calls = Calls();
-      final playback = VideoPlayback();
-      await tester.pumpApp(mini(playback: playback, calls: calls));
-      await tester.tap(find.byTooltip('Pause the video'));
-      expect(calls.pauses, 1);
-      playback.report(paused: true);
-      await tester.pump();
-      await tester.tap(find.byTooltip('Play the video'));
-      expect(calls.plays, 1);
+      await tester.pumpApp(mini(calls: calls));
+      expect(find.byKey(const Key('mini_pause')), findsNothing);
       await tester.tap(find.byKey(const Key('mini_expand')));
       await tester.tap(find.byKey(const Key('mini_close')));
       expect((calls.expands, calls.closes), (1, 1));
@@ -127,7 +121,7 @@ void main() {
     testWidgets('nothing is drawn over the player', (tester) async {
       await tester.pumpApp(mini());
       final player = tester.getRect(find.byKey(const Key('fake_player')));
-      for (final key in ['mini_pause', 'mini_expand', 'mini_close']) {
+      for (final key in ['mini_expand', 'mini_close']) {
         expect(
           tester.getRect(find.byKey(Key(key))).overlaps(player),
           isFalse,

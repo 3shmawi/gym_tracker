@@ -534,6 +534,30 @@ void main() {
       appRouter.go(AppRoutes.plan);
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('mini_player_box')), findsOneWidget);
+      // Dragged to the bottom: it stays at the corner it was dropped near
+      // (it used to snap back to the top).
+      final screen = tester.getSize(find.byType(MiniPlayerHost));
+      final before = tester.getCenter(find.byKey(const Key('mini_player_box')));
+      await tester.drag(
+        find.byKey(const Key('mini_expand')),
+        Offset(0, screen.height * 0.6),
+      );
+      await tester.pumpAndSettle();
+      final after = tester.getCenter(find.byKey(const Key('mini_player_box')));
+      expect(after.dy, greaterThan(screen.height / 2));
+      expect(after.dx, closeTo(before.dx, 1));
+      // Dragged past the side: hidden, a tab at the edge; tap brings it back.
+      await tester.drag(
+        find.byKey(const Key('mini_expand')),
+        Offset(-screen.width, 0),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('mini_player_tab')), findsOneWidget);
+      expect(find.byKey(const Key('mini_expand')), findsNothing);
+      await tester.tap(find.byKey(const Key('mini_player_tab')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('mini_player_tab')), findsNothing);
+      expect(find.byKey(const Key('mini_player_box')), findsOneWidget);
       // Bigger again: the sheet; the mini player goes.
       await tester.tap(find.byKey(const Key('mini_expand')));
       await tester.pumpAndSettle();

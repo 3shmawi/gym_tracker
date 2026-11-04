@@ -1157,5 +1157,7 @@
   },
   "@videoMinimize": {
     "description": "Player sheet: shrink the video to a floating mini player and keep using the app."
-  }
+  },
+  "miniPlayerHide": "Hide the video at the edge",
+  "miniPlayerShow": "Show the video"
 }

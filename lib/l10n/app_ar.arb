@@ -438,5 +438,7 @@
   "videoResume": "شغّل الفيديو",
   "videoExpand": "كبّر الفيديو",
   "miniPlayerLabel": "مشغّل الفيديو الصغير: {title}",
-  "miniPlayerLabelNoTitle": "مشغّل الفيديو الصغير"
+  "miniPlayerLabelNoTitle": "مشغّل الفيديو الصغير",
+  "miniPlayerHide": "خبّي الفيديو على الطرف",
+  "miniPlayerShow": "اظهر الفيديو"
 }
