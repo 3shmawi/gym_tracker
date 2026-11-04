@@ -343,7 +343,7 @@ export function AddMembersPage({
             <div class="live" role="status">{notice}</div>
             {oks.length > 0 ? (
               <>
-                <div class="tblbox">
+                <div class="tblbox" tabIndex={0} role="region" aria-label={t('add.step2')}>
                   <table class="t codes-t">
                     <thead>
                       <tr>

@@ -181,7 +181,7 @@ export function MembersPage({ gym, members }: { readonly gym: ManagedGym; readon
               const sub = [roleLabel(t, m.role), m.status === 'pending' || m.status === 'ended' ? status.when : permsText(t, m)].filter(Boolean).join(' · ');
               return (
                 <li key={m.id}>
-                  <Link route={route} class="panel mcard" label={t('members.manageName', { name: m.name })}>
+                  <Link route={route} class="panel mcard">
                     <span class="av" aria-hidden="true">{initials(m.name)}</span>
                     <span class="meta">
                       <b class="plain">{m.name}</b>
