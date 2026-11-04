@@ -133,7 +133,8 @@ test('keyboard: every tab stop shows a focus outline', async ({ page }) => {
 // - the skip link: visually hidden until focused;
 // - links inside a sentence (the contact email in "Still stuck? ..."): inline
 //   text links are exempt from the WCAG 2.2 target-size rule (inline exception).
-// Footer links are checked: they are styled as 44px-high blocks, not inline text.
+// Footer links: only the height is checked (they are separate short words, 44px high; a
+//   width of 44 would not make them easier to hit and WCAG 2.2 allows 24px targets).
 async function smallTargets(page: Page): Promise<string[]> {
   const targets = page.locator('header.hdr, #menu-panel, main, footer').locator('button, a:not(.skip)');
   const small: string[] = [];

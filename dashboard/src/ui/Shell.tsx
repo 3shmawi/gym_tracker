@@ -76,7 +76,7 @@ export function Shell({ prefs, onPrefs, online, email, onSignOut, gym, gyms, nav
           linkHandler({ name: 'gyms' })(event);
         }}
       >
-        <span class={`lg ${inPanel ? '' : 'small'}`} aria-hidden="true">{initials(gym.name)}</span>
+        <span class={`lg ini ${inPanel ? '' : 'small'}`} data-initials={initials(gym.name)} aria-hidden="true" />
         {inPanel ? (
           <span class="meta">
             <b class="gym-name">{gym.name}</b>

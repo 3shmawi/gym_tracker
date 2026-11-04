@@ -11,7 +11,7 @@ export const strings = { en, ar } as const;
 /** The dashboard's own message for a key, with {placeholders} filled. */
 export function msg(lang: Lang, key: keyof typeof en, values: Record<string, string | number> = {}): string {
   let text: string = strings[lang][key];
-  for (const [name, value] of Object.entries(values)) text = text.replaceAll(`{${name}}`, String(value));
+  for (const [name, value] of Object.entries(values)) text = text.replaceAll(`{${name}}`, typeof value === 'number' ? new Intl.NumberFormat(lang === 'ar' ? 'ar-EG' : 'en').format(value) : value);
   return text;
 }
 

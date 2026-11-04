@@ -61,11 +61,14 @@ test('the language toggle switches to Arabic and back', async ({ page }) => {
   const root = page.locator('html');
   await expect(root).toHaveAttribute('lang', 'ar');
   await expect(root).toHaveAttribute('dir', 'rtl');
+  // On the phone the menu stays open after the toggle; close it to see the page.
+  if ((page.viewportSize()?.width ?? 1280) <= 720) await page.keyboard.press('Escape');
   await expect(page.getByRole('heading', { level: 1, name: msg('ar', 'signIn.title') })).toBeVisible();
   header = await tools(page, 'ar');
   await header.getByRole('button', { name: msg('ar', 'app.switchLanguageLabel') }).click();
   await expect(root).toHaveAttribute('lang', 'en');
   await expect(root).toHaveAttribute('dir', 'ltr');
+  if ((page.viewportSize()?.width ?? 1280) <= 720) await page.keyboard.press('Escape');
   await expect(page.getByRole('heading', { level: 1, name: en('signIn.title') })).toBeVisible();
 });
 

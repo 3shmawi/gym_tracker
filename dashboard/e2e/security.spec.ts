@@ -38,7 +38,7 @@ test('after sign-in only the session and the prefs are stored', async ({ page })
 
   const stored = await page.evaluate(() => Object.fromEntries(Object.entries(window.localStorage)));
   expect(Object.keys(stored).sort()).toEqual(['azm.dashboard.prefs.v1', 'sb-abcdefghijklmnopqrst-auth-token']);
-  const prefs = JSON.parse(stored['azm.dashboard.prefs.v1'] ?? '{}') as Record<string, unknown>;
+  const prefs = JSON.parse(String(stored['azm.dashboard.prefs.v1'] ?? '{}')) as Record<string, unknown>;
   expect(Object.keys(prefs).sort()).toEqual(['lang', 'theme']);
   expect(await page.evaluate(() => window.sessionStorage.length)).toBe(0);
 });
