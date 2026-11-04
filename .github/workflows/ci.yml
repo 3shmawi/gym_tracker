@@ -79,7 +79,7 @@ jobs:
       - name: Vulnerable dependencies (OSV-Scanner)
         run: |
           docker run --rm -v "$PWD:/src" ghcr.io/google/osv-scanner:v2.7.0 \
-            scan source --lockfile=/src/pubspec.lock
+            scan source --lockfile=/src/pubspec.lock --lockfile=/src/dashboard/package-lock.json
 
       # Workflow security: pinned actions, least-privilege tokens, no
       # credentials left on disk, no untrusted text run as shell code.
@@ -94,6 +94,10 @@ jobs:
       # produce a code.
       - name: Join page logic tests (Node)
         run: node --test test/website/join_code.test.js
+
+      # scripts/next_version.sh: dashboard-only commits never release the app.
+      - name: Release version script tests (Node)
+        run: node --test test/scripts/next_version.test.mjs
 
       # Runs once `supabase init` has created supabase/config.toml.
       # RLS tests run when a PR touches supabase/ (or on manual runs).
@@ -152,6 +156,67 @@ jobs:
           "$RUNNER_TEMP/make-invites/bin/pip" install --quiet --require-hashes --only-binary=:all: \
             -r scripts/make_invites/requirements.txt
           "$RUNNER_TEMP/make-invites/bin/python" -m unittest discover -s scripts/make_invites
+
+  # The captain web dashboard (dashboard/, docs/features/dashboard.md):
+  # typecheck, lint, unit tests, build with the security-header check, and
+  # Playwright end-to-end tests against a mocked Supabase (no network, no
+  # secrets: the two VITE_ values below are placeholders, not a project).
+  # Runs in Playwright's own image (Node + browsers), pinned by digest.
+  dashboard:
+    name: Dashboard · typecheck · lint · test · build · e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
+    defaults:
+      run:
+        working-directory: dashboard
+    env:
+      VITE_SUPABASE_URL: https://abcdefghijklmnopqrst.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder_key
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Node version (needs 22.12 or newer)
+        run: node -e 'const [a,b]=process.versions.node.split(".").map(Number); if (a<22||(a===22&&b<12)) { console.error("Node "+process.versions.node+" is too old"); process.exit(1) } console.log("Node "+process.versions.node)'
+
+      - name: Install packages (lockfile only)
+        run: npm ci --no-audit --no-fund
+
+      - name: Known vulnerabilities (npm audit)
+        run: npm audit --audit-level=low
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Built files keep the CSP rules
+        run: node scripts/check_dist.mjs
+
+      - name: End-to-end tests (Playwright, mocked Supabase)
+        run: npm run e2e
+
+      - name: Upload the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dashboard-playwright-report
+          path: |
+            dashboard/playwright-report/
+            dashboard/test-results/
+          if-no-files-found: ignore
+          retention-days: 14
 
   # Whether the PR touches anything the app is built from. The iOS
   # integration job is the slow one (macOS runner, Xcode build), so a PR that

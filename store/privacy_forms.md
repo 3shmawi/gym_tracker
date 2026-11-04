@@ -25,6 +25,7 @@ Definitions used (read 2026-11-04):
 | Account id (random) | joined a gym | Supabase | while the account exists | yes |
 | Install id (random, made by the app, not a device id) | joined a gym | Supabase (sign-in) | while the account exists | yes |
 | Email | only if the member adds one | Supabase Auth | while the account exists | yes |
+| Manager email (captain dashboard, web) | an owner or captain signs in at `azmm-dash.pages.dev` | Supabase Auth (sign-in code email), Cloudflare (hosting) | while the account exists | yes |
 | Workouts and plan | logged **in a gym** (solo workouts stay on the phone, unless the member chooses to copy them) | Supabase | while the account exists | yes |
 | Failed join attempts with a **hashed** network address | a wrong code | Supabase | 30 days | no |
 | Bot check signals (Turnstile) | joining a gym | Cloudflare | Cloudflare's addendum | no |
@@ -34,6 +35,18 @@ Definitions used (read 2026-11-04):
 | IP address (download) | pictures (Cloudinary), video title/thumbnail and player (YouTube) | Cloudinary, Google | not kept by us | no |
 | Camera image | scanning a QR code | **never leaves the phone** | — | — |
 | Rest notification content | rest timer | **never leaves the phone** | — | — |
+
+## Captain dashboard (web, managers only)
+The captain dashboard (`dashboard/`, https://azmm-dash.pages.dev) is a website
+for gym owners and captains, not part of the mobile app. A manager gives an
+**email address** to get a one-time sign-in code (Supabase Auth); the session
+is kept in their browser. It has no analytics, no tracking and no ads. It is
+**not** part of the app's App Privacy / Data safety answers: the app never
+asks a trainee for an email (only if they add one in Profile, already listed
+above), and the dashboard is a separate web service. It is listed here and in
+`website/privacy.html` ("Captain dashboard") so the forms stay accurate: if
+the dashboard ever shows up inside the app, or adds analytics, update both
+forms. Checked 2026-11-04.
 
 ## Google Play: Data safety
 

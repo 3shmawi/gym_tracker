@@ -14,6 +14,20 @@ updates:
       minor-and-patch:
         update-types: [minor, patch]
 
+  # The captain dashboard (dashboard/). Its commits never release the app
+  # (scripts/next_version.sh ignores dashboard-only commits).
+  - package-ecosystem: npm
+    directory: /dashboard
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore(deps)
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
