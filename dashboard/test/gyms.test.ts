@@ -24,8 +24,8 @@ describe('GymsRepository', () => {
     expect(result).toEqual({
       ok: true,
       value: [
-        { id: A, name: 'Alpha', role: 'owner', memberCount: 7 },
-        { id: B, name: 'Zed Gym', role: 'captain', memberCount: 7 },
+        { id: A, name: 'Alpha', role: 'owner', memberCount: 7, logoPath: null },
+        { id: B, name: 'Zed Gym', role: 'captain', memberCount: 7, logoPath: null },
       ],
     });
   });

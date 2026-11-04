@@ -8,11 +8,16 @@ export interface ManagedGym {
   readonly id: string;
   readonly name: string;
   readonly role: ManagerRole;
+  /** Storage path in bucket gym-logos (<gym_id>/logo.png|jpg|jpeg), or null. */
+  readonly logoPath: string | null;
   /** Members that are active or waiting to join. */
   readonly memberCount: number;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/** Same shape as the gyms.logo_path check (migration 0005). */
+export const LOGO_PATH = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/logo\.(png|jpe?g)$/;
 
 export function isGymId(value: string): boolean {
   return UUID.test(value);
@@ -38,7 +43,7 @@ export class GymsRepository {
       const rows = unwrap(
         await this.supabase
           .from('memberships')
-          .select('role, gym:gyms(id, name)')
+          .select('role, gym:gyms(id, name, logo_path)')
           .eq('person_id', person.id)
           .eq('status', 'active')
           .in('role', ['owner', 'captain'])
@@ -49,7 +54,8 @@ export class GymsRepository {
         const gym = Array.isArray(row.gym) ? row.gym[0] : row.gym;
         const role = row.role;
         if (!gym || !isGymId(gym.id) || (role !== 'owner' && role !== 'captain')) return [];
-        return [{ id: gym.id, name: cleanName(gym.name), role }];
+        const logoPath = typeof gym.logo_path === 'string' && LOGO_PATH.test(gym.logo_path) && gym.logo_path.startsWith(`${gym.id}/`) ? gym.logo_path : null;
+        return [{ id: gym.id, name: cleanName(gym.name), role, logoPath }];
       });
 
       const counted = await Promise.all(
@@ -70,5 +76,11 @@ export class GymsRepository {
 
 interface MembershipRow {
   role: string;
-  gym: { id: string; name: unknown } | { id: string; name: unknown }[] | null;
+  gym: GymRow | GymRow[] | null;
+}
+
+interface GymRow {
+  id: string;
+  name: unknown;
+  logo_path?: unknown;
 }
