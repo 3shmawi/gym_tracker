@@ -427,3 +427,10 @@ keyAlias=<the ANDROID_KEY_ALIAS in ~/.app-secrets/apps/gym_tracker/app.env>
 keyPassword=…
 ```
 Without it, release builds fall back to debug signing.
+
+### iOS build: `Unable to write file: build/app/obfuscation.map.json`
+The release passes `--save-obfuscation-map=build/app/obfuscation.map.json`.
+`build/app/` is made by the Android (Gradle) build only, so on the macOS
+runner the folder is missing and the AOT snapshot fails (seen 2026-11-04,
+release after #40; Android shipped, iOS didn't, no tag). `release.yml`
+creates the folder before `flutter build ipa`.
