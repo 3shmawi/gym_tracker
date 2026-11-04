@@ -10,6 +10,7 @@ import 'package:gym_tracker/core/theme/app_text_styles.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/widgets/log_panel.dart';
@@ -326,7 +327,11 @@ class _WorkoutState extends State<_Workout> {
         now: now,
         nextLabel: l10n.workoutNext(
           exercise.name.of(lang),
-          WorkoutFormat.weightTimesReps(cursor.weight, cursor.reps),
+          WorkoutFormat.weightTimesReps(
+            cursor.weight,
+            cursor.reps,
+            exercise.unit,
+          ),
         ),
         onAdd15: actions.onAdd15,
         onSkip: actions.onEndRest,
@@ -344,7 +349,8 @@ class _WorkoutState extends State<_Workout> {
       targetReps: exercise.targetReps,
       weight: cursor.weight,
       reps: cursor.reps,
-      weightStep: exercise.weightStep,
+      weightStep: exercise.step,
+      unit: exercise.unit,
       partnerName: partner != null && cursor.restAfter == 0
           ? workout.day.exercises[partner].name.of(lang)
           : null,
@@ -367,7 +373,8 @@ class _WorkoutState extends State<_Workout> {
         setNumber: number,
         weight: set.weight,
         reps: set.reps,
-        weightStep: exercise.weightStep,
+        weightStep: exercise.step,
+        unit: exercise.unit,
       ),
     );
     switch (result) {
@@ -423,14 +430,14 @@ class _ExerciseLine extends StatelessWidget {
             ),
             if (done || logged.isNotEmpty)
               Text(
-                WorkoutFormat.ltr(WorkoutFormat.sets(logged)),
+                WorkoutFormat.ltr(WorkoutFormat.sets(logged, exercise.unit)),
                 style: AppTextStyles.caption.copyWith(
                   color: palette.textSecondary,
                 ),
               )
-            else if (weight != null)
+            else if (weight != null && exercise.unit != ExerciseUnit.reps)
               Text(
-                WorkoutFormat.ltr(WorkoutFormat.weight(weight)),
+                WorkoutFormat.ltr(WorkoutFormat.amount(weight, exercise.unit)),
                 style: AppTextStyles.label.copyWith(
                   color: palette.textSecondary,
                   fontFeatures: const [FontFeature.tabularFigures()],
@@ -589,7 +596,9 @@ class _CurrentExercise extends StatelessWidget {
           if (preview.lastSets.isNotEmpty)
             Text(
               l10n.exerciseLast(
-                WorkoutFormat.ltr(WorkoutFormat.sets(preview.lastSets)),
+                WorkoutFormat.ltr(
+                  WorkoutFormat.sets(preview.lastSets, exercise.unit),
+                ),
               ),
               style: AppTextStyles.caption.copyWith(
                 color: palette.textSecondary,
@@ -605,9 +614,28 @@ class _CurrentExercise extends StatelessWidget {
                     final w = WorkoutFormat.weight(set.weight);
                     return AppSetChip(
                       key: Key('set_chip_${exercise.id}_$n'),
-                      label: '$w×${set.reps}',
+                      label: WorkoutFormat.set(
+                        set.weight,
+                        set.reps,
+                        exercise.unit,
+                      ),
                       state: AppSetState.done,
-                      semanticLabel: l10n.workoutSetDoneLabel(n, w, set.reps),
+                      semanticLabel: switch (exercise.unit) {
+                        ExerciseUnit.kg => l10n.workoutSetDoneLabel(
+                          n,
+                          w,
+                          set.reps,
+                        ),
+                        ExerciseUnit.plate => l10n.workoutSetDonePlateLabel(
+                          n,
+                          w,
+                          set.reps,
+                        ),
+                        ExerciseUnit.reps => l10n.workoutSetDoneRepsLabel(
+                          n,
+                          set.reps,
+                        ),
+                      },
                       onTap: () => onEditSet(indexes[n - 1]),
                     );
                   }()
@@ -643,12 +671,14 @@ class _EditSetSheet extends StatefulWidget {
     required this.weight,
     required this.reps,
     required this.weightStep,
+    required this.unit,
   });
 
   final int setNumber;
   final double weight;
   final int reps;
   final double weightStep;
+  final ExerciseUnit unit;
 
   @override
   State<_EditSetSheet> createState() => _EditSetSheetState();
@@ -685,6 +715,7 @@ class _EditSetSheetState extends State<_EditSetSheet> {
             weight: _weight,
             reps: _reps,
             weightStep: widget.weightStep,
+            unit: widget.unit,
             onWeight: (w) => setState(() => _weight = w),
             onReps: (r) => setState(() => _reps = r),
           ),
@@ -733,6 +764,7 @@ class _FinishSheet extends StatelessWidget {
     final names = {
       for (final e in workout.day.exercises) e.id: e.name.of(lang),
     };
+    final units = {for (final e in workout.day.exercises) e.id: e.unit};
 
     Widget stat(String label, String value, {Color? color}) => Expanded(
       child: DecoratedBox(
@@ -829,7 +861,11 @@ class _FinishSheet extends StatelessWidget {
                 ),
                 Text(
                   WorkoutFormat.ltr(
-                    '${WorkoutFormat.weight(r.weight)}×${r.reps}',
+                    WorkoutFormat.set(
+                      r.weight,
+                      r.reps,
+                      units[r.exerciseId] ?? ExerciseUnit.kg,
+                    ),
                   ),
                   style: AppTextStyles.label.copyWith(
                     color: palette.textPrimary,

@@ -119,6 +119,18 @@ Days: add, rename (Arabic + English), delete, reorder. Exercises in a day:
 add, rename, delete, reorder, superset with the next one. Targets: sets,
 reps, rest (s), weight step (kg). Everything is saved on the phone after
 each change ("Saves as you go"); there is no Save button.
+- **Logged by** (`Exercise.unit`, field test 2026-11-03): *Weight (kg)*
+  (default), *Machine plate* (the number on the weight stack: the stepper
+  reads "7 plate" and moves one plate; sets read `#7×12`), or *Reps only*
+  (no weight stepper; "Log 20 reps"; sets read `20, 18`). The weight step
+  chips show only for kg. Stored as `unit` in the plan JSON, written only
+  when not kg, so kg plans are unchanged; unknown values read as kg. Gym
+  plans accept the key from migration `0016_plan_exercise_unit.sql` (pgTAP:
+  `supabase/tests/plan_exercise_unit.test.sql`); the published app ignores
+  it, so a plate exercise shows its number as kg there until it updates.
+  Volume counts kg exercises only; suggestions move one plate, and keep
+  weight 0 for reps only. Changing the unit doesn't convert old sets.
+  Event: `plan_targets_changed` with `field: unit`.
 - **Adding an exercise** opens a sheet: *Pick from the library* (the shared
   library, `docs/features/exercise_library.md`) or *Write your own* (the name
   sheet, as before). A library exercise keeps the library's id, so earlier

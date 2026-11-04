@@ -79,4 +79,20 @@ void main() {
     );
     expect(suggest(abs, sets([(10, 15), (10, 15), (10, 15)])).weight, 15);
   });
+
+  test('plates move one plate (#7 ×3 hit → #8)', () {
+    final plate = _exercise.copyWith(unit: ExerciseUnit.plate);
+    expect(
+      suggest(plate, sets([(7, 12), (7, 12), (7, 12)])),
+      const WeightSuggestion(weight: 8, trend: Trend.up),
+    );
+  });
+
+  test('reps only keeps weight 0, the trend still says push', () {
+    final reps = _exercise.copyWith(unit: ExerciseUnit.reps);
+    expect(
+      suggest(reps, sets([(0, 12), (0, 12), (0, 12)])),
+      const WeightSuggestion(weight: 0, trend: Trend.up),
+    );
+  });
 }

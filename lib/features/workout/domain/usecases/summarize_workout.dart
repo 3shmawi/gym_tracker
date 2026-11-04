@@ -1,3 +1,4 @@
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:meta/meta.dart';
 
@@ -26,7 +27,8 @@ class WorkoutSummary {
 
   final int sets;
 
-  /// Sum of weight × reps, kg.
+  /// Sum of weight × reps, kg. Only kg exercises count: a plate number or
+  /// a reps-only set has no weight to add.
   final double volume;
   final List<PersonalRecord> records;
   final Duration duration;
@@ -41,6 +43,7 @@ class SummarizeWorkout {
     List<WorkoutSession> history, {
     required DateTime startedAt,
     required DateTime now,
+    Map<String, ExerciseUnit> units = const {},
   }) {
     final best = <String, double>{};
     for (final session in history) {
@@ -58,7 +61,12 @@ class SummarizeWorkout {
     }
     return WorkoutSummary(
       sets: today.length,
-      volume: today.fold(0, (sum, s) => sum + s.weight * s.reps),
+      volume: today.fold(
+        0,
+        (sum, s) => (units[s.exerciseId] ?? ExerciseUnit.kg) == ExerciseUnit.kg
+            ? sum + s.weight * s.reps
+            : sum,
+      ),
       duration: now.difference(startedAt),
       records: [
         for (final s in todayBest.values)

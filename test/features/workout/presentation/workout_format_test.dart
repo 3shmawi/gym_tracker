@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/presentation/workout_format.dart';
 
@@ -44,5 +45,36 @@ void main() {
 
   test('weight × reps is one isolated unit', () {
     expect(WorkoutFormat.weightTimesReps(52.5, 12), '\u206652.5 × 12\u2069');
+  });
+
+  group('units', () {
+    LoggedSet s(double w, int r) =>
+        LoggedSet(exerciseId: 'x', weight: w, reps: r);
+
+    test('plates: #7×12 ×3', () {
+      expect(WorkoutFormat.set(7, 12, ExerciseUnit.plate), '#7×12');
+      expect(
+        WorkoutFormat.sets([s(7, 12), s(7, 12), s(7, 12)], ExerciseUnit.plate),
+        '#7×12 ×3',
+      );
+      expect(WorkoutFormat.amount(7, ExerciseUnit.plate), '#7');
+    });
+
+    test('reps only: no weight anywhere', () {
+      expect(WorkoutFormat.set(0, 20, ExerciseUnit.reps), '20');
+      expect(
+        WorkoutFormat.sets([s(0, 20), s(0, 20)], ExerciseUnit.reps),
+        '20 ×2',
+      );
+      expect(
+        WorkoutFormat.sets([s(0, 20), s(0, 18)], ExerciseUnit.reps),
+        '20, 18',
+      );
+      expect(WorkoutFormat.amount(0, ExerciseUnit.reps), '');
+    });
+
+    test('kg stays as it was', () {
+      expect(WorkoutFormat.set(52.5, 12), '52.5×12');
+    });
   });
 }

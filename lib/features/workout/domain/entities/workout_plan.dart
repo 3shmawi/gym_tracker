@@ -30,6 +30,24 @@ class LocalizedName {
   String toString() => 'LocalizedName($ar, $en)';
 }
 
+/// How an exercise is logged (field test 2026-11-03). Stored in the plan as
+/// `unit` (`kg`, `plate`, `reps`); missing = [kg], so plans saved before
+/// keep working (migration 0016 allows the key on gym plans).
+enum ExerciseUnit {
+  /// Weight in kg (the default).
+  kg,
+
+  /// The plate (pin) number on a machine's weight stack: 1, 2, 3…
+  plate,
+
+  /// Reps only (body weight, abs): no weight is asked.
+  reps;
+
+  /// [kg] for anything missing or unknown.
+  static ExerciseUnit parse(Object? value) =>
+      values.where((u) => u.name == value).firstOrNull ?? kg;
+}
+
 /// One exercise in a plan day, with its targets.
 @immutable
 class Exercise {
@@ -41,6 +59,7 @@ class Exercise {
     this.restSeconds = 90,
     this.weightStep = 2.5,
     this.supersetWithNext = false,
+    this.unit = ExerciseUnit.kg,
   });
   factory fromJson(Map<String, Object?> json) => Exercise(
     id: json['id']! as String,
@@ -50,6 +69,7 @@ class Exercise {
     restSeconds: json['rest']! as int,
     weightStep: (json['step']! as num).toDouble(),
     supersetWithNext: json['superset']! as bool,
+    unit: ExerciseUnit.parse(json['unit']),
   );
 
   /// Stable id, used to find this exercise's history. Never reused for
@@ -66,6 +86,17 @@ class Exercise {
   /// Done back to back with the next exercise; rest after the pair.
   final bool supersetWithNext;
 
+  /// How its sets are logged.
+  final ExerciseUnit unit;
+
+  /// The step the weight stepper and the suggestion use: [weightStep] in
+  /// kg, one plate on a stack, none for reps only.
+  double get step => switch (unit) {
+    ExerciseUnit.kg => weightStep,
+    ExerciseUnit.plate => 1,
+    ExerciseUnit.reps => 0,
+  };
+
   Exercise copyWith({
     LocalizedName? name,
     int? targetSets,
@@ -73,6 +104,7 @@ class Exercise {
     int? restSeconds,
     double? weightStep,
     bool? supersetWithNext,
+    ExerciseUnit? unit,
   }) => Exercise(
     id: id,
     name: name ?? this.name,
@@ -81,6 +113,7 @@ class Exercise {
     restSeconds: restSeconds ?? this.restSeconds,
     weightStep: weightStep ?? this.weightStep,
     supersetWithNext: supersetWithNext ?? this.supersetWithNext,
+    unit: unit ?? this.unit,
   );
 
   Map<String, Object?> toJson() => {
@@ -91,6 +124,8 @@ class Exercise {
     'rest': restSeconds,
     'step': weightStep,
     'superset': supersetWithNext,
+    // Only when not kg: a kg plan is exactly what it was before 0016.
+    if (unit != ExerciseUnit.kg) 'unit': unit.name,
   };
 
   @override
@@ -102,7 +137,8 @@ class Exercise {
       other.targetReps == targetReps &&
       other.restSeconds == restSeconds &&
       other.weightStep == weightStep &&
-      other.supersetWithNext == supersetWithNext;
+      other.supersetWithNext == supersetWithNext &&
+      other.unit == unit;
 
   @override
   int get hashCode => Object.hash(
@@ -113,6 +149,7 @@ class Exercise {
     restSeconds,
     weightStep,
     supersetWithNext,
+    unit,
   );
 }
 

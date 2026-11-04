@@ -203,6 +203,7 @@ class EditPlan {
     int? reps,
     int? restSeconds,
     double? weightStep,
+    ExerciseUnit? unit,
     String? lockedDayId,
   }) {
     if (weightStep != null &&
@@ -221,6 +222,7 @@ class EditPlan {
         targetReps: reps?.clamp(PlanLimits.minReps, PlanLimits.maxReps),
         restSeconds: restSeconds?.clamp(PlanLimits.minRest, PlanLimits.maxRest),
         weightStep: weightStep,
+        unit: unit,
       ),
     );
   }

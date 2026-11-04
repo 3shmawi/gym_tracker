@@ -467,6 +467,42 @@ void main() {
       expect(find.byKey(const Key('fake_player_mCEIUZySRPY')), findsNothing);
     });
 
+    testWidgets("the gym's own video comes before the library's", (
+      tester,
+    ) async {
+      final gymMedia = GymMedia.fromPictures(
+        const [],
+        videos: [
+          GymExerciseVideo.tryParse({
+            'exercise_id': 'flat_db_press',
+            'video_id': 'amgXq2ThD0c',
+            'start_seconds': 15,
+          })!,
+        ],
+      );
+      await pumpApp(
+        tester,
+        at: AppRoutes.libraryExercise('flat_db_press'),
+        overrides: [
+          ...fakeYouTube(
+            const VideoInfo(
+              availability: VideoAvailability.available,
+              title: 'Our bench',
+              channel: 'Gym',
+            ),
+          ),
+          activeGymMediaProvider.overrideWith((ref) async => gymMedia),
+        ],
+      );
+      await tester.ensureVisible(find.byKey(const Key('video_play')));
+      await tester.tap(find.byKey(const Key('video_play')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('fake_player_amgXq2ThD0c')), findsOneWidget);
+      expect(find.byKey(const Key('fake_player_mCEIUZySRPY')), findsNothing);
+      await tester.tap(find.byKey(const Key('video_open_in_youtube')).last);
+      expect(opened.single.queryParameters['v'], 'amgXq2ThD0c');
+    });
+
     testWidgets('keep watching while you train: the mini player, then back', (
       tester,
     ) async {
