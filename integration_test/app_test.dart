@@ -454,6 +454,10 @@ void main() {
 /// send the app-wide router back home and clear everything saved on the
 /// device.
 Future<void> freshInstall(WidgetTester tester) async {
+  // In front again: a test that failed while the phone was "locked" would
+  // leave the app paused, and with frames off every pump of the next test
+  // waits forever (see lockPhone).
+  tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
   // Pop back home while the previous app is still mounted, so no page of
   // it (e.g. Settings) is left in the router to cover the new one.
   appRouter.go(AppRoutes.home);
