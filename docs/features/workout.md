@@ -68,6 +68,15 @@ Status: slice 3 started (rest notification), plus levels.
   workout was finished today, Start first asks "You already trained today"
   (Start another / Cancel). Resuming a workout in progress doesn't ask. The
   plan moves on as usual.
+- **Any order** (field test 2026-11-03: alternating a back and a bench
+  exercise wasn't possible). "Tap any exercise to do it now" sits above
+  the list; tapping an unfinished exercise makes it the current one
+  (`ActiveWorkoutController.pick` → `WorkoutDraft.focusId`, stored as
+  `focus`, so a killed app keeps it). It stays current until another is
+  picked or all its sets are logged, then the plan's order resumes. A
+  running rest keeps running. Sets are counted per exercise, so the
+  summary, records and "next" are right whatever the order. Event:
+  `workout_exercise_picked` (`position`, `exercises`; no personal data).
 - **Rest** starts after each set with the exercise's rest time; none inside
   a superset round or after the last set of the day. Stored as an end time,
   so it is right after the app was in the background or killed.
@@ -76,7 +85,12 @@ Status: slice 3 started (rest notification), plus levels.
   switcher), a local notification waits for the rest's end time:
   "Rest over" / "Barbell Back Squat · set 2" (the set after the rest, in
   the app's language). In front, nothing is scheduled: the screen counts
-  down and buzzes itself. It is removed when the member comes back, and
+  down, and when the rest **runs out on screen** (not skipped) it buzzes
+  and **rings right away** (`RestAlarm.ringNow`: sound only on iOS, no
+  banner over the timer; on Android a heads-up that goes away after 5 s).
+  Field test 2026-11-03: a vibration alone was missed at the gym. It does
+  not ring when the rest was skipped early, or ended more than 2 s ago
+  (it already rang in the background). It is removed when the member comes back, and
   rescheduled or removed on +15 s, skip, log, edit, delete, finish and
   close. The first update after a launch always cancels, so a notification
   left by a killed app never rings over the screen.
@@ -87,8 +101,10 @@ Status: slice 3 started (rest notification), plus levels.
     installs, and an inexact alarm can be 10 minutes to an hour late. So
     when notifications are allowed but exact alarms aren't, a sheet
     explains and opens the setting (**Open settings** / **Not now**).
-    Without it no notification is scheduled (a late "Rest over" is worse
-    than none). Android 12–13 grant it by default.
+    Without it the notification is scheduled **inexact**
+    (`inexactAllowWhileIdle`): it may come late, but it rings. Until
+    2026-11-03 nothing was scheduled, and the field test found the alarm
+    silent on Android. Android 12–13 grant it by default.
   - **Tap** the notification: if the app was killed, it opens on
     `/workout`; otherwise it is already there. The payload is never read.
   - Closing the workout screen mid-rest removes the notification (until the
@@ -338,6 +354,7 @@ plugin README.
 | `next_day_chosen` | Member picks the next day | `day` (1-based) |
 | `workout_started` | A new workout starts | `day` (1-based) |
 | `workout_finished` | Finish confirmed | `day`, `sets`, `planned_sets`, `minutes`, `records` |
+| `workout_exercise_picked` | An exercise is picked out of the planned order | `position` (1-based), `exercises` |
 | `progress_opened` | Progress screen opened | none |
 | `exercise_history_opened` | An exercise's history opened | none (the id comes from a link) |
 | `level_reached` | A new best level (once per level) | `level` (`intermediate` / `pro`) |

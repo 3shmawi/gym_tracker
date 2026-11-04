@@ -16,8 +16,10 @@ final restAlarmProvider = Provider<RestAlarm>((ref) => Dependencies.restAlarm);
 /// member is back, the rest changes (+15 s, skip, a set logged, edited or
 /// deleted), the workout is finished or the screen is closed.
 ///
-/// In front, the screen itself counts down and buzzes, so nothing is
-/// scheduled: no banner on top of the timer.
+/// In front, the screen counts down itself, so nothing is scheduled; when
+/// the rest runs out on screen (not skipped) it rings right away
+/// ([RestAlarm.ringNow]): a vibration alone is easy to miss at the gym
+/// (field test 2026-11-03).
 class RestAlarmSync {
   new(this._alarm, {required DateTime Function() now}) : _clock = now;
 
@@ -42,9 +44,21 @@ class RestAlarmSync {
 
   /// The rest the screen shows now; null when not resting.
   void rest(RestAlarmNotice? notice) {
+    final before = _wanted;
     _wanted = notice;
+    if (notice == null && before != null && !_closed && !_inBackground) {
+      // The screen ends a rest at 0:00 (it ticks every 250 ms). Skipped
+      // early: not over yet. Over long ago: it rang in the background.
+      final over = _clock().difference(before.at);
+      if (!over.isNegative && over <= ringWindow) {
+        _run(() => _alarm.ringNow(before));
+      }
+    }
     _apply();
   }
+
+  /// How soon after the rest's end the screen must notice it to ring.
+  static const ringWindow = Duration(seconds: 2);
 
   /// Any state but `resumed` counts as not in front: `inactive` comes
   /// first on iOS when the phone is locked or the app switcher opens, so
