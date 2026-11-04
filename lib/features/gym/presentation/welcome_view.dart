@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gym_tracker/core/legal/legal_links_row.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
@@ -16,12 +17,17 @@ class WelcomeView extends StatelessWidget {
     required this.onJoin,
     required this.onSolo,
     required this.onHaveCode,
+    this.legalLinks = const [],
     super.key,
   });
 
   final VoidCallback onJoin;
   final VoidCallback onSolo;
   final VoidCallback onHaveCode;
+
+  /// Shown under "By continuing you agree to…": choosing how to start is
+  /// agreeing (YouTube API Services Developer Policies III.A).
+  final List<LegalLink> legalLinks;
 
   @override
   Widget build(BuildContext context) {
@@ -80,23 +86,43 @@ class WelcomeView extends StatelessWidget {
           SafeArea(
             top: false,
             child: Padding(
-              padding: EdgeInsetsDirectional.only(bottom: AppDimens.md),
-              child: Center(
-                child: TextButton(
-                  key: const Key('welcome_have_code'),
-                  onPressed: onHaveCode,
-                  style: TextButton.styleFrom(
-                    minimumSize: const Size(0, AppDimens.minTouchTarget),
-                    foregroundColor: Theme.of(context).colorScheme.primary,
-                  ),
-                  child: Text(
-                    l10n.welcomeHaveCode,
-                    style: AppTextStyles.label.copyWith(
-                      fontSize: AppDimens.scaled(15),
-                      fontWeight: FontWeight.w700,
+              padding: EdgeInsetsDirectional.fromSTEB(
+                AppDimens.md,
+                0,
+                AppDimens.md,
+                AppDimens.sm,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: TextButton(
+                      key: const Key('welcome_have_code'),
+                      onPressed: onHaveCode,
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(0, AppDimens.minTouchTarget),
+                        foregroundColor: Theme.of(context).colorScheme.primary,
+                      ),
+                      child: Text(
+                        l10n.welcomeHaveCode,
+                        style: AppTextStyles.label.copyWith(
+                          fontSize: AppDimens.scaled(15),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  if (legalLinks.isNotEmpty) ...[
+                    Text(
+                      l10n.consentByContinuing,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.caption.copyWith(
+                        color: palette.textSecondary,
+                      ),
+                    ),
+                    LegalLinksRow(links: legalLinks),
+                  ],
+                ],
               ),
             ),
           ),
