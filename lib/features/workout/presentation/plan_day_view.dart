@@ -174,6 +174,18 @@ String planExerciseDetail(AppLocalizations l10n, Exercise e) {
   final target = WorkoutFormat.ltr(
     WorkoutFormat.target(e.targetSets, e.targetReps),
   );
+  if (e.unit != ExerciseUnit.kg) {
+    final unit = e.unit == ExerciseUnit.plate
+        ? l10n.planUnitPlate
+        : l10n.planUnitReps;
+    return e.supersetWithNext
+        ? l10n.planExerciseMetaSupersetUnit(target, unit)
+        : l10n.planExerciseMetaUnit(
+            target,
+            WorkoutFormat.ltr('${e.restSeconds}'),
+            unit,
+          );
+  }
   final step = WorkoutFormat.ltr(WorkoutFormat.weight(e.weightStep));
   return e.supersetWithNext
       ? l10n.planExerciseMetaSuperset(target, step)

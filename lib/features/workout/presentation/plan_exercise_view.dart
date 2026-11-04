@@ -46,6 +46,7 @@ class PlanExerciseView extends StatelessWidget {
     int? reps,
     int? restSeconds,
     double? weightStep,
+    ExerciseUnit? unit,
   })
   onSetTargets;
   final ValueChanged<bool> onSetSuperset;
@@ -311,30 +312,32 @@ class _Editor extends StatelessWidget {
             ],
           ),
         ),
-        _Section(l10n.planWeightStep, hint: l10n.planWeightStepHint),
-        Semantics(
-          label: l10n.planWeightStep,
-          child: Wrap(
-            spacing: AppDimens.sm,
-            runSpacing: AppDimens.sm,
-            children: [
-              for (final step in steps)
-                AppChoiceChip(
-                  key: Key('plan_step_$step'),
-                  label: WorkoutFormat.weight(step),
-                  semanticLabel: l10n.planWeightStepChoice(
-                    WorkoutFormat.weight(step),
+        if (e.unit == ExerciseUnit.kg) ...[
+          _Section(l10n.planWeightStep, hint: l10n.planWeightStepHint),
+          Semantics(
+            label: l10n.planWeightStep,
+            child: Wrap(
+              spacing: AppDimens.sm,
+              runSpacing: AppDimens.sm,
+              children: [
+                for (final step in steps)
+                  AppChoiceChip(
+                    key: Key('plan_step_$step'),
+                    label: WorkoutFormat.weight(step),
+                    semanticLabel: l10n.planWeightStepChoice(
+                      WorkoutFormat.weight(step),
+                    ),
+                    selected: step == e.weightStep,
+                    onTap: () {
+                      if (edit && step != e.weightStep) {
+                        view.onSetTargets(weightStep: step);
+                      }
+                    },
                   ),
-                  selected: step == e.weightStep,
-                  onTap: () {
-                    if (edit && step != e.weightStep) {
-                      view.onSetTargets(weightStep: step);
-                    }
-                  },
-                ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
         SizedBox(height: AppDimens.md),
         AppCard(
           child: AppSwitchRow(
@@ -347,6 +350,29 @@ class _Editor extends StatelessWidget {
                 : l10n.planSupersetLast,
             value: e.supersetWithNext,
             onChanged: structure && hasNext ? view.onSetSuperset : null,
+          ),
+        ),
+        _Section(l10n.planUnitTitle, hint: l10n.planUnitHint),
+        Semantics(
+          label: l10n.planUnitTitle,
+          child: Wrap(
+            spacing: AppDimens.sm,
+            runSpacing: AppDimens.sm,
+            children: [
+              for (final unit in ExerciseUnit.values)
+                AppChoiceChip(
+                  key: Key('plan_unit_${unit.name}'),
+                  label: switch (unit) {
+                    ExerciseUnit.kg => l10n.planUnitKg,
+                    ExerciseUnit.plate => l10n.planUnitPlate,
+                    ExerciseUnit.reps => l10n.planUnitReps,
+                  },
+                  selected: unit == e.unit,
+                  onTap: () {
+                    if (edit && unit != e.unit) view.onSetTargets(unit: unit);
+                  },
+                ),
+            ],
           ),
         ),
         if (structure) ...[

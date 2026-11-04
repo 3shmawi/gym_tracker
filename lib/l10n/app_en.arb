@@ -982,5 +982,93 @@
   "exercisePicturesCreditLabel": "Picture credits: Everkinetic, CC BY-SA 4.0. Opens the licenses.",
   "exercisePicturesOfflineHint": "Your gym's pictures show when you're back online",
   "exercisePicturesSwipeHint": "Swipe for the next picture",
-  "libraryGymPictures": "Pictures from your gym"
+  "libraryGymPictures": "Pictures from your gym",
+  "unitPlate": "plate",
+  "@unitPlate": {
+    "description": "Unit after a machine plate (pin) number in the weight stepper."
+  },
+  "workoutPlateUp": "Next plate",
+  "@workoutPlateUp": {
+    "description": "Screen-reader label: one plate heavier on the stack."
+  },
+  "workoutPlateDown": "Previous plate",
+  "@workoutPlateDown": {
+    "description": "Screen-reader label: one plate lighter on the stack."
+  },
+  "workoutLogReps": "Log {reps} reps",
+  "@workoutLogReps": {
+    "placeholders": {
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutSetDonePlateLabel": "Set {set}, plate {plate}, {reps} reps, logged. Tap to edit",
+  "@workoutSetDonePlateLabel": {
+    "placeholders": {
+      "set": {
+        "type": "int"
+      },
+      "plate": {
+        "type": "String"
+      },
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutSetDoneRepsLabel": "Set {set}, {reps} reps, logged. Tap to edit",
+  "@workoutSetDoneRepsLabel": {
+    "placeholders": {
+      "set": {
+        "type": "int"
+      },
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "planUnitTitle": "Logged by",
+  "@planUnitTitle": {
+    "description": "Plan exercise editor: how the exercise is logged."
+  },
+  "planUnitKg": "Weight (kg)",
+  "planUnitPlate": "Machine plate",
+  "planUnitReps": "Reps only",
+  "planUnitHint": "Machine plate: the number on the weight stack. Reps only: no weight.",
+  "weightPlate": "plate {plate}",
+  "@weightPlate": {
+    "description": "A machine plate (pin) number on the weight stack.",
+    "placeholders": {
+      "plate": {
+        "type": "String"
+      }
+    }
+  },
+  "planExerciseMetaUnit": "{target} · rest {rest} s · {unit}",
+  "@planExerciseMetaUnit": {
+    "description": "Plan exercise line when it is logged by machine plate or reps only.",
+    "placeholders": {
+      "target": {
+        "type": "String"
+      },
+      "rest": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "planExerciseMetaSupersetUnit": "{target} · {unit}",
+  "@planExerciseMetaSupersetUnit": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  }
 }

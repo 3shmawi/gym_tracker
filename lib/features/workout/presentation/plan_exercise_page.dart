@@ -27,7 +27,7 @@ class PlanExercisePage extends ConsumerWidget {
       onBackToPlan: () => context.go(AppRoutes.plan),
       onRename: (name) =>
           unawaited(controller.renameExercise(dayId, exerciseId, name)),
-      onSetTargets: ({sets, reps, restSeconds, weightStep}) => unawaited(
+      onSetTargets: ({sets, reps, restSeconds, weightStep, unit}) => unawaited(
         controller.setTargets(
           dayId,
           exerciseId,
@@ -35,6 +35,7 @@ class PlanExercisePage extends ConsumerWidget {
           reps: reps,
           restSeconds: restSeconds,
           weightStep: weightStep,
+          unit: unit,
         ),
       ),
       onSetSuperset: (on) =>

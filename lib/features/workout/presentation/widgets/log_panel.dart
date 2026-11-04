@@ -3,10 +3,13 @@ import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/presentation/workout_format.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 
 /// Weight and reps steppers, prefilled. Used to log a set and to edit one.
+/// [unit]: kg, a machine's plate number (step 1), or reps only (no weight
+/// stepper).
 class SetSteppers extends StatelessWidget {
   const new({
     required this.weight,
@@ -14,12 +17,14 @@ class SetSteppers extends StatelessWidget {
     required this.weightStep,
     required this.onWeight,
     required this.onReps,
+    this.unit = ExerciseUnit.kg,
     super.key,
   });
 
   final double weight;
   final int reps;
   final double weightStep;
+  final ExerciseUnit unit;
   final ValueChanged<double> onWeight;
   final ValueChanged<int> onReps;
 
@@ -27,22 +32,28 @@ class SetSteppers extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final step = WorkoutFormat.weight(weightStep);
+    final plate = unit == ExerciseUnit.plate;
     return Column(
       spacing: AppDimens.sm,
       children: [
-        AppStepper(
-          key: const Key('weight_stepper'),
-          value: WorkoutFormat.weight(weight),
-          unit: l10n.unitKg,
-          decrementLabel: l10n.workoutRemoveWeight(step),
-          incrementLabel: l10n.workoutAddWeight(step),
-          onDecrement: weight <= 0
-              ? null
-              : () => onWeight((weight - weightStep).clamp(0, 1000)),
-          onIncrement: weight >= 1000
-              ? null
-              : () => onWeight(weight + weightStep),
-        ),
+        if (unit != ExerciseUnit.reps)
+          AppStepper(
+            key: const Key('weight_stepper'),
+            value: WorkoutFormat.weight(weight),
+            unit: plate ? l10n.unitPlate : l10n.unitKg,
+            decrementLabel: plate
+                ? l10n.workoutPlateDown
+                : l10n.workoutRemoveWeight(step),
+            incrementLabel: plate
+                ? l10n.workoutPlateUp
+                : l10n.workoutAddWeight(step),
+            onDecrement: weight <= 0
+                ? null
+                : () => onWeight((weight - weightStep).clamp(0, 1000)),
+            onIncrement: weight >= 1000
+                ? null
+                : () => onWeight(weight + weightStep),
+          ),
         AppStepper(
           key: const Key('reps_stepper'),
           value: '$reps',
@@ -69,6 +80,7 @@ class LogPanel extends StatefulWidget {
     required this.weightStep,
     required this.onLog,
     this.partnerName,
+    this.unit = ExerciseUnit.kg,
     super.key,
   });
 
@@ -78,6 +90,7 @@ class LogPanel extends StatefulWidget {
   final double weight;
   final int reps;
   final double weightStep;
+  final ExerciseUnit unit;
 
   /// Set inside a superset round: the next exercise, done without rest.
   final String? partnerName;
@@ -119,13 +132,18 @@ class _LogPanelState extends State<LogPanel> {
           weight: _weight,
           reps: _reps,
           weightStep: widget.weightStep,
+          unit: widget.unit,
           onWeight: (w) => setState(() => _weight = w),
           onReps: (r) => setState(() => _reps = r),
         ),
         AppPrimaryButton(
           key: const Key('log_set_button'),
           icon: Icons.check,
-          label: l10n.workoutLog(WorkoutFormat.weightTimesReps(_weight, _reps)),
+          label: widget.unit == ExerciseUnit.reps
+              ? l10n.workoutLogReps(_reps)
+              : l10n.workoutLog(
+                  WorkoutFormat.weightTimesReps(_weight, _reps, widget.unit),
+                ),
           onPressed: () => widget.onLog(_weight, _reps),
         ),
         if (widget.partnerName != null)

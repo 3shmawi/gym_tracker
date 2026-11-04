@@ -60,4 +60,20 @@ void main() {
     );
     expect(r.records, isEmpty);
   });
+
+  test('volume counts kg exercises only (not plates or reps)', () {
+    final now = DateTime(2026, 11, 4, 18);
+    final summary = const SummarizeWorkout()(
+      const [
+        LoggedSet(exerciseId: 'kg', weight: 50, reps: 10),
+        LoggedSet(exerciseId: 'plate', weight: 7, reps: 12),
+        LoggedSet(exerciseId: 'abs', weight: 0, reps: 20),
+      ],
+      const [],
+      startedAt: now,
+      now: now,
+      units: const {'plate': ExerciseUnit.plate, 'abs': ExerciseUnit.reps},
+    );
+    expect(summary.volume, 500);
+  });
 }

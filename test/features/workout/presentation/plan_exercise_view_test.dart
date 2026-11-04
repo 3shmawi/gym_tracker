@@ -36,12 +36,14 @@ Widget view(
     onRetrySave: () => c.saveRetries++,
     onBackToPlan: () => c.backs++,
     onRename: c.renamed.add,
-    onSetTargets: ({sets, reps, restSeconds, weightStep}) => c.targets.add({
-      'sets': ?sets,
-      'reps': ?reps,
-      'rest': ?restSeconds,
-      'step': ?weightStep,
-    }),
+    onSetTargets: ({sets, reps, restSeconds, weightStep, unit}) =>
+        c.targets.add({
+          'sets': ?sets,
+          'reps': ?reps,
+          'rest': ?restSeconds,
+          'step': ?weightStep,
+          'unit': ?unit,
+        }),
     onSetSuperset: c.supersets.add,
     onDelete: () => c.deletes++,
   );
@@ -136,6 +138,22 @@ void main() {
       ]);
     });
 
+    testWidgets('unit: kg, machine plate or reps only', (tester) async {
+      final calls = ExerciseCalls();
+      await tester.pumpApp(view(const AsyncData(planState), calls: calls));
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('plan_unit_reps')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Logged by'), findsOneWidget);
+      await tapKey(tester, const Key('plan_unit_plate'));
+      await tapKey(tester, const Key('plan_unit_kg')); // already kg
+      expect(calls.targets, [
+        {'unit': ExerciseUnit.plate},
+      ]);
+    });
+
     testWidgets('limits: steppers stop at the edges', (tester) async {
       const plan = WorkoutPlan(
         days: [
@@ -219,6 +237,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(calls.renamed.single.en, 'Front Raise');
 
+      // The last control on the screen, under "Logged by".
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('plan_delete_exercise')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tapKey(tester, const Key('plan_delete_exercise'));
       expect(find.text('Delete "Dumbbell Front Raise"?'), findsOneWidget);
       await tester.tap(find.byKey(const Key('plan_delete_confirm')));
