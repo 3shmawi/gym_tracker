@@ -51,6 +51,9 @@ export function toFailure(error: unknown, online: boolean = typeof navigator ===
 
   // Auth error codes (supabase.com/docs/guides/auth/debugging/error-codes).
   switch (code) {
+    // Supabase answers 403 otp_expired for a wrong code too ("Token has
+    // expired or is invalid", supabase/auth internal/api/verify.go, read
+    // 2026-11-04), so the UI says "wrong or expired".
     case 'otp_expired':
       return { kind: 'code_expired' };
     case 'invalid_credentials':

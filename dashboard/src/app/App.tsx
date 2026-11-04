@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { AuthService, SignedIn } from '../auth/auth';
 import type { Captcha } from '../auth/turnstile';
 import type { Failure } from '../core/failure';
@@ -38,6 +38,8 @@ export function App({ services }: { readonly services: AppServices }) {
   const route = useRoute();
   const [session, setSession] = useState<Session>({ state: 'checking' });
   const [gyms, setGyms] = useState<Gyms>({ state: 'loading' });
+  // Set while the person signs out on purpose, so it isn't shown as "session ended".
+  const signingOut = useRef(false);
 
   // <html lang dir> and the theme follow the preferences.
   useEffect(() => {
@@ -56,6 +58,7 @@ export function App({ services }: { readonly services: AppServices }) {
       setSession(result.ok && result.value ? { state: 'signed_in', user: result.value } : { state: 'signed_out' });
     });
     const stop = services.auth.onSignedOut(() => {
+      if (signingOut.current) return;
       setSession((s) => (s.state === 'signed_in' ? { state: 'ended' } : s));
     });
     return () => {
@@ -83,7 +86,9 @@ export function App({ services }: { readonly services: AppServices }) {
   }, [session, loadGyms]);
 
   const signOut = useCallback(() => {
+    signingOut.current = true;
     void services.auth.signOut().then(() => {
+      signingOut.current = false;
       setSession({ state: 'signed_out' });
       navigate({ name: 'sign_in' }, true);
     });
