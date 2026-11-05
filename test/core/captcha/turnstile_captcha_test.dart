@@ -37,13 +37,45 @@ void main() {
     },
   );
 
-  test('a widget that never answers times out', () async {
+  test(
+    'a widget that never answers is a reported failure, not a retry',
+    () async {
+      await expectLater(
+        captcha(
+          (k, b) => Completer<String?>().future,
+          timeout: const Duration(milliseconds: 20),
+        ).token(),
+        throwsA(
+          isA<UnknownFailure>().having(
+            (f) => '${f.cause}',
+            'cause',
+            contains('timed out'),
+          ),
+        ),
+      );
+    },
+  );
+
+  test('the failure says what the web view saw', () async {
     await expectLater(
-      captcha(
-        (k, b) => Completer<String?>().future,
-        timeout: const Duration(milliseconds: 20),
-      ).token(),
-      throwsA(isA<TimeoutFailure>()),
+      captcha((k, b) async {
+        TurnstileCaptcha.lastNote = 'error 110200';
+        return null;
+      }).token(),
+      throwsA(
+        isA<UnknownFailure>().having(
+          (f) => '${f.cause}',
+          'cause',
+          'turnstile: no token (error 110200)',
+        ),
+      ),
+    );
+  });
+
+  test('waits less than the join itself (guard, 20 s)', () {
+    expect(
+      const TurnstileCaptcha(siteKey: 'site').timeout,
+      lessThan(const Duration(seconds: 20)),
     );
   });
 

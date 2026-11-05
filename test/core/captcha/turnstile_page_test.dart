@@ -61,6 +61,38 @@ void main() {
         expect(TurnstilePage.allowsNavigation(url), isFalse, reason: url);
       }
     });
+
+    test('the page it is loaded as, and nothing else on that host', () {
+      const base = 'https://azmm.pages.dev';
+      for (final url in ['https://azmm.pages.dev/', 'https://azmm.pages.dev']) {
+        expect(
+          TurnstilePage.allowsNavigation(url, baseUrl: base),
+          isTrue,
+          reason: url,
+        );
+      }
+      for (final url in [
+        'https://azmm.pages.dev/privacy',
+        'https://azmm.pages.dev/?x=1',
+        'https://azmm.pages.dev/#x',
+        'http://azmm.pages.dev/',
+        'https://azmm.pages.dev:8443/',
+        'https://user@azmm.pages.dev/',
+        'https://azmm.pages.dev.evil.example/',
+        'https://evil.example/',
+      ]) {
+        expect(
+          TurnstilePage.allowsNavigation(url, baseUrl: base),
+          isFalse,
+          reason: url,
+        );
+      }
+      // Without a base page, the base host stays blocked.
+      expect(
+        TurnstilePage.allowsNavigation('https://azmm.pages.dev/'),
+        isFalse,
+      );
+    });
   });
 
   group('messages from the page', () {
@@ -70,6 +102,12 @@ void main() {
       final ok = TurnstilePage.parse(msg('token', 'fake-token-for-tests'));
       expect(ok?.value, 'fake-token-for-tests');
       expect(TurnstilePage.parse(msg('error', '110200'))?.failed, isTrue);
+      expect(TurnstilePage.parse(msg('error', '110200'))?.code, '110200');
+      // A code that is not a short code is dropped, never passed on.
+      expect(
+        TurnstilePage.parse(msg('error', '<script>alert(1)</script>'))?.code,
+        '',
+      );
       expect(TurnstilePage.parse(msg('timeout', ''))?.timedOut, isTrue);
       expect(TurnstilePage.parse(msg('expired', ''))?.timedOut, isTrue);
     });

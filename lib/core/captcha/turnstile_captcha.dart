@@ -18,7 +18,9 @@ class TurnstileCaptcha {
   const new({
     required this.siteKey,
     this.baseUrl = defaultBaseUrl,
-    this.timeout = const Duration(seconds: 20),
+    // Below guard()'s 20 s, so this failure (with its reason) is the one
+    // that is reported, not a bare timeout.
+    this.timeout = const Duration(seconds: 15),
     this.fetch = _fetchWithWebView,
   });
 
@@ -35,19 +37,28 @@ class TurnstileCaptcha {
   /// Runs the widget; replaced in tests.
   final Future<String?> Function(String siteKey, String baseUrl) fetch;
 
-  /// A fresh token, or a failure ([TimeoutFailure] when the widget does not
-  /// answer, [UnknownFailure] when it refuses). Never null or empty.
+  /// What the last web view saw before it gave up (a Cloudflare error code,
+  /// a load error, a blocked host). Never a URL path, query or token.
+  static String lastNote = '';
+
+  /// A fresh token, or an [UnknownFailure] saying why there is none. Never
+  /// null or empty. Not a TimeoutFailure: a captcha that does not answer is
+  /// not a network problem, so it is reported to monitoring and not retried.
   Future<String> token() async {
+    lastNote = '';
     try {
       final value = await fetch(siteKey, baseUrl).timeout(timeout);
       if (value == null || value.isEmpty) {
-        throw const UnknownFailure('turnstile: no token');
+        throw UnknownFailure(_reason('no token'));
       }
       return value;
-    } on TimeoutException catch (error) {
-      throw TimeoutFailure(error);
+    } on TimeoutException {
+      throw UnknownFailure(_reason('timed out'));
     }
   }
+
+  static String _reason(String what) =>
+      lastNote.isEmpty ? 'turnstile: $what' : 'turnstile: $what ($lastNote)';
 
   static Future<String?> _fetchWithWebView(
     String siteKey,
@@ -69,18 +80,39 @@ class TurnstileCaptcha {
         final parsed = TurnstilePage.parse(message.message);
         if (parsed == null) return;
         if (parsed.value != null) finish(parsed.value);
-        if (parsed.failed) finish(null);
+        if (parsed.failed) {
+          lastNote = parsed.code.isEmpty
+              ? 'widget error'
+              : 'error ${parsed.code}';
+          finish(null);
+        }
         // `timedOut` / expired: keep waiting for the widget's retry; the
         // overall timeout ends the wait.
       },
     );
     await controller.setNavigationDelegate(
       NavigationDelegate(
-        onNavigationRequest: (request) =>
-            TurnstilePage.allowsNavigation(request.url)
-            ? NavigationDecision.navigate
-            : NavigationDecision.prevent,
-        onWebResourceError: (_) => finish(null),
+        onNavigationRequest: (request) {
+          if (TurnstilePage.allowsNavigation(request.url, baseUrl: baseUrl)) {
+            return NavigationDecision.navigate;
+          }
+          // Scheme and host only: a path or query could hold anything.
+          final uri = Uri.tryParse(request.url);
+          lastNote = 'blocked ${uri?.scheme ?? '?'}://${uri?.host ?? '?'}';
+          return NavigationDecision.prevent;
+        },
+        onPageFinished: (_) {
+          if (lastNote.isEmpty) lastNote = 'page loaded, no answer';
+        },
+        // Only the page itself failing to load ends the wait; a failed
+        // sub-resource (an image, a probe Cloudflare expects to fail) does
+        // not.
+        onWebResourceError: (error) {
+          if (error.isForMainFrame ?? true) {
+            lastNote = 'load error ${error.errorCode}';
+            finish(null);
+          }
+        },
       ),
     );
     final entry = OverlayEntry(

@@ -145,7 +145,7 @@ void main() {
     final redirects = File('website/_redirects').readAsStringSync();
     expect(
       redirects,
-      matches(RegExp(r'^/join/\*\s+/join\.html\s+200$', multiLine: true)),
+      matches(RegExp(r'^/join/\*\s+/join\s+200$', multiLine: true)),
     );
     final headers = File('website/_headers').readAsStringSync();
     for (final path in ['/join', '/join/*']) {

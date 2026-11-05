@@ -24,6 +24,19 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: chore(deps)
+    # Majors that can't be installed yet (checked 2026-11-05):
+    # - typescript 7: typescript-eslint 8.72.1 accepts ">=4.8.4 <6.1.0";
+    # - @babel/core 8: @preact/preset-vite 2.10.6 accepts "7.x";
+    # - @types/node: stays on the Node major Cloudflare builds with
+    #   (dashboard/.node-version, 22).
+    # Remove an entry when the package that blocks it supports the new major.
+    ignore:
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+      - dependency-name: "@babel/core"
+        update-types: [version-update:semver-major]
+      - dependency-name: "@types/node"
+        update-types: [version-update:semver-major]
     groups:
       minor-and-patch:
         update-types: [minor, patch]

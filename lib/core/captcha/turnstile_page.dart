@@ -14,11 +14,29 @@ abstract final class TurnstilePage {
   static const allowedHost = 'challenges.cloudflare.com';
   static const channel = 'AzmTurnstile';
 
-  static bool allowsNavigation(String url) {
-    if (url == 'about:blank') return true;
+  /// Whether the web view may open [url]: the Turnstile host, blank frames,
+  /// and the page itself.
+  ///
+  /// [baseUrl] is the address the page itself is loaded as
+  /// (`loadHtmlString(..., baseUrl:)`). iOS reports that first load as a
+  /// navigation to it, so exactly that page (`https://<host>/`, no other
+  /// path, query or fragment) is allowed too; without it the page never
+  /// loads and the join waits for the timeout.
+  static bool allowsNavigation(String url, {String? baseUrl}) {
+    if (url == 'about:blank' || url == 'about:srcdoc') return true;
     final uri = Uri.tryParse(url);
     if (uri == null) return false;
-    return uri.scheme == 'https' && uri.host == allowedHost;
+    if (uri.scheme == 'https' && uri.host == allowedHost) return true;
+    final base = baseUrl == null ? null : Uri.tryParse(baseUrl);
+    return base != null &&
+        uri.scheme == 'https' &&
+        base.scheme == 'https' &&
+        uri.host == base.host &&
+        uri.port == base.port &&
+        uri.userInfo.isEmpty &&
+        (uri.path == '' || uri.path == '/') &&
+        !uri.hasQuery &&
+        !uri.hasFragment;
   }
 
   /// Renders the widget at once, shown only when Cloudflare needs the person
@@ -71,7 +89,9 @@ function azmReady() {
       case 'token':
         return _token.hasMatch(value) ? TurnstileMessage.token(value) : null;
       case 'error':
-        return const TurnstileMessage.failed();
+        // Cloudflare's error code (e.g. 110200: domain not allowed), kept
+        // only when it is a short code, for the failure report.
+        return TurnstileMessage.failed(_code.hasMatch(value) ? value : '');
       case 'timeout':
       case 'expired':
         return const TurnstileMessage.timedOut();
@@ -82,14 +102,27 @@ function azmReady() {
 
   /// A token is long, URL-safe text.
   static final _token = RegExp(r'^[A-Za-z0-9._-]{10,2048}$');
+
+  /// A Turnstile error code: a few letters or digits.
+  static final _code = RegExp(r'^[A-Za-z0-9]{1,16}$');
 }
 
 class TurnstileMessage {
-  const new token(this.value) : failed = false, timedOut = false;
-  const new failed() : value = null, failed = true, timedOut = false;
-  const new timedOut() : value = null, failed = false, timedOut = true;
+  const new token(this.value) : failed = false, timedOut = false, code = '';
+  const new failed([this.code = ''])
+    : value = null,
+      failed = true,
+      timedOut = false;
+  const new timedOut()
+    : value = null,
+      failed = false,
+      timedOut = true,
+      code = '';
 
   final String? value;
   final bool failed;
   final bool timedOut;
+
+  /// Cloudflare's error code for a failure, or empty.
+  final String code;
 }
