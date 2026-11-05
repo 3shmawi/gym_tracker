@@ -77,7 +77,7 @@ class TurnstileCaptcha {
     await controller.setNavigationDelegate(
       NavigationDelegate(
         onNavigationRequest: (request) =>
-            TurnstilePage.allowsNavigation(request.url)
+            TurnstilePage.allowsNavigation(request.url, baseUrl: baseUrl)
             ? NavigationDecision.navigate
             : NavigationDecision.prevent,
         onWebResourceError: (_) => finish(null),

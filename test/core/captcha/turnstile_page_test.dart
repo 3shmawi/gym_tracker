@@ -61,6 +61,38 @@ void main() {
         expect(TurnstilePage.allowsNavigation(url), isFalse, reason: url);
       }
     });
+
+    test('the page it is loaded as, and nothing else on that host', () {
+      const base = 'https://azmm.pages.dev';
+      for (final url in ['https://azmm.pages.dev/', 'https://azmm.pages.dev']) {
+        expect(
+          TurnstilePage.allowsNavigation(url, baseUrl: base),
+          isTrue,
+          reason: url,
+        );
+      }
+      for (final url in [
+        'https://azmm.pages.dev/privacy',
+        'https://azmm.pages.dev/?x=1',
+        'https://azmm.pages.dev/#x',
+        'http://azmm.pages.dev/',
+        'https://azmm.pages.dev:8443/',
+        'https://user@azmm.pages.dev/',
+        'https://azmm.pages.dev.evil.example/',
+        'https://evil.example/',
+      ]) {
+        expect(
+          TurnstilePage.allowsNavigation(url, baseUrl: base),
+          isFalse,
+          reason: url,
+        );
+      }
+      // Without a base page, the base host stays blocked.
+      expect(
+        TurnstilePage.allowsNavigation('https://azmm.pages.dev/'),
+        isFalse,
+      );
+    });
   });
 
   group('messages from the page', () {

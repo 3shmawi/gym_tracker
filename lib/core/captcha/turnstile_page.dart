@@ -14,11 +14,29 @@ abstract final class TurnstilePage {
   static const allowedHost = 'challenges.cloudflare.com';
   static const channel = 'AzmTurnstile';
 
-  static bool allowsNavigation(String url) {
-    if (url == 'about:blank') return true;
+  /// Whether the web view may open [url]: the Turnstile host, blank frames,
+  /// and the page itself.
+  ///
+  /// [baseUrl] is the address the page itself is loaded as
+  /// (`loadHtmlString(..., baseUrl:)`). iOS reports that first load as a
+  /// navigation to it, so exactly that page (`https://<host>/`, no other
+  /// path, query or fragment) is allowed too; without it the page never
+  /// loads and the join waits for the timeout.
+  static bool allowsNavigation(String url, {String? baseUrl}) {
+    if (url == 'about:blank' || url == 'about:srcdoc') return true;
     final uri = Uri.tryParse(url);
     if (uri == null) return false;
-    return uri.scheme == 'https' && uri.host == allowedHost;
+    if (uri.scheme == 'https' && uri.host == allowedHost) return true;
+    final base = baseUrl == null ? null : Uri.tryParse(baseUrl);
+    return base != null &&
+        uri.scheme == 'https' &&
+        base.scheme == 'https' &&
+        uri.host == base.host &&
+        uri.port == base.port &&
+        uri.userInfo.isEmpty &&
+        (uri.path == '' || uri.path == '/') &&
+        !uri.hasQuery &&
+        !uri.hasFragment;
   }
 
   /// Renders the widget at once, shown only when Cloudflare needs the person

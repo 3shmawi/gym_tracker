@@ -137,7 +137,7 @@ for staging first (PostHog → Feature flags → `gym_join`, filter
 Before the flag goes on in production:
 1. **Turnstile (built; needs your keys).** The app asks Turnstile for a token
    before every anonymous sign-in (`lib/core/captcha/turnstile_captcha.dart`,
-   package `webview_flutter` 4.14.1: a 1-pixel web view that loads Cloudflare's script and may open only `challenges.cloudflare.com`).
+   package `webview_flutter` 4.14.1: a 1-pixel web view that loads Cloudflare's script and may open only `challenges.cloudflare.com` and its own page, `https://azmm.pages.dev/`; iOS reports loading that page as a navigation, and blocking it left the join waiting for the 20 s timeout).
    - Cloudflare → Turnstile → the widget's **Domains** must include
      `azmm.pages.dev` (the app uses it as the widget's origin).
    - Put the **site key** (publishable) in every env file the build uses
