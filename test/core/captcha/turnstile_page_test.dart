@@ -102,6 +102,12 @@ void main() {
       final ok = TurnstilePage.parse(msg('token', 'fake-token-for-tests'));
       expect(ok?.value, 'fake-token-for-tests');
       expect(TurnstilePage.parse(msg('error', '110200'))?.failed, isTrue);
+      expect(TurnstilePage.parse(msg('error', '110200'))?.code, '110200');
+      // A code that is not a short code is dropped, never passed on.
+      expect(
+        TurnstilePage.parse(msg('error', '<script>alert(1)</script>'))?.code,
+        '',
+      );
       expect(TurnstilePage.parse(msg('timeout', ''))?.timedOut, isTrue);
       expect(TurnstilePage.parse(msg('expired', ''))?.timedOut, isTrue);
     });

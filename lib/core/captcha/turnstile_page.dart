@@ -89,7 +89,9 @@ function azmReady() {
       case 'token':
         return _token.hasMatch(value) ? TurnstileMessage.token(value) : null;
       case 'error':
-        return const TurnstileMessage.failed();
+        // Cloudflare's error code (e.g. 110200: domain not allowed), kept
+        // only when it is a short code, for the failure report.
+        return TurnstileMessage.failed(_code.hasMatch(value) ? value : '');
       case 'timeout':
       case 'expired':
         return const TurnstileMessage.timedOut();
@@ -100,14 +102,27 @@ function azmReady() {
 
   /// A token is long, URL-safe text.
   static final _token = RegExp(r'^[A-Za-z0-9._-]{10,2048}$');
+
+  /// A Turnstile error code: a few letters or digits.
+  static final _code = RegExp(r'^[A-Za-z0-9]{1,16}$');
 }
 
 class TurnstileMessage {
-  const new token(this.value) : failed = false, timedOut = false;
-  const new failed() : value = null, failed = true, timedOut = false;
-  const new timedOut() : value = null, failed = false, timedOut = true;
+  const new token(this.value) : failed = false, timedOut = false, code = '';
+  const new failed([this.code = ''])
+    : value = null,
+      failed = true,
+      timedOut = false;
+  const new timedOut()
+    : value = null,
+      failed = false,
+      timedOut = true,
+      code = '';
 
   final String? value;
   final bool failed;
   final bool timedOut;
+
+  /// Cloudflare's error code for a failure, or empty.
+  final String code;
 }
