@@ -1,3 +1,6 @@
 # /join/<code> is one page: join.html reads the code from the address.
 # A 200 rule rewrites without changing the URL. The code is never sent anywhere.
-/join/*  /join.html  200
+# The target is /join, not /join.html: Pages redirects *.html to the
+# extension-less path (308), which would drop the code from the address
+# (developers.cloudflare.com/pages/configuration/serving-pages/, read 2026-11-05).
+/join/*  /join  200

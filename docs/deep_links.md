@@ -67,7 +67,8 @@ host to the first path segment, like `azm://settings`).
 
 **When the app is not installed** (or the link opened in an in-app browser),
 https://azmm.pages.dev/join/<code> is a web page: `website/join.html` (served for
-every `/join/*` by `website/_redirects`, a 200 rewrite). It reads the code from
+every `/join/*` by `website/_redirects`, a 200 rewrite to `/join`; not to
+`/join.html`, which Pages would redirect (308) to `/join`, dropping the code). It reads the code from
 the *path* only (never `?c=`), validates it with `^[A-HJKMNP-Z2-9]{6}$`, shows
 it as text (`textContent`), and offers "Open in Azm" (`azm://join/<code>`), the
 store button for the platform, and a copy button. No script means no code on
