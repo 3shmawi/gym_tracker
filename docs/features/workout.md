@@ -81,10 +81,8 @@ Status: slice 3 started (rest notification), plus levels.
   video mini player when both are in the same corner. Screen readers: one
   button with the whole state ("Resume workout: Flat Dumbbell Press, 2 of 7
   exercises done"), and a "Tuck the workout button at the edge" action.
-- The "Rest over" alarm still stops when the workout screen is closed
-  (`RestAlarmSync` lives on that screen). The pill shows the countdown and
-  turns to **Go!**, but does not ring. Keeping the alarm while the pill
-  shows is a follow-up.
+- The "Rest over" alarm follows the pill: closing the workout screen
+  mid-rest no longer cancels it (see Rules → Rest over notification).
 
 ## Rules
 - **Days have stable ids** (`WorkoutDay.id`). Finished workouts, the workout
@@ -128,7 +126,8 @@ Status: slice 3 started (rest notification), plus levels.
 - **Rest** starts after each set with the exercise's rest time; none inside
   a superset round or after the last set of the day. Stored as an end time,
   so it is right after the app was in the background or killed.
-- **Rest over notification** (`RestAlarmSync` → `RestAlarm`): while a
+- **Rest over notification** (`RestAlarmHost` → `RestAlarmSync` →
+  `RestAlarm`; app-wide since 2026-11-10, mounted in `AppShell`): while a
   rest runs and the app is **not in front** (locked, background, app
   switcher), a local notification waits for the rest's end time:
   "Rest over" / "Barbell Back Squat · set 2" (the set after the rest, in
@@ -139,8 +138,12 @@ Status: slice 3 started (rest notification), plus levels.
   Field test 2026-11-03: a vibration alone was missed at the gym. It does
   not ring when the rest was skipped early, or ended more than 2 s ago
   (it already rang in the background). It is removed when the member comes back, and
-  rescheduled or removed on +15 s, skip, log, edit, delete, finish and
-  close. The first update after a launch always cancels, so a notification
+  rescheduled or removed on +15 s, skip, log, edit, delete and finish.
+  Closing the workout screen keeps it (the pill shows the rest): locked or
+  in the background on any screen, it rings at the end; in front on
+  another screen, it rings at the end too (`RestAlarmSync.ringInFront`,
+  never on the workout screen itself, which rings on its own). The first
+  update after a launch always cancels, so a notification
   left by a killed app never rings over the screen.
   - **Permission** is asked once, at the member's **first rest**, never at
     launch (Apple: ask "in a context that helps people understand why").
@@ -154,10 +157,8 @@ Status: slice 3 started (rest notification), plus levels.
     2026-11-03 nothing was scheduled, and the field test found the alarm
     silent on Android. Android 12–13 grant it by default.
   - **Tap** the notification: if the app was killed, it opens on
-    `/workout`; otherwise it is already there. The payload is never read.
-  - Closing the workout screen mid-rest removes the notification (until the
-    design's "timer pill from anywhere", board 3.3b, exists; then keep it
-    while the pill shows).
+    `/workout`; otherwise it comes back on the screen it was on, where the
+    pill says **Go!** and opens the workout. The payload is never read.
 - **Records** = heavier than any earlier set of that exercise (first times
   are not records).
 - Inputs are clamped: weight 0–1000 kg (NaN/∞ → 0), reps 0–999.
@@ -388,8 +389,12 @@ plugin README.
 - **On a phone** (CI can't: the simulator would stop on the permission
   prompt, so tests fake `RestAlarm`): start a workout, log a set, allow,
   lock the phone → "Rest over" at 0:00 with sound; unlock early → nothing
-  rings; Android 14: Not now → nothing rings; turn on Alarms & reminders →
-  it rings.
+  rings; Android 14: Not now → it still pops up, maybe late (inexact);
+  turn on Alarms & reminders → on time. Since 2026-11-10 also: log a set,
+  close the workout (the pill shows the rest), lock → it rings; stay on
+  the home screen → it rings in front. Setup re-checked 2026-11-10 against
+  the plugin README of the installed 22.3.3 (receiver, desugaring, icon
+  kept from R8, iOS delegate): nothing missing.
 - Routes: `/` (home) shows `NextWorkoutPage`; `/workout` the workout in
   progress (with none: an empty state with a way home); `/progress` and
   `/progress/<exerciseId>`; `/plan`, `/plan/<dayId>`,

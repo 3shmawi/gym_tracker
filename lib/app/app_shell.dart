@@ -8,6 +8,7 @@ import 'package:gym_tracker/core/widgets/offline_banner.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
 import 'package:gym_tracker/features/settings/domain/entities/app_settings.dart';
 import 'package:gym_tracker/features/video/presentation/mini_player_host.dart';
+import 'package:gym_tracker/features/workout/presentation/rest_alarm_host.dart';
 import 'package:gym_tracker/features/workout/presentation/workout_pill_host.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 
@@ -38,7 +39,9 @@ class AppShell extends StatelessWidget {
               child: OfflineBanner(
                 child: MiniPlayerHost(
                   child: WorkoutPillHost(
-                    child: child ?? const SizedBox.shrink(),
+                    child: RestAlarmHost(
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               ),
