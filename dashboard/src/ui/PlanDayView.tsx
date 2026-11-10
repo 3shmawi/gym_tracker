@@ -1,6 +1,7 @@
 import { isLibraryId } from '../exercises/catalog';
 import { useI18n } from '../i18n';
 import type { Targets } from '../plans/edit';
+import type { ExerciseDiff } from '../plans/templateDiff';
 import { LIMITS, type PlanDay, type PlanExercise, type Unit } from '../plans/model';
 import { nameIn } from '../plans/text';
 import { Icon } from './icons';
@@ -25,6 +26,9 @@ interface Props {
   readonly onTargets: (exerciseId: string, targets: Targets) => void;
   readonly onSuperset: (exerciseId: string, on: boolean) => void;
   readonly onExercise: (exerciseId: string, action: 'rename' | 'delete' | Move) => void;
+  /** D4: exercises of this day that differ from the template, by exercise id. */
+  readonly differs?: ReadonlyMap<string, ExerciseDiff>;
+  readonly onReset?: (exerciseId: string) => void;
 }
 
 const UNITS: readonly Unit[] = ['kg', 'plate', 'reps'];
@@ -55,7 +59,7 @@ function NumberCell({ value, min, max, step, label, disabled, onCommit }: { read
   );
 }
 
-export function PlanDayView({ day, index, dayCount, editable, covers, cloudName, onDay, onAdd, onTargets, onSuperset, onExercise }: Props) {
+export function PlanDayView({ day, index, dayCount, editable, covers, cloudName, onDay, onAdd, onTargets, onSuperset, onExercise, differs, onReset }: Props) {
   const { t, lang } = useI18n();
   const dayName = nameIn(lang, day.name);
   const other = lang === 'ar' ? day.name.en : day.name.ar;
@@ -66,9 +70,10 @@ export function PlanDayView({ day, index, dayCount, editable, covers, cloudName,
     const name = nameIn(lang, e.name);
     const second = lang === 'ar' ? e.name.en : e.name.ar;
     const last = i === day.exercises.length - 1;
+    const diff = differs?.get(e.id);
     const steps = LIMITS.weightSteps.includes(e.step) ? LIMITS.weightSteps : [...LIMITS.weightSteps, e.step].sort((a, b) => a - b);
     return (
-      <tr key={e.id} class={e.superset ? 'paired' : undefined}>
+      <tr key={e.id} class={[e.superset ? 'paired' : '', diff ? 'differs' : ''].join(' ').trim() || undefined}>
         <td>
           <div class="who">
             <ExerciseThumb cloudName={cloudName} cover={covers.get(e.id)?.[0]} />
@@ -76,6 +81,14 @@ export function PlanDayView({ day, index, dayCount, editable, covers, cloudName,
               <b class="plain">{name}</b>
               <span class="cap plain" lang={lang === 'ar' ? 'en' : 'ar'}>{second}</span>
               {isLibraryId(e.id) ? null : <span class="badge">{t('plan.ownExercise')}</span>}
+              {diff ? (
+                <span class="acts-row">
+                  <span class="badge tpl-badge">{t('tpl.templateValue', { value: t('tpl.values', { sets: diff.template.sets, reps: diff.template.reps, rest: diff.template.rest }) })}</span>
+                  {editable && onReset ? (
+                    <button type="button" class="btn sm" aria-label={t('tpl.resetName', { name })} onClick={() => { onReset(e.id); }}>{t('tpl.reset')}</button>
+                  ) : null}
+                </span>
+              ) : null}
             </span>
           </div>
         </td>

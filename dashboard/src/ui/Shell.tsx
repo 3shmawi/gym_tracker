@@ -16,7 +16,7 @@ export interface ShellProps {
   readonly onSignOut: (() => void) | null;
   readonly gym?: ManagedGym;
   readonly gyms?: readonly ManagedGym[];
-  readonly nav?: 'members' | 'exercises';
+  readonly nav?: 'members' | 'exercises' | 'templates';
   readonly children: ComponentChildren;
 }
 
@@ -89,7 +89,7 @@ export function Shell({ prefs, onPrefs, online, email, onSignOut, gym, gyms, nav
       </a>
     ) : null;
 
-  const navLink = (key: 'members' | 'exercises') => {
+  const navLink = (key: 'members' | 'exercises' | 'templates') => {
     const route: Route = gym ? { name: key, gymId: gym.id } : { name: 'home' };
     const on = nav === key;
     return (
@@ -102,8 +102,8 @@ export function Shell({ prefs, onPrefs, online, email, onSignOut, gym, gyms, nav
           if (gym) linkHandler(route)(event);
         }}
       >
-        <Icon name={key === 'members' ? 'members' : 'dumbbell'} />
-        {key === 'members' ? t('nav.members') : t('nav.exercises')}
+        <Icon name={key === 'members' ? 'members' : key === 'exercises' ? 'dumbbell' : 'copy'} />
+        {key === 'members' ? t('nav.members') : key === 'exercises' ? t('nav.exercises') : t('nav.templates')}
       </a>
     );
   };
@@ -111,6 +111,7 @@ export function Shell({ prefs, onPrefs, online, email, onSignOut, gym, gyms, nav
     <>
       {navLink('members')}
       {navLink('exercises')}
+      {navLink('templates')}
     </>
   );
 

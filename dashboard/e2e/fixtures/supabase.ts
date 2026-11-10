@@ -85,6 +85,18 @@ export interface FakePlan {
   version: number;
   updated_by: string | null;
   updated_at: string;
+  /** D4 (migration 0019): which template the plan came from. */
+  template_id?: string | null;
+  template_version?: number | null;
+}
+
+export interface FakeTemplate {
+  id: string;
+  gym_id: string;
+  name: { ar: string; en: string };
+  body: unknown;
+  version: number;
+  updated_at: string;
 }
 
 /** A small plan in the app's JSON (two days, a superset, a plate exercise). */
@@ -192,6 +204,10 @@ export interface MockOptions {
   savePlan?: 'ok' | 'forbidden' | 'invalid' | 'server_error';
   /** Make the plan reads fail with 500. */
   plansFail?: boolean;
+  /** D4: the gyms' plan templates. */
+  templates?: FakeTemplate[];
+  /** Answer as before migration 0019 (no plan_templates table, no template columns). */
+  noTemplates?: boolean;
 }
 
 export interface Mock {
@@ -220,6 +236,8 @@ export interface Mock {
   readonly cdn: string[];
   /** D3: the live plans table (membership id → row). */
   readonly plans: Record<string, FakePlan>;
+  /** D4: the live plan_templates table. */
+  readonly templates: FakeTemplate[];
   /** Changes failure options in the middle of a test. */
   set(change: Pick<MockOptions, 'failInsertAt' | 'createInvite' | 'patch' | 'logoFile' | 'savePictures' | 'saveVideo' | 'mediaFails' | 'savePlan' | 'plansFail'>): void;
   recover(): void;
@@ -289,6 +307,7 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
     videos: options.videos ?? [],
     cdn: [],
     plans: options.plans ?? {},
+    templates: options.templates ?? [],
     set: (change) => {
       Object.assign(behaviour, change);
     },
@@ -459,9 +478,61 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
       if (invite) invite.revoked_at = new Date().toISOString();
       return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
     }
+    // ---- D4: plan templates (0019) ----
+    if (path === '/rest/v1/plan_templates') {
+      if (options.noTemplates) return error(route, 404, 'PGRST205', "Could not find the table 'public.plan_templates' in the schema cache");
+      const isManager = (gymId: string) => gyms.some((g) => g.id === gymId);
+      const id = wanted(url, 'id');
+      if (method === 'GET') {
+        const gymId = wanted(url, 'gym_id');
+        return json(route, 200, mock.templates.filter((t) => t.gym_id === gymId && isManager(gymId)).map((t) => ({ id: t.id, name: t.name, body: t.body, version: t.version, updated_at: t.updated_at })));
+      }
+      if (method === 'POST') {
+        if (!isManager(String(record.gym_id))) return error(route, 403, '42501', 'new row violates row-level security policy');
+        if (Object.keys(record).some((k) => !['gym_id', 'name', 'body'].includes(k))) return error(route, 403, '42501', 'permission denied for table plan_templates');
+        if (mock.templates.filter((t) => t.gym_id === record.gym_id).length >= 50) return error(route, 400, '23514', 'too_many_templates_in_gym');
+        const row: FakeTemplate = { id: uid(++idCounter), gym_id: String(record.gym_id), name: record.name as FakeTemplate['name'], body: record.body, version: 1, updated_at: new Date().toISOString() };
+        mock.templates.push(row);
+        return json(route, 201, { id: row.id, name: row.name, body: row.body, version: row.version, updated_at: row.updated_at });
+      }
+      const row = mock.templates.find((t) => t.id === id && isManager(t.gym_id));
+      if (method === 'PATCH') {
+        if (!row) return json(route, 200, []);
+        if (record.name) row.name = record.name as FakeTemplate['name'];
+        if (record.body) {
+          row.body = record.body;
+          row.version++;
+        }
+        return json(route, 200, [{ id: row.id, version: row.version }]);
+      }
+      if (method === 'DELETE') {
+        if (!row) return json(route, 200, []);
+        mock.templates.splice(mock.templates.indexOf(row), 1);
+        for (const p of Object.values(mock.plans)) if (p.template_id === row.id) p.template_id = null;
+        return json(route, 200, [{ id: row.id }]);
+      }
+    }
+    if (path === '/rest/v1/rpc/apply_plan_template') {
+      mock.rpcs.push({ name: 'apply_plan_template', body: record });
+      const target = mock.members.find((m) => m.id === record.p_membership_id);
+      const tpl = mock.templates.find((t) => t.id === record.p_template_id);
+      const me = gyms.find((g) => g.id === target?.gym_id);
+      if (!target || !tpl || !me || tpl.gym_id !== target.gym_id || (me.role === 'captain' && target.role !== 'trainee')) return error(route, 403, '42501', 'forbidden');
+      const current = mock.plans[target.id];
+      if ((current?.version ?? 0) !== record.p_base_version) return error(route, 400, 'P0001', 'plan_changed');
+      const version = (current?.version ?? 0) + 1;
+      mock.plans[target.id] = { body: tpl.body, version, updated_by: M.owner, updated_at: new Date().toISOString(), template_id: tpl.id, template_version: tpl.version };
+      return json(route, 200, { version, updated_by: M.owner, updated_at: mock.plans[target.id]?.updated_at, template_id: tpl.id, template_version: tpl.version });
+    }
     // ---- D3: plans (0007) ----
     if (path === '/rest/v1/plans' && method === 'GET') {
       if (behaviour.plansFail) return json(route, 500, { code: 'XX000', message: 'boom' });
+      const select = url.searchParams.get('select') ?? '';
+      if (options.noTemplates && select.includes('template_')) return error(route, 400, '42703', 'column plans.template_id does not exist');
+      const byTemplate = wanted(url, 'template_id');
+      if (byTemplate) {
+        return json(route, 200, Object.entries(mock.plans).filter(([, p]) => p.template_id === byTemplate).map(([id, p]) => ({ membership_id: id, version: p.version, body: p.body })));
+      }
       const one = wanted(url, 'membership_id');
       const inList = /^in\.\((.*)\)$/.exec(url.searchParams.get('membership_id') ?? '');
       const ids = inList ? (inList[1] ?? '').split(',').map((w) => w.replace(/^"|"$/g, '')) : [one];
@@ -482,7 +553,8 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
       if (behaviour.savePlan === 'invalid' || !Array.isArray(body?.days) || body.days.length === 0) return error(route, 400, '22023', 'invalid_plan: bad day count');
       const current = mock.plans[target.id];
       const version = (current?.version ?? 0) + 1;
-      mock.plans[target.id] = { body, version, updated_by: M.owner, updated_at: new Date().toISOString() };
+      // Like the real save_plan: the template link (0019) is kept.
+      mock.plans[target.id] = { body, version, updated_by: M.owner, updated_at: new Date().toISOString(), template_id: current?.template_id ?? null, template_version: current?.template_version ?? null };
       return json(route, 200, { version, updated_by: M.owner, updated_at: mock.plans[target.id]?.updated_at });
     }
     // ---- D2: exercise media (0013, 0015, 0017) ----

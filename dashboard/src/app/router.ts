@@ -11,6 +11,7 @@ export type Route =
   | { readonly name: 'member_plan'; readonly gymId: string; readonly memberId: string }
   | { readonly name: 'add_members'; readonly gymId: string; readonly role: 'trainee' | 'captain' }
   | { readonly name: 'exercises'; readonly gymId: string }
+  | { readonly name: 'templates'; readonly gymId: string }
   | { readonly name: 'exercise'; readonly gymId: string; readonly exerciseId: string }
   | { readonly name: 'not_found' };
 
@@ -28,6 +29,8 @@ export function parsePath(pathname: string): Route {
   if (plan?.[1] && plan[2] && isGymId(plan[1]) && isGymId(plan[2])) return { name: 'member_plan', gymId: plan[1], memberId: plan[2] };
   const member = /^\/g\/([^/]+)\/members\/([^/]+)$/.exec(path);
   if (member?.[1] && member[2] && isGymId(member[1]) && isGymId(member[2])) return { name: 'member', gymId: member[1], memberId: member[2] };
+  const templates = /^\/g\/([^/]+)\/templates$/.exec(path);
+  if (templates?.[1] && isGymId(templates[1])) return { name: 'templates', gymId: templates[1] };
   const exercises = /^\/g\/([^/]+)\/exercises$/.exec(path);
   if (exercises?.[1] && isGymId(exercises[1])) return { name: 'exercises', gymId: exercises[1] };
   const exercise = /^\/g\/([^/]+)\/exercises\/([^/]+)$/.exec(path);
@@ -53,6 +56,8 @@ export function pathOf(route: Route): string {
       return `/g/${route.gymId}/members/${route.role === 'captain' ? 'add-captain' : 'add'}`;
     case 'exercises':
       return `/g/${route.gymId}/exercises`;
+    case 'templates':
+      return `/g/${route.gymId}/templates`;
     case 'exercise':
       return `/g/${route.gymId}/exercises/${route.exerciseId}`;
     case 'not_found':

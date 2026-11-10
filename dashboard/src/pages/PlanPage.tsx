@@ -12,6 +12,9 @@ import { diffPlans } from '../plans/diff';
 import * as edit from '../plans/edit';
 import { LIMITS, newPlanId, planIds, planProblem, type Plan, type PlanName } from '../plans/model';
 import type { PlansRepository, StoredPlan } from '../plans/plans';
+import { resetToTemplate, targetDiffs, templateChanges, type ExerciseDiff } from '../plans/templateDiff';
+import type { Template, TemplateLink, TemplatesRepository } from '../plans/templates';
+import { ApplyToAllDialog, ReplaceDialog, TemplateBanner } from '../ui/TemplateParts';
 import { changeLine, editErrorKey, nameIn, planFailureKey } from '../plans/text';
 import { CopyPlanDialog } from '../ui/CopyPlanDialog';
 import { Icon } from '../ui/icons';
@@ -26,6 +29,7 @@ interface Props {
   readonly memberId: string;
   readonly members: MembersRepository;
   readonly plans: PlansRepository;
+  readonly templates: TemplatesRepository;
   readonly media: MediaRepository;
   readonly cloudName: string | null;
   readonly online: boolean;
@@ -40,7 +44,10 @@ type Modal =
   | { readonly kind: 'rename_ex'; readonly dayId: string; readonly exId: string }
   | { readonly kind: 'delete_ex'; readonly dayId: string; readonly exId: string }
   | { readonly kind: 'pick'; readonly dayId: string }
-  | { readonly kind: 'copy' };
+  | { readonly kind: 'copy' }
+  | { readonly kind: 'save_template' }
+  | { readonly kind: 'replace' }
+  | { readonly kind: 'apply_all' };
 
 type Note = { readonly tone: 'ok' | 'err'; readonly text: string } | null;
 
@@ -76,6 +83,7 @@ export function PlanPage(props: Props) {
   const list = useMembersList(members, gym.id);
   const stored = useStoredPlan(props.plans, memberId);
   const [justSaved, setJustSaved] = useState(false);
+  const [flash, setFlash] = useState<string | null>(null);
   const memberRoute: Route = { name: 'member', gymId: gym.id, memberId };
 
   const member = list.data.state === 'ready' ? list.data.members.find((m) => m.id === memberId) : undefined;
@@ -122,9 +130,16 @@ export function PlanPage(props: Props) {
       stored={stored.data.stored}
       back={back}
       justSaved={justSaved}
+      flash={flash}
+      onReload={(message) => {
+        setJustSaved(false);
+        setFlash(message);
+        void stored.reload();
+      }}
       onStored={(s, saved) => {
         stored.set(s);
         setJustSaved(saved);
+        setFlash(null);
       }}
     />
   );
@@ -136,11 +151,15 @@ interface EditorProps extends Props {
   readonly stored: StoredPlan;
   readonly back: ComponentChildren;
   readonly justSaved: boolean;
+  /** A message kept across the reload that follows (after a template was applied). */
+  readonly flash: string | null;
+  /** Loads the plan again from the server, then shows `message`. */
+  readonly onReload: (message: string) => void;
   /** A new stored plan: after our own save (`saved`), or loaded after a conflict. */
   readonly onStored: (stored: StoredPlan, saved: boolean) => void;
 }
 
-function PlanEditor({ gym, member, everyone, stored, plans, media, cloudName, online, back, justSaved, onStored }: EditorProps) {
+function PlanEditor({ gym, member, everyone, stored, plans, templates, media, cloudName, online, back, justSaved, flash, onReload, onStored }: EditorProps) {
   const { t, lang } = useI18n();
   const [draft, setDraft] = useState<Plan | null>(stored.plan);
   const [dayId, setDayId] = useState<string | null>(stored.plan?.days[0]?.id ?? null);
@@ -151,6 +170,22 @@ function PlanEditor({ gym, member, everyone, stored, plans, media, cloudName, on
   const issued = useRef(new Set<string>());
   const gymMedia = useGymMedia(media, gym.id);
   const covers = gymMedia.data.state === 'ready' ? gymMedia.data.media.pictures : new Map<string, readonly string[]>();
+
+  // D4: the gym's templates and the one this plan came from (none before 0019).
+  const [tplList, setTplList] = useState<readonly Template[]>([]);
+  const [link, setLink] = useState<TemplateLink>({ templateId: null, templateVersion: null });
+  const [tplNote, setTplNote] = useState<Note>(null);
+  const [tplBusy, setTplBusy] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    void templates.list(gym.id).then((r) => { if (alive && r.ok) setTplList(r.value); });
+    void templates.link(member.id).then((r) => { if (alive && r.ok) setLink(r.value); });
+    return () => {
+      alive = false;
+    };
+  }, [templates, gym.id, member.id, stored.version]);
+  const template = link.templateId ? tplList.find((x) => x.id === link.templateId) ?? null : null;
+  const templateGone = link.templateId !== null && tplList.length > 0 && template === null;
 
   const editable = canManage(gym.role, member.role) && member.status !== 'ended' && !stored.unreadable;
   const dirty = draft !== null && JSON.stringify(draft) !== JSON.stringify(stored.plan);
@@ -203,57 +238,99 @@ function PlanEditor({ gym, member, everyone, stored, plans, media, cloudName, on
   const exerciseCount = days.reduce((n, d) => n + d.exercises.length, 0);
   const updatedByName = stored.updatedBy ? everyone.find((m) => m.id === stored.updatedBy)?.name : undefined;
   const candidates = everyone.filter((m) => m.id !== member.id && m.status !== 'ended' && canManage(gym.role, m.role));
+  const tplPlan = template?.plan ?? null;
+  const draftDiffs = draft && tplPlan ? targetDiffs(draft, tplPlan) : new Map<string, ExerciseDiff>();
+  const savedDiffs = stored.plan && tplPlan ? [...targetDiffs(stored.plan, tplPlan).values()] : [];
+  const changeCount = draft && tplPlan ? templateChanges(draft, tplPlan).length : 0;
+  const dayDiffs = new Map([...draftDiffs.values()].filter((d) => d.dayId === day?.id).map((d) => [d.exerciseId, d]));
 
   const modalView = (() => {
-    if (!modal || !draft) return null;
+    if (!modal) return null;
+    // Replace / save as template / copy / apply need no draft; the edits do.
+    const usesDraft = !['replace', 'save_template', 'copy', 'apply_all'].includes(modal.kind);
+    if (usesDraft && !draft) return null;
+    const cur: Plan = draft ?? { days: [] };
     const close = () => { setModal(null); };
-    const dayOf = (id: string) => draft.days.find((d) => d.id === id);
+    const dayOf = (id: string) => cur.days.find((d) => d.id === id);
     switch (modal.kind) {
       case 'add_day':
         return (
           <NameDialog title={t('name.titleAddDay')} initial={null} onClose={close} onSave={(name) => {
             const id = newId('day');
-            if (apply(edit.addDay(draft, name, id))) setDayId(id);
+            if (apply(edit.addDay(cur, name, id))) setDayId(id);
             close();
           }} />
         );
       case 'rename_day': {
         const d = dayOf(modal.dayId);
-        return d ? <NameDialog title={t('name.titleRenameDay')} initial={d.name} onClose={close} onSave={(name) => { apply(edit.renameDay(draft, d.id, name)); close(); }} /> : null;
+        return d ? <NameDialog title={t('name.titleRenameDay')} initial={d.name} onClose={close} onSave={(name) => { apply(edit.renameDay(cur, d.id, name)); close(); }} /> : null;
       }
       case 'delete_day': {
         const d = dayOf(modal.dayId);
         return d ? (
           <ConfirmDialog title={t('name.deleteDayTitle', { name: nameIn(lang, d.name) })} body={t('name.deleteDayBody')} action={t('name.delete')} onClose={close} onConfirm={() => {
-            const i = draft.days.findIndex((x) => x.id === d.id);
-            if (apply(edit.deleteDay(draft, d.id))) setDayId(draft.days[i + 1]?.id ?? draft.days[i - 1]?.id ?? null);
+            const i = cur.days.findIndex((x) => x.id === d.id);
+            if (apply(edit.deleteDay(cur, d.id))) setDayId(cur.days[i + 1]?.id ?? cur.days[i - 1]?.id ?? null);
             close();
           }} />
         ) : null;
       }
       case 'rename_ex': {
         const e = dayOf(modal.dayId)?.exercises.find((x) => x.id === modal.exId);
-        return e ? <NameDialog title={t('name.titleRenameEx')} initial={e.name} onClose={close} onSave={(name) => { apply(edit.renameExercise(draft, modal.dayId, e.id, name)); close(); }} /> : null;
+        return e ? <NameDialog title={t('name.titleRenameEx')} initial={e.name} onClose={close} onSave={(name) => { apply(edit.renameExercise(cur, modal.dayId, e.id, name)); close(); }} /> : null;
       }
       case 'delete_ex': {
         const e = dayOf(modal.dayId)?.exercises.find((x) => x.id === modal.exId);
         return e ? (
-          <ConfirmDialog title={t('name.deleteExTitle', { name: nameIn(lang, e.name) })} body={t('name.deleteExBody')} action={t('name.delete')} onClose={close} onConfirm={() => { apply(edit.deleteExercise(draft, modal.dayId, e.id)); close(); }} />
+          <ConfirmDialog title={t('name.deleteExTitle', { name: nameIn(lang, e.name) })} body={t('name.deleteExBody')} action={t('name.delete')} onClose={close} onConfirm={() => { apply(edit.deleteExercise(cur, modal.dayId, e.id)); close(); }} />
         ) : null;
       }
       case 'pick': {
         const d = dayOf(modal.dayId);
         if (!d) return null;
         const addLibrary = (e: LibraryExercise) => {
-          apply(edit.addExercise(draft, d.id, { id: e.id, name: { ar: e.ar, en: e.en }, sets: e.sets, reps: e.reps, rest: e.rest, step: e.step }));
+          apply(edit.addExercise(cur, d.id, { id: e.id, name: { ar: e.ar, en: e.en }, sets: e.sets, reps: e.reps, rest: e.rest, step: e.step }));
           close();
         };
         const addOwn = (name: PlanName) => {
-          apply(edit.addExercise(draft, d.id, { id: newId('ex'), name }));
+          apply(edit.addExercise(cur, d.id, { id: newId('ex'), name }));
           close();
         };
         return <ExercisePicker dayName={nameIn(lang, d.name)} inDay={new Set(d.exercises.map((x) => x.id))} onClose={close} onPick={addLibrary} onOwn={addOwn} />;
       }
+      case 'save_template': {
+        const base = { ar: member.name, en: member.name };
+        return (
+          <NameDialog title={t('tpl.saveAsTitle', { name: member.name })} initial={base} onClose={close} onSave={(name) => {
+            close();
+            if (!stored.plan) return;
+            setTplBusy(true);
+            void templates.create(gym.id, name, stored.plan).then((r) => {
+              setTplBusy(false);
+              if (r.ok) {
+                setTplList([...tplList, r.value]);
+                setTplNote({ tone: 'ok', text: t('tpl.saved', { name: nameIn(lang, name) }) });
+              } else setTplNote({ tone: 'err', text: r.failure.kind === 'conflict' && r.failure.reason === 'too_many_templates_in_gym' ? t('tpl.full', { max: 50 }) : r.failure.kind === 'forbidden' ? t('tpl.errForbidden') : t('tpl.errServer') });
+            });
+          }} />
+        );
+      }
+      case 'replace':
+        return (
+          <ReplaceDialog memberName={member.name} templates={tplList} online={online} busy={tplBusy} onClose={close} onPick={(tpl) => {
+            setTplBusy(true);
+            void templates.apply(member.id, tpl.id, stored.version).then((r) => {
+              setTplBusy(false);
+              close();
+              if (r.ok) onReload(t('tpl.replaced', { name: member.name, template: nameIn(lang, tpl.name) }));
+              else setTplNote({ tone: 'err', text: t(planFailureKey(r.failure)) });
+            });
+          }} />
+        );
+      case 'apply_all':
+        return template && stored.plan ? (
+          <ApplyToAllDialog template={template} memberId={member.id} diffs={savedDiffs} everyone={everyone} plans={plans} templates={templates} online={online} onClose={close} />
+        ) : null;
       case 'copy':
         return stored.plan ? <CopyPlanDialog sourceName={member.name} plan={stored.plan} candidates={candidates} plans={plans} online={online} onClose={close} /> : null;
     }
@@ -275,6 +352,16 @@ function PlanEditor({ gym, member, everyone, stored, plans, media, cloudName, on
           </p>
         ) : null}
       </div>
+      {editable && stored.plan ? (
+        <button type="button" class="btn" disabled={dirty || !online || tplBusy} aria-describedby={dirty ? 'copy-first' : undefined} onClick={() => { setModal({ kind: 'save_template' }); }}>
+          {t('tpl.saveAs')}
+        </button>
+      ) : null}
+      {editable ? (
+        <button type="button" class="btn" disabled={dirty || !online || tplBusy} aria-describedby={dirty ? 'copy-first' : undefined} onClick={() => { setModal({ kind: 'replace' }); }}>
+          {t('tpl.replace')}
+        </button>
+      ) : null}
       {editable && stored.plan ? (
         <button type="button" class="btn" disabled={dirty || !online} aria-describedby={dirty ? 'copy-first' : undefined} onClick={() => { setModal({ kind: 'copy' }); }}>
           {t('plan.copy')}
@@ -343,6 +430,10 @@ function PlanEditor({ gym, member, everyone, stored, plans, media, cloudName, on
           </StateBlock>
         </div>
         {member.status === 'ended' ? <p class="cap">{t('plan.endedNote')}</p> : null}
+        <div class="live-slot" role={tplNote?.tone === 'err' ? 'alert' : 'status'}>
+          {tplNote ? <div class={`banner ${tplNote.tone === 'ok' ? 'ok' : 'err'}`}><Icon name={tplNote.tone === 'ok' ? 'check' : 'alert'} /><span class="plain-text">{tplNote.text}</span></div> : null}
+        </div>
+        {modalView}
       </section>
     );
   }
@@ -353,6 +444,19 @@ function PlanEditor({ gym, member, everyone, stored, plans, media, cloudName, on
       {header}
       {member.status === 'ended' ? <div class="banner info"><Icon name="info" />{t('plan.endedNote')}</div> : null}
       {dirty ? <p class="cap" id="copy-first">{t('plan.copySaveFirst')}</p> : null}
+      <TemplateBanner
+        template={template}
+        memberName={member.name}
+        changes={changeCount}
+        newer={template !== null && link.templateVersion !== null && template.version > link.templateVersion}
+        gone={templateGone}
+        canApply={editable && !dirty && savedDiffs.length > 0}
+        onApply={() => { setModal({ kind: 'apply_all' }); }}
+      />
+      <div class="live-slot" role={tplNote?.tone === 'err' ? 'alert' : 'status'}>
+        {tplNote ? <div class={`banner ${tplNote.tone === 'ok' ? 'ok' : 'err'}`}><Icon name={tplNote.tone === 'ok' ? 'check' : 'alert'} /><span class="plain-text">{tplNote.text}</span></div> : null}
+        {!tplNote && flash ? <div class="banner ok"><Icon name="check" /><span class="plain-text">{flash}</span></div> : null}
+      </div>
 
       <div class="toolbar">
         <div class="seg day-tabs" role="group" aria-label={t('plan.days')}>
@@ -389,6 +493,11 @@ function PlanEditor({ gym, member, everyone, stored, plans, media, cloudName, on
           onAdd={() => { setModal({ kind: 'pick', dayId: day.id }); }}
           onTargets={(exId, targets) => apply(edit.setTargets(draft, day.id, exId, targets))}
           onSuperset={(exId, on) => apply(edit.setSuperset(draft, day.id, exId, on))}
+          differs={dayDiffs}
+          onReset={(exId) => {
+            const d = dayDiffs.get(exId);
+            if (d) apply(resetToTemplate(draft, d));
+          }}
           onExercise={(exId, action) => {
             if (action === 'rename') setModal({ kind: 'rename_ex', dayId: day.id, exId });
             else if (action === 'delete') setModal({ kind: 'delete_ex', dayId: day.id, exId });
