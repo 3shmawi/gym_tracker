@@ -161,7 +161,9 @@ jobs:
   # typecheck, lint, unit tests, build with the security-header check, and
   # Playwright end-to-end tests against a mocked Supabase (no network, no
   # secrets: the two VITE_ values below are placeholders, not a project).
-  # Runs in Playwright's own image (Node + browsers), pinned by digest.
+  # Runs in Playwright's own image (Node + browsers), pinned by digest. Its
+  # version must equal @playwright/test in dashboard/package.json, or the
+  # browsers are missing: bump both in the same PR.
   dashboard:
     name: Dashboard · typecheck · lint · test · build · e2e
     runs-on: ubuntu-latest
