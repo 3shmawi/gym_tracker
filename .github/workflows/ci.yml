@@ -221,9 +221,10 @@ jobs:
           retention-days: 14
 
   # Whether the PR touches anything the app is built from. The iOS
-  # integration job is the slow one (macOS runner, Xcode build), so a PR that
-  # only changes docs, scripts or other workflows skips it. A skipped job
-  # counts as passed for required checks. Drafts skip it too: mark the PR
+  # integration job is the slow one (macOS runner, Xcode build) and the
+  # Android build costs a Gradle run, so a PR that only changes docs, scripts
+  # or other workflows skips both. A skipped job counts as passed for
+  # required checks. Drafts skip it too: mark the PR
   # "Ready for review" to run it.
   changes:
     name: What changed
@@ -242,11 +243,11 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: |
           if git diff --name-only "origin/$BASE_REF...HEAD" \
-            | grep -qE '^(lib/|ios/|integration_test/|assets/|env/|l10n\.yaml$|pubspec\.(yaml|lock)$|\.fvmrc$|\.github/workflows/ci\.yml$|\.github/actions/)'; then
+            | grep -qE '^(lib/|ios/|android/|integration_test/|assets/|env/|l10n\.yaml$|pubspec\.(yaml|lock)$|\.fvmrc$|\.github/workflows/ci\.yml$|\.github/actions/)'; then
             echo "app=true" >> "$GITHUB_OUTPUT"
           else
             echo "app=false" >> "$GITHUB_OUTPUT"
-            echo "No app changes: the iOS integration tests are skipped." >> "$GITHUB_STEP_SUMMARY"
+            echo "No app changes: the iOS integration tests and the Android build are skipped." >> "$GITHUB_STEP_SUMMARY"
           fi
 
   # Every integration test, on an iPhone simulator with full Liquid Glass
@@ -312,7 +313,10 @@ jobs:
   # end of every app run, losing the results, in every setup tried.
   android-build:
     name: Android build (debug APK)
-    if: github.event_name == 'pull_request'
+    needs: changes
+    # Unlike the iOS job, drafts are built too: it is cheap (Ubuntu runner,
+    # Gradle cache) and a broken Android build is best known early.
+    if: github.event_name == 'pull_request' && needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

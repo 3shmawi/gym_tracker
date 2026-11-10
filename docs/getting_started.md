@@ -73,3 +73,29 @@ dart fix --apply && dart format .    # fix lints + format
 flutter gen-l10n                     # after editing lib/l10n/*.arb
 ./scripts/new_feature.sh <name>      # scaffold a feature + its doc
 ```
+
+## 5. Design reviews (Elephant-Goldfish Model)
+Big features get a written spec reviewed by fresh AI reviewers before any
+code (rules in `CLAUDE.md`). The
+[EGM plugin](https://github.com/google/elephant-goldfish-model) is pinned in
+`.claude/settings.json`:
+
+- **Claude Code on your Mac**: trust the folder when Claude Code asks, then
+  accept the prompt to install `egm@egm`. Or install it yourself:
+  `claude plugin marketplace add google/elephant-goldfish-model#v0.1.1 && claude plugin install egm@egm`.
+- **Claude Code cloud sessions** don't install plugins from a repo's
+  settings. The setup script in the kit's README installs it for every
+  session (environment menu → **Edit** → **Setup script**).
+- **Codex / Antigravity**: see the plugin's README for the one-time install.
+
+```text
+/egm:egm-brainstorm Add offline favorites   → concepts_brief.md
+/egm:egm-draft                              → design_draft.md, section by section
+/egm:egm-review design_draft.md             → fresh reviewers, five stages
+/egm:egm-resolve                            → agree on fixes, then approve
+```
+
+Save the approved spec as `docs/designs/<feature>.md`. A full review starts
+several sub-agents, so it uses more tokens than a normal session; skip it
+for small changes. To upgrade EGM, change `ref` in `.claude/settings.json`
+and the version in `docs/release.md` → "Pinned tools".
