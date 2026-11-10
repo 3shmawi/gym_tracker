@@ -62,25 +62,20 @@ void main() {
   });
 
   test('last sets come from any day with the same exercise', () {
-    // Day 4 repeats day 1: day 1's sets feed day 4's suggestions.
+    // Abs is on day 1 and day 4: day 1's sets feed day 4's suggestion.
     final next = get(plan, [
       session(0, DateTime(2026, 11, 2), const [
-        LoggedSet(exerciseId: 'wide_lat_pulldown', weight: 50, reps: 12),
-        LoggedSet(exerciseId: 'wide_lat_pulldown', weight: 50, reps: 12),
-        LoggedSet(exerciseId: 'wide_lat_pulldown', weight: 50, reps: 12),
+        LoggedSet(exerciseId: 'abs', weight: 50, reps: 15),
+        LoggedSet(exerciseId: 'abs', weight: 50, reps: 15),
+        LoggedSet(exerciseId: 'abs', weight: 50, reps: 15),
       ]),
       session(1, DateTime(2026, 11, 3)),
       session(2, DateTime(2026, 11, 4)),
     ], now: DateTime(2026, 11, 5));
     expect(next.dayIndex, 3);
-    final pulldown = next.exercises.firstWhere(
-      (e) => e.exercise.id == 'wide_lat_pulldown',
-    );
-    expect(pulldown.lastSets, hasLength(3));
-    expect(
-      pulldown.suggestion,
-      const WeightSuggestion(weight: 52.5, trend: Trend.up),
-    );
+    final abs = next.exercises.firstWhere((e) => e.exercise.id == 'abs');
+    expect(abs.lastSets, hasLength(3));
+    expect(abs.suggestion, const WeightSuggestion(weight: 55, trend: Trend.up));
   });
 
   test('a plan without days is rejected', () {

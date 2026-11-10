@@ -63,6 +63,9 @@ gets black bands above and below.
   the real router in `library_flows_test`).
 
 ## Where videos come from
+The 13 exercises added for days 4 and 5 on 2026-11-10 have **no library
+video yet**: videos are approved by the owner one by one. Until then they
+show their pictures and steps (a gym can still add its own video).
 Order: the gym's video (V-B), then the library's, then none (pictures and
 steps only). Library videos: `lib/features/library/data/exercise_videos.dart`,
 approved by the owner on 2026-11-03 from
