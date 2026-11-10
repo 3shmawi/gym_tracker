@@ -44,7 +44,7 @@ Everything is pinned to an exact version in `dashboard/package.json` and
 | `eslint` 10.13.0, `typescript-eslint` 8.72.0, `@eslint/js` 10.0.1 | | lint |
 | `vitest` | **4.1.12** | the first version that fixes GHSA-82fw-gwwq-j7x9 and GHSA-qxg6-89mg-rqv8 |
 | `jsdom` | 30.1.3 | DOM for unit tests |
-| `@playwright/test` 1.64.1, `@axe-core/playwright` 4.14.0 | | browser tests, accessibility |
+| `@playwright/test` 1.65.0, `@axe-core/playwright` 4.14.0 | | browser tests, accessibility. The CI job's container (`mcr.microsoft.com/playwright:v<same version>-noble`, pinned by digest in `.github/workflows/ci.yml`) must match this version, or no browser is found (Playwright Docker docs, checked 2026-11-10). Bump both together. |
 | `minimatch` | **11.0.3** (npm `overrides`) | fixes GHSA-g3hv-75wg-m249 in a transitive dependency |
 
 Lockfile note: `package-lock.json` was generated with **npm 11.21.1**,
