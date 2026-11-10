@@ -13,8 +13,9 @@ placeholder (hatched tile with a dumbbell), at the same size.
 - Settings → About → **Open-source licenses** opens the licenses page; the
   pictures' attributions are listed there.
 
-## Coverage (checked 2026-11-03)
-All 23 exercises have a picture. **4 are substitutes**: no free drawing of the
+## Coverage (checked 2026-11-10)
+All 36 exercises have a picture (13 added 2026-11-10 for the new days 4 and 5,
+all Everkinetic, licence re-read that day). **7 are substitutes**: no free drawing of the
 exercise itself exists, so the picture shows a similar exercise for the same
 muscle (`substitute: true` and a `substituteNote` in the manifest):
 
@@ -24,10 +25,13 @@ muscle (`substitute: true` and a `substituteNote` in the manifest):
 | `cable_kickback` | triceps kickback with a dumbbell (same movement, other equipment) |
 | `reverse_wrist_curl` | reverse dumbbell curl (forearm extensors, but an elbow curl) |
 | `barbell_wrist_curl` | barbell curl (forearms work, but an elbow curl) |
+| `hammer_close_grip_row` | seated cable row (same close-grip row, cable instead of machine) |
+| `machine_shoulder_press` | seated military press (same press, barbell instead of machine) |
+| `face_pull` | bent-over lateral cable raise (rear shoulder; no free face-pull drawing) |
 
 Replace a substitute when a real drawing is found (remove its `substitute`
 fields). The test `pictures of a similar exercise are marked, with a note`
-lists the four ids: change it with this table.
+lists the seven ids: change it with this table.
 
 ## Where the pictures come from
 Line drawings by **Everkinetic** (Greg Priday), from

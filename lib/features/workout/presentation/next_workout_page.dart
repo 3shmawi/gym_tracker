@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
 import 'package:gym_tracker/features/gym/presentation/workspace_switcher.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
@@ -23,6 +24,7 @@ class NextWorkoutPage extends ConsumerWidget {
     final next = ref.watch(nextWorkoutControllerProvider);
     return NextWorkoutView(
       state: next,
+      covers: ref.watch(exerciseCoversProvider),
       onRetry: () => unawaited(controller.retry()),
       onUseTemplate: () => unawaited(controller.useTemplate()),
       onOpenSettings: () => unawaited(context.push<void>(AppRoutes.settings)),

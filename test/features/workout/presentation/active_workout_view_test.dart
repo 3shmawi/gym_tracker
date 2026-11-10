@@ -111,6 +111,7 @@ class Calls {
   int finish = 0;
   int close = 0;
   int retry = 0;
+  final howTo = <String>[];
 
   ActiveWorkoutActions get actions => ActiveWorkoutActions(
     onLog: (w, r) => logs.add((w, r)),
@@ -122,7 +123,16 @@ class Calls {
     onFinish: () async => finish++,
     onClose: () => close++,
     onRetry: () => retry++,
+    onHowTo: howTo.add,
   );
+}
+
+/// Scrolls the list until the widget with [key] is on screen (the current
+/// exercise's card is tall: the others can be below the fold).
+Future<Finder> _show(WidgetTester tester, Key key) async {
+  await tester.ensureVisible(find.byKey(key, skipOffstage: false));
+  await tester.pumpAndSettle();
+  return find.byKey(key);
 }
 
 Widget view(
@@ -137,6 +147,53 @@ Widget view(
 
 void main() {
   group(ActiveWorkoutView, () {
+    testWidgets('every exercise has a picture and a "how to" button', (
+      tester,
+    ) async {
+      final calls = Calls();
+      final w = logging();
+      await tester.pumpApp(view(AsyncData(w), calls: calls));
+      // The current exercise: a large picture and the labelled button.
+      expect(find.text('Exercise 2 of 7'), findsOneWidget);
+      await tester.tap(
+        find.byKey(const Key('how_to_current_wide_lat_pulldown')),
+      );
+      // Another exercise: its own button, named for screen readers.
+      final upcoming = w.day.exercises[2];
+      await _show(tester, Key('how_to_${upcoming.id}'));
+      expect(
+        find.bySemanticsLabel('How to do ${upcoming.name.en}'),
+        findsOneWidget,
+      );
+      await tester.tap(await _show(tester, Key('how_to_${upcoming.id}')));
+      expect(calls.howTo, ['wide_lat_pulldown', upcoming.id]);
+      // Tapping the button does not pick the exercise.
+      expect(calls.picks, isEmpty);
+    });
+
+    testWidgets('no how-to callback: no how-to buttons', (tester) async {
+      final calls = Calls();
+      await tester.pumpApp(
+        ActiveWorkoutView(
+          state: AsyncData(logging()),
+          actions: ActiveWorkoutActions(
+            onLog: (_, _) {},
+            onPick: (_) {},
+            onEditSet: (_, _, _) {},
+            onDeleteSet: (_) {},
+            onAdd15: () {},
+            onEndRest: () {},
+            onFinish: () async {},
+            onClose: () {},
+            onRetry: () {},
+          ),
+          now: () => _now,
+        ),
+      );
+      expect(find.byIcon(Icons.play_circle_outline), findsNothing);
+      expect(calls.howTo, isEmpty);
+    });
+
     testWidgets('one tap logs the prefilled set', (tester) async {
       final calls = Calls();
       await tester.pumpApp(view(AsyncData(logging()), calls: calls));
@@ -152,11 +209,11 @@ void main() {
       await tester.pumpApp(view(AsyncData(w), calls: calls));
       expect(find.text('Tap any exercise to do it now'), findsOneWidget);
       final upcoming = w.day.exercises[2].id;
-      await tester.tap(find.byKey(Key('exercise_line_$upcoming')));
+      await tester.tap(await _show(tester, Key('exercise_line_$upcoming')));
       expect(calls.picks, [2]);
       // A finished exercise is not a button.
       final done = w.day.exercises[0].id;
-      await tester.tap(find.byKey(Key('exercise_line_$done')));
+      await tester.tap(await _show(tester, Key('exercise_line_$done')));
       expect(calls.picks, [2]);
     });
 
@@ -213,6 +270,7 @@ void main() {
     testWidgets('tap a logged set to edit it', (tester) async {
       final calls = Calls();
       await tester.pumpApp(view(AsyncData(logging()), calls: calls));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('set_chip_wide_lat_pulldown_1')));
       await tester.pumpAndSettle();
       expect(find.text('Edit set 1'), findsOneWidget);
@@ -231,6 +289,7 @@ void main() {
     testWidgets('delete needs a second tap', (tester) async {
       final calls = Calls();
       await tester.pumpApp(view(AsyncData(logging()), calls: calls));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('set_chip_wide_lat_pulldown_1')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('edit_delete')));

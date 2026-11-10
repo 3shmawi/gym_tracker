@@ -20,6 +20,7 @@
 | Tables, helpers, RLS: gyms, people, memberships, `leave_gym` | `supabase/migrations/0005_gym_accounts.sql` |
 | Invites, attempts, pepper, `create_invite`, `revoke_invite`, `admin_create_invites`, `redeem_invite_core` | `supabase/migrations/0006_gym_invites.sql` |
 | Plans and `save_plan` (server-side `PlanLimits`) | `supabase/migrations/0007_gym_plans.sql` |
+| The 5-day template's real days 4 and 5: stored plans whose days 4/5 are still untouched copies of days 1/2 get them (`private.template_days_upgrade`, one-off update, version + 1) | `supabase/migrations/0018_template_days_4_5.sql`, `supabase/tests/template_days_4_5.test.sql` |
 | `gym-logos` Storage bucket and its policies | `supabase/migrations/0008_gym_logos_storage.sql` |
 | pgTAP, one file per table (+ redeem and storage) | `supabase/tests/*_rls.test.sql`, `redeem_invite.test.sql`, `gym_logos_storage.test.sql` |
 | Edge Function | `supabase/functions/redeem_invite/` (`index.ts` wiring, `handler.ts` HTTP layer, `validate.ts` input checks, Deno tests next to them) |

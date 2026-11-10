@@ -19,7 +19,7 @@ void main() {
     test('every template exercise is in the library', () {
       final ids = {for (final e in all) e.id};
       expect(ids, containsAll(templateExercises.keys));
-      expect(templateExercises, hasLength(23));
+      expect(templateExercises, hasLength(36));
     });
 
     test('same id, names and starting targets', () {
@@ -89,13 +89,15 @@ void main() {
     });
 
     test('starting targets are inside the plan limits', () {
+      // A day holds at most 30 exercises: one day per 30.
       final plan = WorkoutPlan(
         days: [
-          WorkoutDay(
-            id: 'd1',
-            name: const LocalizedName(ar: 'ا', en: 'A'),
-            exercises: [for (final e in all) e.defaults],
-          ),
+          for (var i = 0; i < all.length; i += 30)
+            WorkoutDay(
+              id: 'd$i',
+              name: const LocalizedName(ar: 'ا', en: 'A'),
+              exercises: [for (final e in all.skip(i).take(30)) e.defaults],
+            ),
         ],
       );
       expect(validatePlan(plan), isNull);

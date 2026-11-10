@@ -47,109 +47,130 @@ class SettingsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final languageCode = settings.locale?.languageCode;
+    final languages = <(String, Locale?)>[
+      (l10n.settingsLanguageSystem, null),
+      (l10n.languageEnglish, const Locale('en')),
+      (l10n.languageArabic, const Locale('ar')),
+    ];
+    final languageIndex = switch (languageCode) {
+      'en' => 1,
+      'ar' => 2,
+      _ => 0,
+    };
+    String themeLabel(ThemeMode mode) => switch (mode) {
+      ThemeMode.system => l10n.settingsThemeSystem,
+      ThemeMode.light => l10n.settingsThemeLight,
+      ThemeMode.dark => l10n.settingsThemeDark,
+    };
     return AppScaffold(
       title: l10n.settingsTitle,
-      // Grouped sections on cards: readable on any background (glass or
-      // not) and the familiar iOS settings layout.
+      // Grouped cards of compact rows, the value at the end (design board
+      // 4: the familiar iOS settings layout, readable on glass).
       body: ListView(
-        padding: EdgeInsets.symmetric(horizontal: AppDimens.md),
+        padding: EdgeInsetsDirectional.fromSTEB(
+          AppDimens.md,
+          0,
+          AppDimens.md,
+          AppDimens.xl,
+        ),
         children: [
           if (onOpenPlan != null) ...[
             SettingsSectionHeader(l10n.settingsWorkout),
-            AppCard(
-              child: SettingsLinkTile(
-                key: const Key('settings_plan'),
-                label: l10n.planTitle,
-                icon: Icons.format_list_bulleted,
-                onTap: onOpenPlan!,
-              ),
+            SettingsGroup(
+              children: [
+                SettingsRow(
+                  key: const Key('settings_plan'),
+                  label: l10n.planTitle,
+                  icon: Icons.format_list_bulleted,
+                  onTap: onOpenPlan,
+                ),
+              ],
             ),
           ],
+          SettingsSectionHeader(l10n.settingsAppearance),
+          SettingsGroup(
+            children: [
+              SettingsRow(
+                key: const Key('settings_language'),
+                label: l10n.settingsLanguage,
+                icon: Icons.translate,
+                value: languages[languageIndex].$1,
+                onTap: () async {
+                  final picked = await showSettingsChoice(
+                    context: context,
+                    title: l10n.settingsLanguage,
+                    choices: [for (final l in languages) l.$1],
+                    selected: languageIndex,
+                  );
+                  if (picked != null) onLocaleChanged(languages[picked].$2);
+                },
+              ),
+              SettingsRow(
+                key: const Key('settings_theme'),
+                label: l10n.settingsTheme,
+                icon: Icons.contrast,
+                value: themeLabel(settings.themeMode),
+                onTap: () async {
+                  final picked = await showSettingsChoice(
+                    context: context,
+                    title: l10n.settingsTheme,
+                    choices: [for (final m in ThemeMode.values) themeLabel(m)],
+                    selected: settings.themeMode.index,
+                  );
+                  if (picked != null) {
+                    onThemeModeChanged(ThemeMode.values[picked]);
+                  }
+                },
+              ),
+            ],
+          ),
           if (onOpenAccount != null || onJoinGym != null) ...[
             SettingsSectionHeader(l10n.settingsAccount),
-            AppCard(
-              child: onOpenAccount != null
-                  ? SettingsLinkTile(
-                      key: const Key('settings_account'),
-                      label: l10n.settingsMyAccount,
-                      icon: Icons.account_circle_outlined,
-                      onTap: onOpenAccount!,
-                    )
-                  : SettingsLinkTile(
-                      key: const Key('settings_join_gym'),
-                      label: l10n.settingsJoinGym,
-                      icon: Icons.qr_code_scanner,
-                      onTap: onJoinGym!,
-                    ),
+            SettingsGroup(
+              children: [
+                if (onOpenAccount != null)
+                  SettingsRow(
+                    key: const Key('settings_account'),
+                    label: l10n.settingsMyAccount,
+                    icon: Icons.account_circle_outlined,
+                    onTap: onOpenAccount,
+                  )
+                else
+                  SettingsRow(
+                    key: const Key('settings_join_gym'),
+                    label: l10n.settingsJoinGym,
+                    icon: Icons.qr_code_scanner,
+                    onTap: onJoinGym,
+                  ),
+              ],
             ),
           ],
-          SettingsSectionHeader(l10n.settingsLanguage),
-          AppCard(
-            child: Column(
-              children: [
-                SettingsChoiceTile(
-                  label: l10n.settingsLanguageSystem,
-                  selected: languageCode == null,
-                  onTap: () => onLocaleChanged(null),
-                ),
-                SettingsChoiceTile(
-                  label: l10n.languageEnglish,
-                  selected: languageCode == 'en',
-                  onTap: () => onLocaleChanged(const Locale('en')),
-                ),
-                SettingsChoiceTile(
-                  label: l10n.languageArabic,
-                  selected: languageCode == 'ar',
-                  onTap: () => onLocaleChanged(const Locale('ar')),
-                ),
-              ],
-            ),
-          ),
-          SettingsSectionHeader(l10n.settingsTheme),
-          AppCard(
-            child: Column(
-              children: [
-                for (final mode in ThemeMode.values)
-                  SettingsChoiceTile(
-                    label: switch (mode) {
-                      ThemeMode.system => l10n.settingsThemeSystem,
-                      ThemeMode.light => l10n.settingsThemeLight,
-                      ThemeMode.dark => l10n.settingsThemeDark,
-                    },
-                    selected: settings.themeMode == mode,
-                    onTap: () => onThemeModeChanged(mode),
-                  ),
-              ],
-            ),
-          ),
           SettingsSectionHeader(l10n.settingsAbout),
-          AppCard(
-            child: Column(
-              children: [
-                const SettingsVersionTile(),
-                if (onOpenPrivacy != null)
-                  SettingsLinkTile(
-                    key: const Key('settings_privacy'),
-                    label: l10n.legalPrivacy,
-                    icon: Icons.privacy_tip_outlined,
-                    onTap: onOpenPrivacy!,
-                  ),
-                if (onOpenTerms != null)
-                  SettingsLinkTile(
-                    key: const Key('settings_terms'),
-                    label: l10n.legalTerms,
-                    icon: Icons.gavel_outlined,
-                    onTap: onOpenTerms!,
-                  ),
-                if (onOpenLicenses != null)
-                  SettingsLinkTile(
-                    key: const Key('settings_licenses'),
-                    label: l10n.settingsLicenses,
-                    icon: Icons.description_outlined,
-                    onTap: onOpenLicenses!,
-                  ),
-              ],
-            ),
+          SettingsGroup(
+            children: [
+              const SettingsVersionTile(),
+              if (onOpenPrivacy != null)
+                SettingsRow(
+                  key: const Key('settings_privacy'),
+                  label: l10n.legalPrivacy,
+                  icon: Icons.privacy_tip_outlined,
+                  onTap: onOpenPrivacy,
+                ),
+              if (onOpenTerms != null)
+                SettingsRow(
+                  key: const Key('settings_terms'),
+                  label: l10n.legalTerms,
+                  icon: Icons.gavel_outlined,
+                  onTap: onOpenTerms,
+                ),
+              if (onOpenLicenses != null)
+                SettingsRow(
+                  key: const Key('settings_licenses'),
+                  label: l10n.settingsLicenses,
+                  icon: Icons.description_outlined,
+                  onTap: onOpenLicenses,
+                ),
+            ],
           ),
         ],
       ),

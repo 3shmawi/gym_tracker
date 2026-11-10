@@ -1170,5 +1170,128 @@
   "@consentTitle": {
     "description": "Shown once before the app opens: agree to the Terms of Use and Privacy Policy (YouTube Developer Policies III.A)."
   },
-  "consentByContinuing": "By continuing, you agree to the Terms of Use, the Privacy Policy and YouTube's Terms of Service."
+  "consentByContinuing": "By continuing, you agree to the Terms of Use, the Privacy Policy and YouTube's Terms of Service.",
+  "workoutHowTo": "How to do it",
+  "@workoutHowTo": {
+    "description": "Exercise pictures / floating workout pill (design: Azm — exercise pictures, workout pill)."
+  },
+  "workoutHowToLabel": "How to do {name}",
+  "@workoutHowToLabel": {
+    "description": "Exercise pictures / floating workout pill (design: Azm — exercise pictures, workout pill).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutExerciseOf": "Exercise {number} of {total}",
+  "@workoutExerciseOf": {
+    "description": "Exercise pictures / floating workout pill (design: Azm — exercise pictures, workout pill).",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pillStart": "Start workout",
+  "@pillStart": {
+    "description": "Exercise pictures / floating workout pill (design: Azm — exercise pictures, workout pill)."
+  },
+  "pillResume": "Resume workout",
+  "@pillResume": {
+    "description": "Exercise pictures / floating workout pill (design: Azm — exercise pictures, workout pill)."
+  },
+  "pillRest": "Rest",
+  "@pillRest": {
+    "description": "Exercise pictures / floating workout pill (design: Azm — exercise pictures, workout pill)."
+  },
+  "pillRestOver": "Go!",
+  "@pillRestOver": {
+    "description": "Exercise pictures / floating workout pill (design: Azm — exercise pictures, workout pill)."
+  },
+  "pillDay": "Day {day} · {name}",
+  "@pillDay": {
+    "description": "Exercise pictures / floating workout pill (design: Azm — exercise pictures, workout pill).",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pillNextSet": "Next: set {set}",
+  "@pillNextSet": {
+    "description": "Exercise pictures / floating workout pill (design: Azm — exercise pictures, workout pill).",
+    "placeholders": {
+      "set": {
+        "type": "int"
+      }
+    }
+  },
+  "pillStartLabel": "Start workout: day {day}, {name}",
+  "@pillStartLabel": {
+    "description": "Exercise pictures / floating workout pill (design: Azm — exercise pictures, workout pill).",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pillResumeLabel": "Resume workout: {name}, {done} of {total} exercises done",
+  "@pillResumeLabel": {
+    "description": "Exercise pictures / floating workout pill (design: Azm — exercise pictures, workout pill).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pillRestLabel": "Resting, {time} left. Opens the workout.",
+  "@pillRestLabel": {
+    "description": "Exercise pictures / floating workout pill (design: Azm — exercise pictures, workout pill).",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "pillRestOverLabel": "Rest is over: set {set}. Opens the workout.",
+  "@pillRestOverLabel": {
+    "description": "Exercise pictures / floating workout pill (design: Azm — exercise pictures, workout pill).",
+    "placeholders": {
+      "set": {
+        "type": "int"
+      }
+    }
+  },
+  "pillTabLabel": "Show the workout button",
+  "@pillTabLabel": {
+    "description": "Exercise pictures / floating workout pill (design: Azm — exercise pictures, workout pill)."
+  },
+  "pillMoveHint": "Drag to move it to another corner",
+  "@pillMoveHint": {
+    "description": "Exercise pictures / floating workout pill (design: Azm — exercise pictures, workout pill)."
+  },
+  "pillHide": "Tuck the workout button at the edge",
+  "@pillHide": {
+    "description": "Screen-reader action on the floating workout pill."
+  },
+  "settingsAppearance": "Appearance",
+  "@settingsAppearance": {
+    "description": "Settings group with language and theme (design board 4)."
+  }
 }

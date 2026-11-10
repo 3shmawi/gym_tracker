@@ -3,20 +3,26 @@ import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
+import 'package:gym_tracker/features/library/presentation/widgets/exercise_thumb.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/presentation/workout_format.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 
-/// One exercise on the next-workout list: number, name (both languages),
+/// One exercise on the next-workout list: its picture with the number,
+/// name (both languages),
 /// target and last time; the suggested weight and its trend at the end.
 class ExercisePreviewRow extends StatelessWidget {
   const new({
     required this.number,
     required this.preview,
     this.onTap,
+    this.cover,
     super.key,
   });
+
+  /// The gym's picture of the exercise; null: the bundled drawing.
+  final ImageProvider? cover;
 
   final int number;
   final ExercisePreview preview;
@@ -47,23 +53,12 @@ class ExercisePreviewRow extends StatelessWidget {
       child: Padding(
         padding: EdgeInsetsDirectional.symmetric(vertical: AppDimens.sm2),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           spacing: AppDimens.sm2,
           children: [
-            Container(
-              width: 28,
-              height: 28,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: palette.fillSubtle,
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                '$number',
-                style: AppTextStyles.label.copyWith(
-                  color: palette.textSecondary,
-                ),
-              ),
+            NumberedExerciseThumb(
+              number: number,
+              exerciseId: exercise.id,
+              cover: cover,
             ),
             Expanded(
               child: Column(

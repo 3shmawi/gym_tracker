@@ -537,5 +537,313 @@ abstract final class ExerciseCatalog {
         ),
       ],
     ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'incline_barbell_press',
+        name: LocalizedName(ar: 'بار عالي', en: 'Incline Barbell Press'),
+      ),
+      muscle: MuscleGroup.chest,
+      equipment: [Equipment.barbell, Equipment.bench],
+      steps: [
+        LocalizedName(
+          ar: 'اتمدد على بنش مايل وامسك البار أوسع شوية من كتفك.',
+          en: 'Lie on an incline bench and hold the bar a little wider than your shoulders.',
+        ),
+        LocalizedName(
+          ar: 'نزّل البار براحة لحد أعلى صدرك.',
+          en: 'Lower the bar slowly to your upper chest.',
+        ),
+        LocalizedName(
+          ar: 'ادفع لفوق لحد ما دراعاتك تتفرد من غير ما تقفل الكوع.',
+          en: 'Press up until your arms are straight, without locking the elbows.',
+        ),
+      ],
+    ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'lat_pulldown_machine',
+        name: LocalizedName(ar: 'ظرافة', en: 'Lat Pulldown Machine'),
+      ),
+      muscle: MuscleGroup.back,
+      equipment: [Equipment.machine],
+      steps: [
+        LocalizedName(
+          ar: 'اقعد على الجهاز وثبّت رجلك، وامسك المقابض.',
+          en: 'Sit on the machine with your legs fixed and hold the handles.',
+        ),
+        LocalizedName(
+          ar: 'اسحب لتحت لحد صدرك وانت بتضم لوحي كتفك.',
+          en: 'Pull down to your chest while squeezing your shoulder blades.',
+        ),
+        LocalizedName(
+          ar: 'ارجع لفوق براحة لحد ما ضهرك يتفرد.',
+          en: 'Return slowly until your back is fully stretched.',
+        ),
+      ],
+    ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'flat_machine_press',
+        name: LocalizedName(
+          ar: 'دفع جهاز مستوي',
+          en: 'Flat Machine Chest Press',
+        ),
+      ),
+      muscle: MuscleGroup.chest,
+      equipment: [Equipment.machine],
+      steps: [
+        LocalizedName(
+          ar: 'اضبط الكرسي عشان المقابض تبقى عند نص صدرك، وضهرك ملزوق.',
+          en: 'Set the seat so the handles are at mid-chest, with your back flat on the pad.',
+        ),
+        LocalizedName(
+          ar: 'ادفع المقابض لقدّام لحد ما دراعاتك تتفرد تقريباً.',
+          en: 'Push the handles forward until your arms are almost straight.',
+        ),
+        LocalizedName(
+          ar: 'ارجع براحة وحسّ بالشد في صدرك.',
+          en: 'Return slowly and feel the stretch in your chest.',
+        ),
+      ],
+    ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'wide_t_bar_row',
+        name: LocalizedName(ar: 'طرمبة واسع', en: 'Wide-Grip T-Bar Row'),
+      ),
+      muscle: MuscleGroup.back,
+      equipment: [Equipment.barbell, Equipment.machine],
+      steps: [
+        LocalizedName(
+          ar: 'اقف على الجهاز، اطوي وسطك وضهرك مفرود، وامسك المقابض الواسعة.',
+          en: 'Stand on the machine, hinge at the hips with a flat back and take the wide handles.',
+        ),
+        LocalizedName(
+          ar: 'اسحب لحد صدرك وانت بتضم لوحي كتفك.',
+          en: 'Pull to your chest while squeezing your shoulder blades.',
+        ),
+        LocalizedName(
+          ar: 'نزّل براحة من غير ما ضهرك يتقوّس.',
+          en: 'Lower slowly without rounding your back.',
+        ),
+      ],
+    ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'high_cable_crossover',
+        name: LocalizedName(
+          ar: 'كابل تجميع من فوق',
+          en: 'High Cable Crossover',
+        ),
+      ),
+      muscle: MuscleGroup.chest,
+      equipment: [Equipment.cable],
+      steps: [
+        LocalizedName(
+          ar: 'ثبّت البكرتين فوق، وامسك مقبض في كل إيد وخطوة لقدّام.',
+          en: 'Set both pulleys high, hold a handle in each hand and step forward.',
+        ),
+        LocalizedName(
+          ar: 'هات إيديك لتحت وقدّام لحد ما يتقابلوا قدام وسطك.',
+          en: 'Bring your hands down and forward until they meet in front of your hips.',
+        ),
+        LocalizedName(
+          ar: 'ارجع براحة لحد ما تحس بالشد في صدرك.',
+          en: 'Return slowly until you feel the stretch in your chest.',
+        ),
+      ],
+    ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'hammer_close_grip_row',
+        name: LocalizedName(ar: 'جهاز همر ضيق', en: 'Close-Grip Hammer Row'),
+      ),
+      muscle: MuscleGroup.back,
+      equipment: [Equipment.machine],
+      steps: [
+        LocalizedName(
+          ar: 'اقعد وصدرك على الوسادة، وامسك المقابض الضيقة.',
+          en: 'Sit with your chest on the pad and hold the close handles.',
+        ),
+        LocalizedName(
+          ar: 'اسحب لورا وكوعك جنب جسمك لحد ما تضم ضهرك.',
+          en: 'Pull back with your elbows close to your body and squeeze your back.',
+        ),
+        LocalizedName(
+          ar: 'ارجع براحة لحد ما دراعاتك تتفرد.',
+          en: 'Return slowly until your arms are straight.',
+        ),
+      ],
+    ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'machine_shoulder_press',
+        name: LocalizedName(
+          ar: 'دفع جهاز أمامي كتف',
+          en: 'Machine Shoulder Press',
+        ),
+      ),
+      muscle: MuscleGroup.shoulders,
+      equipment: [Equipment.machine],
+      steps: [
+        LocalizedName(
+          ar: 'اضبط الكرسي عشان المقابض تبقى عند كتفك، وضهرك ملزوق.',
+          en: 'Set the seat so the handles are at shoulder height, with your back on the pad.',
+        ),
+        LocalizedName(
+          ar: 'ادفع لفوق لحد ما دراعاتك تتفرد من غير ما تقفل الكوع.',
+          en: 'Press up until your arms are straight, without locking the elbows.',
+        ),
+        LocalizedName(
+          ar: 'نزّل براحة لحد مستوى كتفك.',
+          en: 'Lower slowly back to shoulder height.',
+        ),
+      ],
+    ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'db_lateral_raise',
+        name: LocalizedName(
+          ar: 'رفرفة دمبل جانبي كتف',
+          en: 'Dumbbell Lateral Raise',
+        ),
+        weightStep: 1,
+      ),
+      muscle: MuscleGroup.shoulders,
+      equipment: [Equipment.dumbbell],
+      steps: [
+        LocalizedName(
+          ar: 'اقف ودمبل في كل إيد جنبك، وكوعك مثني شوية.',
+          en: 'Stand with a dumbbell in each hand at your sides, elbows slightly bent.',
+        ),
+        LocalizedName(
+          ar: 'ارفع الدمبل للجنب لحد مستوى كتفك.',
+          en: 'Raise the dumbbells out to the sides up to shoulder height.',
+        ),
+        LocalizedName(
+          ar: 'نزّل براحة من غير ما تتمرجح.',
+          en: 'Lower slowly without swinging.',
+        ),
+      ],
+    ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'face_pull',
+        name: LocalizedName(ar: 'حبل على الوش', en: 'Face Pull'),
+        supersetWithNext: true,
+      ),
+      muscle: MuscleGroup.shoulders,
+      equipment: [Equipment.cable],
+      steps: [
+        LocalizedName(
+          ar: 'ثبّت الحبل في الكابل عند مستوى وشك وامسكه بالإيدين.',
+          en: 'Set the rope on a cable at face height and hold it with both hands.',
+        ),
+        LocalizedName(
+          ar: 'اسحب الحبل لوشك وافتح إيديك للجناب وكوعك لفوق.',
+          en: 'Pull the rope to your face, spreading your hands apart with elbows high.',
+        ),
+        LocalizedName(
+          ar: 'ارجع براحة لحد ما دراعاتك تتفرد.',
+          en: 'Return slowly until your arms are straight.',
+        ),
+      ],
+    ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'smith_shrug',
+        name: LocalizedName(ar: 'ترباس بار سميث', en: 'Smith Machine Shrug'),
+      ),
+      muscle: MuscleGroup.shoulders,
+      equipment: [Equipment.machine, Equipment.barbell],
+      steps: [
+        LocalizedName(
+          ar: 'اقف قدام بار السميث وامسكه بعرض كتفك ودراعاتك مفرودة.',
+          en: 'Stand at the Smith bar and hold it shoulder-width with straight arms.',
+        ),
+        LocalizedName(
+          ar: 'ارفع كتفك لفوق ناحية ودانك واثبت ثانية.',
+          en: 'Lift your shoulders up toward your ears and hold for a second.',
+        ),
+        LocalizedName(
+          ar: 'نزّل براحة من غير ما تلف كتفك.',
+          en: 'Lower slowly without rolling your shoulders.',
+        ),
+      ],
+    ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'cable_bar_curl',
+        name: LocalizedName(
+          ar: 'مسطرة كابل من تحت باي',
+          en: 'Straight-Bar Cable Curl',
+        ),
+        supersetWithNext: true,
+      ),
+      muscle: MuscleGroup.arms,
+      equipment: [Equipment.cable],
+      steps: [
+        LocalizedName(
+          ar: 'ثبّت البار المستقيم في الكابل من تحت وامسكه والكفوف لفوق.',
+          en: 'Attach a straight bar to a low cable and hold it palms up.',
+        ),
+        LocalizedName(
+          ar: 'اثني كوعك وارفع البار لحد صدرك وكوعك ثابت جنبك.',
+          en: 'Curl the bar to your chest, keeping your elbows at your sides.',
+        ),
+        LocalizedName(
+          ar: 'نزّل براحة لحد ما دراعاتك تتفرد.',
+          en: 'Lower slowly until your arms are straight.',
+        ),
+      ],
+    ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'preacher_curl',
+        name: LocalizedName(ar: 'تكوير على جهاز الحصان', en: 'Preacher Curl'),
+        supersetWithNext: true,
+      ),
+      muscle: MuscleGroup.arms,
+      equipment: [Equipment.machine, Equipment.bench],
+      steps: [
+        LocalizedName(
+          ar: 'اقعد على جهاز الحصان وسند ضهر دراعك على الوسادة.',
+          en: 'Sit at the preacher bench with the backs of your arms on the pad.',
+        ),
+        LocalizedName(
+          ar: 'اثني كوعك وارفع الوزن لحد ما الباي يتقفل.',
+          en: 'Curl the weight up until your biceps are fully squeezed.',
+        ),
+        LocalizedName(
+          ar: 'نزّل براحة لحد ما دراعك يتفرد تقريباً.',
+          en: 'Lower slowly until your arm is almost straight.',
+        ),
+      ],
+    ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'db_overhead_extension',
+        name: LocalizedName(
+          ar: 'دمبل زوجي تراي',
+          en: 'Two-Hand DB Overhead Extension',
+        ),
+      ),
+      muscle: MuscleGroup.arms,
+      equipment: [Equipment.dumbbell],
+      steps: [
+        LocalizedName(
+          ar: 'امسك دمبل واحد بالإيدين فوق راسك ودراعاتك مفرودة.',
+          en: 'Hold one dumbbell with both hands above your head, arms straight.',
+        ),
+        LocalizedName(
+          ar: 'نزّل الدمبل ورا راسك بثني الكوع بس.',
+          en: 'Lower the dumbbell behind your head by bending only your elbows.',
+        ),
+        LocalizedName(
+          ar: 'افرد دراعاتك لفوق تاني وشد التراي.',
+          en: 'Straighten your arms again and squeeze your triceps.',
+        ),
+      ],
+    ),
   ];
 }
