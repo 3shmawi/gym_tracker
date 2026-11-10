@@ -45,7 +45,7 @@ test.describe('hostile data from the server', () => {
     });
     await expect(page.locator('.pic-card')).toHaveCount(1);
     await expect(page.locator('.pic-card .cap')).toContainText(PAYLOAD);
-    expect(await page.locator('main').innerText()).not.toMatch(/[‪-‮⁦-⁩]/);
+    expect(await page.locator('main').innerText()).not.toMatch(/[\u202a-\u202e\u2066-\u2069]/);
     await expect(page.getByText(en('vid.library'))).toBeVisible();
 
     await page.getByLabel(en('pic.searchLabel')).fill('abs');

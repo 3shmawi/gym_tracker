@@ -41,7 +41,7 @@ describe('parseYouTubeLink: more hostile input', () => {
     ['trailing colon (empty port)', `https://www.youtube.com:/watch?v=${ID}`],
     ['tab inside', `https://www.youtube.com/watch?v=${ID}\tx`],
     ['newline inside', `https://youtu.be/${ID}\nhttps://evil.example`],
-    ['RTL override', `https://youtu.be/${ID}‮`],
+    ['RTL override', `https://youtu.be/${ID}\u202e`],
     ['HTML in the id place', 'https://youtu.be/<img src=x>'],
     ['quote in the id', `https://youtu.be/${ID.slice(0, 10)}'`],
     ['end only, zero', `https://youtu.be/${ID}?end=0`],

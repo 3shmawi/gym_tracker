@@ -64,7 +64,7 @@ describe('lookups', () => {
   it('folds Arabic letters typed either way', () => {
     expect(foldForSearch('إسكوات')).toBe(foldForSearch('اسكوات'));
     expect(foldForSearch('ترباسَ')).toBe('ترباس');
-    expect(foldForSearch('Abs‮')).toBe('abs');
+    expect(foldForSearch('Abs\u202e')).toBe('abs');
   });
 });
 

@@ -128,7 +128,7 @@ describe('reading a gym\'s choices', () => {
   });
 
   it('takes library pictures only when the id, key and frame agree, and cleans titles', () => {
-    expect(toCatalogPicture({ public_id: pid(55), exercise_key: 'ek-0055', frame: 'tension', title_en: 'Bench‮ Press' })).toEqual({ publicId: pid(55), exerciseKey: 'ek-0055', frame: 'tension', title: 'Bench Press' });
+    expect(toCatalogPicture({ public_id: pid(55), exercise_key: 'ek-0055', frame: 'tension', title_en: 'Bench\u202e Press' })).toEqual({ publicId: pid(55), exerciseKey: 'ek-0055', frame: 'tension', title: 'Bench Press' });
     expect(toCatalogPicture({ public_id: pid(55), exercise_key: 'ek-0056', frame: 'tension', title_en: 'x' })).toBeNull();
     expect(toCatalogPicture({ public_id: pid(55), exercise_key: 'ek-0055', frame: 'middle', title_en: 'x' })).toBeNull();
     expect(toCatalogPicture({ public_id: 1, exercise_key: 'ek-0055', frame: 'tension', title_en: 'x' })).toBeNull();
