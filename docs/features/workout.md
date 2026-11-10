@@ -501,9 +501,9 @@ None. (`active_workout` was removed when the workout screen shipped.)
     migration `0018_template_days_4_5.sql` (gym plans in `plans` and
     personal plans; version + 1 so phones fetch it; `updated_by` null, so no
     "captain updated your plan" toast). Anything edited is left alone.
-  - English names to confirm with the owner: `Lat Pulldown Machine`
-    (ظرافة), `Wide-Grip T-Bar Row` (طرمبة واسع), `Two-Hand DB Overhead
-    Extension` (دمبل زوجي).
+  - English names confirmed by the owner (2026-11-10), including `Lat
+    Pulldown Machine` (ظرافة), `Wide-Grip T-Bar Row` (طرمبة واسع) and
+    `Two-Hand DB Overhead Extension` (دمبل زوجي).
 - Exercise ids are stable strings; history is matched by id, so renaming an
   exercise keeps its history. Renaming changes only that day's copy of an
   exercise that is on two days (abs on days 1 and 4); their history is
