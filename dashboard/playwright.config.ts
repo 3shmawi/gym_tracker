@@ -2,10 +2,12 @@ import { defineConfig, devices } from '@playwright/test';
 
 // End-to-end tests run the built dashboard (vite preview) against a mocked
 // Supabase (e2e/fixtures/supabase.ts): no network, no real project, no keys.
-// The two VITE_ values are placeholders that only satisfy the config check.
+// The VITE_ values are placeholders that only satisfy the config check.
 const env = {
   VITE_SUPABASE_URL: 'https://abcdefghijklmnopqrst.supabase.co',
   VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_e2e_placeholder_key',
+  // Exercise pictures (D2): a placeholder cloud; e2e/fixtures/supabase.ts answers it.
+  VITE_CLOUDINARY_CLOUD_NAME: 'azm-e2e',
 };
 
 // Locally, a preinstalled Chromium can be used: PW_CHROMIUM=/path/to/chrome.

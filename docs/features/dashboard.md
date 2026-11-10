@@ -12,20 +12,22 @@
 |---|---|---|
 | **D0** | Project, build and deploy, headers/CSP, sign-in by email code, session, "my gyms", members page shell (empty state), English + Arabic (RTL), light/dark | **built (this doc)** |
 | **D1** | Members and invites: member list, add trainees, QR cards, permissions, end a member | **built (this doc, "D1 Members and invite codes")** |
-| D2 | Exercise media: gym-chosen pictures and videos (table `gym_exercise_images`, see [gym_exercise_images.md](gym_exercise_images.md)) | planned |
+| **D2** | Exercise media: gym-chosen pictures and videos (tables `gym_exercise_images`, `gym_exercise_videos`) | **built (this doc, "D2 Exercise media")** |
 | D3 | Plans: view and edit a trainee's plan through `save_plan` | planned |
 | D4 | Plan templates (needs a **backend change**: new migration, RLS, pgTAP) | planned |
 | D5 | Progress (the `member_*` views, [trainee_dashboard_data.md](trainee_dashboard_data.md)) and gym settings | planned |
 
-D0 and D1 add **no** migration, no RPC and no table. They only use what
-migrations 0005, 0006 and 0008 already allow.
+D0, D1 and D2 add **no** migration, no RPC and no table. They only use what
+migrations 0005, 0006, 0008, 0013, 0015 and 0017 already allow.
 
 ## Design
 - Board: https://claude.ai/artifact/8dPMf6CPxewxFRgtjovg1P. D0 uses boards
   **0.1 to 0.5**; D1 uses **1.1 to 1.7**.
 - Based on the Design System https://claude.ai/artifact/WUzyEppnEkcQXvVYec4m9H
   and the exercise media board https://claude.ai/artifact/VDxBpGdwNidSZgrGjfARJo
-  (used from D2).
+  (the app side of exercise media).
+- D2 board: https://claude.ai/artifact/1hRNf6WxKvsmZ1vpK5S1YK (D2.1 to D2.4,
+  approved Nov 2026: the exercise media boards cover the app only).
 - Same rules as the app: no invented styles, Arabic and English (RTL with
   logical CSS), dark mode, loading / empty / error / offline states, touch
   targets of at least 48 px, labels for screen readers.
@@ -65,6 +67,7 @@ dashboard/
     core/                      config, supabase client, result/failure, text, prefs, online
     auth/auth.ts               email-code sign-in, session
     gyms/gyms.ts               the gyms the person manages
+    exercises/                 D2: library copy, link parser, picture rules, media repository
     i18n/                      en.ts, ar.ts
     ui/ pages/ styles/         screens and styling
   test/                        unit tests (Vitest) and e2e (Playwright)
@@ -89,6 +92,8 @@ dashboard/
 | `/g/<gym-uuid>/members/<member-uuid>` | one member (D1) |
 | `/g/<gym-uuid>/members/add` | add trainees (D1) |
 | `/g/<gym-uuid>/members/add-captain` | add a captain, owners only (D1) |
+| `/g/<gym-uuid>/exercises` | the exercise list (D2) |
+| `/g/<gym-uuid>/exercises/<library-id>` | one exercise's pictures and video (D2); an id that is not in the library is "not found" |
 | anything else | not found |
 
   The gym id must match the UUID pattern, otherwise the route is "not found";
@@ -256,6 +261,136 @@ logs.
   يتطبع. إدّي كل متدرب كارته، يعمل سكان وخلاص."
 - **Hashtags:** #Azm #GymApp #BuildInPublic #QRCode #Preact #Egypt
 
+## D2 Exercise media
+Boards **D2.1 to D2.4** (link above): the owner or a captain picks the pictures
+and the how-to video the gym's members see for each library exercise. The app
+already shows them (`gym_exercise_images.md`, `exercise_videos.md`).
+
+| Board | Screen | Code |
+|---|---|---|
+| D2.1 | Exercises: all 36 library exercises (both names, muscle, the gym's cover), search (English, Arabic, id), filters All / Has your media / No video, a summary line | `src/pages/ExercisesPage.tsx` |
+| D2.2 | One exercise: the chosen pictures (cover first, move earlier/later, remove, remove all, undo), search the 538-picture library with both frames of a move side by side ("Add both"), save; the gym's video (paste a link, see the id, save, remove, open on YouTube) | `src/pages/ExercisePage.tsx`, `src/ui/Picture.tsx` |
+| D2.3 | Arabic RTL in dark: a refused link, the 6-picture limit | same |
+| D2.4 | States: loading, nothing found, no pictures yet, error with retry, offline, saved, refused | same, `src/ui/states.tsx` |
+
+### Where the exercise list comes from
+The library lives in the app (`lib/features/library/data/exercise_catalog.dart`
+and `exercise_videos.dart`; decision doc §20, "`ExerciseLibrary` is the seam").
+There is no table for it, so the dashboard keeps a **generated copy**:
+`node scripts/library_from_dart.mjs > src/exercises/library.ts` (ids, both
+names, muscle, whether the library has a video). `test/library.test.ts` fails
+when the copy drifts from the Dart files, so a new library exercise is one
+command away. Today: **36 exercises**, 23 with a library video (the 13 added for
+days 4 and 5 have none yet). Exercises a captain wrote in a plan (`ex-…` ids)
+come with D3.
+
+### Contracts used (migrations 0013, 0015, 0017; nothing new)
+`src/exercises/media.ts` only asks; Row Level Security decides.
+
+| What | Table / RPC | Rule |
+|---|---|---|
+| Read the gym's pictures | `gym_exercise_images` (`exercise_id, public_id, position`, `gym_id = eq.<gym>`, ordered, ≤ 1200 rows) | "members read …" (`private.my_role_in`) |
+| Read the gym's videos | `gym_exercise_videos` (`exercise_id, video_id, start_seconds, end_seconds`, ≤ 300 rows) | same |
+| Search the library | `exercise_images` (`public_id, exercise_key, frame, title_en`, `keywords=ov.{…}`, ≤ 60 rows) | public read (0013). Words are cleaned like the app (lower case, Latin/Arabic letters and digits, ≤ 5 words of ≤ 30) and sent as **values** of the array filter, never as SQL |
+| Picture titles (alt text) | `exercise_images` (`public_id=in.(…)`, ≤ 6) | public read |
+| Save an exercise's pictures | RPC `set_gym_exercise_images(p_gym_id, p_exercise_id, p_public_ids)` | one transaction replaces the list; array order = position, `[]` removes all; security invoker, `private.i_manage` (permanent session) |
+| Set the video | `gym_exercise_videos` **update** (`video_id, start_seconds, end_seconds`) when the gym has one, else **insert** (`gym_id, exercise_id, video_id, start_seconds, end_seconds`) | insert/update policies (`private.i_manage`); a `23505` on insert (someone added one meanwhile) turns into an update, an update that changes no row into an insert |
+| Remove the video | `gym_exercise_videos` delete (`gym_id`, `exercise_id`) | delete policy; members then see the library's video, if any |
+
+**Not an upsert.** PostgREST's upsert writes every sent column in
+`ON CONFLICT … DO UPDATE SET` (`src/library/PostgREST/Query/QueryBuilder.hs`,
+`PostgREST/postgrest` main, read 2026-11-10), and 0017 grants `UPDATE` only on
+`video_id`, `start_seconds`, `end_seconds`: an upsert carrying `gym_id` and
+`exercise_id` would be refused with `42501`. Insert and update are each covered
+by `supabase/tests/gym_exercise_videos_rls.test.sql`.
+
+Before anything is sent the dashboard checks the gym id (UUID), the exercise
+id (the tables' own pattern, and the route accepts library ids only), every
+`public_id` (`exercises/[a-z0-9-]`), at most 6, no repeats, and the video id
+and times (same rules as the database). Rows read back that break the rules are
+dropped, never shown; titles go through `cleanName`.
+
+**Errors** (one fixed message each, never the server's text,
+`saveFailureKey` in `src/exercises/useGymMedia.ts`): `42501` → only the owner
+and captains; `23514 too_many_pictures_in_gym` → 1,200 pictures;
+`too_many_videos_in_gym` → 300 videos; `too_many_pictures` → the 6 limit;
+`22023`/`23503` → refused, reload; offline; session ended; anything else →
+nothing was changed, try again.
+
+### Video links
+`src/exercises/youtube.ts` implements the app's rules
+(`lib/core/media/youtube_link.dart`) and runs the **same 55 shared vectors**
+(`docs/features/youtube_link_vectors.json`, `test/youtube.test.ts`), plus
+more hostile cases. The link is split by hand rather than with `new URL()`
+(the browser's parser resolves `..`, punycodes hosts and decodes parts); dot
+segments are refused. **Only the id** (and start/end seconds) is sent and
+stored, never the link. The page shows "This is video `<id>`" with the start
+and end before saving. Nothing is fetched from YouTube (no thumbnail, no
+oEmbed); "Open on YouTube" is a plain link built from the id.
+
+### Pictures and the CDN
+URLs come only from `pictureUrl(cloud, public_id, size)`:
+`https://res.cloudinary.com/<cloud>/image/upload/c_limit,w_160|640,f_webp,q_auto/<public_id>.png`,
+the same fixed transformations as the app, so both use the same cached files.
+The cloud name is the new **publishable** setting `VITE_CLOUDINARY_CLOUD_NAME`
+(same value as the app's `CLOUDINARY_CLOUD_NAME`; `[a-z0-9][a-z0-9_-]{0,62}`,
+else the build fails). Without it the pages work with plain tiles. With it the
+CSP's `img-src` gains `https://res.cloudinary.com/<cloud>/image/upload/` only
+(CSP Level 3 path matching, W3C WD 2026-10-27, read 2026-11-10). Images load
+with `referrerpolicy="no-referrer"`; a picture that fails shows the plain tile.
+Credit line: "Pictures: Everkinetic · CC BY-SA 4.0".
+
+### States
+Loading (skeleton), error with **Try again**, empty (no pictures yet, nothing
+found, no exercise in this filter), offline (the global bar; what was loaded
+stays, Search and Save are off with "Saving needs internet"), saved, refused,
+the 6-picture limit. Unsaved picture changes say "Not saved yet." and leaving
+the page asks first (`useLeaveWarning`, the same as D1's codes). Keyboard:
+every action is a button; moving a picture keeps focus on that picture's move
+button; removing one moves focus to the "Pictures" heading.
+
+### Events
+**None** (the dashboard has no analytics). Nothing about the gym's choices,
+links or words is kept in the browser.
+
+### D2 tests
+- `test/youtube.test.ts` (the 55 shared vectors and 22 more hostile links),
+  `test/library.test.ts` (the copy equals the generator's output, all 36 ids,
+  the 23 videos; lookups, Arabic search folding; routes with hostile ids),
+  `test/media.test.ts` (picture rules and URLs, search words, what each call
+  sends and drops, the insert/update video path and its races, refusals before
+  any request, failure messages), `test/exercises-ui.test.tsx` (both pages with
+  a fake repository, English and Arabic, every state), `test/config.test.ts`
+  and `test/headers.test.ts` (cloud name, `img-src`).
+- `e2e/exercises.spec.ts` (main flow: list → pick pictures, order, cover, save →
+  paste a link, save, change → reload → remove; remove all with the leave
+  warning; error with retry; offline; refusals; the 6 limit),
+  `e2e/exercises-a11y.spec.ts` (axe on 7 screens in English light and Arabic
+  dark; RTL; keyboard-only flow), `e2e/exercises-security.spec.ts` (crafted ids
+  in the URL, another gym, hostile rows and titles from the server, hostile
+  links and search words, every request goes to the site, the project or the
+  one picture path, the CSP, nothing stored). The fake Supabase answers the
+  three tables, the RPC and the picture CDN.
+
+### Deploy note
+Add `VITE_CLOUDINARY_CLOUD_NAME` to the Pages project (Production and
+Preview, Settings > Variables and Secrets) with the app's cloud name, and
+redeploy. Until then the exercise pages work with plain tiles.
+
+### Demo & post (D2)
+- **Hook:** "Your gym's own pictures and video for every exercise, chosen in a minute."
+- **Scenario** (`e2e/exercises.spec.ts`, main flow): open Exercises, pick Flat
+  Dumbbell Press, search "dumbbell press", "Add both" frames, add the incline
+  start frame and move it to the cover, save; paste a YouTube Shorts link, see
+  "This is video …", save; reload and everything is there.
+- **Caption (EN):** "New in the Azm captain dashboard: pick the pictures and the
+  how-to video your members see for each exercise. Paste a YouTube link and
+  they get it in the app."
+- **Caption (AR, Egyptian):** "جديد في لوحة الكابتن بتاعة Azm: اختار الصور وفيديو
+  الطريقة اللي أعضاء الجيم يشوفوها لكل تمرين. الصق لينك يوتيوب ويوصلهم في
+  التطبيق."
+- **Hashtags:** #Azm #GymApp #BuildInPublic #Supabase #Preact #Egypt
+
 ## Sign-in flow and session
 1. **Ask for a code.** `signInWithOtp({ email, options: { shouldCreateUser: false } })`.
    The dashboard never creates users. An unknown address makes Supabase answer
@@ -297,8 +432,9 @@ Storage may be blocked (private window): the dashboard still works for that
 tab; every access is guarded.
 
 ## Events
-**None.** The dashboard has no analytics and no feature flags in D0 or D1 (no
-PostHog, no Sentry, no cookies, no third-party requests). If that changes,
+**None.** The dashboard has no analytics and no feature flags in D0 to D2 (no
+PostHog, no Sentry, no cookies). Its only third-party requests are the
+exercise pictures from the one Cloudinary path (D2). If that changes,
 update this section, `website/privacy.html` and `store/privacy_forms.md` first.
 
 ## How to run
@@ -342,8 +478,9 @@ https://developers.cloudflare.com/pages/configuration/headers/).
    `dist/_headers` and `dist/index.html` are picked up (verify in the
    dashboard preview).
 6. **Environment variables**, added for **Production and Preview** (Settings >
-   Variables and Secrets): `VITE_SUPABASE_URL` and
-   `VITE_SUPABASE_PUBLISHABLE_KEY`. Publishable values only. Add
+   Variables and Secrets): `VITE_SUPABASE_URL`,
+   `VITE_SUPABASE_PUBLISHABLE_KEY` and (D2) `VITE_CLOUDINARY_CLOUD_NAME`.
+   Publishable values only. Add
    `VITE_TURNSTILE_SITE_KEY` (the Turnstile **site** key, publishable) as soon
    as CAPTCHA protection is on in Supabase (see C).
 7. **Save and Deploy.** Node comes from `dashboard/.node-version` (22); the
@@ -447,8 +584,10 @@ values (
   (UUID only, hostile paths), auth (no enumeration, anonymous refused), gyms,
   headers (CSP exact, `_headers` limits), pages.
 - `dashboard/e2e/` (Playwright + axe, Supabase mocked, no network): sign-in
-  flow, wrong code, offline, Arabic RTL, dark mode; D1 specs are listed under
-  "D1 tests".
+  flow, wrong code, offline, Arabic RTL, dark mode; D1 and D2 specs are listed
+  under "D1 tests" and "D2 tests".
+- Locally, the Playwright browser can be a preinstalled Chromium:
+  `PW_CHROMIUM=/path/to/chrome npm run e2e`.
 - `test/security/dashboard_test.dart` (Flutter side, static guards) and the
   OSV scan of `dashboard/package-lock.json`; see
   [`../security.md`](../security.md) → "Captain dashboard".
@@ -466,5 +605,5 @@ values (
 - **Hashtags:** #Azm #GymApp #BuildInPublic #Supabase #Preact #Egypt
 
 ## What's next
-D2 (exercise media), then D3 to D5 as in the table above. D4 needs a backend change, so it gets its own migration, RLS and pgTAP
+D3 to D5 as in the table above. D4 needs a backend change, so it gets its own migration, RLS and pgTAP
 file first.

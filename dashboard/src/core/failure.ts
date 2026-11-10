@@ -81,6 +81,7 @@ export function toFailure(error: unknown, online: boolean = typeof navigator ===
       return { kind: 'conflict', ...reasonOf(message) };
     case '22023':
     case '22P02':
+    case '23503': //        a foreign key: e.g. a picture id that is not in the library
     case '23502':
     case 'PGRST204':
       return { kind: 'invalid', ...reasonOf(message) };

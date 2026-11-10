@@ -8,19 +8,31 @@ export interface HeadersOptions {
   readonly supabaseUrl: string;
   /** Turnstile on: its script and frame come from challenges.cloudflare.com. */
   readonly turnstile?: boolean;
+  /** Cloudinary cloud name (already validated): pictures from that cloud's upload path only. */
+  readonly cloudinaryCloudName?: string | null;
 }
 
 /** Cloudflare's CSP guidance for Turnstile (developers.cloudflare.com/turnstile/reference/content-security-policy/, read 2026-11-04). */
 export const TURNSTILE_ORIGIN = 'https://challenges.cloudflare.com';
 
-export function contentSecurityPolicy({ supabaseUrl, turnstile = false }: HeadersOptions): string {
+/**
+ * Exercise pictures (D2): one path prefix on Cloudinary, never the whole host.
+ * A source with a path ending in "/" matches that prefix (CSP Level 3,
+ * "path-part matching", W3C WD 2026-10-27, read 2026-11-10).
+ */
+export function pictureSource(cloudName: string): string {
+  return `https://res.cloudinary.com/${cloudName}/image/upload/`;
+}
+
+export function contentSecurityPolicy({ supabaseUrl, turnstile = false, cloudinaryCloudName = null }: HeadersOptions): string {
   const ws = supabaseUrl.replace(/^https:/, 'wss:');
   const captcha = turnstile ? ` ${TURNSTILE_ORIGIN}` : '';
+  const pictures = cloudinaryCloudName ? ` ${pictureSource(cloudinaryCloudName)}` : '';
   return [
     "default-src 'self'",
     `script-src 'self'${captcha}`,
     "style-src 'self'",
-    "img-src 'self'",
+    `img-src 'self'${pictures}`,
     "font-src 'self'",
     // REST, Auth and (later) Storage/Realtime of our project only.
     `connect-src 'self' ${supabaseUrl} ${ws}`,

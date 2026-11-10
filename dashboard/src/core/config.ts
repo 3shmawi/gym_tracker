@@ -14,12 +14,21 @@ export interface AppConfig {
    * read 2026-11-04).
    */
   readonly turnstileSiteKey: string | null;
+  /**
+   * Cloudinary cloud name of the exercise picture library (publishable: it is
+   * part of every picture URL, as in the app's CLOUDINARY_CLOUD_NAME), or
+   * null. Without it the exercise pages still work, with plain tiles instead
+   * of pictures (docs/features/dashboard.md → "D2 Exercise media").
+   */
+  readonly cloudinaryCloudName: string | null;
 }
 
 const SUPABASE_URL = /^https:\/\/[a-z0-9]{20}\.supabase\.co$/;
 const PUBLISHABLE_KEY = /^sb_publishable_[A-Za-z0-9_-]{10,200}$/;
 // Real site keys start with 0x; Cloudflare's test keys with 1x, 2x or 3x.
 const TURNSTILE_SITE_KEY = /^[0-3]x[A-Za-z0-9_-]{10,64}$/;
+// Same rule as the app (lib/core/media/cloudinary_url.dart).
+const CLOUD_NAME = /^[a-z0-9][a-z0-9_-]{0,62}$/;
 
 export class ConfigError extends Error {
   override name = 'ConfigError';
@@ -42,5 +51,9 @@ export function parseConfig(env: Record<string, unknown>): AppConfig {
   if (rawTurnstile && !TURNSTILE_SITE_KEY.test(rawTurnstile)) {
     throw new ConfigError('VITE_TURNSTILE_SITE_KEY must be a Turnstile site key (0x…), never the secret.');
   }
-  return { supabaseUrl: url, supabaseKey: key, turnstileSiteKey: rawTurnstile || null };
+  const rawCloud = typeof env.VITE_CLOUDINARY_CLOUD_NAME === 'string' ? env.VITE_CLOUDINARY_CLOUD_NAME.trim() : '';
+  if (rawCloud && !CLOUD_NAME.test(rawCloud)) {
+    throw new ConfigError('VITE_CLOUDINARY_CLOUD_NAME must be a Cloudinary cloud name (lower-case letters, digits, - and _).');
+  }
+  return { supabaseUrl: url, supabaseKey: key, turnstileSiteKey: rawTurnstile || null, cloudinaryCloudName: rawCloud || null };
 }

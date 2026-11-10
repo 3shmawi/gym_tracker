@@ -1,7 +1,8 @@
 // Checks the built dashboard (dist/) before it can ship. Run after `npm run build`.
 // - index.html: no inline script, no inline style, no style attributes;
 // - _headers: the CSP and the other security headers are there, and
-//   connect-src names only 'self' and our Supabase project;
+//   connect-src names only 'self' and our Supabase project; img-src only
+//   'self' and the picture library's Cloudinary path;
 // - no secret-looking strings anywhere in dist/.
 // docs/security.md → "Captain dashboard".
 import { readdirSync, readFileSync, statSync } from 'node:fs';
@@ -41,6 +42,9 @@ expect('base-uri', ["'none'"]);
 expect('frame-ancestors', ["'none'"]);
 const url = (process.env.VITE_SUPABASE_URL ?? '').replace(/\/+$/, '');
 expect('connect-src', ["'self'", url, url.replace(/^https:/, 'wss:')]);
+// Exercise pictures (D2): only this cloud's upload path, never the whole host.
+const cloud = (process.env.VITE_CLOUDINARY_CLOUD_NAME ?? '').trim();
+expect('img-src', cloud ? ["'self'", `https://res.cloudinary.com/${cloud}/image/upload/`] : ["'self'"]);
 if (/unsafe-|\*|data:|blob:|http:/.test(csp)) fail('CSP allows unsafe-*, a wildcard, data:, blob: or http:');
 for (const header of [
   'Strict-Transport-Security: max-age=31536000',

@@ -102,10 +102,14 @@ below (same test vectors).
   The phone's copy (`gym.media.<gymId>`) gains an optional `videos` list; a
   copy saved before has none. The exercise screen shows the gym's video,
   else the library's (`VideoSource.gym` / `library` in the events).
-- **Dashboard**: upsert on `(gym_id, exercise_id)` with
-  `Prefer: resolution=merge-duplicates`, or delete the row to fall back to
-  the library's video. Errors: `42501` not a manager, `23514` bad id/range or
-  `too_many_videos_in_gym`, `23505` only if inserting twice without upsert.
+- **Dashboard** (D2, built): **update** `video_id`/`start_seconds`/`end_seconds`
+  when the gym has a row, else **insert**; delete the row to fall back to the
+  library's video. Not an upsert: PostgREST's upsert puts every sent column
+  (including `gym_id`, `exercise_id`) in `DO UPDATE SET`, and those have no
+  update grant, so it would fail with `42501` (see `dashboard.md` → "D2
+  Exercise media"). Errors: `42501` not a manager, `23514` bad id/range or
+  `too_many_videos_in_gym`, `23505` when a row appeared meanwhile (the
+  dashboard then updates it).
 
 ## Video links (the parser; the dashboard implements the same rules)
 `lib/core/media/youtube_link.dart`; test vectors shared with the dashboard:
