@@ -6,6 +6,9 @@ import { test as base, expect, type Page, type Route } from '@playwright/test';
 // test can never reach a real project or a third party.
 
 export const SUPABASE = 'https://abcdefghijklmnopqrst.supabase.co';
+/** The picture CDN the e2e build points at (playwright.config.ts). */
+export const CLOUDINARY = 'https://res.cloudinary.com';
+export const CLOUD_PATH = '/azm-e2e/image/upload/';
 export const USER_ID = '11111111-1111-4111-8111-111111111111';
 export const PERSON_ID = '22222222-2222-4222-8222-222222222222';
 export const GYM_A = { id: '33333333-3333-4333-8333-333333333333', name: 'Power Gym' };
@@ -43,6 +46,39 @@ export interface FakeInvite {
   used_at: string | null;
   revoked_at: string | null;
 }
+
+export interface FakePictureRow {
+  gym_id: string;
+  exercise_id: string;
+  public_id: string;
+  position: number;
+}
+
+export interface FakeVideoRow {
+  gym_id: string;
+  exercise_id: string;
+  video_id: string;
+  start_seconds: number | null;
+  end_seconds: number | null;
+}
+
+export interface FakeCatalogRow {
+  public_id: string;
+  exercise_key: string;
+  frame: 'tension' | 'relaxation';
+  title_en: string;
+  keywords: string[];
+}
+
+/** A small slice of the picture library (exercise_images, 0013). */
+export const CATALOG: FakeCatalogRow[] = [
+  ['ek-0055', 'Dumbbell Bench Press', ['dumbbell', 'bench', 'press', 'chest', 'صدر', 'دمبل']],
+  ['ek-0056', 'Incline Dumbbell Press', ['incline', 'dumbbell', 'press', 'chest', 'صدر', 'دمبل']],
+  ['ek-0101', 'Barbell Squat', ['barbell', 'squat', 'legs', 'رجل', 'اسكوات']],
+  ['ek-0102', 'Leg Press', ['leg', 'press', 'machine', 'legs', 'رجل']],
+].flatMap(([key, title, words]) =>
+  (['tension', 'relaxation'] as const).map((frame) => ({ public_id: `exercises/${key as string}-${frame}`, exercise_key: key as string, frame, title_en: title as string, keywords: words as string[] })),
+);
 
 /** Member ids of the seed data (gym A), for tests. */
 export const M = {
@@ -121,6 +157,17 @@ export interface MockOptions {
   wrongCode?: 'otp_expired' | 'invalid';
   /** Make REST calls fail with 500 (until `recover()` is called). */
   restFails?: boolean;
+  /** The gyms' exercise pictures and videos (D2). Default: none. */
+  pictures?: FakePictureRow[];
+  videos?: FakeVideoRow[];
+  /** Extra rows of the picture library, e.g. hostile ones. */
+  catalogExtra?: Record<string, unknown>[];
+  /** What set_gym_exercise_images answers. */
+  savePictures?: 'ok' | 'forbidden' | 'too_many_pictures_in_gym';
+  /** What writes to gym_exercise_videos answer. */
+  saveVideo?: 'ok' | 'forbidden';
+  /** Make the media reads fail with 500. */
+  mediaFails?: boolean;
 }
 
 export interface Mock {
@@ -143,8 +190,12 @@ export interface Mock {
   readonly invites: FakeInvite[];
   /** Codes handed out by create_invite, in order. */
   readonly codes: string[];
+  /** D2: the live media tables, and every picture URL the page asked the CDN for. */
+  readonly pictures: FakePictureRow[];
+  readonly videos: FakeVideoRow[];
+  readonly cdn: string[];
   /** Changes failure options in the middle of a test. */
-  set(change: Pick<MockOptions, 'failInsertAt' | 'createInvite' | 'patch' | 'logoFile'>): void;
+  set(change: Pick<MockOptions, 'failInsertAt' | 'createInvite' | 'patch' | 'logoFile' | 'savePictures' | 'saveVideo' | 'mediaFails'>): void;
   recover(): void;
 }
 
@@ -188,7 +239,11 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
     createInvite: options.createInvite ?? 'ok',
     patch: options.patch ?? 'ok',
     logoFile: options.logoFile ?? 'png',
+    savePictures: options.savePictures ?? 'ok',
+    saveVideo: options.saveVideo ?? 'ok',
+    mediaFails: options.mediaFails ?? false,
   };
+  const catalog: Record<string, unknown>[] = [...CATALOG.map((r) => ({ ...r })), ...(options.catalogExtra ?? [])];
   const seed = seedMembers();
   const mock: Mock = {
     otpRequests: [],
@@ -202,6 +257,9 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
     members: options.members ?? seed.members,
     invites: options.invites ?? seed.invites,
     codes: [],
+    pictures: options.pictures ?? [],
+    videos: options.videos ?? [],
+    cdn: [],
     set: (change) => {
       Object.assign(behaviour, change);
     },
@@ -229,6 +287,11 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
   await page.route('**/*', async (route) => {
     const url = new URL(route.request().url());
     if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') return route.continue();
+    if (url.origin === CLOUDINARY && route.request().method() === 'GET') {
+      mock.cdn.push(url.pathname + url.search);
+      if (!url.pathname.startsWith(CLOUD_PATH)) return route.fulfill({ status: 404, body: '' });
+      return route.fulfill({ status: 200, contentType: 'image/png', body: LOGO_PNG });
+    }
     if (url.origin !== SUPABASE) return route.abort('blockedbyclient');
     const method = route.request().method();
     if (method === 'OPTIONS') {
@@ -366,6 +429,70 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
       const invite = mock.invites.find((i) => i.id === record.p_invite_id);
       if (invite) invite.revoked_at = new Date().toISOString();
       return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
+    }
+    // ---- D2: exercise media (0013, 0015, 0017) ----
+    const isManager = (gymId: string) => gyms.some((g) => g.id === gymId);
+    if (path === '/rest/v1/exercise_images' && method === 'GET') {
+      const ov = /^ov\.\{(.*)\}$/.exec(url.searchParams.get('keywords') ?? '');
+      const inList = /^in\.\((.*)\)$/.exec(url.searchParams.get('public_id') ?? '');
+      let rows = catalog;
+      if (ov) {
+        const words = (ov[1] ?? '').split(',').map((w) => w.replace(/^"|"$/g, ''));
+        rows = rows.filter((r) => Array.isArray(r.keywords) && (r.keywords as string[]).some((k) => words.includes(k)));
+      }
+      if (inList) {
+        const ids = (inList[1] ?? '').split(',').map((w) => w.replace(/^"|"$/g, ''));
+        rows = rows.filter((r) => ids.includes(String(r.public_id)));
+      }
+      return json(route, 200, rows.map((r) => ({ public_id: r.public_id, exercise_key: r.exercise_key, frame: r.frame, title_en: r.title_en })));
+    }
+    if (path === '/rest/v1/gym_exercise_images' && method === 'GET') {
+      if (behaviour.mediaFails) return json(route, 500, { code: 'XX000', message: 'boom' });
+      const gymId = wanted(url, 'gym_id');
+      return json(route, 200, mock.pictures.filter((r) => r.gym_id === gymId).sort((a, b) => a.exercise_id.localeCompare(b.exercise_id) || a.position - b.position).map((r) => ({ exercise_id: r.exercise_id, public_id: r.public_id, position: r.position })));
+    }
+    if (path === '/rest/v1/rpc/set_gym_exercise_images') {
+      mock.rpcs.push({ name: 'set_gym_exercise_images', body: record });
+      if (behaviour.savePictures === 'forbidden' || !isManager(String(record.p_gym_id))) return error(route, 403, '42501', 'forbidden');
+      if (behaviour.savePictures === 'too_many_pictures_in_gym') return error(route, 400, '23514', 'too_many_pictures_in_gym');
+      const ids = record.p_public_ids as string[];
+      if (ids.some((id) => !catalog.some((c) => c.public_id === id))) return error(route, 409, '23503', 'insert or update on table "gym_exercise_images" violates foreign key constraint');
+      const gymId = String(record.p_gym_id);
+      const exerciseId = String(record.p_exercise_id);
+      for (let i = mock.pictures.length - 1; i >= 0; i--) {
+        const r = mock.pictures[i];
+        if (r && r.gym_id === gymId && r.exercise_id === exerciseId) mock.pictures.splice(i, 1);
+      }
+      ids.forEach((id, i) => mock.pictures.push({ gym_id: gymId, exercise_id: exerciseId, public_id: id, position: i + 1 }));
+      return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
+    }
+    if (path === '/rest/v1/gym_exercise_videos') {
+      const gymId = wanted(url, 'gym_id');
+      const exerciseId = wanted(url, 'exercise_id');
+      if (method === 'GET') {
+        if (behaviour.mediaFails) return json(route, 500, { code: 'XX000', message: 'boom' });
+        return json(route, 200, mock.videos.filter((r) => r.gym_id === gymId).map((r) => ({ exercise_id: r.exercise_id, video_id: r.video_id, start_seconds: r.start_seconds, end_seconds: r.end_seconds })));
+      }
+      if (behaviour.saveVideo === 'forbidden') return error(route, 403, '42501', 'new row violates row-level security policy');
+      if (method === 'POST') {
+        if (!isManager(String(record.gym_id))) return error(route, 403, '42501', 'new row violates row-level security policy');
+        if (mock.videos.some((v) => v.gym_id === record.gym_id && v.exercise_id === record.exercise_id)) return error(route, 409, '23505', 'duplicate key value violates unique constraint "gym_exercise_videos_one_per_exercise"');
+        mock.videos.push({ gym_id: String(record.gym_id), exercise_id: String(record.exercise_id), video_id: String(record.video_id), start_seconds: (record.start_seconds as number | null) ?? null, end_seconds: (record.end_seconds as number | null) ?? null });
+        return route.fulfill({ status: 201, headers: { 'access-control-allow-origin': '*' } });
+      }
+      if (method === 'PATCH') {
+        // Only the columns 0017 lets anyone update.
+        if (Object.keys(record).some((k) => !['video_id', 'start_seconds', 'end_seconds'].includes(k))) return error(route, 403, '42501', 'permission denied for table gym_exercise_videos');
+        const row = mock.videos.find((v) => v.gym_id === gymId && v.exercise_id === exerciseId);
+        if (!row) return json(route, 200, []);
+        Object.assign(row, record);
+        return json(route, 200, [{ exercise_id: row.exercise_id }]);
+      }
+      if (method === 'DELETE') {
+        const i = mock.videos.findIndex((v) => v.gym_id === gymId && v.exercise_id === exerciseId);
+        if (i >= 0) mock.videos.splice(i, 1);
+        return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
+      }
     }
     if (path.startsWith('/storage/v1/object/') && method === 'GET') {
       mock.storage.push(path.replace('/storage/v1/object/', ''));

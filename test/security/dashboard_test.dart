@@ -48,6 +48,12 @@ void main() {
     expect(headers, isNot(contains('unsafe-inline')));
     expect(headers, isNot(contains('unsafe-eval')));
     expect(headers, isNot(contains('data:')));
+    // D2 pictures: one Cloudinary upload path in img-src, never the host.
+    expect(
+      headers,
+      contains(r'https://res.cloudinary.com/${cloudName}/image/upload/'),
+    );
+    expect(headers, contains(r"`img-src 'self'${pictures}`"));
     // The build writes _headers and refuses to start without valid config.
     final vite = read('dashboard/vite.config.ts');
     expect(vite, contains("fileName: '_headers'"));
@@ -69,6 +75,7 @@ void main() {
       'VITE_SUPABASE_URL',
       'VITE_SUPABASE_PUBLISHABLE_KEY',
       'VITE_TURNSTILE_SITE_KEY',
+      'VITE_CLOUDINARY_CLOUD_NAME',
     });
     expect(example, contains('sb_publishable_example_not_a_real_key'));
     final ignore = read('dashboard/.gitignore');

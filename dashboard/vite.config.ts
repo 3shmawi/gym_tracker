@@ -3,14 +3,15 @@ import preact from '@preact/preset-vite';
 import { parseConfig } from './src/core/config';
 import { headersFile } from './build/headers';
 
-// Writes dist/_headers with a CSP that allows only our Supabase project.
+// Writes dist/_headers with a CSP that allows only our Supabase project (and,
+// when set, the exercise pictures' Cloudinary path).
 // The build fails when the Supabase settings are missing or not publishable.
-function securityHeaders(supabaseUrl: string, turnstile: boolean): Plugin {
+function securityHeaders(supabaseUrl: string, turnstile: boolean, cloudinaryCloudName: string | null): Plugin {
   return {
     name: 'azm-security-headers',
     apply: 'build',
     generateBundle() {
-      this.emitFile({ type: 'asset', fileName: '_headers', source: headersFile({ supabaseUrl, turnstile }) });
+      this.emitFile({ type: 'asset', fileName: '_headers', source: headersFile({ supabaseUrl, turnstile, cloudinaryCloudName }) });
     },
   };
 }
@@ -19,7 +20,7 @@ export default defineConfig(({ mode }) => {
   const env = { ...loadEnv(mode, process.cwd(), 'VITE_'), ...pick(process.env) };
   const config = parseConfig(env);
   return {
-    plugins: [preact(), securityHeaders(config.supabaseUrl, config.turnstileSiteKey !== null)],
+    plugins: [preact(), securityHeaders(config.supabaseUrl, config.turnstileSiteKey !== null, config.cloudinaryCloudName)],
     build: {
       // No inline script: the CSP has no 'unsafe-inline'.
       modulePreload: { polyfill: false },

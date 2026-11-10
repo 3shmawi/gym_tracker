@@ -273,7 +273,8 @@ were read from their repositories:
 No exercise id, name, picture id or URL (`test/security/exercise_library_test.dart`).
 
 ## Not done here
-The dashboard's picker. Gym pictures for exercises the captain wrote
+The dashboard's picker is built (D2, `dashboard.md` → "D2 Exercise media"; it
+uses the contract above: §1 search, §2 read, §3 the RPC). Gym pictures for exercises the captain wrote
 (`ex-…` ids) are stored and synced, but the app has an exercise screen only for
 library exercises.
 

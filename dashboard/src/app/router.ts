@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
+import { isLibraryId } from '../exercises/catalog';
 import { isGymId } from '../gyms/gyms';
 
 export type Route =
@@ -8,9 +9,11 @@ export type Route =
   | { readonly name: 'members'; readonly gymId: string }
   | { readonly name: 'member'; readonly gymId: string; readonly memberId: string }
   | { readonly name: 'add_members'; readonly gymId: string; readonly role: 'trainee' | 'captain' }
+  | { readonly name: 'exercises'; readonly gymId: string }
+  | { readonly name: 'exercise'; readonly gymId: string; readonly exerciseId: string }
   | { readonly name: 'not_found' };
 
-/** Paths are fixed strings; a gym id must be a UUID. Anything else is not found. */
+/** Paths are fixed strings; a gym id must be a UUID, an exercise id one of the library. Anything else is not found. */
 export function parsePath(pathname: string): Route {
   const path = pathname.replace(/\/+$/, '') || '/';
   if (path === '/') return { name: 'home' };
@@ -22,6 +25,10 @@ export function parsePath(pathname: string): Route {
   if (add?.[1] && isGymId(add[1])) return { name: 'add_members', gymId: add[1], role: add[2] === 'add-captain' ? 'captain' : 'trainee' };
   const member = /^\/g\/([^/]+)\/members\/([^/]+)$/.exec(path);
   if (member?.[1] && member[2] && isGymId(member[1]) && isGymId(member[2])) return { name: 'member', gymId: member[1], memberId: member[2] };
+  const exercises = /^\/g\/([^/]+)\/exercises$/.exec(path);
+  if (exercises?.[1] && isGymId(exercises[1])) return { name: 'exercises', gymId: exercises[1] };
+  const exercise = /^\/g\/([^/]+)\/exercises\/([^/]+)$/.exec(path);
+  if (exercise?.[1] && exercise[2] && isGymId(exercise[1]) && isLibraryId(exercise[2])) return { name: 'exercise', gymId: exercise[1], exerciseId: exercise[2] };
   return { name: 'not_found' };
 }
 
@@ -39,6 +46,10 @@ export function pathOf(route: Route): string {
       return `/g/${route.gymId}/members/${route.memberId}`;
     case 'add_members':
       return `/g/${route.gymId}/members/${route.role === 'captain' ? 'add-captain' : 'add'}`;
+    case 'exercises':
+      return `/g/${route.gymId}/exercises`;
+    case 'exercise':
+      return `/g/${route.gymId}/exercises/${route.exerciseId}`;
     case 'not_found':
       return '/';
   }

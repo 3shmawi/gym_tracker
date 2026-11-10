@@ -8,7 +8,10 @@ import type { GymsRepository, ManagedGym } from '../gyms/gyms';
 import { I18nContext, makeI18n } from '../i18n';
 import { GymPickerPage } from '../pages/GymPickerPage';
 import type { MembersRepository } from '../members/members';
+import type { MediaRepository } from '../exercises/media';
 import { AddMembersPage } from '../pages/AddMembersPage';
+import { ExercisePage } from '../pages/ExercisePage';
+import { ExercisesPage } from '../pages/ExercisesPage';
 import { MemberPage } from '../pages/MemberPage';
 import { MembersPage } from '../pages/MembersPage';
 import { SignInPage } from '../pages/SignInPage';
@@ -24,6 +27,10 @@ export interface AppServices {
   readonly members: MembersRepository;
   /** The bitmap for the middle of the QR: the gym's logo, else the app icon. */
   readonly loadLogo: (logoPath: string | null) => Promise<ImageBitmap | null>;
+  /** Exercise pictures and videos (D2). */
+  readonly media: MediaRepository;
+  /** Cloudinary cloud name of the picture library, or null (plain tiles). */
+  readonly cloudName: string | null;
 }
 
 type Session =
@@ -178,6 +185,26 @@ export function App({ services }: { readonly services: AppServices }) {
             )}
             {route.name === 'add_members' && (
               <AddMembersPage gym={gym} role={route.role} userId={session.user.userId} members={services.members} loadLogo={services.loadLogo} />
+            )}
+          </Shell>
+        );
+      }
+      case 'exercises':
+      case 'exercise': {
+        const gym = list.find((g) => g.id === route.gymId);
+        if (!gym) {
+          return (
+            <Shell {...shellBase} gyms={list}>
+              <ForbiddenView onPickAnother={() => { navigate({ name: 'gyms' }); }} onSignOut={signOut} />
+            </Shell>
+          );
+        }
+        return (
+          <Shell {...shellBase} gyms={list} gym={gym} nav="exercises">
+            {route.name === 'exercises' ? (
+              <ExercisesPage gym={gym} media={services.media} cloudName={services.cloudName} />
+            ) : (
+              <ExercisePage key={route.exerciseId} gym={gym} exerciseId={route.exerciseId} media={services.media} cloudName={services.cloudName} online={online} />
             )}
           </Shell>
         );

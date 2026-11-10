@@ -348,6 +348,15 @@ Pages headers and Git integration. Feature doc:
   (Cloudflare's Turnstile CSP guidance, read 2026-11-04); nothing else
   changes. The site key is publishable; the Turnstile secret lives only in
   Supabase → Authentication → Attack Protection.
+  With `VITE_CLOUDINARY_CLOUD_NAME` set (D2, exercise pictures), the build
+  adds **one path prefix** to `img-src`:
+  `https://res.cloudinary.com/<cloud>/image/upload/` (never the whole host,
+  never `connect-src`). Picture URLs are built only from a library
+  `public_id` and fixed transformations (`src/exercises/pictures.ts`), images
+  load with `referrerpolicy="no-referrer"`, and the dashboard makes **no**
+  request to YouTube: a gym video is stored as its 11-character id, and
+  "Open on YouTube" is a plain link (`rel="noopener noreferrer"`) that only
+  the captain's click follows. `scripts/check_dist.mjs` checks `img-src`.
   Also: `Strict-Transport-Security: max-age=31536000; includeSubDomains`,
   `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
   `Referrer-Policy: no-referrer`, `Cross-Origin-Opener-Policy: same-origin`,
