@@ -319,9 +319,13 @@ are pinned by hand — bump them here and in the kit together:
 | gitleaks | CI `security` job | v8.30.1 |
 | OSV-Scanner | CI `security` job | v2.7.0 |
 | Supabase CLI | Supabase workflows | 2.120.0 |
+<<<<<<< yours
 | Deno (`denoland/deno` image) | CI Edge Function tests | 2.9.6 |
 | `@supabase/server`, `@std/assert` | `supabase/functions/redeem_invite/deno.json` + `deno.lock` | 1.9.2, 1.0.19 |
 | Python packages for `scripts/make_invites` | `scripts/make_invites/requirements.txt` (hashes) | qrcode 8.2, pillow 13.0.0, reportlab 5.0.1, zxing-cpp 3.1.1, charset-normalizer 3.5.2 |
+=======
+| EGM plugin (`google/elephant-goldfish-model`) | `.claude/settings.json` (`ref`), design reviews | v0.1.1 |
+>>>>>>> kit fb68bc5
 
 ## One-time setup
 - Create the app in Play Console and App Store Connect (bundle id
@@ -360,7 +364,6 @@ doesn't stop the run halfway; re-running the script is always safe.
 | `IOS_CERTIFICATE_P12_BASE64`, `IOS_CERTIFICATE_PASSWORD` | your Apple Distribution certificate (.p12) |
 | `APPLE_TEAM_ID` | Team ID |
 | `ENV_PROD_JSON` | contents of `env/prod.json` (re-upload after changing a key; the release run warns about empty keys — `scripts/check_env.sh`) |
-
 | `KIT_SYNC_TOKEN` | optional, see "Kit sync" below |
 
 A store whose secrets are missing is skipped (with a warning), not failed.

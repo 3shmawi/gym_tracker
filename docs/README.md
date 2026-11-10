@@ -7,8 +7,14 @@ Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 - [Release & CI/CD](release.md) — how merging to `main` ships to the stores
 - [Deep links](deep_links.md)
 - [Security](security.md) — what is tested and how
+<<<<<<< yours
 - [Performance](performance.md) — scroll performance test, glass vs lite, numbers before/after
 - [Decisions](decisions/) — why the stack looks the way it does; [gym accounts](decisions/gym_accounts.md) (accepted; backend and app built, captain tools and dashboard not yet); [videos outside the app](decisions/video_outside_app.md) (accepted: no PiP or background play, pause on leaving)
+=======
+- [Decisions](decisions/) — why the stack looks the way it does
+- [Designs](designs/) — approved specs for big features, reviewed with EGM
+  ([getting started](getting_started.md) → "Design reviews")
+>>>>>>> kit fb68bc5
 
 ## Features
 - [App update gate](features/app_update.md)

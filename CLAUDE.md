@@ -113,6 +113,26 @@ leaks").
 4. `docs/features/<feature>.md` (start from `./scripts/new_feature.sh`), linked
    in `docs/README.md`. Update it whenever the feature changes.
 
+**Design before code for big features (Elephant-Goldfish Model)**
+The [EGM plugin](https://github.com/google/elephant-goldfish-model) is pinned
+in `.claude/settings.json` (docs/getting_started.md → "Design reviews").
+You (the elephant) know the project and write the spec; fresh "goldfish"
+reviewers read only the spec and the code, so they catch what you assumed.
+- **Use it** when a feature needs design decisions: auth, payments, sync or
+  offline data, new Supabase tables or RLS, store or CI changes, anything
+  hard to undo. Run `/egm:egm-brainstorm <idea>` → `/egm:egm-draft` →
+  `/egm:egm-review design_draft.md` → `/egm:egm-resolve`, and wait for the
+  user to approve the spec before writing code.
+- **Skip it** for small UI tweaks, copy changes and bug fixes with a clear
+  cause.
+- Save the approved spec as `docs/designs/<feature>.md` (EGM's default) and
+  link it from the feature doc's "Decisions & edge cases". Don't commit the
+  working files (`concepts_brief.md`, `design_draft.md`).
+- `/egm:egm-drift-report` checks that `docs/` still matches the code; run
+  it before a release with big changes.
+- Plugin not loaded (no `/egm:` commands)? Say so and continue without it;
+  never copy its prompts into the repo.
+
 **UI**
 - The look comes from the design in `docs/design.md` (Claude Design System +
   Design artifacts). Read them before building a screen; don't invent
@@ -267,5 +287,6 @@ Store texts: `store/` → Actions → **Store listing**.
 - [ ] Matches the design (docs/design.md); `screenUiTests` green and screenshots reviewed (`./scripts/ui_review.sh`) on small phone, large phone and tablet
 - [ ] Loading / empty / error / offline states; accessible (contrast, large text, labels)
 - [ ] Feature doc written/updated; analytics events listed
+- [ ] Big feature → spec reviewed with EGM, approved and saved in `docs/designs/`
 - [ ] Setup, CI or secrets changed → `docs/release.md` / `docs/security.md` updated; zizmor and `test/security/` green
 - [ ] Commit message follows Conventional Commits
