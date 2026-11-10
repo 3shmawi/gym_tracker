@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/features/settings/domain/entities/app_settings.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_view.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -43,11 +44,52 @@ void main() {
         ),
       );
 
+      // Each row shows its value and opens a sheet to pick (board 4).
+      expect(find.text(l10nEn.settingsThemeSystem), findsOneWidget);
+      await tester.tap(find.byKey(const Key('settings_theme')));
+      await tester.pumpAndSettle();
       await tester.tap(find.text(l10nEn.settingsThemeDark));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('settings_language')));
+      await tester.pumpAndSettle();
       await tester.tap(find.text(l10nEn.languageArabic));
+      await tester.pumpAndSettle();
 
       expect(themeMode, ThemeMode.dark);
       expect(locale, const Locale('ar'));
+    });
+
+    testWidgets('closing a choice sheet changes nothing', (tester) async {
+      var changes = 0;
+      await tester.pumpApp(
+        SettingsView(
+          settings: const AppSettings(themeMode: ThemeMode.light),
+          onLocaleChanged: (_) => changes++,
+          onThemeModeChanged: (_) => changes++,
+        ),
+      );
+      expect(find.text(l10nEn.settingsThemeLight), findsOneWidget);
+      await tester.tap(find.byKey(const Key('settings_theme')));
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      expect(changes, 0);
+    });
+
+    testWidgets('the version reads left to right in Arabic', (tester) async {
+      await tester.pumpApp(
+        SettingsView(
+          settings: const AppSettings(),
+          onLocaleChanged: (_) {},
+          onThemeModeChanged: (_) {},
+        ),
+        locale: const Locale('ar'),
+      );
+      await tester.pumpAndSettle();
+      final text = tester.widget<Text>(
+        find.byKey(const Key('settings_version')),
+      );
+      expect(text.textDirection, TextDirection.ltr);
     });
 
     testWidgets('the licenses row opens the licenses page', (tester) async {
@@ -188,11 +230,13 @@ void main() {
         ),
       );
 
-      final light = tester.widget<ListTile>(
-        find.widgetWithText(ListTile, l10nEn.settingsThemeLight),
+      await tester.tap(find.byKey(const Key('settings_theme')));
+      await tester.pumpAndSettle();
+      final light = tester.widget<AppChoiceRow>(
+        find.widgetWithText(AppChoiceRow, l10nEn.settingsThemeLight),
       );
-      final dark = tester.widget<ListTile>(
-        find.widgetWithText(ListTile, l10nEn.settingsThemeDark),
+      final dark = tester.widget<AppChoiceRow>(
+        find.widgetWithText(AppChoiceRow, l10nEn.settingsThemeDark),
       );
       expect(light.selected, isTrue);
       expect(dark.selected, isFalse);

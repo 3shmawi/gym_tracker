@@ -318,12 +318,17 @@ class AppIconButton extends StatelessWidget {
     required this.icon,
     required this.tooltip,
     required this.onPressed,
+    this.plain = false,
     super.key,
   });
 
   final IconData icon;
   final String tooltip;
   final VoidCallback onPressed;
+
+  /// Just the icon, no round surface (a button inside a list row, like
+  /// "How to do it" on the workout screen): same 48×48 target.
+  final bool plain;
 
   @override
   Widget build(BuildContext context) {
@@ -344,7 +349,9 @@ class AppIconButton extends StatelessWidget {
             child: Center(
               widthFactor: 1,
               heightFactor: 1,
-              child: AppUi.isLite(context)
+              child: plain
+                  ? _PlainIconButton(icon: icon, onPressed: onPressed)
+                  : AppUi.isLite(context)
                   ? _LiteIconButton(icon: icon, onPressed: onPressed)
                   : GlassButton(
                       icon: Icon(icon),
@@ -361,6 +368,32 @@ class AppIconButton extends StatelessWidget {
       ),
     );
   }
+}
+
+/// [AppIconButton.plain]: the icon with an ink splash, no surface.
+class _PlainIconButton extends StatelessWidget {
+  const new({required this.icon, required this.onPressed});
+
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    type: MaterialType.transparency,
+    shape: const CircleBorder(),
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: onPressed,
+      child: SizedBox.square(
+        dimension: AppDimens.minTouchTarget,
+        child: Icon(
+          icon,
+          size: AppDimens.iconMd,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+      ),
+    ),
+  );
 }
 
 /// Lite mode: a solid round button, no shader or blur.

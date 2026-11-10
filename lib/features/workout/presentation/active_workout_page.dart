@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/router/link_guard.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
 import 'package:gym_tracker/features/video/presentation/mini_player.dart';
 import 'package:gym_tracker/features/workout/domain/services/rest_alarm.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_controller.dart';
@@ -105,6 +106,7 @@ class _ActiveWorkoutPageState extends ConsumerState<ActiveWorkoutPage>
         context.canPop() ? context.pop() : context.go(AppRoutes.home);
     return ActiveWorkoutView(
       state: ref.watch(activeWorkoutControllerProvider),
+      covers: ref.watch(exerciseCoversProvider),
       now: ref.watch(clockProvider),
       onDockHeight: ref.reserveBottom,
       actions: ActiveWorkoutActions(
@@ -121,6 +123,10 @@ class _ActiveWorkoutPageState extends ConsumerState<ActiveWorkoutPage>
         },
         onClose: home,
         onRetry: () => unawaited(controller.retry()),
+        // The library's exercise screen (pictures, steps, video); back
+        // returns to the same set.
+        onHowTo: (id) =>
+            unawaited(context.push<void>(AppRoutes.libraryExercise(id))),
       ),
     );
   }

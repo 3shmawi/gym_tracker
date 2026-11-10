@@ -37,6 +37,54 @@ Status: slice 3 started (rest notification), plus levels.
 
 5. **Edit the plan** (`/plan`: the list button on the home bar, or
    Settings → Workout → Your plan; design boards 5.0–5.9). See "Plan editor".
+6. **Pictures, how-to and the workout pill** (2026-11-10; design
+   "Azm — exercise pictures, workout pill, how-to",
+   https://claude.ai/artifact/6x6HnGjjC3BomfkW6fC9KU, approved by the owner).
+   See "Exercise pictures, how-to, workout pill".
+
+## Exercise pictures, how-to, workout pill
+- **Pictures.** Home: every exercise row starts with its picture (56,
+  the number in the corner; 40 when the system text is enlarged, so the
+  words keep their room). Workout: the current exercise has a large picture
+  (84) with "Exercise 2 of 7" above its name and the trend badge under it;
+  other lines have a 40 picture (green with a check when done). Source:
+  the gym's first chosen picture (`exerciseCoversProvider`), else the
+  bundled drawing (`ExerciseImages`), else a dumbbell. Widget:
+  `ExerciseThumb` / `NumberedExerciseThumb`
+  (`features/library/presentation/widgets/exercise_thumb.dart`).
+- **How to do it.** The current exercise has a **How to do it** button;
+  every other line (and a superset partner) has a ▶ icon button ("How to do
+  <name>"), outside the line's own tap (which picks the exercise). Both open
+  the library's exercise screen (`/library/<id>`: pictures, steps, video);
+  back returns to the same set. An exercise not in the library (a custom
+  name) shows "not in the library".
+- **Workout pill** (`WorkoutPillHost`, mounted in `AppShell` under the
+  video mini player's overlay). A floating card, 196 × 64 (wider for long
+  names or large text, never past the screen), on **every screen but the
+  workout itself** and the screens before the app (welcome, joining a gym);
+  the home screen included (owner's choice). Hidden while the keyboard is
+  open and when there is nothing to start (no plan, empty day). States:
+  - **Start workout** · "Day 2 · Shoulders & Arms": starts the waiting
+    day; asks "You already trained today" first when needed (same sheet as
+    the home screen, `confirmTrainAgain`).
+  - **Resume workout** · "<exercise> · 2/7": the ring shows the exercises
+    done, the current exercise's picture inside.
+  - **Rest** · "Next: set 3": the ring and the clock count down (ticks once
+    a second only while resting).
+  - **Go!** · "Set 3 · 50 kg" (green): the rest ran out away from the
+    workout screen.
+  One tap opens the workout; when the workout is under the current screen
+  (the how-to page opened from it) it goes back to it instead of opening a
+  second one. Drag it to any corner (`workoutPillCornerProvider`, default
+  bottom end); drag it past a side to tuck it there as a tab; one tap brings
+  it back. It sits above the home screen's Start button and stacks above the
+  video mini player when both are in the same corner. Screen readers: one
+  button with the whole state ("Resume workout: Flat Dumbbell Press, 2 of 7
+  exercises done"), and a "Tuck the workout button at the edge" action.
+- The "Rest over" alarm still stops when the workout screen is closed
+  (`RestAlarmSync` lives on that screen). The pill shows the countdown and
+  turns to **Go!**, but does not ring. Keeping the alarm while the pill
+  shows is a follow-up.
 
 ## Rules
 - **Days have stable ids** (`WorkoutDay.id`). Finished workouts, the workout
@@ -358,6 +406,7 @@ plugin README.
 | `progress_opened` | Progress screen opened | none |
 | `exercise_history_opened` | An exercise's history opened | none (the id comes from a link) |
 | `level_reached` | A new best level (once per level) | `level` (`intermediate` / `pro`) |
+| `workout_pill_tapped` | The floating workout pill was tapped | `state` (`start` / `resume` / `rest` / `rest_over`) |
 | `rest_alarm_answered` | The first rest's permission question was answered | `allowed` (notifications on), `on_time` (and exact alarms on) |
 
 Every event also carries `app` (`gym_tracker`) and `environment`
@@ -432,9 +481,28 @@ None. (`active_workout` was removed when the workout screen shipped.)
 - The template is the member's real plan (`plan_templates_test.dart` pins
   it). Targets are 3×12 except abs (3×15); squat rests 120 s. Change the
   targets when the member gives them.
+- **Days 4 and 5 (fixed 2026-11-10).** Until then the template repeated
+  day 1's exercises on day 4 and day 2's on day 5, although the owner's plan
+  trains the same muscles with other exercises. Now day 4 is بار عالي ·
+  ظرافة · دفع جهاز مستوي · طرمبة واسع · كابل تجميع من فوق · جهاز همر ضيق ·
+  بطن, and day 5 is دفع جهاز أمامي كتف · رفرفة دمبل جانبي كتف · حبل على الوش ⇄
+  ترباس بار سميث · مسطرة كابل من تحت باي ⇄ حبل خلفي تراي · تكوير على جهاز
+  الحصان ⇄ دمبل زوجي تراي. Only abs (days 1 and 4) and the rope pushdown
+  (days 2 and 5) are shared, so they share their history.
+  - **Saved plans are upgraded** when days 4 and 5 are still exactly the old
+    copies (same day ids, never edited): on the phone when the plan loads
+    (`PlanTemplates.upgrade`, `LocalWorkoutRepository.loadPlan`; skipped
+    while a workout of day 4 or 5 is in progress), and on the server by
+    migration `0018_template_days_4_5.sql` (gym plans in `plans` and
+    personal plans; version + 1 so phones fetch it; `updated_by` null, so no
+    "captain updated your plan" toast). Anything edited is left alone.
+  - English names to confirm with the owner: `Lat Pulldown Machine`
+    (ظرافة), `Wide-Grip T-Bar Row` (طرمبة واسع), `Two-Hand DB Overhead
+    Extension` (دمبل زوجي).
 - Exercise ids are stable strings; history is matched by id, so renaming an
   exercise keeps its history. Renaming changes only that day's copy of an
-  exercise that is on two days (day 1 and day 4); their history is shared.
+  exercise that is on two days (abs on days 1 and 4); their history is
+  shared.
 - Day ids instead of blocking edits: reordering is free, only the day of a
   workout in progress is locked, and the waiting workout never jumps.
 - Numbers use Western digits in both languages, like gym plates.
@@ -471,3 +539,12 @@ back home: the new day is waiting → Start: "Set 1 of 4".
 **Caption (English):** Build your own plan in the app: days, exercises, sets, reps, rest. Reorder anything, and the workout waiting for you stays put.
 **Caption (Egyptian Arabic):** اعمل خطتك بنفسك من التطبيق: الأيام والتمارين والمجموعات والعدات والراحة. رتّب زي ما تحب، والتمرين اللي مستنيك مش هيتغير.
 **Hashtags:** #flutter #buildinpublic #gym #fitness #riverpod
+
+**Workout pill (last test):** the 5-day plan with a picture on every
+exercise → Settings: the pill waits in the corner → one tap starts day 1 →
+**How to do it** on the current exercise → the pill on the how-to page goes
+back to the same set → log it.
+**Hook:** Start or resume your workout from any screen.
+**Caption (English):** Every exercise now has its picture, and how to do it is one tap away. The little workout button follows you everywhere: start, resume, or watch your rest from any screen.
+**Caption (Egyptian Arabic):** كل تمرين بقى ليه صورته، وطريقة الأداء على بعد دوسة. وزرار التمرين الصغير معاك في كل حتة: تبدأ أو تكمّل أو تشوف الراحة من أي صفحة.
+**Hashtags:** #flutter #buildinpublic #gym #fitness

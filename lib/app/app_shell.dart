@@ -8,6 +8,7 @@ import 'package:gym_tracker/core/widgets/offline_banner.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
 import 'package:gym_tracker/features/settings/domain/entities/app_settings.dart';
 import 'package:gym_tracker/features/video/presentation/mini_player_host.dart';
+import 'package:gym_tracker/features/workout/presentation/workout_pill_host.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 
 /// The MaterialApp, configured once: screen scaling, themes, localization
@@ -35,7 +36,11 @@ class AppShell extends StatelessWidget {
           child: ConsentGate(
             child: GymSyncHost(
               child: OfflineBanner(
-                child: MiniPlayerHost(child: child ?? const SizedBox.shrink()),
+                child: MiniPlayerHost(
+                  child: WorkoutPillHost(
+                    child: child ?? const SizedBox.shrink(),
+                  ),
+                ),
               ),
             ),
           ),

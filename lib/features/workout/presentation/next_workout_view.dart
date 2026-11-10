@@ -10,6 +10,7 @@ import 'package:gym_tracker/core/widgets/state_views.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
 import 'package:gym_tracker/features/workout/presentation/widgets/exercise_preview_row.dart';
 import 'package:gym_tracker/features/workout/presentation/widgets/level_card.dart';
+import 'package:gym_tracker/features/workout/presentation/widgets/train_again_sheet.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 import 'package:intl/intl.dart';
 
@@ -29,8 +30,13 @@ class NextWorkoutView extends StatelessWidget {
     this.onOpenWorkspace,
     this.onBuildPlan,
     this.onEditDay,
+    this.covers = const {},
     super.key,
   });
+
+  /// The gym's picture of each exercise (by id); the others show their
+  /// bundled drawing.
+  final Map<String, ImageProvider> covers;
 
   /// null value: no plan yet.
   final AsyncValue<NextWorkout?> state;
@@ -104,6 +110,7 @@ class NextWorkoutView extends StatelessWidget {
           onChooseDay: onChooseDay,
           onOpenExercise: onOpenExercise,
           onEditDay: onEditDay,
+          covers: covers,
         ),
         AsyncData() => EmptyView(
           icon: Icons.fitness_center,
@@ -150,9 +157,11 @@ class _Workout extends StatelessWidget {
     required this.onChooseDay,
     this.onOpenExercise,
     this.onEditDay,
+    this.covers = const {},
   });
 
   final NextWorkout next;
+  final Map<String, ImageProvider> covers;
   final ValueChanged<String>? onEditDay;
   final ValueChanged<String>? onOpenExercise;
   final VoidCallback? onStart;
@@ -209,52 +218,7 @@ class _Workout extends StatelessWidget {
   /// today (a second session is allowed, never blocked).
   Future<void> _start(BuildContext context) async {
     if (!next.trainedToday) return onStart?.call();
-    final l10n = context.l10n;
-    final go = await showAppSheet<bool>(
-      context: context,
-      builder: (sheet) => Padding(
-        padding: EdgeInsetsDirectional.fromSTEB(
-          AppDimens.md,
-          0,
-          AppDimens.md,
-          AppDimens.lg,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: AppDimens.sm2,
-          children: [
-            Semantics(
-              header: true,
-              child: Text(
-                l10n.todayAgainTitle,
-                style: AppTextStyles.title.copyWith(
-                  color: sheet.palette.textPrimary,
-                ),
-              ),
-            ),
-            Text(
-              l10n.todayAgainBody,
-              style: AppTextStyles.body.copyWith(
-                color: sheet.palette.textSecondary,
-              ),
-            ),
-            AppPrimaryButton(
-              key: const Key('start_again_confirm'),
-              icon: Icons.play_arrow_rounded,
-              label: l10n.todayAgainStart,
-              onPressed: () => Navigator.of(sheet).pop(true),
-            ),
-            AppSecondaryButton(
-              key: const Key('start_again_cancel'),
-              label: l10n.workoutCancel,
-              onPressed: () => Navigator.of(sheet).pop(false),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (go ?? false) onStart?.call();
+    if (await confirmTrainAgain(context)) onStart?.call();
   }
 
   @override
@@ -382,6 +346,7 @@ class _Workout extends StatelessWidget {
                         ExercisePreviewRow(
                           number: i + 1,
                           preview: preview,
+                          cover: covers[preview.exercise.id],
                           onTap: onOpenExercise == null
                               ? null
                               : () => onOpenExercise!(preview.exercise.id),
@@ -419,6 +384,7 @@ class _Workout extends StatelessWidget {
               AppDimens.md,
             ),
             child: AppPrimaryButton(
+              key: const Key('home_start_button'),
               label: l10n.todayStart,
               icon: Icons.play_arrow_rounded,
               onPressed: () => _start(context),
