@@ -8,6 +8,7 @@ import { GymsRepository } from './gyms/gyms';
 import { loadLogo } from './invites/logo';
 import { MediaRepository } from './exercises/media';
 import { MembersRepository } from './members/members';
+import { PlansRepository } from './plans/plans';
 import { ConfigErrorPage } from './ui/states';
 import './styles/app.css';
 
@@ -24,6 +25,7 @@ if (root) {
       loadLogo: (logoPath: string | null) => loadLogo(supabase, logoPath),
       media: new MediaRepository(supabase),
       cloudName: config.cloudinaryCloudName,
+      plans: new PlansRepository(supabase),
     };
     render(<App services={services} />, root);
   } catch (error: unknown) {

@@ -21,4 +21,11 @@ describe('parsePath', () => {
     expect(parsePath('/%2e%2e/').name).toBe('not_found');
     expect(parsePath('/nope').name).toBe('not_found');
   });
+  it('opens a member\'s plan (D3); both ids must be UUIDs', () => {
+    expect(parsePath(`/g/${ID}/members/${ID}/plan`)).toEqual({ name: 'member_plan', gymId: ID, memberId: ID });
+    expect(parsePath(`/g/${ID}/members/${ID}/plan/`)).toEqual({ name: 'member_plan', gymId: ID, memberId: ID });
+    for (const bad of [`/g/${ID}/members/x/plan`, `/g/${ID}/members/${ID}/plan/extra`, `/g/${ID}/members/${ID.toUpperCase()}/plan`, `/g/${ID}/members/%2e%2e/plan`]) {
+      expect(parsePath(bad).name, bad).toBe('not_found');
+    }
+  });
 });

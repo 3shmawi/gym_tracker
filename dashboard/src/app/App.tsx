@@ -9,6 +9,8 @@ import { I18nContext, makeI18n } from '../i18n';
 import { GymPickerPage } from '../pages/GymPickerPage';
 import type { MembersRepository } from '../members/members';
 import type { MediaRepository } from '../exercises/media';
+import type { PlansRepository } from '../plans/plans';
+import { PlanPage } from '../pages/PlanPage';
 import { AddMembersPage } from '../pages/AddMembersPage';
 import { ExercisePage } from '../pages/ExercisePage';
 import { ExercisesPage } from '../pages/ExercisesPage';
@@ -31,6 +33,8 @@ export interface AppServices {
   readonly media: MediaRepository;
   /** Cloudinary cloud name of the picture library, or null (plain tiles). */
   readonly cloudName: string | null;
+  /** Members' plans (D3). */
+  readonly plans: PlansRepository;
 }
 
 type Session =
@@ -168,6 +172,7 @@ export function App({ services }: { readonly services: AppServices }) {
       }
       case 'members':
       case 'member':
+      case 'member_plan':
       case 'add_members': {
         const gym = list.find((g) => g.id === route.gymId);
         if (!gym) {
@@ -182,6 +187,9 @@ export function App({ services }: { readonly services: AppServices }) {
             {route.name === 'members' && <MembersPage gym={gym} members={services.members} />}
             {route.name === 'member' && (
               <MemberPage gym={gym} memberId={route.memberId} members={services.members} loadLogo={services.loadLogo} />
+            )}
+            {route.name === 'member_plan' && (
+              <PlanPage gym={gym} memberId={route.memberId} members={services.members} plans={services.plans} media={services.media} cloudName={services.cloudName} online={online} />
             )}
             {route.name === 'add_members' && (
               <AddMembersPage gym={gym} role={route.role} userId={session.user.userId} members={services.members} loadLogo={services.loadLogo} />

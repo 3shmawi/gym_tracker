@@ -154,6 +154,7 @@ export function MemberPage({
   };
 
   const manageable = canManage(gym.role, member.role);
+  const planRoute: Route = { name: 'member_plan', gymId: gym.id, memberId: member.id };
   const ended = member.status === 'ended';
   const locked = !manageable || ended;
   const status = statusOf(t, lang, member, new Date());
@@ -217,6 +218,15 @@ export function MemberPage({
         />
 
         <div class="grid2">
+          {manageable && !ended ? (
+            <section class="panel" aria-labelledby="s-plan">
+              <h2 class="h2" id="s-plan">{t('member.sectionPlan')}</h2>
+              <p class="sub">{t('member.planBody')}</p>
+              <a class="btn pri self-start" href={pathOf(planRoute)} onClick={linkHandler(planRoute)}>
+                {t('member.openPlan')}
+              </a>
+            </section>
+          ) : null}
           {!locked && member.status === 'active' ? (
             <section class="panel" aria-labelledby="s-phone">
               <h2 class="h2" id="s-phone">{t('member.sectionPhone')}</h2>
