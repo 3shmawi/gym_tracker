@@ -27,7 +27,7 @@ const DAY = 86_400_000;
 const GYM_ID = 'b0000000-0000-4000-8000-000000000001';
 const ME = 'c0000000-0000-4000-8000-000000000001';
 const id = (n: number) => `a0000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
-const gym = (role: 'owner' | 'captain'): ManagedGym => ({ id: GYM_ID, name: 'Power Gym', role, logoPath: null, historyAfterEnd: 'readable', memberCount: 5 });
+const gym = (role: 'owner' | 'captain'): ManagedGym => ({ id: GYM_ID, name: 'Power Gym', role, logoPath: null, historyAfterEnd: 'readable', brandColor: null, memberCount: 5 });
 const noFlags = { editTargets: false, editPlan: false, buildOwnPlan: false };
 
 function member(n: number, over: Partial<Member> = {}): Member {

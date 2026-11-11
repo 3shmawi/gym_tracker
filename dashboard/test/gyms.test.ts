@@ -13,9 +13,9 @@ describe('GymsRepository', () => {
   it('drops deleted gyms, cleans names and sorts', async () => {
     const bidi = String.fromCharCode(0x202e);
     const rows = [
-      { role: 'captain', gym: { id: B, name: `Zed${bidi} Gym` } },
+      { role: 'captain', gym: { id: B, name: `Zed${bidi} Gym`, brand_color: '#FFF<script>' } },
       { role: 'owner', gym: null },
-      { role: 'owner', gym: { id: A, name: 'Alpha' } },
+      { role: 'owner', gym: { id: A, name: 'Alpha', brand_color: '#facc15' } },
       { role: 'member', gym: { id: A, name: 'Not a manager' } },
       { role: 'owner', gym: { id: 'not-a-uuid', name: 'Bad id' } },
     ];
@@ -24,8 +24,8 @@ describe('GymsRepository', () => {
     expect(result).toEqual({
       ok: true,
       value: [
-        { id: A, name: 'Alpha', role: 'owner', memberCount: 7, logoPath: null, historyAfterEnd: 'readable' },
-        { id: B, name: 'Zed Gym', role: 'captain', memberCount: 7, logoPath: null, historyAfterEnd: 'readable' },
+        { id: A, name: 'Alpha', role: 'owner', memberCount: 7, logoPath: null, historyAfterEnd: 'readable', brandColor: '#facc15' },
+        { id: B, name: 'Zed Gym', role: 'captain', memberCount: 7, logoPath: null, historyAfterEnd: 'readable', brandColor: null },
       ],
     });
   });
