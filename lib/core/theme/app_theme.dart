@@ -39,9 +39,12 @@ abstract final class AppTheme {
   static ThemeData _build(Brightness brightness, BrandColors brand) {
     final isDark = brightness == Brightness.dark;
     final base = isDark ? AppPalette.dark : AppPalette.light;
-    // Seeded from the brand, then pinned to the Design System tokens.
+    // Material's generated roles (card surfaces in lite mode, outlines,
+    // containers) are always seeded from Azm's green: surfaces stay Azm's
+    // for every gym, and they are what the brand's contrast is checked
+    // against. Then pinned to the Design System tokens and the brand.
     final seeded = ColorScheme.fromSeed(
-      seedColor: brand.seed,
+      seedColor: AppColors.primary,
       brightness: brightness,
     );
     final scheme = seeded.copyWith(
