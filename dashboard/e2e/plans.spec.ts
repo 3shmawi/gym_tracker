@@ -142,7 +142,7 @@ test.describe('a member\'s plan', () => {
     await page.getByRole('button', { name: en('plan.save') }).click();
     await expect(page.getByText(en('plan.saved', { name: 'Youssef Khaled' }))).toBeVisible();
     expect(lastSave(mock)?.p_base_version).toBe(0);
-    expect((lastSave(mock)?.p_body as Body).days[0]?.name).toEqual({ ar: 'اليوم ١', en: 'Day 1' });
+    expect((lastSave(mock)?.p_body as Body).days[0]?.name).toEqual({ ar: 'اليوم 1', en: 'Day 1' });
   });
 
   test('states: error with retry, refused save, offline, leave warning', async ({ page, context }) => {

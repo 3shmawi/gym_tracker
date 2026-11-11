@@ -10,6 +10,8 @@ import { MediaRepository } from './exercises/media';
 import { MembersRepository } from './members/members';
 import { PlansRepository } from './plans/plans';
 import { TemplatesRepository } from './plans/templates';
+import { ProgressRepository } from './progress/progress';
+import { GymSettingsRepository } from './gyms/settings';
 import { ConfigErrorPage } from './ui/states';
 import './styles/app.css';
 
@@ -28,6 +30,8 @@ if (root) {
       cloudName: config.cloudinaryCloudName,
       plans: new PlansRepository(supabase),
       templates: new TemplatesRepository(supabase),
+      progress: new ProgressRepository(supabase),
+      gymSettings: new GymSettingsRepository(supabase),
     };
     render(<App services={services} />, root);
   } catch (error: unknown) {

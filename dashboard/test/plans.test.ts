@@ -117,7 +117,7 @@ describe('editing (EditPlan in the app)', () => {
     p = ok(edit.moveDay(p, 'day-3', -1));
     expect(p.days.map((d) => d.id)).toEqual(['day-1', 'day-3', 'day-2']);
     expect(ok(edit.moveDay(p, 'day-1', -1))).toBe(p);
-    p = ok(edit.renameDay(p, 'day-3', { ar: 'كتف ٢', en: 'Shoulders 2' }));
+    p = ok(edit.renameDay(p, 'day-3', { ar: 'كتف 2', en: 'Shoulders 2' }));
     expect(p.days[1]?.name.en).toBe('Shoulders 2');
     expect(edit.renameDay(p, 'day-3', { ar: '', en: '' })).toEqual({ ok: false, error: 'invalid_name' });
     p = ok(edit.deleteDay(p, 'day-3'));
@@ -160,7 +160,7 @@ describe('editing (EditPlan in the app)', () => {
   it('ids never change: rename keeps the id, a first plan is valid', () => {
     const p = ok(edit.renameExercise(plan(), 'day-1', 'flat_db_press', { ar: 'جديد', en: 'New' }));
     expect(p.days[0]?.exercises[0]?.id).toBe('flat_db_press');
-    expect(planProblem(edit.firstPlan({ ar: 'اليوم ١', en: 'Day 1' }, 'day-x'))).toBeNull();
+    expect(planProblem(edit.firstPlan({ ar: 'اليوم 1', en: 'Day 1' }, 'day-x'))).toBeNull();
   });
 });
 

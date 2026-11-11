@@ -345,6 +345,20 @@ by clients. `apply_plan_template` is `security definer`, pinned, `execute` for
 Templates hold no personal data beyond the plan content and membership ids.
 `supabase/tests/plan_templates_rls.test.sql`.
 
+### Gym settings and logo upload (dashboard D5)
+The dashboard writes `gyms` (`name`, `logo_path`, `history_after_end`) and
+`gym-logos/<gym_id>/logo.png|jpg` through the existing grants and policies
+(migrations 0005, 0008: `private.i_manage`). Before any request a logo is
+checked by size (≤ 512 KB) and by its first bytes (PNG/JPEG signatures, so a
+renamed SVG or script is refused), then decoded and redrawn on a canvas so only
+pixels are uploaded (EXIF such as GPS place never leaves the computer). The
+object path is built from the gym id and the checked type, never the file name.
+Previews are canvases, so the CSP keeps `img-src` without `blob:`/`data:`.
+Only the owner sees the forms; a captain gets the page read-only. That is a
+dashboard choice, **not** a security boundary: the policies still allow a
+captain to update, so a server-side owner-only rule needs a migration
+(dashboard.md → D5 "Needs a backend step").
+
 ### Captain dashboard (`dashboard/`, azmm-dash.pages.dev)
 Docs read 2026-11-04: Supabase email OTP
 (https://supabase.com/docs/guides/auth/auth-email-passwordless), Cloudflare

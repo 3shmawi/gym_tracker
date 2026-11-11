@@ -1,5 +1,5 @@
 import { isLibraryId } from '../exercises/catalog';
-import { useI18n } from '../i18n';
+import { numberLocale, useI18n } from '../i18n';
 import type { Targets } from '../plans/edit';
 import type { ExerciseDiff } from '../plans/templateDiff';
 import { LIMITS, type PlanDay, type PlanExercise, type Unit } from '../plans/model';
@@ -64,7 +64,7 @@ export function PlanDayView({ day, index, dayCount, editable, covers, cloudName,
   const dayName = nameIn(lang, day.name);
   const other = lang === 'ar' ? day.name.en : day.name.ar;
   const unitLabel: Record<Unit, string> = { kg: t('plan.unitKg'), plate: t('plan.unitPlate'), reps: t('plan.unitReps') };
-  const stepLabel = (s: number) => t('plan.stepKg', { step: new Intl.NumberFormat(lang === 'ar' ? 'ar-EG' : 'en').format(s) });
+  const stepLabel = (s: number) => t('plan.stepKg', { step: new Intl.NumberFormat(numberLocale(lang)).format(s) });
 
   const row = (e: PlanExercise, i: number) => {
     const name = nameIn(lang, e.name);

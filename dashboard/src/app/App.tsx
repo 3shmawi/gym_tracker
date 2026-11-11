@@ -11,6 +11,9 @@ import type { MembersRepository } from '../members/members';
 import type { MediaRepository } from '../exercises/media';
 import type { PlansRepository } from '../plans/plans';
 import type { TemplatesRepository } from '../plans/templates';
+import type { ProgressRepository } from '../progress/progress';
+import type { GymSettingsRepository } from '../gyms/settings';
+import { SettingsPage } from '../pages/SettingsPage';
 import { TemplatesPage } from '../pages/TemplatesPage';
 import { PlanPage } from '../pages/PlanPage';
 import { AddMembersPage } from '../pages/AddMembersPage';
@@ -39,6 +42,10 @@ export interface AppServices {
   readonly plans: PlansRepository;
   /** The gym's plan templates (D4). */
   readonly templates: TemplatesRepository;
+  /** Members' progress (D5, views of migration 0012). */
+  readonly progress: ProgressRepository;
+  /** Gym settings: name, logo, history after a membership ends (D5). */
+  readonly gymSettings: GymSettingsRepository;
 }
 
 type Session =
@@ -105,6 +112,14 @@ export function App({ services }: { readonly services: AppServices }) {
   useEffect(() => {
     if (session.state === 'signed_in') loadGyms(session.user);
   }, [session, loadGyms]);
+
+  // After a settings change: swap the list without the loading skeleton.
+  const refreshGyms = useCallback(() => {
+    if (session.state !== 'signed_in') return;
+    void services.gyms.managedGyms(session.user.userId).then((result) => {
+      if (result.ok) setGyms({ state: 'ready', gyms: result.value });
+    });
+  }, [services, session]);
 
   const signOut = useCallback(() => {
     signingOut.current = true;
@@ -188,9 +203,9 @@ export function App({ services }: { readonly services: AppServices }) {
         }
         return (
           <Shell {...shellBase} gyms={list} gym={gym} nav="members">
-            {route.name === 'members' && <MembersPage gym={gym} members={services.members} />}
+            {route.name === 'members' && <MembersPage gym={gym} members={services.members} progress={services.progress} />}
             {route.name === 'member' && (
-              <MemberPage gym={gym} memberId={route.memberId} members={services.members} loadLogo={services.loadLogo} />
+              <MemberPage gym={gym} memberId={route.memberId} members={services.members} loadLogo={services.loadLogo} progressDeps={{ progress: services.progress, plans: services.plans, media: services.media, cloudName: services.cloudName }} />
             )}
             {route.name === 'member_plan' && (
               <PlanPage gym={gym} memberId={route.memberId} members={services.members} plans={services.plans} templates={services.templates} media={services.media} cloudName={services.cloudName} online={online} />
@@ -198,6 +213,21 @@ export function App({ services }: { readonly services: AppServices }) {
             {route.name === 'add_members' && (
               <AddMembersPage gym={gym} role={route.role} userId={session.user.userId} members={services.members} loadLogo={services.loadLogo} />
             )}
+          </Shell>
+        );
+      }
+      case 'settings': {
+        const gym = list.find((g) => g.id === route.gymId);
+        if (!gym) {
+          return (
+            <Shell {...shellBase} gyms={list}>
+              <ForbiddenView onPickAnother={() => { navigate({ name: 'gyms' }); }} onSignOut={signOut} />
+            </Shell>
+          );
+        }
+        return (
+          <Shell {...shellBase} gyms={list} gym={gym} nav="settings">
+            <SettingsPage key={gym.id} gym={gym} settings={services.gymSettings} loadLogo={services.loadLogo} online={online} onChanged={refreshGyms} />
           </Shell>
         );
       }

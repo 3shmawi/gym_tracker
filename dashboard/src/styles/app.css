@@ -12,6 +12,7 @@
 
 :root{
   color-scheme:light;
+  --chart:#15803D;
   --p:#22C55E; --p-text:#15803D; --on-p:#04210F;
   --g0:#EEF4F0; --surface:#FFFFFF; --glass:rgba(255,255,255,.72); --edge:rgba(12,22,16,.10);
   --t1:#0C1610; --t2:#46554C; --t3:#5F6E66;
@@ -21,6 +22,7 @@
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
+  --chart:#16A34A;
   --g0:#07120C; --surface:#141E19; --glass:rgba(22,34,28,.72); --edge:rgba(255,255,255,.12);
   --t1:#F2F7F3; --t2:#A9B8AF; --t3:#7C8B83; --p-text:#4ADE80;
   --up:#4ADE80; --keep:#93C5FD; --down:#FBBF24; --err:#F87171; --warn:#FBBF24; --new:#C4B5FD;
@@ -365,3 +367,32 @@ table.plan-t tr.paired td{border-bottom-style:dashed}
 tr.differs td{background:color-mix(in srgb,var(--warn) 8%,transparent)}
 .tpl-badge{color:var(--down);background:color-mix(in srgb,var(--warn) 14%,transparent)}
 .apply-list{max-height:30vh;overflow:auto}
+
+/* ---- D5: progress and settings ---- */
+.chart{width:100%;max-width:640px}
+.chart svg{display:block;width:100%;height:auto}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .threshold{stroke:var(--t3);stroke-width:1;stroke-dasharray:4 4}
+.chart .axis{fill:var(--t2);font-size:11px;font-family:"Inter",sans-serif}
+.chart .mark{fill:var(--chart)}
+.chart .zero{stroke:var(--t3);stroke-width:2}
+.chart .hit{fill:transparent}
+.chart .line{fill:none;stroke:var(--chart);stroke-width:2}
+.chart .dot{fill:var(--chart);stroke:var(--surface);stroke-width:2}
+.chart .record{fill:var(--surface);stroke:var(--chart);stroke-width:3}
+.stats{display:flex;flex-wrap:wrap;gap:12px}
+.stat{flex:1 1 140px;display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-radius:16px;background:var(--chip)}
+.stat b{font-size:24px;font-weight:800;font-family:"Inter","Cairo",sans-serif}
+details.tbl summary{cursor:pointer;min-height:44px;display:inline-flex;align-items:center;font-weight:700;color:var(--p-text)}
+.logo-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.logo-box{width:64px;height:64px;border-radius:18px;overflow:hidden;background:var(--chip);display:grid;place-items:center;flex:none}
+.logo-box canvas{width:64px;height:64px;display:block}
+.radio-card{display:flex;gap:12px;align-items:flex-start;min-height:64px;padding:12px;border-radius:14px;border:1px solid var(--edge);cursor:pointer}
+.radio-card input{width:22px;height:22px;margin:2px 0 0;accent-color:var(--p-text);flex:none}
+.radio-card > span{display:flex;flex-direction:column;gap:2px}
+.ex-pick{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.btn.is-off{opacity:.55;cursor:not-allowed;pointer-events:none}
+/* Read-only settings (captains, D5) */
+.kv{display:grid;gap:4px 16px;margin:0}
+.kv dt{font-size:13px;font-weight:700;color:var(--t2)}
+.kv dd{margin:0 0 12px}
