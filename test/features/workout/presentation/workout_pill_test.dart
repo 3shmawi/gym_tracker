@@ -97,9 +97,11 @@ void main() {
     });
   });
 
-  test('hidden on the workout screen and before the app', () {
+  test('hidden on the workout screen, on home and before the app', () {
     for (final path in [
       AppRoutes.workout,
+      // Home has its own Start / Continue button.
+      AppRoutes.home,
       AppRoutes.welcome,
       AppRoutes.join,
       AppRoutes.joinScan,
@@ -108,7 +110,6 @@ void main() {
       expect(workoutPillHiddenOn(path), isTrue, reason: path);
     }
     for (final path in [
-      AppRoutes.home,
       AppRoutes.settings,
       AppRoutes.plan,
       AppRoutes.progress,

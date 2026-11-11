@@ -84,6 +84,7 @@ Widget view(
   VoidCallback? onBuildPlan,
   ValueChanged<String>? onEditDay,
   VoidCallback? onOpenWorkspace,
+  bool inProgress = false,
 }) => NextWorkoutView(
   state: state,
   onRetry: onRetry ?? () {},
@@ -91,6 +92,7 @@ Widget view(
   onOpenSettings: () {},
   onChooseDay: onChooseDay ?? (_) {},
   onStart: onStart,
+  inProgress: inProgress,
   onOpenPlan: onOpenPlan ?? () {},
   onBuildPlan: onBuildPlan ?? () {},
   onEditDay: onEditDay ?? (_) {},
@@ -247,6 +249,23 @@ void main() {
         await tester.tap(find.byKey(const Key('start_again_confirm')));
         await tester.pumpAndSettle();
         expect(started, 1);
+      });
+
+      testWidgets('a workout in progress: Continue goes straight back, no '
+          'question', (tester) async {
+        var opened = 0;
+        await tester.pumpApp(
+          view(
+            AsyncData(trainedToday()),
+            onStart: () => opened++,
+            inProgress: true,
+          ),
+        );
+        expect(find.text('Start workout'), findsNothing);
+        await tester.tap(find.text('Continue workout'));
+        await tester.pumpAndSettle();
+        expect(find.text('You already trained today'), findsNothing);
+        expect(opened, 1);
       });
 
       testWidgets('Cancel starts nothing', (tester) async {
@@ -474,6 +493,8 @@ void main() {
     'next_workout_comeback': () => view(AsyncData(withLevel(proComeback))),
     'next_workout_pro': () => view(AsyncData(withLevel(pro))),
     'next_workout': () => view(AsyncData(day1Waiting()), onStart: () {}),
+    'next_workout_in_progress': () =>
+        view(AsyncData(day1Waiting()), onStart: () {}, inProgress: true),
     'next_workout_supersets': () => view(AsyncData(day2())),
     'next_workout_no_plan': () => view(const AsyncData(null)),
     'next_workout_empty_day': () => view(AsyncData(emptyDay()), onStart: () {}),

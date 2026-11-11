@@ -299,20 +299,22 @@ void main() {
     await unlockPhone(tester);
     await beat(tester);
 
-    // Log set 2, then close the workout mid-rest: the pill keeps the rest,
-    // so locking the phone on the home screen still schedules it.
+    // Log set 2, then close the workout mid-rest: the rest goes on, so
+    // locking the phone on the home screen still schedules it. Home has no
+    // floating pill: its own button says "Continue workout".
     await tester.tap(find.byKey(const Key('log_set_button')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('workout_close')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('workout_pill')), findsOneWidget);
+    expect(find.byKey(const Key('workout_pill')), findsNothing);
+    expect(find.text('Continue workout'), findsOneWidget);
     await lockPhone(tester);
     expect(alarm.scheduled?.body, 'Barbell Back Squat · set 3');
     await unlockPhone(tester);
     expect(alarm.scheduled, isNull);
 
-    // Finishing the workout from the pill's screen removes it for good.
-    await tester.tap(find.byKey(const Key('workout_pill')));
+    // Back in from home's button; finishing ends the rest for good.
+    await tester.tap(find.byKey(const Key('home_start_button')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('workout_finish_menu')));
     await tester.pumpAndSettle();

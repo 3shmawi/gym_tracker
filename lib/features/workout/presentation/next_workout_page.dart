@@ -39,6 +39,8 @@ class NextWorkoutPage extends ConsumerWidget {
       onOpenPlan: () => unawaited(context.push<void>(AppRoutes.plan)),
       onBuildPlan: () => unawaited(context.push<void>(AppRoutes.plan)),
       onEditDay: (id) => unawaited(context.push<void>(AppRoutes.planDay(id))),
+      // The pill is not on this screen, so its button says what it does.
+      inProgress: ref.watch(activeWorkoutControllerProvider).value != null,
       onStart: next.value == null
           ? null
           : () async {

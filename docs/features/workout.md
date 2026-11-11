@@ -60,10 +60,14 @@ Status: slice 3 started (rest notification), plus levels.
   name) shows "not in the library".
 - **Workout pill** (`WorkoutPillHost`, mounted in `AppShell` under the
   video mini player's overlay). A floating card, 196 × 64 (wider for long
-  names or large text, never past the screen), on **every screen but the
-  workout itself** and the screens before the app (welcome, joining a gym);
-  the home screen included (owner's choice). Hidden while the keyboard is
-  open and when there is nothing to start (no plan, empty day). States:
+  names or large text, never past the screen), on every screen **except**:
+  the workout itself (the member is already in it), **the home screen** (its
+  own button starts the workout, and says **Continue workout** while one is
+  in progress; owner's choice, 2026-11-11, replacing "the home screen
+  included") and the screens before the app (welcome, joining a gym). Also
+  hidden while the keyboard is open and when there is nothing to start (no
+  plan, empty day). On home, *Continue workout* goes straight back and never
+  asks "You already trained today". States:
   - **Start workout** · "Day 2 · Shoulders & Arms": starts the waiting
     day; asks "You already trained today" first when needed (same sheet as
     the home screen, `confirmTrainAgain`).
@@ -77,12 +81,14 @@ Status: slice 3 started (rest notification), plus levels.
   (the how-to page opened from it) it goes back to it instead of opening a
   second one. Drag it to any corner (`workoutPillCornerProvider`, default
   bottom end); drag it past a side to tuck it there as a tab; one tap brings
-  it back. It sits above the home screen's Start button and stacks above the
-  video mini player when both are in the same corner. Screen readers: one
+  it back. It stacks above the video mini player when both are in the same
+  corner. Screen readers: one
   button with the whole state ("Resume workout: Flat Dumbbell Press, 2 of 7
   exercises done"), and a "Tuck the workout button at the edge" action.
 - The "Rest over" alarm follows the pill: closing the workout screen
   mid-rest no longer cancels it (see Rules → Rest over notification).
+  It does not depend on the pill being on screen: on home (no pill) a rest
+  that runs out still rings.
 
 ## Rules
 - **Days have stable ids** (`WorkoutDay.id`). Finished workouts, the workout

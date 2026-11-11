@@ -90,6 +90,7 @@
     }
   },
   "todayStart": "Start workout",
+  "todayContinue": "Continue workout",
   "todayNoPlan": "No plan yet. Start with a ready 5-day plan and change it later.",
   "todayUseTemplate": "Start with the 5-day plan",
   "exerciseLast": "Last: {sets}",

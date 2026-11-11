@@ -24,6 +24,7 @@ class NextWorkoutView extends StatelessWidget {
     required this.onOpenSettings,
     required this.onChooseDay,
     this.onStart,
+    this.inProgress = false,
     this.onOpenProgress,
     this.onOpenExercise,
     this.onOpenPlan,
@@ -55,6 +56,10 @@ class NextWorkoutView extends StatelessWidget {
 
   /// Hidden while null (the active workout isn't available yet).
   final VoidCallback? onStart;
+
+  /// A workout is in progress: the button says "Continue workout" and goes
+  /// straight back to it. (The floating workout pill is not on this screen.)
+  final bool inProgress;
 
   /// Opens the plan editor ("Your plan", the list button on the bar).
   final VoidCallback? onOpenPlan;
@@ -107,6 +112,7 @@ class NextWorkoutView extends StatelessWidget {
         AsyncData(value: final next?) => _Workout(
           next: next,
           onStart: onStart,
+          inProgress: inProgress,
           onChooseDay: onChooseDay,
           onOpenExercise: onOpenExercise,
           onEditDay: onEditDay,
@@ -155,6 +161,7 @@ class _Workout extends StatelessWidget {
     required this.next,
     required this.onStart,
     required this.onChooseDay,
+    this.inProgress = false,
     this.onOpenExercise,
     this.onEditDay,
     this.covers = const {},
@@ -165,6 +172,7 @@ class _Workout extends StatelessWidget {
   final ValueChanged<String>? onEditDay;
   final ValueChanged<String>? onOpenExercise;
   final VoidCallback? onStart;
+  final bool inProgress;
   final ValueChanged<int> onChooseDay;
 
   Future<void> _pickDay(BuildContext context) async {
@@ -215,9 +223,10 @@ class _Workout extends StatelessWidget {
   }
 
   /// Starts right away, or asks first when a workout was already finished
-  /// today (a second session is allowed, never blocked).
+  /// today (a second session is allowed, never blocked). Going back to a
+  /// workout in progress never asks: that was answered when it started.
   Future<void> _start(BuildContext context) async {
-    if (!next.trainedToday) return onStart?.call();
+    if (inProgress || !next.trainedToday) return onStart?.call();
     if (await confirmTrainAgain(context)) onStart?.call();
   }
 
@@ -385,7 +394,7 @@ class _Workout extends StatelessWidget {
             ),
             child: AppPrimaryButton(
               key: const Key('home_start_button'),
-              label: l10n.todayStart,
+              label: inProgress ? l10n.todayContinue : l10n.todayStart,
               icon: Icons.play_arrow_rounded,
               onPressed: () => _start(context),
             ),

@@ -52,10 +52,12 @@ class CurrentPathController extends Notifier<String> {
   }
 }
 
-/// Screens without the pill: the workout itself (the pill opens it) and the
-/// screens before the app (welcome, joining a gym).
+/// Screens without the pill: the workout itself (the member is already in
+/// it), the home screen (its own button starts or continues the workout)
+/// and the screens before the app (welcome, joining a gym).
 bool workoutPillHiddenOn(String path) =>
     path == AppRoutes.workout ||
+    path == AppRoutes.home ||
     path == AppRoutes.welcome ||
     path == AppRoutes.join ||
     path.startsWith('${AppRoutes.join}/');
@@ -112,11 +114,11 @@ WorkoutPillData? workoutPillData({
   return PillStart(dayNumber: nextDayNumber, dayName: nextDayName);
 }
 
-/// Floats the workout pill over every screen but the workout's own (design
-/// board 5): start the waiting workout, or go back to the one in progress,
-/// from anywhere. Drag it to any corner; drag it past a side to tuck it
-/// there as a tab. It keeps clear of the video mini player in the same
-/// corner, of the home screen's Start button, and of the keyboard.
+/// Floats the workout pill over every screen but the workout's own and the
+/// home screen (design board 5): start the waiting workout, or go back to
+/// the one in progress, from anywhere else. Drag it to any corner; drag it
+/// past a side to tuck it there as a tab. It keeps clear of the video mini
+/// player in the same corner and of the keyboard.
 class WorkoutPillHost extends ConsumerStatefulWidget {
   const new({required this.child, super.key});
 
@@ -243,13 +245,9 @@ class _WorkoutPillHostState extends ConsumerState<WorkoutPillHost> {
               AppDimens.minTouchTarget +
               AppDimens.sm
         : 0.0;
-    // The home screen's Start button spans the bottom edge.
-    final homeRoom = path == AppRoutes.home
-        ? AppDimens.ctaHeight + AppDimens.md + AppDimens.sm
-        : 0.0;
     final margin = AppDimens.md;
     final top = media.padding.top + kToolbarHeight + AppDimens.sm2 + videoRoom;
-    final bottom = media.padding.bottom + AppDimens.sm2 + videoRoom + homeRoom;
+    final bottom = media.padding.bottom + AppDimens.sm2 + videoRoom;
     final l10n = context.l10n;
 
     Widget positioned({required double edge, required Widget child}) =>
