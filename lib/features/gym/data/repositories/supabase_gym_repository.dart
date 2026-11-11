@@ -104,7 +104,7 @@ class SupabaseGymRepository implements GymRepository {
         .select(
           'id, role, status, display_name, ended_at, can_edit_targets, '
           'can_edit_plan, can_build_own_plan, '
-          'gyms(id, name, history_after_end)',
+          'gyms(id, name, history_after_end, brand_color)',
         )
         .order('joined_at');
     return [for (final row in rows) Map<String, Object?>.from(row)];

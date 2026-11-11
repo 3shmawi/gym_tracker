@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:gym_tracker/core/adaptive/adaptive.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
+import 'package:gym_tracker/core/theme/azm_theme.dart';
 import 'package:gym_tracker/core/update/update_info.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -13,7 +14,7 @@ Future<void> showUpdateDialog(BuildContext context, UpdateInfo info) {
   return showAdaptiveDialog<void>(
     context: context,
     barrierDismissible: !info.isForce,
-    builder: (context) => UpdateDialog(info: info),
+    builder: (context) => AzmTheme(child: UpdateDialog(info: info)),
   );
 }
 

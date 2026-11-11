@@ -1,6 +1,7 @@
 import 'package:gym_tracker/core/backend/backend.dart';
 import 'package:gym_tracker/core/captcha/turnstile_captcha.dart';
 import 'package:gym_tracker/core/config/env.dart';
+import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
 import 'package:gym_tracker/core/legal/legal.dart';
 import 'package:gym_tracker/core/media/video_info.dart';
 import 'package:gym_tracker/core/notifications/local_notifications.dart';
@@ -45,6 +46,9 @@ abstract final class Dependencies {
 
   /// Whether the member agreed to the Terms and Privacy Policy.
   static ConsentStore consentStore = const AcceptedConsentStore();
+
+  /// The last known feature flag answers (`FlagCache`).
+  static FlagCache flagCache = InMemoryFlagCache();
   static late WorkoutRepository workoutRepository;
 
   /// Gym accounts. Until [init] runs, in widget tests and without Supabase
@@ -88,6 +92,7 @@ abstract final class Dependencies {
     final prefs = await SharedPreferences.getInstance();
     settingsRepository = SharedPrefsSettingsRepository(prefs);
     consentStore = PrefsConsentStore(prefs);
+    flagCache = PrefsFlagCache(prefs);
     workoutRepository = LocalWorkoutRepository(prefs);
     restAlarm = NotificationRestAlarm(LocalNotifications(), prefs);
     gymLocalRepository = PrefsGymLocalRepository(prefs);
