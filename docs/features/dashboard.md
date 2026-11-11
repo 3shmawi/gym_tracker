@@ -14,11 +14,13 @@
 | **D1** | Members and invites: member list, add trainees, QR cards, permissions, end a member | **built (this doc, "D1 Members and invite codes")** |
 | **D2** | Exercise media: gym-chosen pictures and videos (tables `gym_exercise_images`, `gym_exercise_videos`) | **built (this doc, "D2 Exercise media")** |
 | **D3** | Plans: view and edit a member's plan through `save_plan`, copy a plan to other members | **built (this doc, "D3 A member's plan")** |
-| D4 | Plan templates (needs a **backend change**: new migration, RLS, pgTAP) | planned |
+| **D4** | Plan templates: save, rename, delete, replace a plan with one, what changed and Reset, apply a change to everyone on a template (backend: migration 0019) | **built (this doc, "D4 Gym templates")** |
 | D5 | Progress (the `member_*` views, [trainee_dashboard_data.md](trainee_dashboard_data.md)) and gym settings | planned |
 
-D0 to D3 add **no** migration, no RPC and no table. They only use what
+D0 to D3 add **no** migration, no RPC and no table; they only use what
 migrations 0005, 0006, 0007, 0008, 0013, 0015, 0016 and 0017 already allow.
+D4 adds migration `0019_plan_templates.sql` (one table, two nullable columns
+on `plans`, one RPC).
 
 ## Design
 - Board: https://claude.ai/artifact/8dPMf6CPxewxFRgtjovg1P. D0 uses boards
@@ -68,7 +70,8 @@ dashboard/
     auth/auth.ts               email-code sign-in, session
     gyms/gyms.ts               the gyms the person manages
     exercises/                 D2: library copy, link parser, picture rules, media repository
-    plans/                     D3: plan model and rules, edits, diff, save_plan repository
+    plans/                     D3: plan model and rules, edits, diff, save_plan repository;
+                               D4: templates repository, differences from a template
     i18n/                      en.ts, ar.ts
     ui/ pages/ styles/         screens and styling
   test/                        unit tests (Vitest) and e2e (Playwright)
@@ -94,6 +97,7 @@ dashboard/
 | `/g/<gym-uuid>/members/<member-uuid>/plan` | that member's plan (D3) |
 | `/g/<gym-uuid>/members/add` | add trainees (D1) |
 | `/g/<gym-uuid>/members/add-captain` | add a captain, owners only (D1) |
+| `/g/<gym-uuid>/templates` | the gym's plan templates (D4) |
 | `/g/<gym-uuid>/exercises` | the exercise list (D2) |
 | `/g/<gym-uuid>/exercises/<library-id>` | one exercise's pictures and video (D2); an id that is not in the library is "not found" |
 | anything else | not found |
@@ -475,9 +479,9 @@ captains trainees), not ended, not the source.
 memory only: nothing in `localStorage`, the URL or a log.
 
 ### Open points
-- Server-side version check for managers (above): a small backend change
-  (for example an optional "expected version" argument to `save_plan`) would
-  remove the last race. Proposed for the next backend migration.
+- Server-side version check for managers (above): `apply_plan_template` (D4)
+  has it; `save_plan` still doesn't. Adding it is an open question in
+  [`../designs/plan_templates.md`](../designs/plan_templates.md).
 - `updated_by` is shown as "Last saved by <name>" when that membership is in
   the list the person can read; otherwise only the date.
 
@@ -510,6 +514,54 @@ memory only: nothing in `localStorage`, the URL or a log.
 - **Caption (AR, Egyptian):** "جديد في لوحة الكابتن بتاعة Azm: عدّل خطة أي متدرب
   (الأيام والتمارين والمجموعات والعدّات والراحة) وانسخها لباقي الأعضاء مرة
   واحدة. هيشوفوا "الكابتن حدّث خطتك" في التطبيق."
+- **Hashtags:** #Azm #GymApp #BuildInPublic #Supabase #Preact #Egypt
+
+## D4 Gym templates
+Spec (with the open questions): [`../designs/plan_templates.md`](../designs/plan_templates.md).
+Boards "Dashboard 5" (Save as template, Replace with template) and
+"Dashboard 6" (one change for one member, Reset, apply to everyone).
+
+| Screen | Code |
+|---|---|
+| Plan page: **Save as template** (name in both languages, from the saved plan), **Replace with template** (pick one; the same warning and copy rule as D3), Copy | `src/pages/PlanPage.tsx`, `src/ui/TemplateParts.tsx` |
+| Plan page: "From the template X. N changes for Y. Everything else follows the template." (N by id, D3's diff), "The template changed since…", "The template … was deleted"; rows that differ: "Template: 3 × 12 · 90 s" and **Reset** (that exercise back to the template, in the draft) | `src/plans/templateDiff.ts`, `src/ui/PlanDayView.tsx` |
+| **Apply a change to everyone on this template…** (saved plan): pick the change; members (readable, not ended) whose plan came from the template; one `save_plan` each with their own version; skipped when they don't have that exercise; results per member, retry; "Change the template too" (default on, once) | `ApplyToAllDialog` in `src/ui/TemplateParts.tsx` |
+| Templates page `/g/<gym>/templates` (menu "Templates"): name in both languages, size, last change; rename; delete ("plans made from it stay"); empty state; error with retry; offline | `src/pages/TemplatesPage.tsx` |
+
+### Contracts (migration 0019)
+| What | How |
+|---|---|
+| List | `plan_templates` (`id, name, body, version, updated_at`, `gym_id = eq.<gym>`, ≤ 50) |
+| Save as template | insert `gym_id, name, body` only (the rest is set by the trigger); `23514 too_many_templates_in_gym` → "Your gym has 50 templates" |
+| Rename / change body / delete | update `name` or `body`, delete; a row RLS hid (0 rows) → forbidden |
+| Replace a member's plan | RPC `apply_plan_template(p_membership_id, p_template_id, p_base_version)` with the stored version; `plan_changed` → the conflict message |
+| Which template a plan came from | `plans` (`template_id, template_version`) in its own query; "column/table missing" (`42703`, `PGRST204/205`, `42P01`) = no template, so the page works even if the dashboard deploys before the migration |
+| Plans on a template | `plans` (`membership_id, version, body`, `template_id = eq.<id>`) |
+
+### D4 tests
+- `supabase/tests/plan_templates_rls.test.sql` (pgTAP, 56).
+- `test/templates.test.ts` (rows, columns, insert payload, refusals before any
+  request, the 51st, RLS-hidden rows, the RPC, the missing-migration fallback,
+  differences, Reset, skipped members, the route), `test/plan-ui.test.tsx`.
+- `e2e/templates.spec.ts` (save as template → templates page → rename →
+  delete; replace → no changes → change → badge → Reset; apply to everyone with
+  a skipped member and the template updated; a deleted template; before
+  migration 0019; a stale version), `e2e/templates-a11y-security.spec.ts` (axe
+  on 5 screens in English light and Arabic dark; crafted and foreign gym ids;
+  hostile and malformed templates; 41+ characters and hidden characters in a
+  name; requests; storage).
+
+### Demo & post (D4)
+- **Hook:** "One template, the whole gym: change it once, everyone gets it."
+- **Scenario** (`e2e/templates.spec.ts`): save Ahmed's plan as "Push / Pull",
+  start Youssef from it, give Ahmed 5 sets of Abs and see "1 change", apply
+  that change to everyone on the template.
+- **Caption (EN):** "New in the Azm captain dashboard: save a plan as a gym
+  template, start members from it, see what you changed for each one, and push
+  a change to everyone on the template."
+- **Caption (AR, Egyptian):** "جديد في لوحة الكابتن بتاعة Azm: احفظ خطة كقالب
+  للجيم، وابدأ منه الأعضاء، وشوف غيّرت إيه لكل واحد، وطبّق تغيير على كل اللي
+  على القالب مرة واحدة."
 - **Hashtags:** #Azm #GymApp #BuildInPublic #Supabase #Preact #Egypt
 
 ## Sign-in flow and session
@@ -553,7 +605,7 @@ Storage may be blocked (private window): the dashboard still works for that
 tab; every access is guarded.
 
 ## Events
-**None.** The dashboard has no analytics and no feature flags in D0 to D3 (no
+**None.** The dashboard has no analytics and no feature flags in D0 to D4 (no
 PostHog, no Sentry, no cookies). Its only third-party requests are the
 exercise pictures from the one Cloudinary path (D2). If that changes,
 update this section, `website/privacy.html` and `store/privacy_forms.md` first.
@@ -726,5 +778,5 @@ values (
 - **Hashtags:** #Azm #GymApp #BuildInPublic #Supabase #Preact #Egypt
 
 ## What's next
-D4 (gym templates, a backend change) and D5 as in the table above. D4 needs a backend change, so it gets its own migration, RLS and pgTAP
+D5 (progress and gym settings) as in the table above. D4 needs a backend change, so it gets its own migration, RLS and pgTAP
 file first.

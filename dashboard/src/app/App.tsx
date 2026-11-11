@@ -10,6 +10,8 @@ import { GymPickerPage } from '../pages/GymPickerPage';
 import type { MembersRepository } from '../members/members';
 import type { MediaRepository } from '../exercises/media';
 import type { PlansRepository } from '../plans/plans';
+import type { TemplatesRepository } from '../plans/templates';
+import { TemplatesPage } from '../pages/TemplatesPage';
 import { PlanPage } from '../pages/PlanPage';
 import { AddMembersPage } from '../pages/AddMembersPage';
 import { ExercisePage } from '../pages/ExercisePage';
@@ -35,6 +37,8 @@ export interface AppServices {
   readonly cloudName: string | null;
   /** Members' plans (D3). */
   readonly plans: PlansRepository;
+  /** The gym's plan templates (D4). */
+  readonly templates: TemplatesRepository;
 }
 
 type Session =
@@ -189,11 +193,26 @@ export function App({ services }: { readonly services: AppServices }) {
               <MemberPage gym={gym} memberId={route.memberId} members={services.members} loadLogo={services.loadLogo} />
             )}
             {route.name === 'member_plan' && (
-              <PlanPage gym={gym} memberId={route.memberId} members={services.members} plans={services.plans} media={services.media} cloudName={services.cloudName} online={online} />
+              <PlanPage gym={gym} memberId={route.memberId} members={services.members} plans={services.plans} templates={services.templates} media={services.media} cloudName={services.cloudName} online={online} />
             )}
             {route.name === 'add_members' && (
               <AddMembersPage gym={gym} role={route.role} userId={session.user.userId} members={services.members} loadLogo={services.loadLogo} />
             )}
+          </Shell>
+        );
+      }
+      case 'templates': {
+        const gym = list.find((g) => g.id === route.gymId);
+        if (!gym) {
+          return (
+            <Shell {...shellBase} gyms={list}>
+              <ForbiddenView onPickAnother={() => { navigate({ name: 'gyms' }); }} onSignOut={signOut} />
+            </Shell>
+          );
+        }
+        return (
+          <Shell {...shellBase} gyms={list} gym={gym} nav="templates">
+            <TemplatesPage gym={gym} templates={services.templates} online={online} />
           </Shell>
         );
       }

@@ -359,3 +359,9 @@ table.plan-t tr.paired td{border-bottom-style:dashed}
 .dialog.wide{max-width:560px}
 .copy-list{max-height:45vh;overflow:auto}
 .copy-row > span{display:flex;flex-direction:column;gap:2px}
+.tpl-row{flex-direction:row;align-items:center;gap:14px;flex-wrap:wrap}
+.tpl-row .meta{display:flex;flex-direction:column;gap:2px;min-width:200px}
+.tpl-banner{display:flex;flex-direction:column;gap:6px}
+tr.differs td{background:color-mix(in srgb,var(--warn) 8%,transparent)}
+.tpl-badge{color:var(--down);background:color-mix(in srgb,var(--warn) 14%,transparent)}
+.apply-list{max-height:30vh;overflow:auto}

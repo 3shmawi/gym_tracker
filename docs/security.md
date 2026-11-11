@@ -330,6 +330,21 @@ gym, an ended member or `anon` (grants are `select` to `authenticated` only).
 `supabase/tests/trainee_dashboard_views.test.sql` proves each of these.
 Anything new that reads these views must stay `security_invoker`.
 
+### Plan templates (migration 0019)
+Docs read 2026-11-10: PostgreSQL 17 "CREATE TABLE" and Supabase "Row Level
+Security". `plan_templates` follows the same rules as the other gym tables:
+RLS on, default grants revoked, column grants (`insert (gym_id, name, body)`,
+`update (name, body)`), every policy `private.i_manage(gym_id)` (permanent
+session; members and `anon` see nothing). The body and name are checked in the
+table (`plan_problem`, `plan_name_ok`), so a hostile client can't store what
+the app would refuse; stamps (`created_by`, `updated_by`, `version`) come from
+a `security definer` trigger with a pinned `search_path` that is not callable
+by clients. `apply_plan_template` is `security definer`, pinned, `execute` for
+`authenticated` only, refuses with the same `forbidden` whatever was wrong
+(no probing of other gyms' ids), and writes the plan only through `save_plan`.
+Templates hold no personal data beyond the plan content and membership ids.
+`supabase/tests/plan_templates_rls.test.sql`.
+
 ### Captain dashboard (`dashboard/`, azmm-dash.pages.dev)
 Docs read 2026-11-04: Supabase email OTP
 (https://supabase.com/docs/guides/auth/auth-email-passwordless), Cloudflare

@@ -539,6 +539,12 @@ of https://claude.ai/artifact/26EDAr572B4Qr8eBLB4D75):**
   instead. The remaining window (between that read and the save) needs a
   server-side check for managers too; proposed with the D4 migration.
   Feature doc: [`features/dashboard.md`](../features/dashboard.md) → "D3".
+- **As built (D4, 2026-11-10):** templates as described, migration
+  `0019_plan_templates.sql`: table `plan_templates` (≤ 50 per gym, body and
+  name checked like plans), `plans.template_id` / `template_version`, and the
+  RPC `apply_plan_template` (same rules as `save_plan`, plus a base-version
+  check for managers). Spec and open questions:
+  [`designs/plan_templates.md`](../designs/plan_templates.md).
 
 
 ## 21. Captain dashboard D0 as built (2026-11-04)

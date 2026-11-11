@@ -9,6 +9,7 @@ import type { Member, MembersRepository } from '../src/members/members';
 import { PlanPage } from '../src/pages/PlanPage';
 import type { Plan } from '../src/plans/model';
 import type { PlansRepository, StoredPlan } from '../src/plans/plans';
+import type { TemplatesRepository } from '../src/plans/templates';
 
 const GYM = 'b0000000-0000-4000-8000-000000000001';
 const id = (n: number) => `a0000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
@@ -23,7 +24,8 @@ function setup(over: Partial<Record<keyof PlansRepository, unknown>> = {}) {
   const plans = { get: vi.fn(() => Promise.resolve(ok(stored(plan, 2)))), save: vi.fn(() => Promise.resolve(ok({ version: 3 }))), version: vi.fn(), versions: vi.fn(() => Promise.resolve(ok(new Map([[id(2), 1]])))), replace: vi.fn(() => Promise.resolve(ok({ version: 2 }))), ...over };
   const members = { list: vi.fn(() => Promise.resolve(ok(people))) } as unknown as MembersRepository;
   const media = { load: vi.fn(() => Promise.resolve(failed({ kind: 'server' }))) } as unknown as MediaRepository;
-  return { plans, members, media };
+  const templates = { list: vi.fn(() => Promise.resolve(ok([]))), link: vi.fn(() => Promise.resolve(ok({ templateId: null, templateVersion: null }))) } as unknown as TemplatesRepository;
+  return { plans, members, media, templates };
 }
 
 let host: HTMLElement;
@@ -38,7 +40,7 @@ afterEach(async () => {
 const flush = () => act(async () => { for (let i = 0; i < 5; i++) await Promise.resolve(); });
 async function mount(s: ReturnType<typeof setup>, memberId = id(1)) {
   await act(() => {
-    render(<I18nContext.Provider value={makeI18n('en')}><PlanPage gym={gym} memberId={memberId} members={s.members} plans={s.plans as unknown as PlansRepository} media={s.media} cloudName={null} online /></I18nContext.Provider>, host);
+    render(<I18nContext.Provider value={makeI18n('en')}><PlanPage gym={gym} memberId={memberId} members={s.members} plans={s.plans as unknown as PlansRepository} templates={s.templates} media={s.media} cloudName={null} online /></I18nContext.Provider>, host);
   });
   await flush();
 }

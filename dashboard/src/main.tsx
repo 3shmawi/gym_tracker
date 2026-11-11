@@ -9,6 +9,7 @@ import { loadLogo } from './invites/logo';
 import { MediaRepository } from './exercises/media';
 import { MembersRepository } from './members/members';
 import { PlansRepository } from './plans/plans';
+import { TemplatesRepository } from './plans/templates';
 import { ConfigErrorPage } from './ui/states';
 import './styles/app.css';
 
@@ -26,6 +27,7 @@ if (root) {
       media: new MediaRepository(supabase),
       cloudName: config.cloudinaryCloudName,
       plans: new PlansRepository(supabase),
+      templates: new TemplatesRepository(supabase),
     };
     render(<App services={services} />, root);
   } catch (error: unknown) {
