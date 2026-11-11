@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
-import 'package:gym_tracker/core/theme/app_colors.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
@@ -270,6 +269,7 @@ class _Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final side = AppDimens.scaled(64);
+    final palette = context.palette;
     final letter = name == null || name!.trim().isEmpty
         ? null
         : String.fromCharCodes(name!.trim().runes.take(1)).toUpperCase();
@@ -277,25 +277,21 @@ class _Avatar extends StatelessWidget {
       child: SizedBox.square(
         dimension: side,
         child: DecoratedBox(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
               begin: AlignmentDirectional.topStart,
               end: AlignmentDirectional.bottomEnd,
-              colors: [AppColors.primary, Color(0xFF0B6B33)],
+              colors: [palette.brand, palette.brandDeep],
             ),
           ),
           child: Center(
             child: letter == null
-                ? Icon(
-                    Icons.person,
-                    size: side * 0.5,
-                    color: AppColors.onPrimary,
-                  )
+                ? Icon(Icons.person, size: side * 0.5, color: palette.onBrand)
                 : Text(
                     letter,
                     style: AppTextStyles.headline.copyWith(
-                      color: AppColors.onPrimary,
+                      color: palette.onBrand,
                       fontWeight: FontWeight.w800,
                       fontSize: side * 0.4,
                     ),

@@ -20,6 +20,7 @@ built to match. Code never invents its own look.
 | Design System token | Code |
 |---|---|
 | Colors (light + dark) | `app_colors.dart` (raw tokens) → `app_palette.dart` (`context.palette`: trends, fills, text levels) + `AppTheme` ColorScheme |
+| Brand colour (the green) | Widgets never read it from `AppColors`: fills use `context.palette.brand` / `onBrand` / `brandTint` / `brandDeep`, coloured text and icons use `colorScheme.primary`, the background uses `palette.glowStart` / `glowEnd`. `BrandColors` (`brand_colors.dart`) feeds `AppTheme.of(brightness, gymColor:)`; `brand_color_rule.dart` is the rule for a gym's colour (spec: `docs/designs/gym_brand_colours.md`). `test/core/theme/brand_color_usage_test.dart` fails on a direct use outside `lib/core/theme/`. Themes are cached per brightness, colour and screen scale. |
 | Type scale, font family | `lib/core/theme/app_text_styles.dart` |
 | Spacing, radius, sizes | `lib/core/theme/app_dimens.dart` |
 | Components | `lib/core/ui/app_controls.dart` (exported by `app_ui.dart`): `AppPrimaryButton`, `AppSecondaryButton`, `AppStepper`, `AppBadge` (`AppTone`), `AppSetChip` (`AppSetState`). Showcase + tests: `test/core/ui/app_controls_test.dart` |

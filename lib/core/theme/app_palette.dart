@@ -21,6 +21,11 @@ class AppPalette extends ThemeExtension<AppPalette> {
     required this.trendDown,
     required this.trendNew,
     required this.error,
+    required this.brand,
+    required this.onBrand,
+    required this.brandDeep,
+    required this.glowStart,
+    required this.glowEnd,
   });
 
   static const dark = AppPalette(
@@ -38,6 +43,11 @@ class AppPalette extends ThemeExtension<AppPalette> {
     trendDown: AppColors.darkDown,
     trendNew: AppColors.darkNew,
     error: AppColors.darkError,
+    brand: AppColors.primary,
+    onBrand: AppColors.onPrimary,
+    brandDeep: AppColors.primaryDeep,
+    glowStart: AppColors.darkGlow1,
+    glowEnd: AppColors.darkGlow2,
   );
 
   static const light = AppPalette(
@@ -55,6 +65,11 @@ class AppPalette extends ThemeExtension<AppPalette> {
     trendDown: AppColors.lightDown,
     trendNew: AppColors.lightNew,
     error: AppColors.lightError,
+    brand: AppColors.primary,
+    onBrand: AppColors.onPrimary,
+    brandDeep: AppColors.primaryDeep,
+    glowStart: AppColors.lightGlow1,
+    glowEnd: AppColors.lightGlow2,
   );
 
   final Color background;
@@ -74,8 +89,34 @@ class AppPalette extends ThemeExtension<AppPalette> {
   final Color trendNew;
   final Color error;
 
+  /// The brand fill: buttons, progress, the workout pill, selected marks.
+  /// Azm's green, or the active gym's colour (`BrandColors`).
+  final Color brand;
+
+  /// Text and icons on [brand].
+  final Color onBrand;
+
+  /// The far end of a [brand] gradient that [onBrand] still reads on. A gym
+  /// colour has none: it is [brand] itself, so the contrast stays guaranteed.
+  final Color brandDeep;
+
+  /// The two tinted corners of `AppBackground`. `AppTheme` sets them; the
+  /// constants here only stand in when no theme is installed.
+  final Color glowStart;
+  final Color glowEnd;
+
+  /// A soft [brand] fill behind content (done sets, a selected choice).
+  Color get brandTint => brand.withValues(alpha: 0.2);
+
   @override
-  AppPalette copyWith({Color? background}) => AppPalette(
+  AppPalette copyWith({
+    Color? background,
+    Color? brand,
+    Color? onBrand,
+    Color? brandDeep,
+    Color? glowStart,
+    Color? glowEnd,
+  }) => AppPalette(
     background: background ?? this.background,
     glow1: glow1,
     glow2: glow2,
@@ -90,6 +131,11 @@ class AppPalette extends ThemeExtension<AppPalette> {
     trendDown: trendDown,
     trendNew: trendNew,
     error: error,
+    brand: brand ?? this.brand,
+    onBrand: onBrand ?? this.onBrand,
+    brandDeep: brandDeep ?? this.brandDeep,
+    glowStart: glowStart ?? this.glowStart,
+    glowEnd: glowEnd ?? this.glowEnd,
   );
 
   @override
@@ -111,6 +157,11 @@ class AppPalette extends ThemeExtension<AppPalette> {
       trendDown: l(trendDown, other.trendDown),
       trendNew: l(trendNew, other.trendNew),
       error: l(error, other.error),
+      brand: l(brand, other.brand),
+      onBrand: l(onBrand, other.onBrand),
+      brandDeep: l(brandDeep, other.brandDeep),
+      glowStart: l(glowStart, other.glowStart),
+      glowEnd: l(glowEnd, other.glowEnd),
     );
   }
 }

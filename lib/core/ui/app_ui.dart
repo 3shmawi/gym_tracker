@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:gym_tracker/core/adaptive/adaptive.dart';
-import 'package:gym_tracker/core/theme/app_colors.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
+import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 export 'app_controls.dart';
@@ -87,16 +87,13 @@ class AppBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final palette = context.palette;
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: AlignmentDirectional.topStart,
           end: AlignmentDirectional.bottomEnd,
-          colors: [
-            Color.lerp(AppColors.primary, scheme.surface, 0.55)!,
-            scheme.surface,
-            Color.lerp(scheme.tertiary, scheme.surface, 0.7)!,
-          ],
+          colors: [palette.glowStart, scheme.surface, palette.glowEnd],
         ),
       ),
       child: const SizedBox.expand(),
