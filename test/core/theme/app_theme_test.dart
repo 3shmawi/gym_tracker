@@ -77,6 +77,14 @@ void main() {
         expect(same.$1, same.$2);
       }
       expect(theme.colorScheme.error, azm.error);
+      // Card surfaces and outlines do not take the gym's hue.
+      final azmScheme = AppTheme.of(brightness).colorScheme;
+      expect(
+        theme.colorScheme.surfaceContainerHigh,
+        azmScheme.surfaceContainerHigh,
+      );
+      expect(theme.colorScheme.outline, azmScheme.outline);
+      expect(theme.colorScheme.secondary, azmScheme.secondary);
     }
   });
 

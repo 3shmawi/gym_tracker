@@ -7,7 +7,6 @@ import 'package:gym_tracker/core/theme/brand_color_rule.dart';
 @immutable
 class BrandColors {
   const new({
-    required this.seed,
     required this.brand,
     required this.onBrand,
     required this.brandDeep,
@@ -23,7 +22,6 @@ class BrandColors {
   factory azm(Brightness brightness) {
     final dark = brightness == Brightness.dark;
     return BrandColors(
-      seed: AppColors.primary,
       brand: AppColors.primary,
       onBrand: AppColors.onPrimary,
       brandDeep: AppColors.primaryDeep,
@@ -41,7 +39,6 @@ class BrandColors {
       dark: brightness == Brightness.dark,
     );
     return BrandColors(
-      seed: seed,
       brand: toColor(rule.brand),
       onBrand: toColor(rule.onBrand),
       brandDeep: toColor(rule.brand),
@@ -60,8 +57,6 @@ class BrandColors {
 
   static Color toColor(Rgb c) => Color.fromARGB(255, c.$1, c.$2, c.$3);
 
-  /// What Material's generated roles (ripples, selection) are seeded from.
-  final Color seed;
   final Color brand;
   final Color onBrand;
   final Color brandDeep;
