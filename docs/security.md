@@ -362,6 +362,16 @@ upload / replace / delete their gym logo"). pgTAP:
 anonymous session, an ended owner and another gym's owner write nothing; no
 write policy on `gyms` or `gym-logos` still uses `private.i_manage`).
 
+**Gym brand colour** (migration 0021): `gyms.brand_color` holds one
+`#rrggbb` value or null. The table refuses anything else (`private.brand_color_ok`:
+the exact format in lower case, and channels at least 40 apart), so no markup,
+script or oversized text can be stored there. Only the owner writes it (the
+same policy and a column grant); members read it; `anon` nothing. The app
+does not trust the stored value either: it parses it again and makes its own
+colours with a guaranteed contrast, so a bad value can only mean Azm's
+colours (`docs/designs/gym_brand_colours.md`). pgTAP:
+`supabase/tests/gym_brand_color.test.sql`.
+
 ### Captain dashboard (`dashboard/`, azmm-dash.pages.dev)
 Docs read 2026-11-04: Supabase email OTP
 (https://supabase.com/docs/guides/auth/auth-email-passwordless), Cloudflare
