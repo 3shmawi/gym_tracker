@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:gym_tracker/core/theme/app_colors.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
@@ -81,8 +80,8 @@ class WorkoutPillView extends StatelessWidget {
     final l10n = context.l10n;
     final palette = context.palette;
     final over = data is PillRestOver;
-    final foreground = over ? AppColors.onPrimary : palette.textPrimary;
-    final secondary = over ? AppColors.onPrimary : palette.textSecondary;
+    final foreground = over ? palette.onBrand : palette.textPrimary;
+    final secondary = over ? palette.onBrand : palette.textSecondary;
     final (title, line, label) = switch (data) {
       PillStart(:final dayNumber, :final dayName) => (
         l10n.pillStart,
@@ -127,7 +126,7 @@ class WorkoutPillView extends StatelessWidget {
         child: IntrinsicWidth(
           child: Material(
             key: const Key('workout_pill'),
-            color: over ? AppColors.primary : palette.surfaceSolid,
+            color: over ? palette.brand : palette.surfaceSolid,
             elevation: 3,
             shadowColor: Colors.black38,
             shape: StadiumBorder(side: BorderSide(color: palette.fillSubtle)),
@@ -194,20 +193,20 @@ class WorkoutPillView extends StatelessWidget {
     switch (data) {
       case PillStart():
         return _Disc(
-          color: AppColors.primary,
+          color: palette.brand,
           child: Icon(
             Icons.play_arrow_rounded,
             size: ring * 0.5,
-            color: AppColors.onPrimary,
+            color: palette.onBrand,
           ),
         );
       case PillRestOver():
         return _Disc(
-          color: AppColors.onPrimary,
+          color: palette.onBrand,
           child: Icon(
             Icons.play_arrow_rounded,
             size: ring * 0.5,
-            color: AppColors.primary,
+            color: palette.brand,
           ),
         );
       case PillActive(:final exerciseId, :final done, :final total):
@@ -261,7 +260,7 @@ class WorkoutPillRing extends StatelessWidget {
             child: CircularProgressIndicator(
               value: value.clamp(0, 1).toDouble(),
               strokeWidth: AppDimens.scaled(4),
-              color: AppColors.primary,
+              color: context.palette.brand,
               backgroundColor: context.palette.fillSubtle,
             ),
           ),
