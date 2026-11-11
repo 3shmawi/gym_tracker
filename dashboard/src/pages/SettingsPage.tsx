@@ -7,9 +7,10 @@ import { cleanName } from '../core/text';
 import { Icon } from '../ui/icons';
 
 // Gym settings (D5, design board 12): name, logo, what a former member can
-// still read. Owners and captains, as the table's grants and policy allow
-// (migration 0005: private.i_manage). Deleting the gym and the team list are
-// not here (board 12 shows them; out of scope).
+// still read. Owners change them; captains see them read-only, as board 12
+// shows (product decision: the database, migration 0005 private.i_manage,
+// would also let a captain update them). Deleting the gym and the team list
+// are not here (board 12 shows them; out of scope).
 
 type Note = { readonly tone: 'ok' | 'err'; readonly key: MessageKey } | null;
 
@@ -137,6 +138,43 @@ export function SettingsPage({ gym, settings, loadLogo, online, onChanged }: {
       say('history', { tone: 'err', key: failureKey(r.failure) });
     }
   };
+
+  if (gym.role !== 'owner') {
+    return (
+      <section class="stack">
+        <div class="stack-sm">
+          <h1 class="h1">{t('set.title')}</h1>
+          <p class="sub">{t('set.subtitle')}</p>
+        </div>
+        <div class="banner info" role="note">
+          <Icon name="lock" />
+          <span>{t('set.readOnly')}</span>
+        </div>
+        <div class="grid2">
+          <section class="panel" aria-labelledby="s-identity">
+            <h2 class="h2" id="s-identity">{t('set.identity')}</h2>
+            <dl class="kv">
+              <dt>{t('set.name')}</dt>
+              <dd class="plain-text">{gym.name}</dd>
+              <dt>{t('set.logo')}</dt>
+              <dd>
+                <div class="logo-row">
+                  <div class="logo-box">{logo && logoPath ? <LogoCanvas bitmap={logo} label={t('set.logoAlt', { gym: gym.name })} /> : <Icon name="image" />}</div>
+                  {logoPath ? null : <p class="cap grow">{t('set.logoNone')}</p>}
+                </div>
+              </dd>
+            </dl>
+          </section>
+          <section class="panel" aria-labelledby="s-history">
+            <h2 class="h2" id="s-history">{t('set.historyTitle')}</h2>
+            <p><b>{history === 'readable' ? t('set.readable') : t('set.locked')}</b></p>
+            <p class="cap">{history === 'readable' ? t('set.readableBody') : t('set.lockedBody')}</p>
+            <p class="cap">{t('set.historyBody')}</p>
+          </section>
+        </div>
+      </section>
+    );
+  }
 
   const off = !online || busy !== null;
   return (

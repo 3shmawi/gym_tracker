@@ -414,7 +414,7 @@ board, so it follows those two boards and the app's plan editor
 | Add an exercise: **From the library** (D2's list of 36, search in both languages; one already in the day says so) or **Write your own** (Arabic and English, one is enough) | `src/ui/PlanDialogs.tsx` |
 | Conflict: "Someone saved this plan while you were editing", what they changed and what you changed (by id: added, deleted, renamed, moved, targets), **Load the newest plan** | `PlanPage.tsx`, `src/plans/diff.ts` |
 | Copy to other members: active and waiting members this person may write for, "Has a plan · will be replaced" / "No plan yet", a warning with the count, one save per member, results per member, **Try again for N** | `src/ui/CopyPlanDialog.tsx` |
-| States: loading, error with retry, no plan yet (**Start a plan**: one day "Day 1 / اليوم ١"), a stored plan the dashboard can't read (shown, not editable), ended membership, offline (Save and Copy off), unsaved changes ("Not saved yet." and a warning before leaving) | |
+| States: loading, error with retry, no plan yet (**Start a plan**: one day "Day 1 / اليوم 1"), a stored plan the dashboard can't read (shown, not editable), ended membership, offline (Save and Copy off), unsaved changes ("Not saved yet." and a warning before leaving) | |
 
 ### The rules (the same as the app and the server)
 `src/plans/model.ts` and `src/plans/edit.ts` mirror `PlanLimits`, `PlanNames`,
@@ -588,7 +588,10 @@ screens follow the Design System and D0–D4.
   Saturday to Friday by the date in `Africa/Cairo`, numbered from Saturday 1
   January 2000 (`src/progress/weeks.ts`). Labels read "Sat 7 Nov – Fri 13 Nov".
 - **Numbers use Western digits** (like the app) in both languages, in the
-  progress panel and charts.
+  whole dashboard (product decision, D5): numbers in texts and dates format
+  with `ar-EG-u-nu-latn` (`numberLocale()` in `src/i18n/index.ts`), and no
+  Arabic text holds Arabic-Indic digits (checked by `test/i18n.test.ts`). A
+  first plan's day is "Day 1 / اليوم 1".
 - **Names:** exercises and days from the member's plan (D3), else the library
   (D2), else "An exercise no longer in the plan" / "A day no longer in the plan".
 - **Limits shown, not hidden:** a null duration or planned count is "—", not 0;
@@ -626,9 +629,13 @@ screens follow the Design System and D0–D4.
 - **History after a membership ends:** two choices with plain explanations
   (readable: the former member can open what they logged here, nothing new;
   locked: hidden from them, never deleted, back if they rejoin).
-- **Who:** owners and captains, as the grants and policy allow
-  (`update (name, logo_path, history_after_end)`, "managers update their
-  gym" = `private.i_manage`; bucket policies `private.i_manage`). A refusal
+- **Who:** the **owner** changes them. A **captain** sees the same page
+  read-only (name, logo, the history choice and a note "Only the gym owner can
+  change these settings"), as board 12 shows: no field, no button, no request
+  that writes. This is a product decision in the dashboard only: the grants
+  and policy would also let a captain update (`update (name, logo_path,
+  history_after_end)`, "managers update their gym" = `private.i_manage`;
+  bucket policies `private.i_manage`), see "Needs a backend step". A refusal
   (RLS returns no row) says "You can't change this gym's settings". After a
   save the gym list reloads quietly (header and switcher follow).
 - **States:** saved / refused per section, offline (everything off), errors
@@ -644,6 +651,11 @@ screens follow the Design System and D0–D4.
 - **Progress of an ended member** is not readable by managers (the views and
   policies are active-only); if captains should see a former member's history,
   that is a policy change.
+- **Captains and settings:** the dashboard shows captains the settings
+  read-only, but the database still lets them update `gyms` and the
+  `gym-logos` bucket (0005/0008, `private.i_manage`), for example from the API.
+  Making it owner-only on the server needs a migration that narrows those
+  policies to the owner (with pgTAP).
 
 ### D5 tests
 - `test/progress.test.ts` (the gym week and labels, Western digits, every view
@@ -653,8 +665,9 @@ screens follow the Design System and D0–D4.
   object path; repository calls, RLS-hidden rows, old logo removal).
 - `e2e/progress-settings.spec.ts` (progress with data, empty / waiting / ended /
   error states, the members list column; settings: rename, upload, remove,
-  history, refused files before any request, hostile names, offline),
-  `e2e/progress-settings-a11y-security.spec.ts` (axe on 6 screens in English
+  history, refused files before any request, hostile names, offline, a
+  captain's read-only page with no write request),
+  `e2e/progress-settings-a11y-security.spec.ts` (axe on 7 screens in English
   light and Arabic dark, RTL and Western digits, keyboard only; crafted ids,
   a foreign gym, a captain and the owner's progress, requests, storage). The
   fake Supabase answers the four views (with their visibility rules), `gyms`

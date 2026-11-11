@@ -29,6 +29,7 @@ const screens: Screen[] = [
   { name: 'ended member', options: { path: memberPath(M.hana) }, ready: async (page, lang) => { await expect(page.getByRole('heading', { name: msg(lang, 'prog.endedTitle') })).toBeVisible(); } },
   { name: 'members list with last workout', options: { path: MEMBERS_PATH, progress: { [M.ahmed]: ahmedProgress() } }, ready: async (page) => { await expect(page.getByText('Ahmed Hassan').filter({ visible: true }).first()).toBeVisible(); } },
   { name: 'settings', options: { path: SETTINGS }, ready: async (page, lang) => { await expect(page.getByRole('heading', { level: 1, name: msg(lang, 'set.title') })).toBeVisible(); } },
+  { name: 'settings for a captain (read-only)', options: { path: SETTINGS, gyms: [{ ...GYM_A, role: 'captain' }] }, ready: async (page, lang) => { await expect(page.getByRole('note')).toContainText(msg(lang, 'set.readOnly')); } },
   {
     name: 'settings with errors',
     options: { path: SETTINGS },
@@ -75,7 +76,7 @@ test('settings from the keyboard only: rename and the history choice', async ({ 
   const readable = page.getByRole('radio', { name: new RegExp(msg('en', 'set.readable')) });
   await readable.focus();
   await page.keyboard.press('ArrowDown');
-  await expect(page.getByText(msg('en', 'set.historySaved'))).toBeVisible();
+  await expect(page.getByText(msg('en', 'set.historySaved'), { exact: true })).toBeVisible();
   expect(mock.gymRows[GYM_A.id]).toMatchObject({ name: 'Keyboard Gym', history_after_end: 'locked' });
   // The logo button is reachable and opens the file picker from the keyboard.
   const chooser = page.waitForEvent('filechooser');

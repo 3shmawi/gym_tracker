@@ -88,7 +88,7 @@ test.describe('gym settings', () => {
     expect(mock.removed).toContain(`${GYM_A.id}/logo.png`);
 
     await page.getByRole('radio', { name: new RegExp(en('set.locked')) }).check();
-    await expect(page.getByText(en('set.historySaved'))).toBeVisible();
+    await expect(page.getByText(en('set.historySaved'), { exact: true })).toBeVisible();
     expect(mock.gymRows[GYM_A.id]?.history_after_end).toBe('locked');
   });
 
@@ -119,6 +119,19 @@ test.describe('gym settings', () => {
     await expect(page.getByText(en('set.nameSaved'))).toBeVisible();
     expect(mock.gymRows[GYM_A.id]?.name).toBe("<img src=x onerror=alert(1)>'; DROP TABLE gyms; --");
     await expect(page.locator('img[src="x"]')).toHaveCount(0);
+  });
+
+  test('a captain sees the settings read-only: no field, no button, no request that writes', async ({ page }) => {
+    const mock = await open(page, { gyms: [{ ...GYM_A, role: 'captain' }], path: SETTINGS });
+    await expect(page.getByRole('heading', { level: 1, name: en('set.title') })).toBeVisible();
+    await expect(page.getByRole('note')).toContainText(en('set.readOnly'));
+    await expect(page.getByText(GYM_A.name, { exact: true }).filter({ visible: true }).last()).toBeVisible();
+    await expect(page.getByText(en('set.readable'), { exact: true })).toBeVisible();
+    await expect(page.getByRole('textbox')).toHaveCount(0);
+    await expect(page.getByRole('radio')).toHaveCount(0);
+    await expect(page.locator('#logo-file')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: en('set.saveName') })).toHaveCount(0);
+    expect(mock.requests.some((r) => r.method !== 'GET' && r.method !== 'HEAD' && (r.path.startsWith('/rest/v1/gyms') || r.path.startsWith('/storage/')))).toBe(false);
   });
 
   test('offline: nothing can be saved', async ({ page, context }) => {

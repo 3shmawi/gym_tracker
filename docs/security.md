@@ -354,6 +354,10 @@ renamed SVG or script is refused), then decoded and redrawn on a canvas so only
 pixels are uploaded (EXIF such as GPS place never leaves the computer). The
 object path is built from the gym id and the checked type, never the file name.
 Previews are canvases, so the CSP keeps `img-src` without `blob:`/`data:`.
+Only the owner sees the forms; a captain gets the page read-only. That is a
+dashboard choice, **not** a security boundary: the policies still allow a
+captain to update, so a server-side owner-only rule needs a migration
+(dashboard.md → D5 "Needs a backend step").
 
 ### Captain dashboard (`dashboard/`, azmm-dash.pages.dev)
 Docs read 2026-11-04: Supabase email OTP

@@ -376,7 +376,7 @@ export const en = {
   'plan.emptyTitle': 'No plan yet',
   'plan.emptyBody': 'Start one here, or copy another member\'s plan to {name}.',
   'plan.start': 'Start a plan',
-  'plan.firstDayAr': 'اليوم ١',
+  'plan.firstDayAr': 'اليوم 1',
   'plan.firstDayEn': 'Day 1',
   'plan.unreadableTitle': "This plan can't be edited here",
   'plan.unreadableBody': 'It was saved in a shape the dashboard does not know. The member still sees it in the app.',
@@ -622,6 +622,7 @@ export const en = {
 
   'set.title': 'Gym settings',
   'set.subtitle': 'What your members see: the gym name and logo, and what a member who leaves can still read.',
+  'set.readOnly': 'Only the gym owner can change these settings.',
   'set.identity': 'Gym identity',
   'set.name': 'Gym name',
   'set.nameHint': '1 to 60 characters.',

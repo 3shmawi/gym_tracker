@@ -96,7 +96,7 @@ describe('PlanPage state', () => {
     await act(() => { button(en('plan.start')).click(); });
     await act(() => { button(en('plan.save')).click(); });
     await flush();
-    expect(s.plans.save).toHaveBeenCalledWith(id(1), 0, { days: [expect.objectContaining({ name: { ar: 'اليوم ١', en: 'Day 1' }, exercises: [] })] });
+    expect(s.plans.save).toHaveBeenCalledWith(id(1), 0, { days: [expect.objectContaining({ name: { ar: 'اليوم 1', en: 'Day 1' }, exercises: [] })] });
   });
 
   it('copy offers active members only, then reports each one', async () => {

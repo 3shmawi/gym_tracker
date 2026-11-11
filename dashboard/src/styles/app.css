@@ -392,3 +392,7 @@ details.tbl summary{cursor:pointer;min-height:44px;display:inline-flex;align-ite
 .radio-card > span{display:flex;flex-direction:column;gap:2px}
 .ex-pick{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
 .btn.is-off{opacity:.55;cursor:not-allowed;pointer-events:none}
+/* Read-only settings (captains, D5) */
+.kv{display:grid;gap:4px 16px;margin:0}
+.kv dt{font-size:13px;font-weight:700;color:var(--t2)}
+.kv dd{margin:0 0 12px}
