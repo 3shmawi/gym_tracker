@@ -4,11 +4,11 @@ import { guard, unwrap, type Result } from '../core/result';
 import { cleanName } from '../core/text';
 import { isGymId, LOGO_PATH } from './gyms';
 
-// Gym settings (D5): what the gyms table lets a manager change (migration
-// 0005: update grant on name, logo_path, history_after_end; policy "managers
-// update their gym" = private.i_manage, owner or captain, permanent session)
+// Gym settings (D5): what the gyms table lets the owner change (migration
+// 0005: update grant on name, logo_path, history_after_end; 0020: policy
+// "owners update their gym" = private.i_own, active owner, permanent session)
 // and the logo in the private bucket gym-logos (0008: png/jpeg, ≤ 512 KB,
-// path <gym_id>/logo.png|jpg|jpeg, managers write, members read).
+// path <gym_id>/logo.png|jpg|jpeg, members read; 0020: the owner writes).
 
 export const GYM_NAME_MAX = 60;
 export const LOGO_MAX_BYTES = 512 * 1024;

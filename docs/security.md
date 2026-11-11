@@ -348,16 +348,19 @@ Templates hold no personal data beyond the plan content and membership ids.
 ### Gym settings and logo upload (dashboard D5)
 The dashboard writes `gyms` (`name`, `logo_path`, `history_after_end`) and
 `gym-logos/<gym_id>/logo.png|jpg` through the existing grants and policies
-(migrations 0005, 0008: `private.i_manage`). Before any request a logo is
+(migrations 0005, 0008; since 0020 only the owner may write: `private.i_own`,
+active owner on a permanent session). Before any request a logo is
 checked by size (≤ 512 KB) and by its first bytes (PNG/JPEG signatures, so a
 renamed SVG or script is refused), then decoded and redrawn on a canvas so only
 pixels are uploaded (EXIF such as GPS place never leaves the computer). The
 object path is built from the gym id and the checked type, never the file name.
 Previews are canvases, so the CSP keeps `img-src` without `blob:`/`data:`.
-Only the owner sees the forms; a captain gets the page read-only. That is a
-dashboard choice, **not** a security boundary: the policies still allow a
-captain to update, so a server-side owner-only rule needs a migration
-(dashboard.md → D5 "Needs a backend step").
+Only the owner sees the forms; a captain gets the page read-only, and the
+server agrees (migration 0020: "owners update their gym" and "owners
+upload / replace / delete their gym logo"). pgTAP:
+`supabase/tests/gym_settings_owner_only.test.sql` (a captain, an owner on an
+anonymous session, an ended owner and another gym's owner write nothing; no
+write policy on `gyms` or `gym-logos` still uses `private.i_manage`).
 
 ### Captain dashboard (`dashboard/`, azmm-dash.pages.dev)
 Docs read 2026-11-04: Supabase email OTP

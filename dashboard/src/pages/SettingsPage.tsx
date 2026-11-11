@@ -8,9 +8,8 @@ import { Icon } from '../ui/icons';
 
 // Gym settings (D5, design board 12): name, logo, what a former member can
 // still read. Owners change them; captains see them read-only, as board 12
-// shows (product decision: the database, migration 0005 private.i_manage,
-// would also let a captain update them). Deleting the gym and the team list
-// are not here (board 12 shows them; out of scope).
+// shows. The database agrees since migration 0020 (private.i_own). Deleting
+// the gym and the team list are not here (board 12 shows them; out of scope).
 
 type Note = { readonly tone: 'ok' | 'err'; readonly key: MessageKey } | null;
 

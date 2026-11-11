@@ -39,7 +39,7 @@ insert into public.memberships (id, gym_id, person_id, display_name, role, statu
 insert into public.memberships (id, gym_id, display_name, role, status) values
   ('e0000000-0000-4000-8000-000000000007', 'd0000000-0000-4000-8000-00000000000a', 'Pending Trainee', 'trainee', 'pending');
 
-select plan(25);
+select plan(28);
 
 
 select ok(
@@ -84,16 +84,14 @@ reset request.jwt.claims;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated","is_anonymous":false}';
 
-select results_eq($$ with c as (update public.gyms set name = 'Gym A 2', history_after_end = 'locked' where id = 'd0000000-0000-4000-8000-00000000000a' returning 1) select count(*)::int from c $$, $$ values (1) $$, 'the captain can change name and history setting of their gym');
+select results_eq($$ with c as (update public.gyms set name = 'Gym A 2', history_after_end = 'locked' where id = 'd0000000-0000-4000-8000-00000000000a' returning 1) select count(*)::int from c $$, $$ values (0) $$, 'the captain cannot change name or history setting of their gym (owner only, 0020)');
+select results_eq($$ with c as (update public.gyms set logo_path = null where id = 'd0000000-0000-4000-8000-00000000000a' returning 1) select count(*)::int from c $$, $$ values (0) $$, 'the captain cannot change the logo of their gym');
+select is((select name from public.gyms where id = 'd0000000-0000-4000-8000-00000000000a'), 'Gym A', 'the captain still reads the gym, unchanged');
 
 select throws_ok($$ update public.gyms set deleted_at = now() where id = 'd0000000-0000-4000-8000-00000000000a' $$, '42501', null, 'a captain cannot soft-delete the gym (column not granted)');
 select throws_ok($$ update public.gyms set is_demo = true where id = 'd0000000-0000-4000-8000-00000000000a' $$, '42501', null, 'a captain cannot mark the gym as demo');
 select throws_ok($$ insert into public.gyms (name) values ('Second gym') $$, '42501', null, 'a captain cannot create a gym');
 select throws_ok($$ delete from public.gyms where id = 'd0000000-0000-4000-8000-00000000000a' $$, '42501', null, 'a captain cannot delete a gym');
-select throws_ok($$ update public.gyms set name = repeat('x', 61) where id = 'd0000000-0000-4000-8000-00000000000a' $$, '23514', null, 'a name over 60 characters is refused');
-select throws_ok($$ update public.gyms set history_after_end = 'forever' where id = 'd0000000-0000-4000-8000-00000000000a' $$, '23514', null, 'an unknown history setting is refused');
-select throws_ok($$ update public.gyms set logo_path = '../../etc/passwd' where id = 'd0000000-0000-4000-8000-00000000000a' $$, '23514', null, 'a logo path outside <gym_id>/logo.png is refused');
-select lives_ok($$ update public.gyms set logo_path = 'd0000000-0000-4000-8000-00000000000a/logo.png' where id = 'd0000000-0000-4000-8000-00000000000a' $$, 'a proper logo path is accepted');
 reset role;
 reset request.jwt.claims;
 
@@ -110,7 +108,12 @@ reset request.jwt.claims;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated","is_anonymous":false}';
 
-select results_eq($$ with c as (update public.gyms set name = 'Gym A 3' where id = 'd0000000-0000-4000-8000-00000000000a' returning 1) select count(*)::int from c $$, $$ values (1) $$, 'the owner can rename the gym');
+select results_eq($$ with c as (update public.gyms set name = 'Gym A 3', history_after_end = 'locked' where id = 'd0000000-0000-4000-8000-00000000000a' returning 1) select count(*)::int from c $$, $$ values (1) $$, 'the owner can change name and history setting of the gym');
+select throws_ok($$ update public.gyms set name = repeat('x', 61) where id = 'd0000000-0000-4000-8000-00000000000a' $$, '23514', null, 'a name over 60 characters is refused');
+select throws_ok($$ update public.gyms set history_after_end = 'forever' where id = 'd0000000-0000-4000-8000-00000000000a' $$, '23514', null, 'an unknown history setting is refused');
+select throws_ok($$ update public.gyms set logo_path = '../../etc/passwd' where id = 'd0000000-0000-4000-8000-00000000000a' $$, '23514', null, 'a logo path outside <gym_id>/logo.png is refused');
+select lives_ok($$ update public.gyms set logo_path = 'd0000000-0000-4000-8000-00000000000a/logo.png' where id = 'd0000000-0000-4000-8000-00000000000a' $$, 'a proper logo path is accepted');
+select throws_ok($$ update public.gyms set deleted_at = now() where id = 'd0000000-0000-4000-8000-00000000000a' $$, '42501', null, 'the owner cannot soft-delete the gym either (column not granted)');
 
 select throws_ok($$ insert into public.gyms (name) values ('Second gym') $$, '42501', null, 'the owner cannot create gyms through the API either (done by the developer)');
 reset role;

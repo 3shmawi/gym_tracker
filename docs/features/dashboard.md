@@ -632,10 +632,11 @@ screens follow the Design System and D0–D4.
 - **Who:** the **owner** changes them. A **captain** sees the same page
   read-only (name, logo, the history choice and a note "Only the gym owner can
   change these settings"), as board 12 shows: no field, no button, no request
-  that writes. This is a product decision in the dashboard only: the grants
-  and policy would also let a captain update (`update (name, logo_path,
-  history_after_end)`, "managers update their gym" = `private.i_manage`;
-  bucket policies `private.i_manage`), see "Needs a backend step". A refusal
+  that writes. The database enforces the same since migration
+  `0020_gym_settings_owner_only.sql`: `update (name, logo_path,
+  history_after_end)` with "owners update their gym" = `private.i_own`
+  (active owner, permanent session), and the `gym-logos` insert / update /
+  delete policies use `private.i_own` too (reading is unchanged). A refusal
   (RLS returns no row) says "You can't change this gym's settings". After a
   save the gym list reloads quietly (header and switcher follow).
 - **States:** saved / refused per section, offline (everything off), errors
@@ -651,11 +652,9 @@ screens follow the Design System and D0–D4.
 - **Progress of an ended member** is not readable by managers (the views and
   policies are active-only); if captains should see a former member's history,
   that is a policy change.
-- **Captains and settings:** the dashboard shows captains the settings
-  read-only, but the database still lets them update `gyms` and the
-  `gym-logos` bucket (0005/0008, `private.i_manage`), for example from the API.
-  Making it owner-only on the server needs a migration that narrows those
-  policies to the owner (with pgTAP).
+- (Done) **Captains and settings:** migration 0020 makes gym settings and
+  logo writes owner-only on the server too (pgTAP
+  `supabase/tests/gym_settings_owner_only.test.sql`).
 
 ### D5 tests
 - `test/progress.test.ts` (the gym week and labels, Western digits, every view
