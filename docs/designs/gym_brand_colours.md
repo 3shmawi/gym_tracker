@@ -275,6 +275,20 @@ and treats 0 rows as `forbidden`, like `rename`.
 `gym_accounts_backend.md`, `decisions/gym_accounts.md` §4, `design.md`
 (tokens → code, the mockup), `security.md`, `docs/README.md`.
 
+## As built: where it differs from this spec
+- **Material's generated roles** stay seeded from Azm's green for every gym
+  (not from the gym's colour, as "Rejected" above says for unpinned roles):
+  card surfaces in lite mode took the gym's hue otherwise, against
+  decision 5.
+- **Events:** only `gym_theme_applied`. `gym_theme_fallback` is not built.
+- **Profile avatar:** a flat fill of the gym's colour (Azm keeps its
+  gradient), so the letter's contrast stays guaranteed.
+- **`Gym.brandColor` is not part of `Gym ==`**, which is how a colour change
+  avoids rebuilding the workout repository.
+- **Readability check in the dashboard** informs and never blocks; what is
+  refused is a bad code and black / white / grey.
+- PRs: #79 (theme seam), #80 (migration 0021), #81 (app), #82 (dashboard).
+
 ## Official docs checked (2026-11-11)
 - Flutter 3.47.8 (`.fvmrc`): `ColorScheme.fromSeed` (`dynamicSchemeVariant`,
   `contrastLevel` −1 to 1, default 0; the seed may not appear in the
