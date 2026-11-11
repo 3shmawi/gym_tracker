@@ -13,7 +13,7 @@ import type { TemplatesRepository } from '../src/plans/templates';
 
 const GYM = 'b0000000-0000-4000-8000-000000000001';
 const id = (n: number) => `a0000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
-const gym: ManagedGym = { id: GYM, name: 'Power Gym', role: 'owner', logoPath: null, historyAfterEnd: 'readable', memberCount: 3 };
+const gym: ManagedGym = { id: GYM, name: 'Power Gym', role: 'owner', logoPath: null, historyAfterEnd: 'readable', brandColor: null, memberCount: 3 };
 const en = (key: MessageKey, p?: Record<string, string | number>) => translate('en', key, p);
 const member = (n: number, name: string, over: Partial<Member> = {}): Member => ({ id: id(n), name, role: 'trainee', status: 'active', permissions: { editTargets: false, editPlan: false, buildOwnPlan: false }, joinedAt: null, endedAt: null, createdAt: new Date(), invite: { state: 'none' }, ...over });
 const people = [member(1, 'Ahmed'), member(2, 'Mona'), member(3, 'Hana', { status: 'ended' })];

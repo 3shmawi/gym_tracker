@@ -120,4 +120,30 @@ describe('GymSettingsRepository', () => {
     expect(calls.map((c) => c.kind)).toEqual(['update', 'remove']);
     expect(calls[0]?.payload).toEqual({ logo_path: null });
   });
+
+  it('brand colour: only a valid lower-case colour or null is ever sent, alone', async () => {
+    const { client, calls } = fake();
+    const repo = new GymSettingsRepository(client);
+    expect(await repo.setBrandColor(GYM, '#facc15')).toEqual({ ok: true, value: '#facc15' });
+    expect(calls[0]).toMatchObject({ payload: { brand_color: '#facc15' }, filters: [['id', GYM]] });
+    expect(Object.keys(calls[0]?.payload as object)).toEqual(['brand_color']);
+    expect(await repo.setBrandColor(GYM, null)).toEqual({ ok: true, value: null });
+    expect(calls[1]?.payload).toEqual({ brand_color: null });
+  });
+
+  it('brand colour: hostile values and a crafted gym id are refused before any request', async () => {
+    const { client, calls } = fake();
+    const repo = new GymSettingsRepository(client);
+    for (const bad of ['#FACC15', '#fff', 'red', '#808080', '#000000', '', ' #facc15', "#facc15'; drop table gyms;--", '<script>', '#facc15'.repeat(100000), '{"brand_color":"#facc15","is_demo":true}']) {
+      expect((await repo.setBrandColor(GYM, bad)).ok, bad.slice(0, 30)).toBe(false);
+    }
+    expect((await repo.setBrandColor("x' or 1=1", '#facc15')).ok).toBe(false);
+    expect((await repo.setBrandColor('c0000000-0000-4000-8000-00000000000Z', null)).ok).toBe(false);
+    expect(calls).toHaveLength(0);
+  });
+
+  it('brand colour: RLS hiding the row (a captain, another gym) = forbidden', async () => {
+    const hidden = fake([]);
+    expect(await new GymSettingsRepository(hidden.client).setBrandColor(GYM, '#facc15')).toMatchObject({ ok: false, failure: { kind: 'forbidden' } });
+  });
 });

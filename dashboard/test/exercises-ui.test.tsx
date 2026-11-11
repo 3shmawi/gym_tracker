@@ -13,7 +13,7 @@ import { ExercisePage } from '../src/pages/ExercisePage';
 import { ExercisesPage } from '../src/pages/ExercisesPage';
 
 const GYM_ID = 'b0000000-0000-4000-8000-000000000001';
-const gym: ManagedGym = { id: GYM_ID, name: 'Power Gym', role: 'captain', logoPath: null, historyAfterEnd: 'readable', memberCount: 5 };
+const gym: ManagedGym = { id: GYM_ID, name: 'Power Gym', role: 'captain', logoPath: null, historyAfterEnd: 'readable', brandColor: null, memberCount: 5 };
 const pid = (n: number, frame: 'tension' | 'relaxation' = 'tension') => `exercises/ek-${String(n).padStart(4, '0')}-${frame}`;
 const pic = (n: number, frame: 'tension' | 'relaxation', title: string): CatalogPicture => ({ publicId: pid(n, frame), exerciseKey: `ek-${String(n).padStart(4, '0')}`, frame, title });
 const en = (key: MessageKey, params?: Record<string, string | number>) => translate('en', key, params);

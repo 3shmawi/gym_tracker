@@ -4,6 +4,7 @@ import type { ManagedGym } from '../gyms/gyms';
 import { checkLogoFile, GYM_NAME_MAX, reencodeLogo, validGymName, type GymSettingsRepository, type History } from '../gyms/settings';
 import { useI18n, type MessageKey } from '../i18n';
 import { cleanName } from '../core/text';
+import { BrandColourPanel } from '../ui/BrandColour';
 import { Icon } from '../ui/icons';
 
 // Gym settings (D5, design board 12): name, logo, what a former member can
@@ -170,6 +171,7 @@ export function SettingsPage({ gym, settings, loadLogo, online, onChanged }: {
             <p class="cap">{history === 'readable' ? t('set.readableBody') : t('set.lockedBody')}</p>
             <p class="cap">{t('set.historyBody')}</p>
           </section>
+          <BrandColourPanel gym={gym} settings={settings} online={online} onChanged={onChanged} />
         </div>
       </section>
     );
@@ -233,6 +235,7 @@ export function SettingsPage({ gym, settings, loadLogo, online, onChanged }: {
           <p class="cap">{t('set.historyBody')}</p>
           {shown('history')}
         </section>
+        <BrandColourPanel gym={gym} settings={settings} online={online} onChanged={onChanged} />
       </div>
     </section>
   );
