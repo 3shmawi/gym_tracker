@@ -899,9 +899,8 @@ values (
 - **Hashtags:** #Azm #GymApp #BuildInPublic #Supabase #Preact #Egypt
 
 ## What's next
-**D6 gym brand colours** is proposed, not built: spec
-[`../designs/gym_brand_colours.md`](../designs/gym_brand_colours.md) (waiting
-for approval).
+**D6 gym brand colours** is approved and being built: spec
+[`../designs/gym_brand_colours.md`](../designs/gym_brand_colours.md).
 
 All planned phases (D0–D5) are built. Open items are listed in each phase's
 "Open points" / "Needs a backend step" and in

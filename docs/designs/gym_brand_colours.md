@@ -1,19 +1,16 @@
 # Design: gym brand colours (dashboard D6)
 
-> **Status: proposed. No code is written until the owner approves this spec.**
-> `CLAUDE.md` asks for an EGM-reviewed spec. The EGM plugin is loaded, but its
-> `/egm:` commands can only be started by a person, not by the agent that
-> wrote this. So this spec was written by hand with the same sections and has
-> **not** had an EGM review yet. To get one, run
-> `/egm:egm-review docs/designs/gym_brand_colours.md`, then `/egm:egm-resolve`.
+> **Status: approved by the owner on 2026-11-11, with every recommendation
+> under "Decisions" below.** Written by hand with EGM's sections: the plugin's
+> `/egm:` commands can only be started by a person, and no EGM review was
+> run before the approval.
 >
 > Builds on D5 (#75) and on gym settings being owner-only (migration 0020,
 > [#76](https://github.com/3shmawi/gym_tracker/pull/76)); both are on `main`.
 
 Mockup (dashboard settings with a working picker, and the app in two gym
 colours, light and dark): https://claude.ai/artifact/JwA9PRhZnLeYfYkvDWsjh2
-The mockup runs the exact colour rule of this spec. It has not been
-looked at by a person yet.
+The mockup runs the exact colour rule of this spec. 
 
 ## Goal
 The gym owner picks the gym's colour in the dashboard and sees a live phone
@@ -286,7 +283,7 @@ and treats 0 rows as `forbidden`, like `rename`.
   text 3:1; 1.4.11 user interface components and graphics 3:1.
 - Supabase: column-level security guide (above).
 
-## Decisions needed from the owner
+## Decisions (approved 2026-11-11: the recommended choice in each)
 1. One colour only, no accent in this version. *Recommended: yes.*
 2. Fills are adjusted to reach 3:1 (yellow becomes dark gold in light mode),
    or fills always use the exact colour as Azm's green does today (2.0:1 on
@@ -303,4 +300,4 @@ and treats 0 rows as `forbidden`, like `rename`.
    #76). *Recommended: yes.*
 9. The "Joined" screen is already in the gym's colour (needs the
    `redeem_payload` change). *Recommended: yes.*
-10. Run the EGM review yourself before approving, or approve without it.
+10. EGM review: approved without it.
