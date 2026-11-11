@@ -91,7 +91,7 @@ role gets **nothing** on any new table.
 
 | Table | trainee (own rows) | captain | owner |
 |---|---|---|---|
-| `gyms` | read gyms where they have a membership; if `ended` and `history_after_end = locked`, name only (no sessions, §below) | read own gym (update removed by migration 0020: settings are the owner's) | read own gym; update `history_after_end`, `name`, `logo_path` only (column grants; policy `private.i_own` since 0020) + soft-delete |
+| `gyms` | read gyms where they have a membership; if `ended` and `history_after_end = locked`, name only (no sessions, §below) | read own gym (update removed by migration 0020: settings are the owner's) | read own gym; update `history_after_end`, `name`, `logo_path` and, since 0021, `brand_color` only (column grants; policy `private.i_own` since 0020) + soft-delete |
 | `people` | read/update own row (`auth_user_id = auth.uid()`) | cannot read (they see `memberships.display_name`) | same |
 | `memberships` | read own; no direct writes (`leave_gym` RPC) | read the gym's; update **trainees'** permission flags and `status` | read the gym's; update anyone's role/flags/status except demoting the last owner |
 | `invites` | none | read/insert/revoke for **trainee** memberships in their gym | all invites in their gym, including captain invites |
