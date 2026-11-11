@@ -3,8 +3,9 @@
 > Step 0 of the delivery plan in [`../decisions/gym_accounts.md`](../decisions/gym_accounts.md) §13
 > and the hosting rule in §7: a plain web app on **its own origin**
 > (`https://azmm-dash.pages.dev`), not Flutter web. Phases **D0** (sign in,
-> list the gyms you run) and **D1** (members and invite codes) are built. The
-> rest comes in later phases.
+> list the gyms you run), **D1** (members and invite codes), **D2** (exercise
+> pictures and videos), **D3** (a member's plan, copy a plan), **D4** (gym plan
+> templates) and **D5** (trainee progress, gym settings) are built.
 
 ## Scope
 
@@ -15,7 +16,7 @@
 | **D2** | Exercise media: gym-chosen pictures and videos (tables `gym_exercise_images`, `gym_exercise_videos`) | **built (this doc, "D2 Exercise media")** |
 | **D3** | Plans: view and edit a member's plan through `save_plan`, copy a plan to other members | **built (this doc, "D3 A member's plan")** |
 | **D4** | Plan templates: save, rename, delete, replace a plan with one, what changed and Reset, apply a change to everyone on a template (backend: migration 0019) | **built (this doc, "D4 Gym templates")** |
-| D5 | Progress (the `member_*` views, [trainee_dashboard_data.md](trainee_dashboard_data.md)) and gym settings | planned |
+| **D5** | Progress (the `member_*` views, [trainee_dashboard_data.md](trainee_dashboard_data.md)) and gym settings (name, logo, history after a membership ends) | **built (this doc, "D5 Progress and gym settings")** |
 
 D0 to D3 add **no** migration, no RPC and no table; they only use what
 migrations 0005, 0006, 0007, 0008, 0013, 0015, 0016 and 0017 already allow.
@@ -98,6 +99,7 @@ dashboard/
 | `/g/<gym-uuid>/members/add` | add trainees (D1) |
 | `/g/<gym-uuid>/members/add-captain` | add a captain, owners only (D1) |
 | `/g/<gym-uuid>/templates` | the gym's plan templates (D4) |
+| `/g/<gym-uuid>/settings` | gym settings (D5) |
 | `/g/<gym-uuid>/exercises` | the exercise list (D2) |
 | `/g/<gym-uuid>/exercises/<library-id>` | one exercise's pictures and video (D2); an id that is not in the library is "not found" |
 | anything else | not found |
@@ -564,6 +566,113 @@ Boards "Dashboard 5" (Save as template, Replace with template) and
   على القالب مرة واحدة."
 - **Hashtags:** #Azm #GymApp #BuildInPublic #Supabase #Preact #Egypt
 
+## D5 Progress and gym settings
+Boards 10 ("trainee page": the panel "his workouts in this gym", the members
+list's "last workout") and 12 ("gym settings") of
+https://claude.ai/artifact/XjCnp9ZLUVZ57o7pJ7odBu (they open now; §21 said they
+once didn't). Where the boards show nothing (charts, tables, states), the
+screens follow the Design System and D0–D4.
+
+### Progress (member page)
+`src/ui/MemberProgress.tsx`, data `src/progress/` (read-only, no write).
+
+| Shown | From (migration 0012, `security_invoker` views) |
+|---|---|
+| workouts, a week on average (since the first workout), level and best level, streak, weeks to the next level (or back to the best: "comeback"), first and last workout | `member_progress_summary` (`level, best_level, streak_weeks, comeback, weeks_to_next, workouts_total, first_workout_at, last_workout_at`) |
+| last 12 weeks: bar chart of workouts per week with the "active (3)" line, and a table (week Sat–Fri, workouts, training days, sets done / planned, minutes, active) | `member_weekly_attendance` (`week_start ≥` 12 weeks ago); missing weeks are shown as 0 |
+| recent workouts (10): date, day name (from the member's plan), time, sets done / logged / planned, skipped exercises by name, "New records: n" | `member_session_stats`, records counted from `member_exercise_progress` |
+| weight progress: pick an exercise (gym cover tile from D2), line chart of the top weight per workout with records marked, and a table | `member_exercise_progress` (≤ 2000 rows) |
+| members list: "Last workout" column (cards on a phone) | `member_progress_summary` (`membership_id, workouts_total, last_workout_at`, `gym_id = eq.<gym>`) |
+
+- **Weeks** are the gym week of the app and the server (`private.gym_week`):
+  Saturday to Friday by the date in `Africa/Cairo`, numbered from Saturday 1
+  January 2000 (`src/progress/weeks.ts`). Labels read "Sat 7 Nov – Fri 13 Nov".
+- **Numbers use Western digits** (like the app) in both languages, in the
+  progress panel and charts.
+- **Names:** exercises and days from the member's plan (D3), else the library
+  (D2), else "An exercise no longer in the plan" / "A day no longer in the plan".
+- **Limits shown, not hidden:** a null duration or planned count is "—", not 0;
+  "planned sets are approximate" (compared with today's plan); "level counts
+  gym workouts only"; "only workouts logged in this gym".
+- **Who sees what** (RLS of the views): an owner sees everyone's, a captain
+  trainees' only (the panel isn't shown for others); only while the
+  membership is active.
+- **States:** loading, error with retry, no workouts in this gym yet (solo
+  workouts are never visible), waiting to join, ended (progress isn't shown
+  for an ended membership; what the former member can read follows
+  `history_after_end`).
+- **Charts:** plain SVG, no library. Single series, so no legend; the colour
+  token `--chart` (`#15803D` light, `#16A34A` dark) passed the dataviz palette
+  validator (lightness, chroma, ≥ 3:1 against the surface) in both themes. Each
+  chart has a text summary as its name, a tooltip per mark (bigger hit area),
+  the same numbers in a table, and time running left to right in both
+  languages. Records are a ring diamond, not colour only.
+
+### Gym settings (`/g/<gym>/settings`, menu "Settings")
+`src/pages/SettingsPage.tsx`, `src/gyms/settings.ts`.
+- **Name:** 1–60 characters, cleaned like other names (control and direction
+  characters removed, spaces collapsed); `update gyms set name` (the table's
+  own check: 1–60 and trimmed).
+- **Logo:** PNG or JPEG ≤ 512 KB. Checked in the browser **before any
+  request**: the size, and what the first bytes are (PNG/JPEG signatures; an
+  SVG or a renamed file is refused; the browser's type must not contradict the
+  bytes). Then the picture is **decoded and drawn again** (≤ 512 px a side, same
+  type), so only pixels are uploaded: no EXIF (camera, GPS place, time). The
+  object path is `<gym_id>/logo.png|jpg` from the gym id and the checked type,
+  never from the file name; `upsert`, then `gyms.logo_path`, then the old
+  object under another extension is removed. Remove = `logo_path = null`, then
+  the object. The preview is drawn on a canvas (like the QR cards), so the CSP
+  is unchanged (no `blob:`/`data:`).
+- **History after a membership ends:** two choices with plain explanations
+  (readable: the former member can open what they logged here, nothing new;
+  locked: hidden from them, never deleted, back if they rejoin).
+- **Who:** owners and captains, as the grants and policy allow
+  (`update (name, logo_path, history_after_end)`, "managers update their
+  gym" = `private.i_manage`; bucket policies `private.i_manage`). A refusal
+  (RLS returns no row) says "You can't change this gym's settings". After a
+  save the gym list reloads quietly (header and switcher follow).
+- **States:** saved / refused per section, offline (everything off), errors
+  with fixed messages.
+
+### Events
+**None** (no analytics in the dashboard).
+
+### Needs a backend step
+- **Rest overruns** are not shown: they are not stored
+  (trainee_dashboard_data.md → "What is NOT stored yet").
+- **Planned vs done per week** is approximate (plans keep no history).
+- **Progress of an ended member** is not readable by managers (the views and
+  policies are active-only); if captains should see a former member's history,
+  that is a policy change.
+
+### D5 tests
+- `test/progress.test.ts` (the gym week and labels, Western digits, every view
+  row with its nulls, chart data, the repository's columns and filters,
+  crafted ids, the route), `test/settings.test.ts` (names with hostile input,
+  61 characters, emoji; logo bytes/size/type checks, crafted file names, the
+  object path; repository calls, RLS-hidden rows, old logo removal).
+- `e2e/progress-settings.spec.ts` (progress with data, empty / waiting / ended /
+  error states, the members list column; settings: rename, upload, remove,
+  history, refused files before any request, hostile names, offline),
+  `e2e/progress-settings-a11y-security.spec.ts` (axe on 6 screens in English
+  light and Arabic dark, RTL and Western digits, keyboard only; crafted ids,
+  a foreign gym, a captain and the owner's progress, requests, storage). The
+  fake Supabase answers the four views (with their visibility rules), `gyms`
+  updates and `gym-logos` uploads (multipart, as supabase-js sends them).
+
+### Demo & post (D5)
+- **Hook:** "See who trains, how often, and how much stronger they got."
+- **Scenario** (`e2e/progress-settings.spec.ts`): open Ahmed: 38 workouts,
+  intermediate, the last 12 weeks, last workout, a new record on the dumbbell
+  press; then Settings: rename the gym, upload the logo, lock history.
+- **Caption (EN):** "New in the Azm captain dashboard: each trainee's progress
+  (attendance, time, sets, records, weights and level) and your gym's name,
+  logo and privacy setting in one place."
+- **Caption (AR, Egyptian):** "جديد في لوحة الكابتن بتاعة Azm: تقدّم كل متدرب
+  (الحضور، الوقت، المجموعات، الأرقام الجديدة، الأوزان والمستوى) واسم الجيم
+  وشعاره وإعداد الخصوصية في مكان واحد."
+- **Hashtags:** #Azm #GymApp #BuildInPublic #Supabase #Preact #Egypt
+
 ## Sign-in flow and session
 1. **Ask for a code.** `signInWithOtp({ email, options: { shouldCreateUser: false } })`.
    The dashboard never creates users. An unknown address makes Supabase answer
@@ -605,7 +714,7 @@ Storage may be blocked (private window): the dashboard still works for that
 tab; every access is guarded.
 
 ## Events
-**None.** The dashboard has no analytics and no feature flags in D0 to D4 (no
+**None.** The dashboard has no analytics and no feature flags in D0 to D5 (no
 PostHog, no Sentry, no cookies). Its only third-party requests are the
 exercise pictures from the one Cloudinary path (D2). If that changes,
 update this section, `website/privacy.html` and `store/privacy_forms.md` first.
@@ -778,5 +887,6 @@ values (
 - **Hashtags:** #Azm #GymApp #BuildInPublic #Supabase #Preact #Egypt
 
 ## What's next
-D5 (progress and gym settings) as in the table above. D4 needs a backend change, so it gets its own migration, RLS and pgTAP
-file first.
+All planned phases (D0–D5) are built. Open items are listed in each phase's
+"Open points" / "Needs a backend step" and in
+[`../designs/plan_templates.md`](../designs/plan_templates.md).

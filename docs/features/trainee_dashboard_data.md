@@ -68,6 +68,14 @@ None added (no new events; nothing about this is sent to PostHog).
 (a gym's captain: all trainees). Fine for a gym; if a dashboard lists
 thousands of members, store a nightly snapshot instead.
 
+## Shown in the dashboard (D5)
+The captain dashboard's member page reads all four views for one membership
+(and `member_progress_summary` for the members list's "Last workout"); see
+[`dashboard.md`](dashboard.md) → "D5 Progress and gym settings". It shows the
+limits above as they are: "—" for unknown durations and planned sets, "planned
+sets are approximate", "level counts gym workouts only", and no progress for an
+ended membership. Nothing new is read or stored.
+
 ## Tests
 pgTAP (38 checks, also run on Postgres 16 locally with a shim): RLS for anon,
 the trainee, another trainee, captain A, captain B, an ended member; numbers

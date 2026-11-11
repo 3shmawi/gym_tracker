@@ -1,5 +1,7 @@
 import type { ComponentChildren } from 'preact';
-import { useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
+import type { LastWorkout, ProgressRepository } from '../progress/progress';
+import { dateLabel } from '../progress/weeks';
 import { linkHandler, pathOf, type Route } from '../app/router';
 import { cleanName, initials } from '../core/text';
 import type { ManagedGym } from '../gyms/gyms';
@@ -23,9 +25,23 @@ function Link({ route, class: cls, label, children }: { readonly route: Route; r
   );
 }
 
-export function MembersPage({ gym, members }: { readonly gym: ManagedGym; readonly members: MembersRepository }) {
+export function MembersPage({ gym, members, progress }: { readonly gym: ManagedGym; readonly members: MembersRepository; readonly progress?: ProgressRepository }) {
   const { t, lang } = useI18n();
   const { data, reload } = useMembersList(members, gym.id);
+  // D5 (board 10): "Last workout" per member; optional, a failure just hides it.
+  const [last, setLast] = useState<ReadonlyMap<string, LastWorkout> | null>(null);
+  useEffect(() => {
+    let alive = true;
+    if (progress) void progress.lastWorkouts(gym.id).then((r) => { if (alive && r.ok) setLast(r.value); });
+    return () => {
+      alive = false;
+    };
+  }, [progress, gym.id]);
+  const lastText = (m: Member) => {
+    const l = last?.get(m.id);
+    if (!l || m.status !== 'active') return t('prog.dash');
+    return l.lastWorkoutAt ? dateLabel(lang, l.lastWorkoutAt) : t('members.lastNever');
+  };
   const [tab, setTab] = useState<Tab>('all');
   const [query, setQuery] = useState('');
   const now = useMemo(() => new Date(), [data]);
@@ -142,6 +158,7 @@ export function MembersPage({ gym, members }: { readonly gym: ManagedGym; readon
                   <th scope="col">{t('members.colRole')}</th>
                   <th scope="col">{t('members.colStatus')}</th>
                   <th scope="col">{t('members.colChange')}</th>
+                  {last ? <th scope="col">{t('members.colLast')}</th> : null}
                   <th scope="col"><span class="sr-only">{t('members.colActions')}</span></th>
                 </tr>
               </thead>
@@ -165,6 +182,7 @@ export function MembersPage({ gym, members }: { readonly gym: ManagedGym; readon
                         </div>
                       </td>
                       <td><span class="cap">{permsText(t, m)}</span></td>
+                      {last ? <td><span class="cap">{lastText(m)}</span></td> : null}
                       <td class="end">
                         <Link route={route} class="btn sm" label={t('members.manageName', { name: m.name })}>{t('members.manage')}</Link>
                       </td>
@@ -178,7 +196,7 @@ export function MembersPage({ gym, members }: { readonly gym: ManagedGym; readon
             {rows.map((m) => {
               const status = statusOf(t, lang, m, now);
               const route: Route = { name: 'member', gymId: gym.id, memberId: m.id };
-              const sub = [roleLabel(t, m.role), m.status === 'pending' || m.status === 'ended' ? status.when : permsText(t, m)].filter(Boolean).join(' · ');
+              const sub = [roleLabel(t, m.role), m.status === 'pending' || m.status === 'ended' ? status.when : permsText(t, m), last && m.status === 'active' ? `${t('members.colLast')}: ${lastText(m)}` : null].filter(Boolean).join(' · ');
               return (
                 <li key={m.id}>
                   <Link route={route} class="panel mcard">

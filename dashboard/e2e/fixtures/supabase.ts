@@ -110,6 +110,21 @@ export function samplePlan(): { days: unknown[] } {
   };
 }
 
+export interface FakeProgress {
+  summary?: Record<string, unknown>;
+  weeks?: Record<string, unknown>[];
+  sessions?: Record<string, unknown>[];
+  points?: Record<string, unknown>[];
+}
+
+export interface FakeUpload {
+  path: string;
+  contentType: string;
+  size: number;
+  /** The first bytes, to check what was really sent. */
+  head: number[];
+}
+
 /** Member ids of the seed data (gym A), for tests. */
 export const M = {
   owner: uid(1),
@@ -206,6 +221,10 @@ export interface MockOptions {
   plansFail?: boolean;
   /** D4: the gyms' plan templates. */
   templates?: FakeTemplate[];
+  /** D5: rows of the four progress views, per membership id. */
+  progress?: Record<string, FakeProgress>;
+  /** D5: make the progress views fail with 500. */
+  progressFails?: boolean;
   /** Answer as before migration 0019 (no plan_templates table, no template columns). */
   noTemplates?: boolean;
 }
@@ -238,8 +257,12 @@ export interface Mock {
   readonly plans: Record<string, FakePlan>;
   /** D4: the live plan_templates table. */
   readonly templates: FakeTemplate[];
+  /** D5: the gyms as the server holds them now, uploads and removals in gym-logos. */
+  readonly gymRows: Record<string, { name: string; logo_path: string | null; history_after_end: string }>;
+  readonly uploads: FakeUpload[];
+  readonly removed: string[];
   /** Changes failure options in the middle of a test. */
-  set(change: Pick<MockOptions, 'failInsertAt' | 'createInvite' | 'patch' | 'logoFile' | 'savePictures' | 'saveVideo' | 'mediaFails' | 'savePlan' | 'plansFail'>): void;
+  set(change: Pick<MockOptions, 'failInsertAt' | 'createInvite' | 'patch' | 'logoFile' | 'savePictures' | 'saveVideo' | 'mediaFails' | 'savePlan' | 'plansFail' | 'progressFails'>): void;
   recover(): void;
 }
 
@@ -288,7 +311,9 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
     mediaFails: options.mediaFails ?? false,
     savePlan: options.savePlan ?? 'ok',
     plansFail: options.plansFail ?? false,
+    progressFails: options.progressFails ?? false,
   };
+  const uploaded = new Map<string, Buffer>();
   const catalog: Record<string, unknown>[] = [...CATALOG.map((r) => ({ ...r })), ...(options.catalogExtra ?? [])];
   const seed = seedMembers();
   const mock: Mock = {
@@ -308,6 +333,9 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
     cdn: [],
     plans: options.plans ?? {},
     templates: options.templates ?? [],
+    gymRows: Object.fromEntries(gyms.map((g) => [g.id, { name: g.name, logo_path: g.logo ? `${g.id}/logo.png` : null, history_after_end: g.historyAfterEnd ?? 'readable' }])),
+    uploads: [],
+    removed: [],
     set: (change) => {
       Object.assign(behaviour, change);
     },
@@ -401,7 +429,7 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
           200,
           gyms.map((g) => ({
             role: g.role,
-            gym: { id: g.id, name: g.name, logo_path: g.logo ? `${g.id}/logo.png` : null, history_after_end: g.historyAfterEnd ?? 'readable' },
+            gym: { id: g.id, ...mock.gymRows[g.id] },
           })),
         );
       }
@@ -619,6 +647,92 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
         const i = mock.videos.findIndex((v) => v.gym_id === gymId && v.exercise_id === exerciseId);
         if (i >= 0) mock.videos.splice(i, 1);
         return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
+      }
+    }
+    // ---- D5: progress views (0012) and gym settings (0005, 0008) ----
+    if (path.startsWith('/rest/v1/member_') && method === 'GET') {
+      if (behaviour.progressFails) return json(route, 500, { code: 'XX000', message: 'boom' });
+      // RLS of the views: active members only; a captain sees trainees only.
+      const visible = (id: string) => {
+        const m = mock.members.find((x) => x.id === id);
+        const me = gyms.find((g) => g.id === m?.gym_id);
+        return !!m && !!me && m.status === 'active' && (me.role === 'owner' || m.role === 'trainee');
+      };
+      const one = wanted(url, 'membership_id');
+      const gymId = wanted(url, 'gym_id');
+      const ids = one ? [one] : mock.members.filter((m) => m.gym_id === gymId).map((m) => m.id);
+      const rows = ids.filter(visible).flatMap((id) => {
+        const p = options.progress?.[id] ?? {};
+        switch (path) {
+          case '/rest/v1/member_progress_summary': {
+            const base = { membership_id: id, level: 'beginner', best_level: 'beginner', streak_weeks: 0, comeback: false, weeks_to_next: 4, workouts_total: 0, first_workout_at: null, last_workout_at: null };
+            return [{ ...base, ...p.summary }];
+          }
+          case '/rest/v1/member_weekly_attendance':
+            return p.weeks ?? [];
+          case '/rest/v1/member_session_stats':
+            return p.sessions ?? [];
+          case '/rest/v1/member_exercise_progress':
+            return p.points ?? [];
+          default:
+            return [];
+        }
+      });
+      return json(route, 200, rows);
+    }
+    if (path === '/rest/v1/gyms' && method === 'PATCH') {
+      const id = wanted(url, 'id');
+      const row = mock.gymRows[id];
+      if (!row || !gyms.some((g) => g.id === id)) return json(route, 200, []);
+      if (Object.keys(record).some((k) => !['name', 'logo_path', 'history_after_end'].includes(k))) return error(route, 403, '42501', 'permission denied for table gyms');
+      if (typeof record.name === 'string' && (record.name.length < 1 || Array.from(record.name).length > 60 || record.name !== record.name.trim())) return error(route, 400, '23514', 'new row for relation "gyms" violates check constraint "gyms_name_check"');
+      Object.assign(row, record);
+      return json(route, 200, [{ id }]);
+    }
+    if (path.startsWith('/storage/v1/object/gym-logos/') && (method === 'POST' || method === 'PUT')) {
+      const objectPath = path.replace('/storage/v1/object/gym-logos/', '');
+      // supabase-js sends a Blob as multipart/form-data: the file part carries the bytes and its type.
+      let bytes = route.request().postDataBuffer() ?? Buffer.alloc(0);
+      let type = route.request().headers()['content-type'] ?? '';
+      const boundary = /boundary=(.+)$/.exec(type)?.[1];
+      if (boundary) {
+        const marker = Buffer.from(`--${boundary}`);
+        let start = 0;
+        for (;;) {
+          const at = bytes.indexOf(marker, start);
+          if (at < 0) break;
+          const next = bytes.indexOf(marker, at + marker.length);
+          const part = bytes.subarray(at + marker.length, next < 0 ? bytes.length : next);
+          const split = part.indexOf('\r\n\r\n');
+          const headers = part.subarray(0, Math.max(0, split)).toString('latin1');
+          const partType = /content-type:\s*([^\r\n]+)/i.exec(headers)?.[1];
+          if (partType && split >= 0 && next >= 0) {
+            type = partType.trim();
+            bytes = part.subarray(split + 4, part.length - 2);
+            break;
+          }
+          start = at + marker.length;
+        }
+      }
+      if (!/^[0-9a-f-]{36}\/logo\.(png|jpe?g)$/.test(objectPath) || !gyms.some((g) => objectPath.startsWith(`${g.id}/`))) return json(route, 403, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' });
+      if (bytes.length > 524_288) return json(route, 413, { statusCode: '413', error: 'Payload too large', message: 'The object exceeded the maximum allowed size' });
+      mock.uploads.push({ path: objectPath, contentType: type, size: bytes.length, head: [...bytes.subarray(0, 8)] });
+      uploaded.set(objectPath, bytes);
+      return json(route, 200, { Key: `gym-logos/${objectPath}`, Id: uid(++idCounter) });
+    }
+    if (path === '/storage/v1/object/gym-logos' && method === 'DELETE') {
+      for (const pref of (record.prefixes as string[] | undefined) ?? []) {
+        mock.removed.push(pref);
+        uploaded.delete(pref);
+      }
+      return json(route, 200, []);
+    }
+    if (path.startsWith('/storage/v1/object/') && method === 'GET') {
+      const objectPath = path.replace(/^\/storage\/v1\/object\/(authenticated\/)?gym-logos\//, '');
+      const mine = uploaded.get(objectPath);
+      if (mine) {
+        mock.storage.push(path.replace('/storage/v1/object/', ''));
+        return route.fulfill({ status: 200, contentType: objectPath.endsWith('png') ? 'image/png' : 'image/jpeg', headers: { 'access-control-allow-origin': '*' }, body: mine });
       }
     }
     if (path.startsWith('/storage/v1/object/') && method === 'GET') {
