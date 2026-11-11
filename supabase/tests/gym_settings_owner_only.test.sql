@@ -51,7 +51,10 @@ select is(
       and cmd in ('INSERT', 'UPDATE', 'DELETE')
       and coalesce(qual, '') || coalesce(with_check, '') like '%i_manage%'),
   0, 'no gyms or gym-logos write policy is left for managers');
-select results_eq($$ select policyname::text from pg_policies where schemaname = 'public' and tablename = 'gyms' order by 1 $$, $$ values ('members read their gyms'), ('owners update their gym') $$, 'gyms has exactly the read and owner-update policies');
+select is(
+  (select array_agg(policyname::text collate "C" order by policyname::text collate "C") from pg_policies where schemaname = 'public' and tablename = 'gyms'),
+  array['members read their gyms', 'owners update their gym']::text[],
+  'gyms has exactly the read and owner-update policies');
 select is(has_function_privilege('anon', 'private.i_own(uuid)', 'execute'), false, 'anon cannot call private.i_own');
 
 -- owner of gym A on an anonymous session: nothing
