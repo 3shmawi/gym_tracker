@@ -84,6 +84,8 @@ void main() {
       'gym_sessions_uploaded',
       // A solo member saved their own pictures for an exercise: the count.
       'solo_pictures_saved',
+      // The gym's colour went on: light or dark, and whether it was adjusted.
+      'gym_theme_applied',
     });
     // `via`: scan | link | code. `reason`: a word. `to`: solo | gym. Never a
     // code, a name, an id or an email. Sync: booleans and counts only.
@@ -95,6 +97,9 @@ void main() {
       'deferred',
       'count',
       'left',
+      // `mode`: light | dark. `adjusted`: a boolean. Never the colour.
+      'mode',
+      'adjusted',
     });
   });
 

@@ -22,9 +22,10 @@ Membership member({
   GymPermissions permissions = const GymPermissions(editTargets: true),
   String? name = 'Mohamed',
   DateTime? endedAt,
+  String? color,
 }) => Membership(
   id: id,
-  gym: Gym(id: 'g-$id', name: gym, historyAfterEnd: history),
+  gym: Gym(id: 'g-$id', name: gym, historyAfterEnd: history, brandColor: color),
   role: role,
   status: status,
   permissions: permissions,
@@ -37,9 +38,10 @@ JoinedGym joinedGym({
   String gym = 'Iron House',
   GymRole role = GymRole.trainee,
   GymPermissions permissions = const GymPermissions(editTargets: true),
+  String? color,
 }) => JoinedGym(
   membershipId: id,
-  gym: Gym(id: 'g-$id', name: gym),
+  gym: Gym(id: 'g-$id', name: gym, brandColor: color),
   role: role,
   permissions: permissions,
 );

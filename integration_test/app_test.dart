@@ -7,6 +7,10 @@ import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/core/router/app_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/splash/animated_splash.dart';
+import 'package:gym_tracker/core/theme/app_colors.dart';
+import 'package:gym_tracker/core/theme/app_palette.dart';
+import 'package:gym_tracker/core/theme/brand_color_rule.dart';
+import 'package:gym_tracker/core/theme/brand_colors.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/features/gym/presentation/join_page.dart';
 import 'package:gym_tracker/features/gym/presentation/joined_view.dart';
@@ -416,6 +420,70 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ExercisePreviewRow), findsWidgets);
     await beat(tester, 2000);
+  });
+
+  testWidgets("a gym with its own colour: join, and the app is the gym's", (
+    tester,
+  ) async {
+    // Iron House's owner picked yellow in the dashboard.
+    const yellow = '#facc15';
+    FeatureFlags.overrides[Flags.gymJoin] = true;
+    FeatureFlags.overrides[Flags.gymBrandColours] = true;
+    addTearDown(FeatureFlags.overrides.clear);
+    await freshInstall(tester);
+    await app.main();
+    useFakeRestAlarm();
+    final camera = FakeCamera();
+    scannerCameraOverride = camera.builder;
+    addTearDown(() => scannerCameraOverride = null);
+    Dependencies.gymRepository = FakeGymRepository(
+      redeemResult: Success(joinedGym(color: yellow)),
+      memberships: Success([member(color: yellow)]),
+    );
+    final account = FakeAccountRepository();
+    Dependencies.accountRepository = account;
+    await tester.pumpAndSettle();
+    await beat(tester, 1200);
+
+    Color brandAt(Finder screen) =>
+        Theme.of(tester.element(screen)).extension<AppPalette>()!.brand;
+
+    // Before joining: Azm's green.
+    expect(find.byType(WelcomeView), findsOneWidget);
+    expect(brandAt(find.byType(WelcomeView)), AppColors.primary);
+    await beat(tester, 1500);
+    await tester.tap(find.byKey(const Key('welcome_join')));
+    await tester.pumpAndSettle();
+    await beat(tester, 1500);
+
+    // Scan the gym's QR: the welcome is already in the gym's colour.
+    camera.scan('https://azmm.pages.dev/join/K7M2QX');
+    await tester.pumpAndSettle();
+    account.emit(anonymousSession);
+    await tester.pumpAndSettle();
+    expect(find.text('Welcome to Iron House'), findsOneWidget);
+    await beat(tester, 2500);
+
+    // Start training: every button, bar and ring is the gym's yellow.
+    await tester.tap(find.byKey(const Key('joined_start')));
+    await tester.pumpAndSettle();
+    expect(find.byType(NextWorkoutPage), findsOneWidget);
+    final gymBrand = brandAt(find.byType(NextWorkoutPage));
+    expect(gymBrand, isNot(AppColors.primary));
+    expect(
+      BrandColorRule.passes(
+        BrandColors.toRgb(gymBrand),
+        BrandColors.toRgb(
+          Theme.of(tester.element(find.byType(NextWorkoutPage)))
+              .colorScheme
+              .surface,
+        ),
+        3,
+        1,
+      ),
+      isTrue,
+    );
+    await beat(tester, 2500);
   });
 
   testWidgets('in a gym: the captain changes the plan and the app says so', (
