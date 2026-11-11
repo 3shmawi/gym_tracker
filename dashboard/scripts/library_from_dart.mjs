@@ -13,11 +13,23 @@ export const VIDEOS = new URL('lib/features/library/data/exercise_videos.dart', 
 
 const str = "'((?:[^'\\\\]|\\\\.)*)'";
 const ENTRY = new RegExp(
-  `id: '([a-z][a-z0-9_]*)',\\s*name: LocalizedName\\(\\s*ar: ${str},\\s*en: ${str},?\\s*\\),(?:\\s*[a-zA-Z]+: [^,\\n]+,)*\\s*\\),\\s*muscle: MuscleGroup\\.([a-z]+)`,
+  `id: '([a-z][a-z0-9_]*)',\\s*name: LocalizedName\\(\\s*ar: ${str},\\s*en: ${str},?\\s*\\),((?:\\s*[a-zA-Z]+: [^,\\n]+,)*)\\s*\\),\\s*muscle: MuscleGroup\\.([a-z]+)`,
   'g',
 );
 const VIDEO = /'([a-z][a-z0-9_]*)':\s*YouTubeVideoRef\(\s*'([A-Za-z0-9_-]{11})'/g;
 const unescape = (s) => s.replace(/\\(.)/g, '$1');
+
+// The app's Exercise defaults (workout_plan.dart), overridden per entry.
+const DEFAULTS = { sets: 3, reps: 12, rest: 90, step: 2.5 };
+const FIELDS = { targetSets: 'sets', targetReps: 'reps', restSeconds: 'rest', weightStep: 'step' };
+function targets(text) {
+  const out = { ...DEFAULTS };
+  for (const m of text.matchAll(/([a-zA-Z]+): ([0-9.]+),/g)) {
+    const key = FIELDS[m[1]];
+    if (key) out[key] = Number(m[2]);
+  }
+  return out;
+}
 
 /** Parses the two Dart files' text into the library entries, in the app's order. */
 export function parseLibrary(catalogText, videosText) {
@@ -26,8 +38,9 @@ export function parseLibrary(catalogText, videosText) {
     id: m[1],
     ar: unescape(m[2]),
     en: unescape(m[3]),
-    muscle: m[4],
+    muscle: m[5],
     libraryVideo: videos.has(m[1]),
+    ...targets(m[4] ?? ''),
   }));
 }
 

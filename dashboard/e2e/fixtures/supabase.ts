@@ -80,6 +80,24 @@ export const CATALOG: FakeCatalogRow[] = [
   (['tension', 'relaxation'] as const).map((frame) => ({ public_id: `exercises/${key as string}-${frame}`, exercise_key: key as string, frame, title_en: title as string, keywords: words as string[] })),
 );
 
+export interface FakePlan {
+  body: unknown;
+  version: number;
+  updated_by: string | null;
+  updated_at: string;
+}
+
+/** A small plan in the app's JSON (two days, a superset, a plate exercise). */
+export function samplePlan(): { days: unknown[] } {
+  const ex = (id: string, en: string, ar: string, over: Record<string, unknown> = {}) => ({ id, name: { ar, en }, sets: 3, reps: 12, rest: 90, step: 2.5, superset: false, ...over });
+  return {
+    days: [
+      { id: 'day-1', name: { ar: 'صدر وضهر', en: 'Chest & Back' }, exercises: [ex('flat_db_press', 'Flat Dumbbell Press', 'دفع دمبل مستوي'), ex('pec_deck', 'Pec Deck', 'فراشة', { superset: true }), ex('abs', 'Abs', 'بطن', { reps: 15, step: 5 })] },
+      { id: 'day-2', name: { ar: 'رجل', en: 'Legs' }, exercises: [ex('leg_press', 'Leg Press', 'دفع جهاز', { unit: 'plate', step: 5 })] },
+    ],
+  };
+}
+
 /** Member ids of the seed data (gym A), for tests. */
 export const M = {
   owner: uid(1),
@@ -168,6 +186,12 @@ export interface MockOptions {
   saveVideo?: 'ok' | 'forbidden';
   /** Make the media reads fail with 500. */
   mediaFails?: boolean;
+  /** D3: members' plans by membership id. */
+  plans?: Record<string, FakePlan>;
+  /** What save_plan answers (ok = the real rules of the fake). */
+  savePlan?: 'ok' | 'forbidden' | 'invalid' | 'server_error';
+  /** Make the plan reads fail with 500. */
+  plansFail?: boolean;
 }
 
 export interface Mock {
@@ -194,8 +218,10 @@ export interface Mock {
   readonly pictures: FakePictureRow[];
   readonly videos: FakeVideoRow[];
   readonly cdn: string[];
+  /** D3: the live plans table (membership id → row). */
+  readonly plans: Record<string, FakePlan>;
   /** Changes failure options in the middle of a test. */
-  set(change: Pick<MockOptions, 'failInsertAt' | 'createInvite' | 'patch' | 'logoFile' | 'savePictures' | 'saveVideo' | 'mediaFails'>): void;
+  set(change: Pick<MockOptions, 'failInsertAt' | 'createInvite' | 'patch' | 'logoFile' | 'savePictures' | 'saveVideo' | 'mediaFails' | 'savePlan' | 'plansFail'>): void;
   recover(): void;
 }
 
@@ -242,6 +268,8 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
     savePictures: options.savePictures ?? 'ok',
     saveVideo: options.saveVideo ?? 'ok',
     mediaFails: options.mediaFails ?? false,
+    savePlan: options.savePlan ?? 'ok',
+    plansFail: options.plansFail ?? false,
   };
   const catalog: Record<string, unknown>[] = [...CATALOG.map((r) => ({ ...r })), ...(options.catalogExtra ?? [])];
   const seed = seedMembers();
@@ -260,6 +288,7 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
     pictures: options.pictures ?? [],
     videos: options.videos ?? [],
     cdn: [],
+    plans: options.plans ?? {},
     set: (change) => {
       Object.assign(behaviour, change);
     },
@@ -429,6 +458,32 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
       const invite = mock.invites.find((i) => i.id === record.p_invite_id);
       if (invite) invite.revoked_at = new Date().toISOString();
       return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
+    }
+    // ---- D3: plans (0007) ----
+    if (path === '/rest/v1/plans' && method === 'GET') {
+      if (behaviour.plansFail) return json(route, 500, { code: 'XX000', message: 'boom' });
+      const one = wanted(url, 'membership_id');
+      const inList = /^in\.\((.*)\)$/.exec(url.searchParams.get('membership_id') ?? '');
+      const ids = inList ? (inList[1] ?? '').split(',').map((w) => w.replace(/^"|"$/g, '')) : [one];
+      const rows = ids.flatMap((id) => {
+        const p = mock.plans[id];
+        return p ? [{ membership_id: id, ...p }] : [];
+      });
+      return json(route, 200, rows);
+    }
+    if (path === '/rest/v1/rpc/save_plan') {
+      mock.rpcs.push({ name: 'save_plan', body: record });
+      const target = mock.members.find((m) => m.id === record.p_membership_id);
+      const me = gyms.find((g) => g.id === target?.gym_id);
+      // i_manage_role: owners manage anyone, captains trainees only.
+      if (!target || !me || (me.role === 'captain' && target.role !== 'trainee') || behaviour.savePlan === 'forbidden') return error(route, 403, '42501', 'forbidden');
+      if (behaviour.savePlan === 'server_error') return error(route, 500, 'XX000', 'boom');
+      const body = record.p_body as { days?: unknown[] } | undefined;
+      if (behaviour.savePlan === 'invalid' || !Array.isArray(body?.days) || body.days.length === 0) return error(route, 400, '22023', 'invalid_plan: bad day count');
+      const current = mock.plans[target.id];
+      const version = (current?.version ?? 0) + 1;
+      mock.plans[target.id] = { body, version, updated_by: M.owner, updated_at: new Date().toISOString() };
+      return json(route, 200, { version, updated_by: M.owner, updated_at: mock.plans[target.id]?.updated_at });
     }
     // ---- D2: exercise media (0013, 0015, 0017) ----
     const isManager = (gymId: string) => gyms.some((g) => g.id === gymId);

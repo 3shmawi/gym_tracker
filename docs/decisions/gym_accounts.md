@@ -532,6 +532,13 @@ of https://claude.ai/artifact/26EDAr572B4Qr8eBLB4D75):**
   `save_plan`, behind a confirmation that lists the members.
 - Library content in the dashboard (the same catalog) is read from the app's
   list until it moves to the server; `ExerciseLibrary` is the seam.
+- **As built (D3, 2026-11-10):** copy works as described, from the member's
+  *saved* plan. One difference: `save_plan` checks `base_version` for trainees
+  only, so a manager's save would silently overwrite a change made meanwhile;
+  the dashboard reads the version just before saving and shows what changed
+  instead. The remaining window (between that read and the save) needs a
+  server-side check for managers too; proposed with the D4 migration.
+  Feature doc: [`features/dashboard.md`](../features/dashboard.md) → "D3".
 
 
 ## 21. Captain dashboard D0 as built (2026-11-04)

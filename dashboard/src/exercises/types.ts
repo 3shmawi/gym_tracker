@@ -13,6 +13,13 @@ export interface LibraryExercise {
   readonly muscle: Muscle;
   /** The library has its own how-to video (members see it when the gym has none). */
   readonly libraryVideo: boolean;
+  /** Starting targets when it is added to a plan (the app's catalog). */
+  readonly sets: number;
+  readonly reps: number;
+  /** Seconds. */
+  readonly rest: number;
+  /** Weight step, kg. */
+  readonly step: number;
 }
 
 /** A gym's own video for an exercise: the id only, never a URL. */

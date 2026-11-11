@@ -13,12 +13,12 @@
 | **D0** | Project, build and deploy, headers/CSP, sign-in by email code, session, "my gyms", members page shell (empty state), English + Arabic (RTL), light/dark | **built (this doc)** |
 | **D1** | Members and invites: member list, add trainees, QR cards, permissions, end a member | **built (this doc, "D1 Members and invite codes")** |
 | **D2** | Exercise media: gym-chosen pictures and videos (tables `gym_exercise_images`, `gym_exercise_videos`) | **built (this doc, "D2 Exercise media")** |
-| D3 | Plans: view and edit a trainee's plan through `save_plan` | planned |
+| **D3** | Plans: view and edit a member's plan through `save_plan`, copy a plan to other members | **built (this doc, "D3 A member's plan")** |
 | D4 | Plan templates (needs a **backend change**: new migration, RLS, pgTAP) | planned |
 | D5 | Progress (the `member_*` views, [trainee_dashboard_data.md](trainee_dashboard_data.md)) and gym settings | planned |
 
-D0, D1 and D2 add **no** migration, no RPC and no table. They only use what
-migrations 0005, 0006, 0008, 0013, 0015 and 0017 already allow.
+D0 to D3 add **no** migration, no RPC and no table. They only use what
+migrations 0005, 0006, 0007, 0008, 0013, 0015, 0016 and 0017 already allow.
 
 ## Design
 - Board: https://claude.ai/artifact/8dPMf6CPxewxFRgtjovg1P. D0 uses boards
@@ -68,6 +68,7 @@ dashboard/
     auth/auth.ts               email-code sign-in, session
     gyms/gyms.ts               the gyms the person manages
     exercises/                 D2: library copy, link parser, picture rules, media repository
+    plans/                     D3: plan model and rules, edits, diff, save_plan repository
     i18n/                      en.ts, ar.ts
     ui/ pages/ styles/         screens and styling
   test/                        unit tests (Vitest) and e2e (Playwright)
@@ -90,6 +91,7 @@ dashboard/
 | `/gyms` | the gyms you run (owner or captain) |
 | `/g/<gym-uuid>/members` | members page (`/g/<gym-uuid>` is the same) |
 | `/g/<gym-uuid>/members/<member-uuid>` | one member (D1) |
+| `/g/<gym-uuid>/members/<member-uuid>/plan` | that member's plan (D3) |
 | `/g/<gym-uuid>/members/add` | add trainees (D1) |
 | `/g/<gym-uuid>/members/add-captain` | add a captain, owners only (D1) |
 | `/g/<gym-uuid>/exercises` | the exercise list (D2) |
@@ -282,7 +284,8 @@ names, muscle, whether the library has a video). `test/library.test.ts` fails
 when the copy drifts from the Dart files, so a new library exercise is one
 command away. Today: **36 exercises**, 23 with a library video (the 13 added for
 days 4 and 5 have none yet). Exercises a captain wrote in a plan (`ex-…` ids)
-come with D3.
+show in D3's plan editor (with the gym's cover if one was ever saved for that
+id); choosing pictures for them is not built yet.
 
 ### Contracts used (migrations 0013, 0015, 0017; nothing new)
 `src/exercises/media.ts` only asks; Row Level Security decides.
@@ -391,6 +394,124 @@ redeploy. Until then the exercise pages work with plain tiles.
   التطبيق."
 - **Hashtags:** #Azm #GymApp #BuildInPublic #Supabase #Preact #Egypt
 
+## D3 A member's plan
+From a member's page, **Open the plan** (shown when the person may change it:
+owners for anyone, captains for trainees; not for ended memberships). Board
+"Dashboard 5" (copy) and "Dashboard 6" (targets in a table) of
+https://claude.ai/artifact/26EDAr572B4Qr8eBLB4D75; the editor itself has no
+board, so it follows those two boards and the app's plan editor
+(`docs/features/workout.md` → "Plan editor").
+
+| Screen | Code |
+|---|---|
+| Plan: day tabs (with exercise counts), the day's name in both languages, move/rename/delete the day, add a day; a table of exercises (gym cover or a dumbbell tile, both names, "Written by you" for `ex-…` ids) with sets, reps, rest, weight step, "Logged by" and "With next" edited in place; move/rename/delete per row; **Save plan** and **Undo changes** in a bar that stays at the bottom | `src/pages/PlanPage.tsx`, `src/ui/PlanDayView.tsx` |
+| Add an exercise: **From the library** (D2's list of 36, search in both languages; one already in the day says so) or **Write your own** (Arabic and English, one is enough) | `src/ui/PlanDialogs.tsx` |
+| Conflict: "Someone saved this plan while you were editing", what they changed and what you changed (by id: added, deleted, renamed, moved, targets), **Load the newest plan** | `PlanPage.tsx`, `src/plans/diff.ts` |
+| Copy to other members: active and waiting members this person may write for, "Has a plan · will be replaced" / "No plan yet", a warning with the count, one save per member, results per member, **Try again for N** | `src/ui/CopyPlanDialog.tsx` |
+| States: loading, error with retry, no plan yet (**Start a plan**: one day "Day 1 / اليوم ١"), a stored plan the dashboard can't read (shown, not editable), ended membership, offline (Save and Copy off), unsaved changes ("Not saved yet." and a warning before leaving) | |
+
+### The rules (the same as the app and the server)
+`src/plans/model.ts` and `src/plans/edit.ts` mirror `PlanLimits`, `PlanNames`,
+`validatePlan`, `newPlanId` (`lib/features/workout/domain/usecases/plan_rules.dart`)
+and `EditPlan` (`edit_plan.dart`), and `planProblem()` returns
+`private.plan_problem`'s own words:
+- 1–14 days; ≤ 30 exercises a day; names 1–40 characters in each language
+  (counted like Dart's runes), cleaned to one line, control and direction
+  characters removed; one language fills the other; sets 1–10, reps 1–100,
+  rest 0–600 s (inputs step 15), weight step > 0 and ≤ 50 (choices 0.5, 1,
+  1.25, 2, 2.5, 5; another stored value shows as its own choice); `unit`
+  `kg` / `plate` / `reps`, written only when not kg; day and exercise ids
+  `^[A-Za-z0-9_-]{1,64}$`, unique in their list; the body exactly
+  `{days:[{id,name,exercises:[{id,name,sets,reps,rest,step,superset,unit?}]}]}`.
+- **Size:** the server checks `octet_length(body::text)` ≤ 64 KB, and Postgres
+  prints jsonb with a space after every `:` and `,`; `bodyBytes()` counts the
+  same way. A full 14 × 30 plan with long Arabic names is over the limit; the
+  page says so ("This plan is too big to save").
+- **Ids never change and are never reused:** renaming keeps the id; a library
+  exercise keeps the library id (so the member's history matches); a new
+  day or written exercise gets `day-` / `ex-` and the time in microseconds in
+  base 36, checked against every id in the stored plan, the draft and the
+  ids issued in this session. A library exercise starts with the library's
+  targets (`scripts/library_from_dart.mjs` now also copies them).
+- **Supersets:** "with the next one"; the last exercise of a day never keeps it
+  (moving or deleting its partner ends it); the first of a pair shows "After
+  the pair" instead of its own rest.
+- A stored body the dashboard can't read strictly is **not editable** (so it
+  is never re-sent changed); the member still sees it in the app.
+
+### Contracts used (migrations 0007 and 0016; nothing new)
+| What | How | Rule |
+|---|---|---|
+| Read a plan | `plans` (`body, version, updated_by, updated_at`, `membership_id = eq.<id>`) | "read plans of my membership or my gym" (`private.can_read_plan` → `i_manage_role`: owners anyone, captains trainees) |
+| Versions for the copy list | `plans` (`membership_id, version`, `membership_id = in.(…)`, ≤ 500) | same |
+| Save | RPC `save_plan(p_membership_id, p_base_version, p_body)` only | security definer; `i_manage_role`; `private.plan_problem`; a manager's save always wins and bumps `version`; the app shows "Your captain updated your plan" |
+
+Errors (fixed messages, `src/plans/text.ts`): `42501 forbidden` → you can't
+change this member's plan; `22023 invalid_plan: <why>` → the server didn't
+accept it (should not happen: the page checks the same rules first);
+`P0001 plan_changed` → the conflict screen; offline; session ended; anything
+else → nothing was changed.
+
+**Conflicts: what the server does and doesn't do.** `save_plan` checks
+`p_base_version` **only for a trainee**; for a manager it always saves. So
+the dashboard reads the stored `version` right before it saves and stops with
+`plan_changed` (nothing sent) when someone saved meanwhile; the server's own
+`plan_changed` (two first plans at once) leads to the same screen. The gap
+left is the moment between that read and the save. Closing it needs
+`save_plan` to check the version for managers too, a backend change kept out
+of D3 (see "Open points").
+
+### Copy a plan (decision doc §20)
+The **saved** plan is copied (Save first, the button says so). Each member gets
+the same body, ids included, through `save_plan` with their own current
+version (0 when they have none), one after the other; a member who has a plan
+gets it replaced, after the warning; workout history is never touched. Results
+are shown per member; **Try again for N** repeats only the failed ones.
+Offered: members this person may write for (`canManage`: owners anyone,
+captains trainees), not ended, not the source.
+
+### Events
+**None** (no analytics in the dashboard). Plans, names and drafts are kept in
+memory only: nothing in `localStorage`, the URL or a log.
+
+### Open points
+- Server-side version check for managers (above): a small backend change
+  (for example an optional "expected version" argument to `save_plan`) would
+  remove the last race. Proposed for the next backend migration.
+- `updated_by` is shown as "Last saved by <name>" when that membership is in
+  the list the person can read; otherwise only the date.
+
+### D3 tests
+- `test/plans.test.ts` (names, the body round trip, strict reading, the
+  server's rules and size, ids, every edit, supersets, the diff in both
+  languages, the repository: columns, crafted ids, version pre-check,
+  `plan_changed`, refusals, copy), `test/plan-ui.test.tsx` (save, conflict,
+  first plan, copy, error), `test/router.test.ts` (the plan route),
+  `test/library.test.ts` (the library copy with targets).
+- `e2e/plans.spec.ts` (main flow: member page → plan → edit targets, add from
+  the library and by hand, reorder, superset, rename the day → save; the
+  conflict path; copy to two members with a failure and retry; a first plan;
+  error/refused/offline/leave; who sees the plan), `e2e/plans-a11y.spec.ts`
+  (axe on 7 screens in English light and Arabic dark, RTL, keyboard, dialogs),
+  `e2e/plans-security.spec.ts` (crafted ids in the URL, hostile and 41+
+  character names, control characters, injection-like text, hostile stored
+  plans, clamped numbers, every request goes to the site, the project or the
+  picture path, nothing stored).
+
+### Demo & post (D3)
+- **Hook:** "Change a trainee's plan from your laptop, and copy it to the whole group."
+- **Scenario** (`e2e/plans.spec.ts`, main flow and copy): open Ahmed's plan,
+  4 sets on the press, add Barbell Back Squat from the library and a "Cable
+  Fly" written by hand, pair it with the next one, rename the day, save; then
+  copy the plan to Mona and Youssef.
+- **Caption (EN):** "New in the Azm captain dashboard: edit any trainee's plan
+  (days, exercises, sets, reps, rest) and copy it to other members in one go.
+  They see 'Your captain updated your plan' in the app."
+- **Caption (AR, Egyptian):** "جديد في لوحة الكابتن بتاعة Azm: عدّل خطة أي متدرب
+  (الأيام والتمارين والمجموعات والعدّات والراحة) وانسخها لباقي الأعضاء مرة
+  واحدة. هيشوفوا "الكابتن حدّث خطتك" في التطبيق."
+- **Hashtags:** #Azm #GymApp #BuildInPublic #Supabase #Preact #Egypt
+
 ## Sign-in flow and session
 1. **Ask for a code.** `signInWithOtp({ email, options: { shouldCreateUser: false } })`.
    The dashboard never creates users. An unknown address makes Supabase answer
@@ -432,7 +553,7 @@ Storage may be blocked (private window): the dashboard still works for that
 tab; every access is guarded.
 
 ## Events
-**None.** The dashboard has no analytics and no feature flags in D0 to D2 (no
+**None.** The dashboard has no analytics and no feature flags in D0 to D3 (no
 PostHog, no Sentry, no cookies). Its only third-party requests are the
 exercise pictures from the one Cloudinary path (D2). If that changes,
 update this section, `website/privacy.html` and `store/privacy_forms.md` first.
@@ -584,8 +705,8 @@ values (
   (UUID only, hostile paths), auth (no enumeration, anonymous refused), gyms,
   headers (CSP exact, `_headers` limits), pages.
 - `dashboard/e2e/` (Playwright + axe, Supabase mocked, no network): sign-in
-  flow, wrong code, offline, Arabic RTL, dark mode; D1 and D2 specs are listed
-  under "D1 tests" and "D2 tests".
+  flow, wrong code, offline, Arabic RTL, dark mode; D1 to D3 specs are listed
+  under "D1 tests", "D2 tests" and "D3 tests".
 - Locally, the Playwright browser can be a preinstalled Chromium:
   `PW_CHROMIUM=/path/to/chrome npm run e2e`.
 - `test/security/dashboard_test.dart` (Flutter side, static guards) and the
@@ -605,5 +726,5 @@ values (
 - **Hashtags:** #Azm #GymApp #BuildInPublic #Supabase #Preact #Egypt
 
 ## What's next
-D3 to D5 as in the table above. D4 needs a backend change, so it gets its own migration, RLS and pgTAP
+D4 (gym templates, a backend change) and D5 as in the table above. D4 needs a backend change, so it gets its own migration, RLS and pgTAP
 file first.
