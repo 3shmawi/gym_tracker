@@ -477,3 +477,6 @@ table.bc-checks .ok{font-weight:700;color:var(--up)}
 .pv-radio svg{width:10px;height:10px}
 .pv-danger{text-align:center;font-weight:700;color:var(--pv-err);padding:4px 0}
 @media (max-width:520px){.bc-samples{grid-template-columns:minmax(0,1fr)}}
+
+/* An icon inside running text (the level note, hints): text-sized, on the baseline. Icons in buttons, banners, rows... have their own sizes above; the width/height attributes on the svg are only the fallback. */
+.cap svg,.sub svg,.hint svg{width:16px;height:16px;flex:none;vertical-align:-3px}
