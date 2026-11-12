@@ -308,6 +308,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('workout_pill')), findsNothing);
     expect(find.text('Continue workout'), findsOneWidget);
+    expect(find.byKey(const Key('home_rest_line')), findsOneWidget);
     await lockPhone(tester);
     expect(alarm.scheduled?.body, 'Barbell Back Squat · set 3');
     await unlockPhone(tester);

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker/core/adaptive/adaptive.dart';
@@ -25,6 +27,8 @@ class NextWorkoutView extends StatelessWidget {
     required this.onChooseDay,
     this.onStart,
     this.inProgress = false,
+    this.restEndsAt,
+    this.now = DateTime.now,
     this.onOpenProgress,
     this.onOpenExercise,
     this.onOpenPlan,
@@ -60,6 +64,11 @@ class NextWorkoutView extends StatelessWidget {
   /// A workout is in progress: the button says "Continue workout" and goes
   /// straight back to it. (The floating workout pill is not on this screen.)
   final bool inProgress;
+
+  /// When the rest of the workout in progress ends (null: not resting). The
+  /// countdown shows above the button, since this screen has no pill.
+  final DateTime? restEndsAt;
+  final DateTime Function() now;
 
   /// Opens the plan editor ("Your plan", the list button on the bar).
   final VoidCallback? onOpenPlan;
@@ -113,6 +122,8 @@ class NextWorkoutView extends StatelessWidget {
           next: next,
           onStart: onStart,
           inProgress: inProgress,
+          restEndsAt: restEndsAt,
+          now: now,
           onChooseDay: onChooseDay,
           onOpenExercise: onOpenExercise,
           onEditDay: onEditDay,
@@ -162,6 +173,8 @@ class _Workout extends StatelessWidget {
     required this.onStart,
     required this.onChooseDay,
     this.inProgress = false,
+    this.restEndsAt,
+    this.now = DateTime.now,
     this.onOpenExercise,
     this.onEditDay,
     this.covers = const {},
@@ -173,6 +186,8 @@ class _Workout extends StatelessWidget {
   final ValueChanged<String>? onOpenExercise;
   final VoidCallback? onStart;
   final bool inProgress;
+  final DateTime? restEndsAt;
+  final DateTime Function() now;
   final ValueChanged<int> onChooseDay;
 
   Future<void> _pickDay(BuildContext context) async {
@@ -392,13 +407,109 @@ class _Workout extends StatelessWidget {
               AppDimens.md,
               AppDimens.md,
             ),
-            child: AppPrimaryButton(
-              key: const Key('home_start_button'),
-              label: inProgress ? l10n.todayContinue : l10n.todayStart,
-              icon: Icons.play_arrow_rounded,
-              onPressed: () => _start(context),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: AppDimens.sm,
+              children: [
+                if (inProgress && restEndsAt != null)
+                  HomeRestLine(endsAt: restEndsAt!, now: now),
+                AppPrimaryButton(
+                  key: const Key('home_start_button'),
+                  label: inProgress ? l10n.todayContinue : l10n.todayStart,
+                  icon: Icons.play_arrow_rounded,
+                  onPressed: () => _start(context),
+                ),
+              ],
             ),
           ),
+      ],
+    );
+  }
+}
+
+/// The rest of the workout in progress, counting down above the home
+/// screen's Continue button; "Rest is over" once it has run out. Only this
+/// line repaints, once a second, and only while a rest is running.
+class HomeRestLine extends StatefulWidget {
+  const new({required this.endsAt, required this.now, super.key});
+
+  final DateTime endsAt;
+  final DateTime Function() now;
+
+  @override
+  State<HomeRestLine> createState() => _HomeRestLineState();
+}
+
+class _HomeRestLineState extends State<HomeRestLine> {
+  Timer? _tick;
+
+  int get _left =>
+      (widget.endsAt.difference(widget.now()).inMilliseconds / 1000)
+          .ceil()
+          .clamp(0, 5999);
+
+  @override
+  void initState() {
+    super.initState();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(HomeRestLine old) {
+    super.didUpdateWidget(old);
+    _sync();
+  }
+
+  void _sync() {
+    if (_left > 0) {
+      _tick ??= Timer.periodic(const Duration(seconds: 1), (_) {
+        if (!mounted) return;
+        setState(() {});
+        if (_left == 0) _stop();
+      });
+    } else {
+      _stop();
+    }
+  }
+
+  void _stop() {
+    _tick?.cancel();
+    _tick = null;
+  }
+
+  @override
+  void dispose() {
+    _stop();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final palette = context.palette;
+    final left = _left;
+    final clock = '${left ~/ 60}:${(left % 60).toString().padLeft(2, '0')}';
+    return Row(
+      key: const Key('home_rest_line'),
+      mainAxisAlignment: MainAxisAlignment.center,
+      spacing: AppDimens.xs,
+      children: [
+        Icon(
+          Icons.timer_outlined,
+          size: AppDimens.scaled(18),
+          color: palette.textSecondary,
+        ),
+        Flexible(
+          child: Text(
+            left > 0 ? l10n.todayRest(clock) : l10n.todayRestOver,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.label.copyWith(
+              color: palette.textPrimary,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
       ],
     );
   }

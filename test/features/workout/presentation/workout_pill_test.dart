@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_controller.dart';
@@ -95,6 +98,71 @@ void main() {
       expect(data.nextSet, 3);
       expect(data.amount, isNotNull);
     });
+  });
+
+  testWidgets('the screen on top is what counts, also when it was pushed', (
+    tester,
+  ) async {
+    GoRoute page(String path) => GoRoute(
+      path: path,
+      builder: (_, _) => Text(path, textDirection: TextDirection.ltr),
+    );
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => const Text('/', textDirection: TextDirection.ltr),
+        ),
+        page('/workout'),
+        page('/settings'),
+        GoRoute(
+          path: '/plan',
+          builder: (_, _) =>
+              const Text('plan', textDirection: TextDirection.ltr),
+          routes: [page(':dayId')],
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    String top() => topPathOf(router.routerDelegate.currentConfiguration);
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: Router.withConfig(config: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(top(), '/');
+    expect(workoutPillHiddenOn(top()), isTrue);
+
+    // Pushed from home, as the app opens the workout and Settings.
+    unawaited(router.push<void>('/workout'));
+    await tester.pumpAndSettle();
+    expect(top(), '/workout');
+    expect(workoutPillHiddenOn(top()), isTrue);
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(top(), '/');
+
+    unawaited(router.push<void>('/settings'));
+    await tester.pumpAndSettle();
+    expect(top(), '/settings');
+    expect(workoutPillHiddenOn(top()), isFalse);
+    // A page pushed on a pushed page.
+    unawaited(router.push<void>('/plan/day-1?x=1'));
+    await tester.pumpAndSettle();
+    expect(top(), '/plan/day-1');
+    expect(workoutPillHiddenOn(top()), isFalse);
+    router
+      ..pop()
+      ..pop();
+    await tester.pumpAndSettle();
+    expect(top(), '/');
+
+    // Replaced, not pushed.
+    router.go('/plan/day-2');
+    await tester.pumpAndSettle();
+    expect(top(), '/plan/day-2');
   });
 
   test('hidden on the workout screen, on home and before the app', () {

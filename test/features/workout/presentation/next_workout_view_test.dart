@@ -85,6 +85,8 @@ Widget view(
   ValueChanged<String>? onEditDay,
   VoidCallback? onOpenWorkspace,
   bool inProgress = false,
+  DateTime? restEndsAt,
+  DateTime Function()? now,
 }) => NextWorkoutView(
   state: state,
   onRetry: onRetry ?? () {},
@@ -93,6 +95,8 @@ Widget view(
   onChooseDay: onChooseDay ?? (_) {},
   onStart: onStart,
   inProgress: inProgress,
+  restEndsAt: restEndsAt,
+  now: now ?? DateTime.now,
   onOpenPlan: onOpenPlan ?? () {},
   onBuildPlan: onBuildPlan ?? () {},
   onEditDay: onEditDay ?? (_) {},
@@ -266,6 +270,52 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('You already trained today'), findsNothing);
         expect(opened, 1);
+      });
+
+      testWidgets('resting: the countdown shows above Continue and ticks', (
+        tester,
+      ) async {
+        var clock = DateTime(2026, 11, 3, 19);
+        final ends = clock.add(const Duration(seconds: 72));
+        await tester.pumpApp(
+          view(
+            AsyncData(day1Waiting()),
+            onStart: () {},
+            inProgress: true,
+            restEndsAt: ends,
+            now: () => clock,
+          ),
+        );
+        expect(find.textContaining('1:12'), findsOneWidget);
+        clock = clock.add(const Duration(seconds: 2));
+        await tester.pump(const Duration(seconds: 2));
+        expect(find.textContaining('1:10'), findsOneWidget);
+        // It runs out: it says so, and the ticking stops.
+        clock = ends.add(const Duration(seconds: 5));
+        await tester.pump(const Duration(seconds: 1));
+        expect(find.text('Rest is over. Next set!'), findsOneWidget);
+        await tester.pump(const Duration(seconds: 30));
+        expect(find.text('Rest is over. Next set!'), findsOneWidget);
+        expect(tester.binding.transientCallbackCount, 0);
+      });
+
+      testWidgets('no rest line without a rest, or without a workout', (
+        tester,
+      ) async {
+        await tester.pumpApp(
+          view(AsyncData(day1Waiting()), onStart: () {}, inProgress: true),
+        );
+        expect(find.byKey(const Key('home_rest_line')), findsNothing);
+        // A stale rest time with no workout in progress shows nothing.
+        await tester.pumpApp(
+          view(
+            AsyncData(day1Waiting()),
+            onStart: () {},
+            restEndsAt: DateTime(2030),
+          ),
+        );
+        expect(find.byKey(const Key('home_rest_line')), findsNothing);
+        expect(find.text('Start workout'), findsOneWidget);
       });
 
       testWidgets('Cancel starts nothing', (tester) async {
@@ -495,6 +545,13 @@ void main() {
     'next_workout': () => view(AsyncData(day1Waiting()), onStart: () {}),
     'next_workout_in_progress': () =>
         view(AsyncData(day1Waiting()), onStart: () {}, inProgress: true),
+    'next_workout_resting': () => view(
+      AsyncData(day1Waiting()),
+      onStart: () {},
+      inProgress: true,
+      restEndsAt: DateTime(2026, 11, 3, 19, 1, 12),
+      now: () => DateTime(2026, 11, 3, 19),
+    ),
     'next_workout_supersets': () => view(AsyncData(day2())),
     'next_workout_no_plan': () => view(const AsyncData(null)),
     'next_workout_empty_day': () => view(AsyncData(emptyDay()), onStart: () {}),

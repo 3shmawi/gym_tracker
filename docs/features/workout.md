@@ -67,7 +67,13 @@ Status: slice 3 started (rest notification), plus levels.
   included") and the screens before the app (welcome, joining a gym). Also
   hidden while the keyboard is open and when there is nothing to start (no
   plan, empty day). On home, *Continue workout* goes straight back and never
-  asks "You already trained today". States:
+  asks "You already trained today"; while resting, a line above it counts
+  the rest down ("Rest · 1:12 left", then "Rest is over. Next set!";
+  `HomeRestLine`, the only thing that repaints each second). "The screen
+  on top" comes from `topPathOf` (the last match of the router's stack): the
+  router's `uri` is only the page the stack started from, so until
+  2026-11-12 every screen pushed from home counted as home, and the pill
+  showed on the workout screen. States:
   - **Start workout** · "Day 2 · Shoulders & Arms": starts the waiting
     day; asks "You already trained today" first when needed (same sheet as
     the home screen, `confirmTrainAgain`).

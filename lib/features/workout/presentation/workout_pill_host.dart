@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/router/app_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
@@ -32,7 +33,16 @@ class WorkoutPillCornerController extends Notifier<MiniCorner> {
   void moveTo(MiniCorner corner) => state = corner;
 }
 
-/// The screen the router shows now (its path), for the pill's visibility.
+/// The path of the screen on top of the stack. Not the router's `uri`:
+/// that is only the page the stack started from, so every screen pushed
+/// from home (the workout, Settings, the plan) read as "/".
+String topPathOf(RouteMatchList stack) {
+  if (stack.isEmpty) return stack.uri.path;
+  return Uri.tryParse(stack.last.matchedLocation)?.path ?? stack.uri.path;
+}
+
+/// The screen the router shows now (its path), for the pill's visibility
+/// and the rest alarm.
 final currentPathProvider = NotifierProvider<CurrentPathController, String>(
   CurrentPathController.new,
 );
@@ -42,13 +52,13 @@ class CurrentPathController extends Notifier<String> {
   String build() {
     final delegate = appRouter.routerDelegate;
     void update() {
-      final path = delegate.currentConfiguration.uri.path;
+      final path = topPathOf(delegate.currentConfiguration);
       if (ref.mounted && path != state) state = path;
     }
 
     delegate.addListener(update);
     ref.onDispose(() => delegate.removeListener(update));
-    return delegate.currentConfiguration.uri.path;
+    return topPathOf(delegate.currentConfiguration);
   }
 }
 
@@ -187,7 +197,7 @@ class _WorkoutPillHostState extends ConsumerState<WorkoutPillHost> {
   /// Back to the workout when it is under this screen (the how-to page
   /// opened from it); else opens it on top.
   void _showWorkout() {
-    String path() => appRouter.routerDelegate.currentConfiguration.uri.path;
+    String path() => topPathOf(appRouter.routerDelegate.currentConfiguration);
     final inStack = appRouter.routerDelegate.currentConfiguration.matches.any(
       (m) => m.matchedLocation == AppRoutes.workout,
     );
