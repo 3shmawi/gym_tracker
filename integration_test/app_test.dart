@@ -44,6 +44,7 @@ import '../test/helpers/gym_fakes.dart';
 import '../test/helpers/plan_sync_fakes.dart';
 import 'flows/build_plan_flow.dart';
 import 'flows/gym_pictures_flow.dart';
+import 'flows/move_flow.dart';
 import 'helpers/demo.dart';
 
 /// The home bar's one menu button, then the row.
@@ -639,6 +640,26 @@ void main() {
   // Was nested inside unlockPhone (the same merge mistake as the test above),
   // so every test that unlocked the phone failed with "Can't call test()
   // once tests have begun running", and this one never ran on its own.
+  testWidgets('Move games: ten push-ups counted by the camera, saved', (
+    tester,
+  ) async {
+    await freshInstall(tester);
+    FeatureFlags.overrides[Flags.moveGames] = true;
+    addTearDown(FeatureFlags.overrides.clear);
+    await app.main();
+    // The simulator has no camera: the camera "sees" a recorded set.
+    Dependencies.poseSource = demoPoseSource;
+    await tester.pumpAndSettle();
+    await beat(tester);
+
+    await tester.tap(find.byKey(const Key('use_template_button')));
+    await tester.pumpAndSettle();
+    await beat(tester);
+
+    await moveFlow(tester);
+    await beat(tester, 2000);
+  });
+
   testWidgets('workout pill: pictures, start from settings, how-to, resume', (
     tester,
   ) async {

@@ -358,8 +358,11 @@ class CameraRoundController extends Notifier<CameraRoundState>
     _cameraSince = null;
     if (source == null) return;
     await source.stop();
-    await frames?.cancel();
-    await status?.cancel();
-    await _awake.keepOn(on: false);
+    // Not awaited: the source is already stopped, and a cancel can take a
+    // while to settle; the round's end must not wait for it.
+    unawaited(frames?.cancel());
+    unawaited(status?.cancel());
+    // Fire and forget, like keeping it on: never hold the round's end up.
+    unawaited(_awake.keepOn(on: false));
   }
 }

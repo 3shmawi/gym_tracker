@@ -8,7 +8,7 @@ import { useI18n } from '../i18n';
 import type { Member } from '../members/members';
 import type { Plan } from '../plans/model';
 import type { PlansRepository } from '../plans/plans';
-import { byExercise, fillWeeks, perWeek, type Progress, type ProgressRepository } from '../progress/progress';
+import { byExercise, fillWeeks, MOVE_DAY_ID, perWeek, type Progress, type ProgressRepository } from '../progress/progress';
 import { dateLabel, gymWeek, num, weekLabel, weekTick } from '../progress/weeks';
 import { BarChart, LineChart } from './Charts';
 import { Icon } from './icons';
@@ -104,6 +104,8 @@ function ActiveProgress({ gym, member, progress, plans, media, cloudName, title 
     return lib ? (lang === 'ar' ? lib.ar : lib.en) : t('prog.exUnknown');
   };
   const dayName = (id: string | null) => {
+    // A Move games round (docs/designs/move_games.md §8): not a plan day.
+    if (id === MOVE_DAY_ID) return t('prog.dayMove');
     const d = id ? plan?.days.find((x) => x.id === id) : undefined;
     return d ? (lang === 'ar' ? d.name.ar : d.name.en) : t('prog.dayGone');
   };

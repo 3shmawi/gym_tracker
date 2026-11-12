@@ -10,16 +10,16 @@ const pid = (key: string, frame: 'tension' | 'relaxation') => `exercises/${key}-
 const rows = (page: Page) => page.locator('.ex-row');
 
 test.describe('exercises list', () => {
-  test('lists the 36 library exercises, searches and filters', async ({ page }) => {
+  test('lists the 37 library exercises, searches and filters', async ({ page }) => {
     await open(page, {
       path: EXERCISES_PATH,
       pictures: [{ gym_id: GYM_A.id, exercise_id: 'flat_db_press', public_id: pid('ek-0055', 'tension'), position: 1 }],
       videos: [{ gym_id: GYM_A.id, exercise_id: 'leg_press', video_id: 'dQw4w9WgXcQ', start_seconds: null, end_seconds: null }],
     });
     await expect(page.getByRole('heading', { level: 1, name: en('ex.title') })).toBeVisible();
-    await expect(rows(page)).toHaveCount(36);
-    await expect(page.getByText(en('ex.summary', { shown: 36, total: 36, pictures: 1, videos: 1 }))).toBeVisible();
-    // The 13 exercises added for days 4 and 5 are there too.
+    await expect(rows(page)).toHaveCount(37);
+    await expect(page.getByText(en('ex.summary', { shown: 37, total: 37, pictures: 1, videos: 1 }))).toBeVisible();
+    // The 13 exercises added for days 4 and 5, and Push-ups, are there too.
     for (const name of ['Smith Machine Shrug', 'Preacher Curl', 'Two-Hand DB Overhead Extension']) await expect(rows(page).filter({ hasText: name })).toHaveCount(1);
     await expect(rows(page).filter({ hasText: 'Flat Dumbbell Press' })).toContainText(en('ex.picsOne'));
     await expect(rows(page).filter({ hasText: 'Leg Press' }).first()).toContainText(en('ex.videoYours'));
@@ -29,8 +29,8 @@ test.describe('exercises list', () => {
     await expect(rows(page).first()).toBeVisible();
     for (const text of await rows(page).allTextContents()) expect(text).toMatch(/دمبل|Dumbbell|DB/i);
     await search.fill('');
-    await page.getByRole('group', { name: en('ex.show') }).getByRole('button', { name: `${en('ex.tabNoVideo')} 13` }).click();
-    await expect(rows(page)).toHaveCount(13);
+    await page.getByRole('group', { name: en('ex.show') }).getByRole('button', { name: `${en('ex.tabNoVideo')} 14` }).click();
+    await expect(rows(page)).toHaveCount(14);
   });
 });
 
@@ -138,7 +138,7 @@ test.describe('exercise media states', () => {
     await expect(page.getByRole('heading', { name: en('state.errorTitle') })).toBeVisible();
     mock.set({ mediaFails: false });
     await page.getByRole('button', { name: en('state.retry') }).click();
-    await expect(rows(page)).toHaveCount(36);
+    await expect(rows(page)).toHaveCount(37);
   });
 
   test('search: nothing has every word, so exercises with any of them are listed, best match first', async ({ page }) => {
@@ -208,7 +208,7 @@ test.describe('exercises written into a plan', () => {
 
   test('a member\'s own exercise is listed, opens, and takes pictures like a library one', async ({ page }) => {
     const mock = await open(page, { path: EXERCISES_PATH, plans: { [M.ahmed]: plan('Testt') } });
-    await expect(rows(page)).toHaveCount(37);
+    await expect(rows(page)).toHaveCount(38);
     const own = rows(page).filter({ hasText: 'Testt' });
     await expect(own).toContainText(en('plan.ownExercise'));
     await own.click();
@@ -231,7 +231,7 @@ test.describe('exercises written into a plan', () => {
       void d.dismiss();
     });
     await open(page, { path: EXERCISES_PATH, plans: { [M.ahmed]: plan('<img src=x onerror=alert(1)>') } });
-    await expect(rows(page)).toHaveCount(37);
+    await expect(rows(page)).toHaveCount(38);
     await expect(rows(page).filter({ hasText: '<img src=x' })).toHaveCount(1);
     expect(dialogs).toEqual([]);
   });

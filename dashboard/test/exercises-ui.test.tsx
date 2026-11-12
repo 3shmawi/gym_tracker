@@ -94,11 +94,11 @@ const chosen = () => all('.pic-card').map((el) => el.dataset.pic);
 // ---------------------------------------------------------------- list ----
 
 describe('ExercisesPage', () => {
-  it('lists all 36 library exercises with their state', async () => {
+  it('lists all 37 library exercises with their state', async () => {
     const f = fakeRepo(gymMedia([['flat_db_press', [pid(55), pid(55, 'relaxation')]]], [['leg_press', { id: 'dQw4w9WgXcQ', start: null, end: null }]]));
     await mount(<ExercisesPage gym={gym} media={f.repo} cloudName={null} />);
-    expect(all('.ex-row')).toHaveLength(36);
-    expect(host.textContent).toContain(en('ex.summary', { shown: 36, total: 36, pictures: 1, videos: 1 }));
+    expect(all('.ex-row')).toHaveLength(37);
+    expect(host.textContent).toContain(en('ex.summary', { shown: 37, total: 37, pictures: 1, videos: 1 }));
     const press = all('.ex-row').find((r) => r.textContent.includes('Flat Dumbbell Press'));
     expect(press?.textContent).toContain(en('ex.picsMany', { count: 2 }));
     expect(press?.textContent).toContain(en('ex.videoLibrary'));
@@ -106,7 +106,7 @@ describe('ExercisesPage', () => {
     const leg = all('.ex-row').find((r) => r.textContent.includes('Leg Press'));
     expect(leg?.textContent).toContain(en('ex.videoYours'));
     // The 13 new exercises of days 4 and 5 have no library video.
-    expect(all('.ex-row').filter((r) => r.textContent.includes(en('ex.videoNone')))).toHaveLength(13);
+    expect(all('.ex-row').filter((r) => r.textContent.includes(en('ex.videoNone')))).toHaveLength(14);
   });
 
   it('searches in English and Arabic, and says when nothing matches', async () => {
@@ -122,7 +122,7 @@ describe('ExercisesPage', () => {
     expect(host.querySelector('img')).toBeNull();
     expect(host.textContent).toContain(en('ex.noMatchTitle', { query: '<img src=x onerror=alert(1)>' }));
     await click(byLabel(en('ex.clearSearch')));
-    expect(all('.ex-row')).toHaveLength(36);
+    expect(all('.ex-row')).toHaveLength(37);
   });
 
   it('filters by "has your media" and "no video", with an empty state', async () => {
@@ -130,8 +130,8 @@ describe('ExercisesPage', () => {
     await mount(<ExercisesPage gym={gym} media={f.repo} cloudName={null} />);
     await click(byLabel(`${en('ex.tabMine')} 1`));
     expect(all('.ex-row')).toHaveLength(1);
-    await click(byLabel(`${en('ex.tabNoVideo')} 13`));
-    expect(all('.ex-row')).toHaveLength(13);
+    await click(byLabel(`${en('ex.tabNoVideo')} 14`));
+    expect(all('.ex-row')).toHaveLength(14);
     const g = fakeRepo();
     await act(() => { render(null, host); });
     await mount(<ExercisesPage gym={gym} media={g.repo} cloudName={null} />);
@@ -145,7 +145,7 @@ describe('ExercisesPage', () => {
     await mount(<ExercisesPage gym={gym} media={f.repo} cloudName={null} />);
     expect(host.textContent).toContain(en('state.errorTitle'));
     await click(byLabel(en('state.retry')));
-    expect(all('.ex-row')).toHaveLength(36);
+    expect(all('.ex-row')).toHaveLength(37);
   });
 
   it('shows covers from the picture CDN only when a cloud name is set', async () => {
@@ -175,12 +175,12 @@ describe('exercises written into plans', () => {
     const f = fakeRepo(gymMedia(), { customExercises: vi.fn(() => Promise.resolve(ok([OWN]))) });
     await mount(<ExercisesPage gym={gym} media={f.repo} cloudName={null} />);
     const rows = all('.ex-row');
-    expect(rows).toHaveLength(37);
+    expect(rows).toHaveLength(38);
     const own = rows.find((r) => r.textContent.includes('Testt'));
     expect(own?.getAttribute('href')).toBe(`/g/${GYM_ID}/exercises/ex-lq3k9a`);
     expect(own?.textContent).toContain(en('plan.ownExercise'));
     expect(own?.textContent).toContain(en('ex.videoNone'));
-    expect(host.textContent).toContain(en('ex.summary', { shown: 37, total: 37, pictures: 0, videos: 0 }));
+    expect(host.textContent).toContain(en('ex.summary', { shown: 38, total: 38, pictures: 0, videos: 0 }));
   });
 
   it('are found by search in both languages', async () => {
@@ -193,7 +193,7 @@ describe('exercises written into plans', () => {
   it('a failed read leaves the library list as it was', async () => {
     const f = fakeRepo(gymMedia(), { customExercises: vi.fn(() => Promise.resolve(failed({ kind: 'offline' }))) });
     await mount(<ExercisesPage gym={gym} media={f.repo} cloudName={null} />);
-    expect(all('.ex-row')).toHaveLength(36);
+    expect(all('.ex-row')).toHaveLength(37);
   });
 
   it('the page of one saves pictures under its own id', async () => {

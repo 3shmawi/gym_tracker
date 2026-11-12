@@ -234,3 +234,7 @@ export class ProgressRepository {
     });
   }
 }
+
+/** The day id of a Move games round (the app's `WorkoutSession.moveDayId`):
+ *  a camera push-up round, not a plan day. */
+export const MOVE_DAY_ID = 'move';

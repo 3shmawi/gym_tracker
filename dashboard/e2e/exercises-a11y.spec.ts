@@ -27,7 +27,7 @@ const screens: Screen[] = [
     name: 'exercises list',
     options: { path: LIST, pictures: [six[0] ?? { gym_id: GYM_A.id, exercise_id: 'abs', public_id: pid('ek-0055', 'tension'), position: 1 }] },
     ready: async (page) => {
-      await expect(page.locator('.ex-row')).toHaveCount(36);
+      await expect(page.locator('.ex-row')).toHaveCount(37);
     },
   },
   {
@@ -84,7 +84,7 @@ const screens: Screen[] = [
       },
     },
     ready: async (page) => {
-      await expect(page.locator('.ex-row')).toHaveCount(37);
+      await expect(page.locator('.ex-row')).toHaveCount(38);
     },
   },
   {

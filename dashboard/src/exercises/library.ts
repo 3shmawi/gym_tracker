@@ -40,4 +40,5 @@ export const LIBRARY: readonly LibraryExercise[] = [
   {"id":"cable_bar_curl","ar":"مسطرة كابل من تحت باي","en":"Straight-Bar Cable Curl","muscle":"arms","libraryVideo":false,"sets":3,"reps":12,"rest":90,"step":2.5},
   {"id":"preacher_curl","ar":"تكوير على جهاز الحصان","en":"Preacher Curl","muscle":"arms","libraryVideo":false,"sets":3,"reps":12,"rest":90,"step":2.5},
   {"id":"db_overhead_extension","ar":"دمبل زوجي تراي","en":"Two-Hand DB Overhead Extension","muscle":"arms","libraryVideo":false,"sets":3,"reps":12,"rest":90,"step":2.5},
+  {"id":"push_ups","ar":"ضغط","en":"Push-ups","muscle":"chest","libraryVideo":false,"sets":3,"reps":12,"rest":90,"step":2.5},
 ];
