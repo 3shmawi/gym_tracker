@@ -244,7 +244,10 @@ class _WorkoutPillHostState extends ConsumerState<WorkoutPillHost> {
         data == null ||
         workoutPillHiddenOn(path) ||
         media.viewInsets.bottom > 0;
-    if (hidden) return widget.child;
+    // The app keeps its place in the tree whether the pill shows or not
+    // (swapping the Stack for the bare child re-parented the whole app
+    // and broke semantics on iOS).
+    if (hidden) return Stack(children: [widget.child]);
 
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final corner = ref.watch(workoutPillCornerProvider);
