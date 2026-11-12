@@ -1,6 +1,9 @@
 # Design: never lose your training (local database, backup, restore)
 
-> **Status: proposed. No code is written until the owner approves this spec.**
+> **Status: approved by the owner on 2026-11-12, with every recommendation
+> in "Decisions needed" (1 to 11 as recommended; 12: approved without an EGM
+> review). Build order: PR 1 to 5 in section 9. PR 1 (local database) is
+> built: `docs/features/workout.md` → "The phone's database".**
 > `CLAUDE.md` asks for an EGM-reviewed spec. The EGM plugin is loaded, but its
 > `/egm:` commands can only be started by a person, not by the agent that
 > wrote this. So this spec was written by hand with the same sections and has
