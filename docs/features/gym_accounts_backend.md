@@ -24,7 +24,7 @@
 | `gym-logos` Storage bucket and its policies | `supabase/migrations/0008_gym_logos_storage.sql` |
 | Gym settings (`gyms` update) and logo writes are owner-only (`private.i_own`) | `supabase/migrations/0020_gym_settings_owner_only.sql`, `supabase/tests/gym_settings_owner_only.test.sql` |
 | Gym brand colour: `gyms.brand_color` (`#rrggbb`, lower case, not black / white / grey; null = Azm colours), owner writes, members read, and the join answer carries it | `supabase/migrations/0021_gym_brand_color.sql`, pgTAP `supabase/tests/gym_brand_color.test.sql` (62), spec [`../designs/gym_brand_colours.md`](../designs/gym_brand_colours.md) |
-| Backup of a member's own training: `ensure_person()`, `save_personal_plan()`, `personal_state` + `save_personal_state()`, `delete_my_backup()`, a 20,000-workout cap on every insert, `import_solo_data` cap 1000 → 20000 | `supabase/migrations/0022_personal_backup.sql`, pgTAP `supabase/tests/personal_backup.test.sql` (68), [`backup.md`](backup.md) |
+| Backup of a member's own training: `ensure_person()`, `save_personal_plan()`, `personal_state` + `save_personal_state()`, `delete_my_backup()`, a 20,000-workout cap on every insert, `import_solo_data` cap 1000 → 20000 | `supabase/migrations/0022_personal_backup.sql`, pgTAP `supabase/tests/personal_state_rls.test.sql` (68), [`backup.md`](backup.md) |
 | pgTAP, one file per table (+ redeem and storage) | `supabase/tests/*_rls.test.sql`, `redeem_invite.test.sql`, `gym_logos_storage.test.sql` |
 | Edge Function | `supabase/functions/redeem_invite/` (`index.ts` wiring, `handler.ts` HTTP layer, `validate.ts` input checks, Deno tests next to them) |
 | Invite tool | `scripts/make_invites/` (`run.sh`, `make_invites.py`, tests, hash-pinned `requirements.txt`) |
