@@ -28,4 +28,11 @@ describe('parsePath', () => {
       expect(parsePath(bad).name, bad).toBe('not_found');
     }
   });
+  it('opens an exercise written into a plan, but only with the app\'s id shape', () => {
+    expect(parsePath(`/g/${ID}/exercises/ex-lq3k9a`)).toEqual({ name: 'exercise', gymId: ID, exerciseId: 'ex-lq3k9a' });
+    expect(parsePath(`/g/${ID}/exercises/ex-lq3k9a-2`).name).toBe('exercise');
+    for (const bad of ['ex-', 'ex-UPPER', 'ex-a b', 'ex-%2e%2e', 'ex-<script>', 'x-lq3k9a', `ex-${'a'.repeat(21)}`, 'ex-a-12345']) {
+      expect(parsePath(`/g/${ID}/exercises/${bad}`).name, bad).toBe('not_found');
+    }
+  });
 });

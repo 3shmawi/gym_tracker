@@ -293,7 +293,7 @@ export const en = {
   'ex.noneHereTitle': 'No exercise here yet',
   'ex.noneHereBody': 'Choose pictures or a video for an exercise and it shows here.',
   'ex.showAll': 'Show all exercises',
-  'ex.note': "Exercises you wrote yourself in a member's plan get their own pictures and video in a later update.",
+  'ex.note': "Exercises you or a member wrote into a plan are listed after the library, marked \"Written by you\", and take pictures and video the same way.",
   'ex.credit': 'Pictures: Everkinetic · CC BY-SA 4.0',
   'ex.back': 'All exercises',
   'ex.muscle.chest': 'Chest',

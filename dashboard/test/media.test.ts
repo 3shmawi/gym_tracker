@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { describe, expect, it } from 'vitest';
-import { MediaRepository, toCatalogPicture, toGymMedia } from '../src/exercises/media';
+import { customFromDays, MediaRepository, toCatalogPicture, toGymMedia } from '../src/exercises/media';
 import { addAll, addPicture, movePicture, pictureBase, pictureUrl, removePicture, sameList, searchWords, togglePicture } from '../src/exercises/pictures';
 import { saveFailureKey } from '../src/exercises/useGymMedia';
 
@@ -327,5 +327,65 @@ describe('saving the video', () => {
     const crafted = fake();
     expect((await new MediaRepository(crafted.client).removeVideo(GYM, '*')).ok).toBe(false);
     expect(crafted.calls).toHaveLength(0);
+  });
+});
+
+// ------------------------------------------------- exercises in plans ----
+
+const MEMBER = 'c0000000-0000-4000-8000-000000000002';
+const planDay = (...exercises: unknown[]) => ({ id: 'd1', name: { en: 'Day', ar: 'يوم' }, exercises });
+const ex = (id: unknown, en: unknown, ar: unknown) => ({ id, name: { en, ar }, sets: 3, reps: 10, rest: 90, step: 2.5, superset: false, unit: 'kg' });
+
+describe('exercises written into plans', () => {
+  it('keeps only ids of the app\'s shape that are not the library\'s, once each', () => {
+    const list = customFromDays([
+      [planDay(ex('flat_db_press', 'Press', 'ضغط'), ex('ex-abc123', 'Testt', 'تيست'), ex('ex-abc123', 'Again', 'تاني'))],
+      [planDay(ex('ex-abc123-2', 'Second', ''))],
+    ]);
+    expect(list.map((e) => e.id)).toEqual(['ex-abc123', 'ex-abc123-2']);
+    expect(list[0]).toMatchObject({ en: 'Testt', ar: 'تيست', muscle: null, custom: true, libraryVideo: false });
+    // A missing language falls back to the other one.
+    expect(list[1]).toMatchObject({ en: 'Second', ar: 'Second' });
+  });
+
+  it('drops hostile or malformed entries without throwing', () => {
+    const bad = [
+      null,
+      'x',
+      42,
+      {},
+      [null, 'x', { exercises: 'no' }, { exercises: [null, 1, 'x', {}] }],
+      [planDay(ex('ex-<img src=x>', 'A', 'A'), ex('../../etc', 'A', 'A'), ex('EX-ABC', 'A', 'A'), ex(7, 'A', 'A'), ex('ex-ok1', '', ''), ex('ex-ok2', 12, null))],
+      [planDay(ex(`ex-${'a'.repeat(30)}`, 'Long', 'Long'))],
+    ];
+    expect(customFromDays(bad)).toEqual([]);
+  });
+
+  it('cleans names (control and bidi characters) and stops at the cap', () => {
+    const [one] = customFromDays([[planDay(ex('ex-aa1', 'Bench\u202E  Press\u0007', 'x'))]]);
+    expect(one?.en).toBe('Bench Press');
+    const many = Array.from({ length: 300 }, (_, i) => ex(`ex-n${i}`, `E${i}`, `E${i}`));
+    expect(customFromDays([[planDay(...many)]])).toHaveLength(200);
+  });
+
+  it('asks for the gym\'s memberships, then only their plans\' day lists', async () => {
+    const { client, calls } = fake((call) =>
+      call.table === 'memberships' ? { data: [{ id: MEMBER }, { id: 'nope' }], error: null } : { data: [{ days: [planDay(ex('ex-abc123', 'Testt', 'تيست'))] }], error: null },
+    );
+    const result = await new MediaRepository(client).customExercises(GYM);
+    expect(result.ok && result.value.map((e) => e.id)).toEqual(['ex-abc123']);
+    expect(calls[0]).toMatchObject({ table: 'memberships', columns: 'id' });
+    expect(calls[0]?.filters).toContainEqual(['eq', 'gym_id', GYM]);
+    expect(calls[1]).toMatchObject({ table: 'plans', columns: 'days:body->days' });
+    expect(calls[1]?.filters).toContainEqual(['in', 'membership_id', [MEMBER]]);
+  });
+
+  it('refuses a bad gym id and survives a failed read', async () => {
+    const { client, calls } = fake();
+    const bad = await new MediaRepository(client).customExercises('x');
+    expect(bad.ok).toBe(false);
+    expect(calls).toHaveLength(0);
+    const down = fake(() => ({ data: null, error: { code: '42501', message: 'denied' } }));
+    expect((await new MediaRepository(down.client).customExercises(GYM)).ok).toBe(false);
   });
 });

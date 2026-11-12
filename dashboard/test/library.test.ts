@@ -76,7 +76,7 @@ describe('routes', () => {
     expect(parsePath(`/g/${GYM}/exercises/leg_press`)).toEqual({ name: 'exercise', gymId: GYM, exerciseId: 'leg_press' });
   });
   it('refuses unknown or hostile exercise ids', () => {
-    for (const id of ['nope', 'LEG_PRESS', 'ex-abc', '%2e%2e', '..', 'leg_press%00', '<script>', '__proto__', 'leg_press/extra']) {
+    for (const id of ['nope', 'LEG_PRESS', 'ex-', '%2e%2e', '..', 'leg_press%00', '<script>', '__proto__', 'leg_press/extra']) {
       expect(parsePath(`/g/${GYM}/exercises/${id}`).name, id).toBe('not_found');
     }
     expect(parsePath('/g/not-a-uuid/exercises').name).toBe('not_found');

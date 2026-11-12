@@ -101,7 +101,7 @@ dashboard/
 | `/g/<gym-uuid>/templates` | the gym's plan templates (D4) |
 | `/g/<gym-uuid>/settings` | gym settings (D5) |
 | `/g/<gym-uuid>/exercises` | the exercise list (D2) |
-| `/g/<gym-uuid>/exercises/<library-id>` | one exercise's pictures and video (D2); an id that is not in the library is "not found" |
+| `/g/<gym-uuid>/exercises/<library-id>` | one exercise's pictures and video (D2); an id that is neither in the library nor an `ex-…` plan id is "not found" |
 | anything else | not found |
 
   The gym id must match the UUID pattern, otherwise the route is "not found";
@@ -289,9 +289,22 @@ There is no table for it, so the dashboard keeps a **generated copy**:
 names, muscle, whether the library has a video). `test/library.test.ts` fails
 when the copy drifts from the Dart files, so a new library exercise is one
 command away. Today: **36 exercises**, 23 with a library video (the 13 added for
-days 4 and 5 have none yet). Exercises a captain wrote in a plan (`ex-…` ids)
-show in D3's plan editor (with the gym's cover if one was ever saved for that
-id); choosing pictures for them is not built yet.
+days 4 and 5 have none yet). Exercises written into a plan (`ex-…` ids)
+show in D3's plan editor (with the gym's cover if one was saved for that id).
+
+**Exercises written into plans (follow-up to D2).** The Exercises tab lists
+them after the 36 library exercises, marked "Written by you", with no muscle
+group; they count in the summary and the "No video" filter, and search finds
+them in both languages. `MediaRepository.customExercises(gymId)` reads the
+gym's membership ids, then only `days:body->days` of their plans (≤ 500 rows),
+and `customFromDays` keeps ids of the app's shape (`^ex-[a-z0-9]{1,20}(-n)?$`,
+never a library id), one entry per id, names cleaned like the plan editor and
+capped at 200. A failed read leaves just the library (quiet on purpose). The
+route `/g/<gym>/exercises/ex-…` opens the same page as a library exercise
+(pictures and video saved under that id); an `ex-` id no plan names and no
+media row mentions is "not found". Tests: `test/media.test.ts` (extraction,
+hostile entries, query), `test/router.test.ts`, `test/exercises-ui.test.tsx`,
+`e2e/exercises.spec.ts`, `e2e/exercises-a11y.spec.ts`.
 
 ### Contracts used (migrations 0013, 0015, 0017; nothing new)
 `src/exercises/media.ts` only asks; Row Level Security decides.
