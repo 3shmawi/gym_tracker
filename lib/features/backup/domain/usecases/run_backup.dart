@@ -1,10 +1,8 @@
-import 'dart:convert';
-
-import 'package:crypto/crypto.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/backup/domain/entities/backup_status.dart';
 import 'package:gym_tracker/features/backup/domain/repositories/backup_repositories.dart';
+import 'package:gym_tracker/features/backup/domain/usecases/fingerprints.dart';
 import 'package:gym_tracker/features/workout/domain/repositories/workout_repository.dart';
 
 /// One backup run: the waiting workouts, then the plan, then the level and
@@ -72,7 +70,7 @@ class RunBackup {
     // 2. The plan.
     final plan = await workouts.loadPlan();
     if (plan case Success(:final value) when value != null) {
-      final print = _fingerprint(jsonEncode(value.toJson()));
+      final print = planFingerprint(value);
       if (print != settings.planFingerprint && !settings.planConflict) {
         final saved = await remote.savePlan(settings.planVersion, value);
         switch (saved) {
@@ -98,9 +96,7 @@ class RunBackup {
       Success(value: final bestLevel),
       Success(value: final chosen),
     )) {
-      final print = _fingerprint(
-        '${bestLevel.name}|${jsonEncode(chosen?.toJson())}',
-      );
+      final print = stateFingerprint(bestLevel, chosen);
       if (print != settings.stateFingerprint) {
         final saved = await remote.saveState(bestLevel, chosen);
         switch (saved) {
@@ -142,7 +138,4 @@ class RunBackup {
       planConflict: settings.planConflict,
     );
   }
-
-  static String _fingerprint(String text) =>
-      sha256.convert(utf8.encode(text)).toString();
 }

@@ -45,6 +45,7 @@ import 'package:gym_tracker/features/settings/domain/repositories/settings_repos
 import 'package:gym_tracker/features/workout/data/local/open_workout_repository.dart';
 import 'package:gym_tracker/features/workout/data/local/workout_database.dart';
 import 'package:gym_tracker/features/workout/data/services/notification_rest_alarm.dart';
+import 'package:gym_tracker/features/workout/domain/repositories/restore_sink.dart';
 import 'package:gym_tracker/features/workout/domain/repositories/workout_repository.dart';
 import 'package:gym_tracker/features/workout/domain/services/rest_alarm.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -70,6 +71,9 @@ abstract final class Dependencies {
   static BackupRemote backupRemote = const UnconfiguredBackupRemote();
   static BackupQueue backupQueue = const EmptyBackupQueue();
   static BackupSettings backupSettings = InMemoryBackupSettings();
+
+  /// Where restored workouts go (the phone's database; none without it).
+  static RestoreSink restoreSink = const EmptyRestoreSink();
 
   /// Gym accounts. Until [init] runs, in widget tests and without Supabase
   /// values in the env file, joining fails with "offline" and nobody is
@@ -128,6 +132,7 @@ abstract final class Dependencies {
     backupQueue = db == null
         ? const EmptyBackupQueue()
         : SqliteBackupQueue(db.database);
+    restoreSink = db == null ? const EmptyRestoreSink() : db.sessions;
     restAlarm = NotificationRestAlarm(LocalNotifications(), prefs);
     gymLocalRepository = PrefsGymLocalRepository(prefs);
     soloImportStore = PrefsSoloImportStore(prefs);

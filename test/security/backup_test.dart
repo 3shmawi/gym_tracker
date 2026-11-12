@@ -28,6 +28,7 @@ void main() {
     expect(events, {
       'backup_sign_in_started',
       'backup_code_failed',
+      'restore_done',
       'backup_enabled',
       'backup_synced',
       'backup_failed',

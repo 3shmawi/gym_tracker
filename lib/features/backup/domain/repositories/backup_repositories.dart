@@ -1,4 +1,5 @@
 import 'package:gym_tracker/core/network/result.dart';
+import 'package:gym_tracker/features/backup/domain/entities/restore.dart';
 import 'package:gym_tracker/features/workout/domain/entities/chosen_day.dart';
 import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
@@ -23,6 +24,19 @@ abstract interface class BackupRemote {
   /// Saves the best level (it only goes up on the server) and the chosen
   /// day (the last write wins).
   Future<Result<void>> saveState(Level bestLevel, ChosenDay? chosenDay);
+
+  /// The next page of the account's workouts after [after] (null = from the
+  /// start), oldest first. Rows the app cannot read are skipped and counted.
+  Future<Result<RestorePage>> fetchSessions({
+    RestoreCursor? after,
+    int limit = 200,
+  });
+
+  /// The account's plan, or null when it has none.
+  Future<Result<RemotePlan?>> fetchPlan();
+
+  /// The account's best level and chosen day, or null when it has none.
+  Future<Result<RemoteState?>> fetchState();
 }
 
 /// The workouts waiting on the phone. Only **solo** workouts: a gym workout
@@ -62,4 +76,14 @@ abstract interface class BackupSettings {
   /// Fingerprint of the level and chosen day last uploaded.
   String? get stateFingerprint;
   Future<void> setStateFingerprint(String fingerprint);
+
+  /// Where the download of the account's workouts stopped (`RestoreCursor`
+  /// text; `done` once everything was taken; null = not started).
+  String? get restoreCursor;
+  Future<void> setRestoreCursor(String? value);
+
+  /// The plan that lost a conflict, kept for 30 days (JSON text and when).
+  String? get keptPlan;
+  DateTime? get keptPlanAt;
+  Future<void> setKeptPlan(String? json, DateTime at);
 }
