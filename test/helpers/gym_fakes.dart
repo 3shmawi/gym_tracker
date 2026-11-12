@@ -108,6 +108,31 @@ class FakeAccountRepository implements AccountRepository {
     return addEmailResult;
   }
 
+  /// Codes asked for, and what each call answers (a test sets these).
+  final List<String> codesSentTo = [];
+  final List<(String, String)> codesTried = [];
+  Result<void> sendCodeResult = const Success(null);
+  Result<void> verifyCodeResult = const Success(null);
+
+  /// The session the person has after a correct code.
+  AccountSession afterCode = const AccountSession(
+    isSignedIn: true,
+    email: 'me@example.com',
+  );
+
+  @override
+  Future<Result<void>> sendCode(String email) async {
+    codesSentTo.add(email);
+    return sendCodeResult;
+  }
+
+  @override
+  Future<Result<void>> verifyCode(String email, String code) async {
+    codesTried.add((email, code));
+    if (verifyCodeResult is Success<void>) emit(afterCode);
+    return verifyCodeResult;
+  }
+
   @override
   Future<Result<void>> deleteAccount() async {
     deletes++;

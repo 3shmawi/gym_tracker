@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:meta/meta.dart';
 
@@ -76,6 +79,17 @@ class WorkoutSession {
   /// workouts saved before this was kept. Only used for the gym dashboard's
   /// duration; not part of the workout's identity.
   final DateTime? startedAt;
+
+  /// A workout has no id of its own: this is `sha256(day_id|finished_at|sets)`
+  /// (hex, 64 characters; `finished_at` UTC ISO-8601, `sets` the JSON of the
+  /// list), so the same workout always has the same id. It is the server's
+  /// `client_id` and the key of the phone's database: saving, uploading or
+  /// restoring a workout twice is a no-op (decision doc §17).
+  String get clientId {
+    final finished = finishedAt.toUtc().toIso8601String();
+    final json = jsonEncode([for (final s in sets) s.toJson()]);
+    return sha256.convert(utf8.encode('$dayId|$finished|$json')).toString();
+  }
 
   List<LoggedSet> setsFor(String exerciseId) => [
     for (final s in sets)

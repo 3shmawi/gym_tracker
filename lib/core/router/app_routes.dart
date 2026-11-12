@@ -21,6 +21,10 @@ abstract final class AppRoutes {
   /// "Welcome to {gym}" after a code was accepted.
   static const joined = '/join/joined';
 
+  /// Back up my training: email, 6-digit code, done. Behind the
+  /// `training_backup` flag (off: opens the home screen).
+  static const backup = '/backup';
+
   /// My account (signed-in people only).
   static const profile = '/profile';
 

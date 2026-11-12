@@ -39,6 +39,7 @@ dependencies:
   flutter_cache_manager: ^3.5.0
   http: ^1.6.0
   youtube_player_iframe: ^6.0.2
+  sqflite: ^2.4.6
 dev_dependencies:
   flutter_driver:
     sdk: flutter
@@ -51,6 +52,7 @@ dev_dependencies:
   sentry_dart_plugin: ^3.4.0
   flutter_native_splash: ^2.4.8
   flutter_flavorizr: ^2.6.0
+  sqflite_common_ffi: ^2.4.7
 
 flutter:
   assets:

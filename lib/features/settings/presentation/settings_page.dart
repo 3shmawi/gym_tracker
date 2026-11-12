@@ -7,6 +7,7 @@ import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
 import 'package:gym_tracker/core/legal/consent_gate.dart';
 import 'package:gym_tracker/core/legal/legal.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
+import 'package:gym_tracker/features/backup/presentation/backup_card.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
 import 'package:gym_tracker/features/move/presentation/move_check_controller.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_controller.dart';
@@ -34,6 +35,9 @@ class SettingsPage extends ConsumerWidget {
       onLocaleChanged: controller.setLocale,
       onThemeModeChanged: controller.setThemeMode,
       onOpenPlan: () => unawaited(context.push<void>(AppRoutes.plan)),
+      backup: BackupCard(
+        onOpen: () => unawaited(context.push<void>(AppRoutes.backup)),
+      ),
       onOpenAccount: gymsOn && signedIn
           ? () => unawaited(context.push<void>(AppRoutes.profile))
           : null,

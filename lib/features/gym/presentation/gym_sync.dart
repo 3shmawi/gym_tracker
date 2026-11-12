@@ -12,6 +12,7 @@ import 'package:gym_tracker/core/network/connectivity.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/core/router/link_guard.dart';
 import 'package:gym_tracker/core/ui/app_toast.dart';
+import 'package:gym_tracker/features/backup/presentation/backup_sync.dart';
 import 'package:gym_tracker/features/gym/data/repositories/gym_workout_repository.dart';
 import 'package:gym_tracker/features/gym/domain/entities/gym_media.dart';
 import 'package:gym_tracker/features/gym/domain/entities/gym_plan.dart';
@@ -243,6 +244,8 @@ class GymSync {
       }
     }
     await uploadPending();
+    // Backing up the member's own training (when they turned it on).
+    await _ref.read(backupSyncProvider).run();
   }
 
   void _applied(PlanSyncOutcome outcome, {bool toastNow = false}) {
@@ -337,6 +340,7 @@ class _GymSyncHostState extends ConsumerState<GymSyncHost>
     unawaited(sync.syncPlan());
     unawaited(sync.syncMedia());
     unawaited(sync.uploadPending());
+    unawaited(ref.read(backupSyncProvider).run());
   }
 
   @override

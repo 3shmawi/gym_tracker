@@ -19,6 +19,7 @@ also a deep link.
 | `/welcome` | "How do you want to start?" (join a gym / train alone). Behind the `gym_join` flag |
 | `/join/scan` | The QR scanner. Reads nothing from its address. Behind the flag |
 | `/join/joined` | "Welcome to <gym>" right after a code was accepted; opened any other way it goes home. Behind the flag |
+| `/backup` | Back up my training (email, 6-digit code, done). Behind the `training_backup` flag: off → home. The address carries nothing: no email, no code; a link sends nothing |
 | `/profile` | My account. **Signed-in people only**: signed out → `/welcome` (flag off → home) |
 | `/profile/delete` | Delete account. Signed-in only, same redirect. A link never deletes: only the button does |
 

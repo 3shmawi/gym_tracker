@@ -77,6 +77,11 @@ abstract final class Flags {
   /// (docs/designs/gym_brand_colours.md → Rollout).
   static const gymBrandColours = 'gym_brand_colours';
 
+  /// Backing up a member's training to their account: the offer, the
+  /// Settings card and the "I already have an account" link. Off: nothing of
+  /// it shows (docs/designs/never_lose_history.md §8).
+  static const trainingBackup = 'training_backup';
+
   /// The pose check (Settings → About): the camera counts push-ups and
   /// shows the model's speed, to measure phones before Move games ship.
   /// Never in prod builds, whatever the flag says

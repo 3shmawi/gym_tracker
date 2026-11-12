@@ -9,6 +9,7 @@ import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/router/link_guard.dart';
 import 'package:gym_tracker/core/router/not_found_page.dart';
 import 'package:gym_tracker/core/router/router_refresh.dart';
+import 'package:gym_tracker/features/backup/presentation/backup_sign_in_page.dart';
 import 'package:gym_tracker/features/gym/presentation/delete_account_page.dart';
 import 'package:gym_tracker/features/gym/presentation/join_page.dart';
 import 'package:gym_tracker/features/gym/presentation/joined_page.dart';
@@ -35,6 +36,11 @@ final rootNavigatorKey = GlobalKey<NavigatorState>();
 /// is on; otherwise they open the home screen.
 Future<String?> _joinGate(BuildContext context, GoRouterState state) async =>
     await FeatureFlags.isEnabled(Flags.gymJoin) ? null : AppRoutes.home;
+
+/// Backup shows only while the `training_backup` flag is on; otherwise a
+/// link to it opens the home screen.
+Future<String?> _backupGate(BuildContext context, GoRouterState state) async =>
+    await FeatureFlags.isEnabled(Flags.trainingBackup) ? null : AppRoutes.home;
 
 /// Screens that only make sense with an account (profile, delete account):
 /// signed-out people go to the "how do you want to start?" screen. With the
@@ -99,6 +105,12 @@ final appRouter = GoRouter(
       name: 'welcome',
       redirect: _joinGate,
       builder: (context, state) => const WelcomePage(),
+    ),
+    GoRoute(
+      path: AppRoutes.backup,
+      name: 'backup',
+      redirect: _backupGate,
+      builder: (context, state) => const BackupSignInPage(),
     ),
     GoRoute(
       path: AppRoutes.profile,

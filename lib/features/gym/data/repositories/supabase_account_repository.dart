@@ -9,9 +9,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// [AccountRepository] on Supabase Auth and the `delete-account` Edge
 /// Function.
 class SupabaseAccountRepository implements AccountRepository {
-  const new(this._client);
+  new(this._client, {this.captchaToken});
 
   final SupabaseClient _client;
+
+  /// The Turnstile token for the sign-in request, when it is configured.
+  final Future<String?> Function()? captchaToken;
 
   static AccountSession _sessionOf(Session? session) {
     final user = session?.user;
@@ -40,6 +43,31 @@ class SupabaseAccountRepository implements AccountRepository {
     () => _client.auth.updateUser(UserAttributes(email: email.trim())),
     retries: 0,
   );
+
+  @override
+  Future<Result<void>> sendCode(String email) => guard(() async {
+    final address = email.trim();
+    if (_client.auth.currentSession?.user.isAnonymous ?? false) {
+      // Same account, made permanent: the code confirms the new email.
+      await _client.auth.updateUser(UserAttributes(email: address));
+      return;
+    }
+    await _client.auth.signInWithOtp(
+      email: address,
+      shouldCreateUser: true,
+      captchaToken: await captchaToken?.call(),
+    );
+  }, retries: 0);
+
+  @override
+  Future<Result<void>> verifyCode(String email, String code) => guard(() async {
+    final anonymous = _client.auth.currentSession?.user.isAnonymous ?? false;
+    await _client.auth.verifyOTP(
+      type: anonymous ? OtpType.emailChange : OtpType.email,
+      email: email.trim(),
+      token: code.trim(),
+    );
+  }, retries: 0);
 
   @override
   Future<Result<void>> deleteAccount() => guard(() async {

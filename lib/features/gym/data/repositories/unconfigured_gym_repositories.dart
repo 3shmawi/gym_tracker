@@ -38,5 +38,13 @@ class UnconfiguredAccountRepository implements AccountRepository {
       const Failed(NetworkFailure());
 
   @override
+  Future<Result<void>> sendCode(String email) async =>
+      const Failed(NetworkFailure());
+
+  @override
+  Future<Result<void>> verifyCode(String email, String code) async =>
+      const Failed(NetworkFailure());
+
+  @override
   Future<Result<void>> deleteAccount() async => const Failed(NetworkFailure());
 }

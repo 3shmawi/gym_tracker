@@ -14,6 +14,7 @@ class SettingsView extends StatelessWidget {
     required this.onLocaleChanged,
     required this.onThemeModeChanged,
     this.onOpenPlan,
+    this.backup,
     this.onOpenAccount,
     this.onJoinGym,
     this.onOpenLicenses,
@@ -29,6 +30,9 @@ class SettingsView extends StatelessWidget {
 
   /// Opens the plan editor; the Workout section is hidden while null.
   final VoidCallback? onOpenPlan;
+
+  /// The Backup card (`BackupCard`), or null while backup is not offered.
+  final Widget? backup;
 
   /// "My account" for people signed in to a gym; else [onJoinGym] offers
   /// "Join your gym". Both null (gym accounts off) hides the section.
@@ -92,6 +96,7 @@ class SettingsView extends StatelessWidget {
               ],
             ),
           ],
+          ?backup,
           SettingsSectionHeader(l10n.settingsAppearance),
           SettingsGroup(
             children: [

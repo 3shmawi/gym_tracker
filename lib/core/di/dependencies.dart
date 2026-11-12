@@ -1,10 +1,19 @@
+import 'dart:async';
+
+import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/backend/backend.dart';
 import 'package:gym_tracker/core/captcha/turnstile_captcha.dart';
 import 'package:gym_tracker/core/config/env.dart';
 import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
 import 'package:gym_tracker/core/legal/legal.dart';
 import 'package:gym_tracker/core/media/video_info.dart';
+import 'package:gym_tracker/core/monitoring/monitoring.dart';
 import 'package:gym_tracker/core/notifications/local_notifications.dart';
+import 'package:gym_tracker/features/backup/data/in_memory_backup.dart';
+import 'package:gym_tracker/features/backup/data/prefs_backup_settings.dart';
+import 'package:gym_tracker/features/backup/data/sqlite_backup_queue.dart';
+import 'package:gym_tracker/features/backup/data/supabase_backup_remote.dart';
+import 'package:gym_tracker/features/backup/domain/repositories/backup_repositories.dart';
 import 'package:gym_tracker/features/gym/data/datasources/secret_store.dart';
 import 'package:gym_tracker/features/gym/data/datasources/secure_install_id_store.dart';
 import 'package:gym_tracker/features/gym/data/repositories/in_memory_gym_local_repository.dart';
@@ -35,7 +44,8 @@ import 'package:gym_tracker/features/move/data/datasources/mlkit_pose_source.dar
 import 'package:gym_tracker/features/move/domain/repositories/pose_source.dart';
 import 'package:gym_tracker/features/settings/data/repositories/shared_prefs_settings_repository.dart';
 import 'package:gym_tracker/features/settings/domain/repositories/settings_repository.dart';
-import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
+import 'package:gym_tracker/features/workout/data/local/open_workout_repository.dart';
+import 'package:gym_tracker/features/workout/data/local/workout_database.dart';
 import 'package:gym_tracker/features/workout/data/services/notification_rest_alarm.dart';
 import 'package:gym_tracker/features/workout/domain/repositories/workout_repository.dart';
 import 'package:gym_tracker/features/workout/domain/services/rest_alarm.dart';
@@ -52,6 +62,16 @@ abstract final class Dependencies {
   /// The last known feature flag answers (`FlagCache`).
   static FlagCache flagCache = InMemoryFlagCache();
   static late WorkoutRepository workoutRepository;
+
+  /// The database under [workoutRepository]; null when the preferences are
+  /// used (it could not be opened).
+  static WorkoutDatabase? workoutDatabase;
+
+  /// Backing up the member's own training (docs/features/backup.md). With no
+  /// database there is nothing to queue.
+  static BackupRemote backupRemote = const UnconfiguredBackupRemote();
+  static BackupQueue backupQueue = const EmptyBackupQueue();
+  static BackupSettings backupSettings = InMemoryBackupSettings();
 
   /// Move games: a new pose source (front camera + on-device model) per
   /// screen. Tests and the simulator demo replay recorded frames instead.
@@ -99,7 +119,21 @@ abstract final class Dependencies {
     settingsRepository = SharedPrefsSettingsRepository(prefs);
     consentStore = PrefsConsentStore(prefs);
     flagCache = PrefsFlagCache(prefs);
-    workoutRepository = LocalWorkoutRepository(prefs);
+    // The phone's database; the preferences if it cannot be opened.
+    await workoutDatabase?.close();
+    final storage = await openWorkoutRepository(
+      prefs,
+      onEvent: (name, data) => unawaited(Analytics.capture(name, data)),
+      onError: (error, stack) =>
+          unawaited(Monitoring.captureException(error, stack)),
+    );
+    workoutRepository = storage.repository;
+    workoutDatabase = storage.database;
+    backupSettings = PrefsBackupSettings(prefs);
+    final db = storage.database;
+    backupQueue = db == null
+        ? const EmptyBackupQueue()
+        : SqliteBackupQueue(db.database);
     restAlarm = NotificationRestAlarm(LocalNotifications(), prefs);
     gymLocalRepository = PrefsGymLocalRepository(prefs);
     soloImportStore = PrefsSoloImportStore(prefs);
@@ -115,10 +149,16 @@ abstract final class Dependencies {
             ? null
             : const TurnstileCaptcha(siteKey: Env.turnstileSiteKey).token,
       );
-      accountRepository = SupabaseAccountRepository(Backend.client);
+      accountRepository = SupabaseAccountRepository(
+        Backend.client,
+        captchaToken: Env.turnstileSiteKey.isEmpty
+            ? null
+            : const TurnstileCaptcha(siteKey: Env.turnstileSiteKey).token,
+      );
       soloImportRepository = SupabaseSoloImportRepository(Backend.client);
       gymPlanRepository = SupabaseGymPlanRepository(Backend.client);
       sessionUploader = SupabaseSessionUploader(Backend.client);
+      backupRemote = SupabaseBackupRemote(Backend.client);
       gymMediaRepository = SupabaseGymMediaRepository(Backend.client);
       pictureCatalog = SupabasePictureCatalogRepository(Backend.client);
     } else {
@@ -127,6 +167,7 @@ abstract final class Dependencies {
       soloImportRepository = const UnconfiguredSoloImportRepository();
       gymPlanRepository = const UnconfiguredGymPlanRepository();
       sessionUploader = const UnconfiguredSessionUploader();
+      backupRemote = const UnconfiguredBackupRemote();
       gymMediaRepository = const UnconfiguredGymMediaRepository();
       pictureCatalog = const UnconfiguredPictureCatalogRepository();
     }
