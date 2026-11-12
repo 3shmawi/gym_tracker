@@ -36,6 +36,7 @@ void main() {
       'backup_offer_shown',
       'backup_offer_dismissed',
       'backup_erased',
+      'backup_plan_swapped',
     });
     // One word: network | signin | refused, or the kind of code problem.
     // Never an email, a code, an id, a name, a workout or a count.
