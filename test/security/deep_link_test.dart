@@ -12,6 +12,7 @@ import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/router/not_found_page.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
+import 'package:gym_tracker/features/backup/presentation/backup_sign_in_view.dart';
 import 'package:gym_tracker/features/gym/domain/entities/invite_code.dart';
 import 'package:gym_tracker/features/gym/domain/entities/workspace.dart';
 import 'package:gym_tracker/features/gym/presentation/delete_account_view.dart';
@@ -297,6 +298,60 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('join_not_ready')), findsOneWidget);
     });
+  });
+
+  group('backup screen', () {
+    const paths = [
+      '/backup',
+      '/backup?email=a@b.c&code=123456',
+      '/backup#code=123456',
+      '/backup/',
+      '/backup/extra',
+      '/BACKUP',
+    ];
+
+    testWidgets('with the flag off every path opens home', (tester) async {
+      final app = GymApp();
+      await app.pump(tester);
+      FeatureFlags.overrides[Flags.trainingBackup] = false;
+      for (final path in paths) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.byType(BackupSignInView), findsNothing, reason: path);
+      }
+      expect(app.account.codesSentTo, isEmpty);
+    });
+
+    testWidgets(
+      'with it on, only /backup opens it; a link sends and fills in nothing',
+      (tester) async {
+        final app = GymApp();
+        await app.pump(tester);
+        FeatureFlags.overrides[Flags.trainingBackup] = true;
+        for (final path in [
+          '/backup',
+          '/backup?email=a@b.c&code=123456',
+          '/backup#code=123456',
+        ]) {
+          appRouter.go(path);
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull, reason: path);
+          expect(find.byType(BackupSignInView), findsOneWidget, reason: path);
+          // Nothing from the address reached the form or the server.
+          expect(find.text('a@b.c'), findsNothing, reason: path);
+          appRouter.go('/');
+          await tester.pumpAndSettle();
+        }
+        expect(app.account.codesSentTo, isEmpty);
+        expect(app.account.codesTried, isEmpty);
+        for (final path in ['/backup/extra', '/BACKUP']) {
+          appRouter.go(path);
+          await tester.pumpAndSettle();
+          expect(find.byType(BackupSignInView), findsNothing, reason: path);
+        }
+      },
+    );
   });
 
   group('gym account screens', () {

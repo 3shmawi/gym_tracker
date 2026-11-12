@@ -157,6 +157,11 @@ extension AppFailureMessage on AppFailure {
       InviteProblem.conflict => l10n.joinConflictTitle,
       InviteProblem.throttled => l10n.joinThrottledTitle,
     },
+    AuthCodeFailure(:final problem) => switch (problem) {
+      AuthCodeProblem.wrongOrExpired => l10n.backupCodeWrong,
+      AuthCodeProblem.tooMany => l10n.backupTooMany,
+      AuthCodeProblem.emailTaken => l10n.backupEmailTaken,
+    },
     LastOwnerFailure() => l10n.errorLastOwner,
     PlanChangedFailure() => l10n.errorPlanChanged,
     ServerFailure() || UnknownFailure() => l10n.errorUnknown,

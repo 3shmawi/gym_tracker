@@ -37,6 +37,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../test/features/backup/fakes.dart' show FakeServer;
 import '../test/helpers/fake_rest_alarm.dart';
 import '../test/helpers/gym_app.dart' show FakeCamera;
 import '../test/helpers/gym_fakes.dart';
@@ -432,6 +433,76 @@ void main() {
     await tester.tap(find.byKey(const Key('use_template_button')));
     await tester.pumpAndSettle();
     expect(find.byType(ExercisePreviewRow), findsWidgets);
+    await beat(tester, 2000);
+  });
+
+  testWidgets('back up my training: email, code, and it is on the account', (
+    tester,
+  ) async {
+    FeatureFlags.overrides[Flags.trainingBackup] = true;
+    addTearDown(FeatureFlags.overrides.clear);
+    await freshInstall(tester);
+    await app.main();
+    useFakeRestAlarm();
+    // No server in the demo: an account that accepts the code, and a server
+    // model that keeps what is sent.
+    final account = FakeAccountRepository();
+    Dependencies.accountRepository = account;
+    final server = FakeServer();
+    Dependencies.backupRemote = server.phone();
+    await tester.pumpAndSettle();
+    await beat(tester);
+
+    // A plan and one finished workout waiting on the phone.
+    await tester.tap(find.byKey(const Key('use_template_button')));
+    await tester.pumpAndSettle();
+    final workout = WorkoutSession(
+      dayId: legacyDayId(0),
+      finishedAt: DateTime.now().subtract(const Duration(days: 1)),
+      sets: const [LoggedSet(exerciseId: 'pec_deck', weight: 40, reps: 10)],
+    );
+    await Dependencies.workoutRepository.saveSession(workout);
+    await beat(tester, 1200);
+
+    // Menu, Settings, "Back up my training".
+    await openHomeMenu(tester);
+    await tester.tap(find.byKey(const Key('home_settings_button')));
+    await tester.pumpAndSettle();
+    await beat(tester);
+    await tester.tap(find.byKey(const Key('settings_backup')));
+    await tester.pumpAndSettle();
+    expect(find.text('Never lose your training'), findsOneWidget);
+    await beat(tester, 1500);
+
+    // Email, then the six digits.
+    await tester.enterText(
+      find.byKey(const Key('backup_email')),
+      'me@example.com',
+    );
+    await beat(tester);
+    await tester.tap(find.byKey(const Key('backup_send_code')));
+    await tester.pumpAndSettle();
+    expect(account.codesSentTo, ['me@example.com']);
+    expect(find.text('Enter the code'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), '123456');
+    await tester.pump();
+    await beat(tester, 1200);
+    await tester.tap(find.byKey(const Key('backup_verify')));
+    await tester.pumpAndSettle();
+    expect(account.codesTried, [('me@example.com', '123456')]);
+    expect(find.text("You're backed up"), findsOneWidget);
+    // The workout and the plan are on the account, and the phone keeps them.
+    expect(server.sessions.keys, [workout.clientId]);
+    expect(server.plan, isNotNull);
+    await beat(tester, 2000);
+
+    // Back in Settings the card says so.
+    await tester.tap(find.byKey(const Key('backup_done')));
+    await tester.pumpAndSettle();
+    expect(find.text('Everything is backed up.'), findsOneWidget);
+    final history = await Dependencies.workoutRepository.loadHistory();
+    expect(history, isA<Success<List<WorkoutSession>>>());
+    expect((history as Success<List<WorkoutSession>>).value, hasLength(1));
     await beat(tester, 2000);
   });
 

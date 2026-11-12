@@ -467,3 +467,11 @@ The release passes `--save-obfuscation-map=build/app/obfuscation.map.json`.
 runner the folder is missing and the AOT snapshot fails (seen 2026-11-04,
 release after #40; Android shipped, iOS didn't, no tag). `release.yml`
 creates the folder before `flutter build ipa`.
+
+## Backup flag (`training_backup`)
+Backing up a member's training (docs/features/backup.md) ships dark: the PostHog
+flag `training_backup` is **off**. Before turning it on, the Supabase settings
+in "Before the flag goes on" of that page must be done (sign-up by email, the
+`{{ .Token }}` templates, SMTP, CAPTCHA). Migration 0022 deploys on merge and
+is safe before the app versions that use it.
+

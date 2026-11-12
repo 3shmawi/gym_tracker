@@ -23,6 +23,8 @@ sealed class AppFailure implements Exception {
     SocketException() || HttpException() => NetworkFailure(error),
     TimeoutException() => TimeoutFailure(error),
     AuthRetryableFetchException() => NetworkFailure(error),
+    AuthApiException() when AuthCodeFailure.of(error) != null =>
+      AuthCodeFailure.of(error)!,
     AuthException() => UnauthorizedFailure(error),
     FunctionsFetchException() => NetworkFailure(error),
     FunctionException(:final status) when status == 401 || status == 403 =>
@@ -124,4 +126,39 @@ final class LastOwnerFailure extends AppFailure {
 /// version wins (docs/decisions/gym_accounts.md §11).
 final class PlanChangedFailure extends AppFailure {
   const new([super.cause]);
+}
+
+/// What went wrong with an email code (sign-in for backup). One of three
+/// things a person can act on; anything else is a normal failure.
+enum AuthCodeProblem {
+  /// The code is wrong or has expired (the server says the same for both).
+  wrongOrExpired,
+
+  /// Too many tries or too many emails: wait a little.
+  tooMany,
+
+  /// This email already belongs to another account (an anonymous gym
+  /// account cannot take it: the person can sign in to that account instead).
+  emailTaken,
+}
+
+final class AuthCodeFailure extends AppFailure {
+  const new(this.problem, [super.cause]);
+
+  final AuthCodeProblem problem;
+
+  /// The problem a Supabase Auth error names, by its documented code
+  /// (`otp_expired`, `over_email_send_rate_limit`, `email_exists`, 429).
+  static AuthCodeFailure? of(AuthApiException error) {
+    final code = error.code ?? '';
+    final problem = switch (code) {
+      'otp_expired' => AuthCodeProblem.wrongOrExpired,
+      'over_email_send_rate_limit' ||
+      'over_request_rate_limit' => AuthCodeProblem.tooMany,
+      'email_exists' || 'identity_already_exists' => AuthCodeProblem.emailTaken,
+      _ when error.statusCode == '429' => AuthCodeProblem.tooMany,
+      _ => null,
+    };
+    return problem == null ? null : AuthCodeFailure(problem, error);
+  }
 }

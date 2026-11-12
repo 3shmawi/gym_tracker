@@ -929,6 +929,8 @@ class AppCodeField extends StatefulWidget {
     required this.clean,
     this.hasError = false,
     this.autofocus = false,
+    this.keyboardType,
+    this.autofillHints,
     this.onChanged,
     this.onSubmitted,
     super.key,
@@ -941,6 +943,11 @@ class AppCodeField extends StatefulWidget {
   final String Function(String input) clean;
   final bool hasError;
   final bool autofocus;
+
+  /// The keyboard (a numeric one for a code of digits) and what autofill may
+  /// offer (`AutofillHints.oneTimeCode` brings the code from an SMS or mail).
+  final TextInputType? keyboardType;
+  final Iterable<String>? autofillHints;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
 
@@ -1040,6 +1047,8 @@ class _AppCodeFieldState extends State<AppCodeField> {
                   textCapitalization: TextCapitalization.characters,
                   textDirection: TextDirection.ltr,
                   textInputAction: TextInputAction.done,
+                  keyboardType: widget.keyboardType,
+                  autofillHints: widget.autofillHints,
                   maxLength: widget.length,
                   inputFormatters: [_CleanFormatter(widget.clean)],
                   onChanged: widget.onChanged,

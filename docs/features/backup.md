@@ -11,7 +11,7 @@ works as before.
 | PR 1 | Local database and the one-time move from preferences | built, see [workout.md → The phone's database](workout.md) |
 | PR 2 | Backend: person for solo members, personal plan, personal state, erase backup, 20,000 cap | built (this page) |
 | PR 3a | The backup engine: solo workouts, plan, best level and chosen day go up when backup is on (no screen yet) | built ("The backup engine" below) |
-| PR 3b | Sign-in by code, the minimal Settings card, the link-email path for gym members (behind `training_backup`) | not started |
+| PR 3b | Sign-in by code, the Settings card, the email path for gym trainees (behind `training_backup`) | built ("Sign in and the Settings card" below) |
 | PR 4 | Restore on a new phone | not started |
 | PR 5 | Offer after the 3rd workout, full status card, sign-out choices, privacy texts | not started |
 
@@ -73,4 +73,59 @@ Security test: `test/security/backup_test.dart`.
 
 Not in this step (spec §3, moved to PR 5): a gym workout refused because the
 membership ended is not yet sent again as a solo row.
+
+## Sign in and the Settings card (PR 3b)
+Behind the `training_backup` flag (PostHog, **off**): the route `/backup`, the
+Settings card and the sign-in. With the flag off `/backup` opens home. Someone
+who already turned backup on keeps seeing the card (so they can turn it off).
+
+**Screens** (`lib/features/backup/presentation/`; design board "Backup and
+restore"): *Back up my training* (`backup_sign_in_view.dart`): email, then six
+digits (the `AppCodeField` boxes, numeric keyboard, one-time-code autofill,
+paste cleaned to digits), then "You're backed up". Settings → **Backup card**
+(`backup_card.dart`): off (one row), or the status: backed up and when, how
+many wait for the internet, how many could not be backed up, "sign in again",
+"your plan was changed on another phone", Try again, Turn off. Every state
+says the training is safe on the phone. Not built yet (PR 5): the offer after
+the 3rd workout and the sign-out choices.
+
+**How it signs in** (`AccountRepository.sendCode` / `verifyCode`):
+- A signed-out member: `signInWithOtp(email, shouldCreateUser: true)` with the
+  Turnstile token when configured, then `verifyOTP(type: email)`. A known email
+  signs in, a new one makes an account, and the app never says which.
+- A gym trainee (anonymous): `updateUser(email)` then `verifyOTP(type:
+  emailChange)`: same account, same memberships and history, now permanent.
+- The email already belongs to another account (`email_exists`): the screen
+  says so and offers "Sign in to that account", warning that the gym on this
+  phone then needs a new code from the captain. Nothing on the phone is
+  deleted. No automatic merge (spec §2, decision 3).
+- Rules before anything is sent: `EmailRules.clean` (one `@`, at most 254
+  characters, no spaces, control or invisible characters, no markup, brackets
+  or quotes) and a code of exactly six digits; a new code after 60 seconds.
+- Errors a person can act on (`AuthCodeFailure`): wrong or expired code, too
+  many tries, email taken; offline and anything else say so. The server's own
+  text is never shown.
+- On a correct code `BackupSync.enable()` turns backup on and the first run
+  sends the whole history.
+
+Events (a word only): `backup_sign_in_started`, `backup_code_failed {reason}`,
+plus the four above. Deep link: `/backup` (docs/deep_links.md): the address
+carries nothing and a link sends nothing.
+
+Tests: `email_rules_test`, `backup_sign_in_controller_test`,
+`backup_sign_in_view_test` and `backup_card_test` (each ends with
+`screensUiTests`: 14 screens and states), `supabase_account_repository_test`
+(the code methods), `test/security/deep_link_test.dart` ("backup screen"),
+`test/security/backup_test.dart`, and the integration test "back up my
+training: email, code, and it is on the account" (a demo: Settings, email,
+code, done, the card).
+
+### Before the flag goes on (owner, Supabase dashboard)
+- Authentication → Sign In / Providers → Email: **new users may sign up** (the
+  dashboard never creates users, so check it is on).
+- Email templates: **Confirm signup** and **Change email address** contain
+  `{{ .Token }}` (the 6-digit code), like Magic Link.
+- Code lifetime: 10 minutes (the mockup says so); shared with the dashboard.
+- Custom SMTP (already needed by the dashboard).
+- CAPTCHA on, with the app's Turnstile site key.
 
