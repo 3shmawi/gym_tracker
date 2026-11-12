@@ -6,15 +6,29 @@ import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
 import 'package:gym_tracker/core/monitoring/monitoring.dart';
 import 'package:gym_tracker/features/workout/domain/services/rest_alarm.dart';
+import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
 
 /// Override in tests: `restAlarmProvider.overrideWithValue(fake)`.
 final restAlarmProvider = Provider<RestAlarm>((ref) => Dependencies.restAlarm);
 
-/// Keeps the "Rest over" notification in step with the workout screen:
-/// scheduled only while a rest is running **and** the app is not in front
-/// (locked, in the background, app switcher), removed as soon as the
-/// member is back, the rest changes (+15 s, skip, a set logged, edited or
-/// deleted), the workout is finished or the screen is closed.
+/// One for the whole app (`RestAlarmHost`): the rest follows the member
+/// to any screen (the workout pill), so the alarm does too.
+final restAlarmSyncProvider = Provider<RestAlarmSync>((ref) {
+  final sync = RestAlarmSync(
+    ref.watch(restAlarmProvider),
+    now: ref.watch(clockProvider),
+  );
+  ref.onDispose(() => unawaited(sync.close()));
+  return sync;
+});
+
+/// Keeps the "Rest over" notification in step with the workout in
+/// progress, from any screen: scheduled only while a rest is running
+/// **and** the app is not in front (locked, in the background, app
+/// switcher), removed as soon as the member is back, the rest changes
+/// (+15 s, skip, a set logged, edited or deleted) or the workout is
+/// finished or discarded. Leaving the workout screen keeps it (2026-11-10:
+/// the workout pill shows the rest everywhere).
 ///
 /// In front, the screen counts down itself, so nothing is scheduled; when
 /// the rest runs out on screen (not skipped) it rings right away
@@ -55,6 +69,13 @@ class RestAlarmSync {
       }
     }
     _apply();
+  }
+
+  /// The rest ran out while the app is in front but not on the workout
+  /// screen (the pill shows it): ring now, the same sound as on screen.
+  void ringInFront(RestAlarmNotice notice) {
+    if (_closed || _inBackground) return;
+    _run(() => _alarm.ringNow(notice));
   }
 
   /// How soon after the rest's end the screen must notice it to ring.

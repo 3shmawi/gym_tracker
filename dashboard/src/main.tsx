@@ -6,7 +6,12 @@ import { ConfigError, parseConfig } from './core/config';
 import { makeSupabase } from './core/supabase';
 import { GymsRepository } from './gyms/gyms';
 import { loadLogo } from './invites/logo';
+import { MediaRepository } from './exercises/media';
 import { MembersRepository } from './members/members';
+import { PlansRepository } from './plans/plans';
+import { TemplatesRepository } from './plans/templates';
+import { ProgressRepository } from './progress/progress';
+import { GymSettingsRepository } from './gyms/settings';
 import { ConfigErrorPage } from './ui/states';
 import './styles/app.css';
 
@@ -21,6 +26,12 @@ if (root) {
       captcha: config.turnstileSiteKey ? new TurnstileCaptcha(config.turnstileSiteKey) : null,
       members: new MembersRepository(supabase),
       loadLogo: (logoPath: string | null) => loadLogo(supabase, logoPath),
+      media: new MediaRepository(supabase),
+      cloudName: config.cloudinaryCloudName,
+      plans: new PlansRepository(supabase),
+      templates: new TemplatesRepository(supabase),
+      progress: new ProgressRepository(supabase),
+      gymSettings: new GymSettingsRepository(supabase),
     };
     render(<App services={services} />, root);
   } catch (error: unknown) {

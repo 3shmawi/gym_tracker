@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:gym_tracker/core/network/result.dart';
+import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/domain/entities/chosen_day.dart';
 import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart';
@@ -38,8 +39,29 @@ class LocalWorkoutRepository implements WorkoutRepository {
   Future<Result<WorkoutPlan?>> loadPlan() => guard(() async {
     final raw = _prefs.getString(planKey);
     if (raw == null) return null;
-    return _parse<WorkoutPlan>(() => WorkoutPlan.fromJson(_decodeMap(raw)));
+    final plan = _parse<WorkoutPlan>(
+      () => WorkoutPlan.fromJson(_decodeMap(raw)),
+    );
+    // Plans started from the old template had days 4 and 5 as copies of
+    // days 1 and 2: give them the real days, unless a workout of one of them
+    // is in progress (its logged sets point at the old exercises).
+    final upgraded = PlanTemplates.upgrade(plan);
+    if (identical(upgraded, plan)) return plan;
+    final draftDay = _draftDayId();
+    if (draftDay == 'day-4' || draftDay == 'day-5') return plan;
+    await _prefs.setString(planKey, jsonEncode(upgraded.toJson()));
+    return upgraded;
   }, retries: 0);
+
+  String? _draftDayId() {
+    final raw = _prefs.getString(draftKey);
+    if (raw == null) return null;
+    try {
+      return WorkoutDraft.fromJson(_decodeMap(raw)).dayId;
+    } on Object {
+      return null;
+    }
+  }
 
   /// Refuses (`ValidationFailure`) a plan outside `PlanLimits`: no days,
   /// empty or long names, targets out of range, repeated ids. Names are

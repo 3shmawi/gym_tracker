@@ -72,7 +72,7 @@ void main() {
     // The active workout: started from home like a member would.
     appRouter.go(AppRoutes.home);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Start workout'));
+    await tester.tap(find.byKey(const Key('home_start_button')));
     await tester.pumpAndSettle();
     expect(find.byType(ActiveWorkoutView), findsOneWidget);
     await _fling(tester, binding, 'active_workout');

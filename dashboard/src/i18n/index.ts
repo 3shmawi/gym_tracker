@@ -19,8 +19,11 @@ export function translate(lang: Lang, key: MessageKey, params: Params = {}): str
   });
 }
 
+/** Arabic with Western digits (123), like the app; English as before. */
+export const numberLocale = (lang: Lang): string => (lang === 'ar' ? 'ar-EG-u-nu-latn' : 'en');
+
 function formatValue(lang: Lang, value: string | number): string {
-  return typeof value === 'number' ? new Intl.NumberFormat(lang === 'ar' ? 'ar-EG' : 'en').format(value) : value;
+  return typeof value === 'number' ? new Intl.NumberFormat(numberLocale(lang)).format(value) : value;
 }
 
 export function dirOf(lang: Lang): 'ltr' | 'rtl' {

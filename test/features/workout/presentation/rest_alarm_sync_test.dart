@@ -96,6 +96,32 @@ void main() {
     });
   });
 
+  group('ringInFront (another screen than the workout)', () {
+    test('rings while in front', () async {
+      sync
+        ..lifecycle(AppLifecycleState.resumed)
+        ..ringInFront(notice());
+      await sync.idle;
+      expect(alarm.rung, [notice()]);
+    });
+
+    test('silent in the background (the notification does it)', () async {
+      sync
+        ..lifecycle(AppLifecycleState.paused)
+        ..ringInFront(notice());
+      await sync.idle;
+      expect(alarm.rung, isEmpty);
+    });
+
+    test('silent once closed', () async {
+      sync.lifecycle(AppLifecycleState.resumed);
+      await sync.close();
+      sync.ringInFront(notice());
+      await sync.idle;
+      expect(alarm.rung, isEmpty);
+    });
+  });
+
   test('locked or in the background during a rest: scheduled', () async {
     for (final state in [
       AppLifecycleState.inactive,

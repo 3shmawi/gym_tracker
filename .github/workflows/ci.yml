@@ -160,20 +160,25 @@ jobs:
   # The captain web dashboard (dashboard/, docs/features/dashboard.md):
   # typecheck, lint, unit tests, build with the security-header check, and
   # Playwright end-to-end tests against a mocked Supabase (no network, no
-  # secrets: the two VITE_ values below are placeholders, not a project).
-  # Runs in Playwright's own image (Node + browsers), pinned by digest.
+  # secrets: the VITE_ values below are placeholders, not a project).
+  # Runs in Playwright's own image (Node + browsers), pinned by digest. Its
+  # version must equal @playwright/test in dashboard/package.json, or the
+  # browsers are missing: bump both in the same PR.
   dashboard:
     name: Dashboard · typecheck · lint · test · build · e2e
     runs-on: ubuntu-latest
     timeout-minutes: 20
     container:
-      image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
+      image: mcr.microsoft.com/playwright:v1.65.0-noble@sha256:6e3fb709361521eb27161606e6da6d2674e5e89fa16516cb37d6fdd91372273d
     defaults:
       run:
         working-directory: dashboard
     env:
       VITE_SUPABASE_URL: https://abcdefghijklmnopqrst.supabase.co
       VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder_key
+      # D2 exercise pictures: a placeholder cloud name (publishable, not an
+      # account), so check_dist.mjs also checks the img-src picture path.
+      VITE_CLOUDINARY_CLOUD_NAME: azm-ci-placeholder
       CI: 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -219,9 +224,10 @@ jobs:
           retention-days: 14
 
   # Whether the PR touches anything the app is built from. The iOS
-  # integration job is the slow one (macOS runner, Xcode build), so a PR that
-  # only changes docs, scripts or other workflows skips it. A skipped job
-  # counts as passed for required checks. Drafts skip it too: mark the PR
+  # integration job is the slow one (macOS runner, Xcode build) and the
+  # Android build costs a Gradle run, so a PR that only changes docs, scripts
+  # or other workflows skips both. A skipped job counts as passed for
+  # required checks. Drafts skip it too: mark the PR
   # "Ready for review" to run it.
   changes:
     name: What changed
@@ -240,11 +246,11 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: |
           if git diff --name-only "origin/$BASE_REF...HEAD" \
-            | grep -qE '^(lib/|ios/|integration_test/|assets/|env/|l10n\.yaml$|pubspec\.(yaml|lock)$|\.fvmrc$|\.github/workflows/ci\.yml$|\.github/actions/)'; then
+            | grep -qE '^(lib/|ios/|android/|integration_test/|assets/|env/|l10n\.yaml$|pubspec\.(yaml|lock)$|\.fvmrc$|\.github/workflows/ci\.yml$|\.github/actions/)'; then
             echo "app=true" >> "$GITHUB_OUTPUT"
           else
             echo "app=false" >> "$GITHUB_OUTPUT"
-            echo "No app changes: the iOS integration tests are skipped." >> "$GITHUB_STEP_SUMMARY"
+            echo "No app changes: the iOS integration tests and the Android build are skipped." >> "$GITHUB_STEP_SUMMARY"
           fi
 
   # Every integration test, on an iPhone simulator with full Liquid Glass
@@ -310,7 +316,10 @@ jobs:
   # end of every app run, losing the results, in every setup tried.
   android-build:
     name: Android build (debug APK)
-    if: github.event_name == 'pull_request'
+    needs: changes
+    # Unlike the iOS job, drafts are built too: it is cheap (Ubuntu runner,
+    # Gradle cache) and a broken Android build is best known early.
+    if: github.event_name == 'pull_request' && needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

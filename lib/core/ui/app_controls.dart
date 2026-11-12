@@ -29,8 +29,8 @@ class AppPrimaryButton extends StatelessWidget {
     label: label,
     icon: icon,
     onPressed: onPressed,
-    fill: AppColors.primary,
-    foreground: AppColors.onPrimary,
+    fill: context.palette.brand,
+    foreground: context.palette.onBrand,
     haptic: HapticFeedback.lightImpact,
   );
 }
@@ -379,13 +379,13 @@ class AppSetChip extends StatelessWidget {
     final palette = context.palette;
     final (fill, border, text) = switch (state) {
       AppSetState.done => (
-        AppColors.primary.withValues(alpha: 0.2),
+        palette.brandTint,
         Colors.transparent,
         palette.textPrimary,
       ),
       AppSetState.current => (
         Colors.transparent,
-        AppColors.primary,
+        palette.brand,
         palette.textPrimary,
       ),
       AppSetState.pending => (
@@ -480,7 +480,7 @@ class AppSegmentedProgress extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: (current - i).clamp(0, 1).toDouble(),
                       backgroundColor: palette.fillSubtle,
-                      color: AppColors.primary,
+                      color: palette.brand,
                       minHeight: 6,
                     ),
                   ),
@@ -869,9 +869,7 @@ class AppChoiceChip extends StatelessWidget {
       label: semanticLabel ?? label,
       excludeSemantics: true,
       child: Material(
-        color: selected
-            ? AppColors.primary.withValues(alpha: 0.2)
-            : palette.fillSubtle,
+        color: selected ? palette.brandTint : palette.fillSubtle,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDimens.radiusMd + 2),
           side: BorderSide(

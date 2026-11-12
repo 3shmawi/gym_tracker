@@ -267,7 +267,7 @@ class AppRadioMark extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: selected ? AppColors.primary : null,
+            color: selected ? palette.brand : null,
             border: selected
                 ? null
                 : Border.all(color: palette.textTertiary, width: 2),
@@ -276,7 +276,7 @@ class AppRadioMark extends StatelessWidget {
               ? Icon(
                   Icons.check,
                   size: AppDimens.scaled(18),
-                  color: AppColors.onPrimary,
+                  color: palette.onBrand,
                 )
               : null,
         ),

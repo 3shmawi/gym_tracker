@@ -9,6 +9,7 @@ import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
+import 'package:gym_tracker/features/library/presentation/widgets/exercise_thumb.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
@@ -30,9 +31,14 @@ class ActiveWorkoutActions {
     required this.onFinish,
     required this.onClose,
     required this.onRetry,
+    this.onHowTo,
   });
 
   final void Function(double weight, int reps) onLog;
+
+  /// Opens how to do an exercise (its id); the buttons are hidden while
+  /// null.
+  final ValueChanged<String>? onHowTo;
 
   /// Do the exercise at this index now, out of the planned order.
   final ValueChanged<int> onPick;
@@ -56,8 +62,13 @@ class ActiveWorkoutView extends StatelessWidget {
     required this.actions,
     required this.now,
     this.onDockHeight,
+    this.covers = const {},
     super.key,
   });
+
+  /// The gym's picture of each exercise (by id); the others show their
+  /// bundled drawing.
+  final Map<String, ImageProvider> covers;
 
   /// The dock's height (logging, rest or finish) whenever it changes, so
   /// the floating video stays above it (board 4.3).
@@ -101,6 +112,7 @@ class ActiveWorkoutView extends StatelessWidget {
           now: now,
           onFinish: () => _showFinish(context, w),
           onDockHeight: onDockHeight,
+          covers: covers,
         ),
         AsyncData() => EmptyView(
           icon: Icons.fitness_center,
@@ -136,8 +148,10 @@ class _Workout extends StatefulWidget {
     required this.now,
     required this.onFinish,
     this.onDockHeight,
+    this.covers = const {},
   });
 
+  final Map<String, ImageProvider> covers;
   final ValueChanged<double>? onDockHeight;
   final ActiveWorkout workout;
   final ActiveWorkoutActions actions;
@@ -244,16 +258,24 @@ class _WorkoutState extends State<_Workout> {
                           preview: preview,
                           workout: workout,
                           isNow: i == current,
+                          cover: widget.covers[preview.exercise.id],
                           onEditSet: (index) => _edit(context, index),
+                          onHowTo: actions.onHowTo == null
+                              ? null
+                              : () => actions.onHowTo!(preview.exercise.id),
                         )
                       : _ExerciseLine(
                           key: Key('exercise_line_${preview.exercise.id}'),
                           number: i + 1,
                           preview: preview,
                           logged: workout.draft.setsFor(preview.exercise.id),
+                          cover: widget.covers[preview.exercise.id],
                           onPick: _done(preview)
                               ? null
                               : () => actions.onPick(i),
+                          onHowTo: actions.onHowTo == null
+                              ? null
+                              : () => actions.onHowTo!(preview.exercise.id),
                         ),
                 ),
             ],
@@ -396,6 +418,8 @@ class _ExerciseLine extends StatelessWidget {
     required this.preview,
     required this.logged,
     this.onPick,
+    this.onHowTo,
+    this.cover,
     super.key,
   });
 
@@ -403,6 +427,8 @@ class _ExerciseLine extends StatelessWidget {
   final ExercisePreview preview;
   final List<LoggedSet> logged;
   final VoidCallback? onPick;
+  final VoidCallback? onHowTo;
+  final ImageProvider? cover;
 
   @override
   Widget build(BuildContext context) {
@@ -418,7 +444,7 @@ class _ExerciseLine extends StatelessWidget {
         child: Row(
           spacing: AppDimens.sm2,
           children: [
-            _NumberDot(number: number, done: done),
+            _LineThumb(exercise: exercise, cover: cover, done: done),
             Expanded(
               child: Text(
                 exercise.name.of(lang),
@@ -448,7 +474,7 @@ class _ExerciseLine extends StatelessWidget {
       ),
     );
     final pick = onPick;
-    return MergeSemantics(
+    final row = MergeSemantics(
       child: pick == null
           ? line
           : Semantics(
@@ -464,33 +490,71 @@ class _ExerciseLine extends StatelessWidget {
               ),
             ),
     );
+    final howTo = onHowTo;
+    if (howTo == null) return row;
+    // Its own button, outside the row's merged label: "How to do <name>".
+    return Row(
+      children: [
+        Expanded(child: row),
+        AppIconButton(
+          key: Key('how_to_${exercise.id}'),
+          icon: Icons.play_circle_outline,
+          tooltip: context.l10n.workoutHowToLabel(exercise.name.of(lang)),
+          onPressed: howTo,
+          plain: true,
+        ),
+      ],
+    );
   }
 }
 
-class _NumberDot extends StatelessWidget {
-  const new({required this.number, required this.done});
+/// A workout line's picture (40): green when the exercise is done, with a
+/// check in the corner.
+class _LineThumb extends StatelessWidget {
+  const new({required this.exercise, required this.done, this.cover});
 
-  final int number;
+  final Exercise exercise;
   final bool done;
+  final ImageProvider? cover;
 
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: 28,
-      height: 28,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: done ? scheme.primary : palette.fillSubtle,
-        shape: BoxShape.circle,
-      ),
-      child: done
-          ? Icon(Icons.check, size: 16, color: scheme.onPrimary)
-          : Text(
-              '$number',
-              style: AppTextStyles.label.copyWith(color: palette.textSecondary),
+    final size = AppDimens.exerciseThumbSmall;
+    final check = AppDimens.scaled(16);
+    return SizedBox.square(
+      dimension: size,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          ExerciseThumb(
+            exerciseId: exercise.id,
+            size: size,
+            cover: cover,
+            color: done ? palette.textPrimary : palette.textSecondary,
+            background: done ? scheme.primary.withValues(alpha: 0.2) : null,
+          ),
+          if (done)
+            PositionedDirectional(
+              bottom: -AppDimens.xs / 2,
+              end: -AppDimens.xs / 2,
+              child: Container(
+                width: check,
+                height: check,
+                decoration: BoxDecoration(
+                  color: scheme.primary,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.check,
+                  size: check * 0.75,
+                  color: scheme.onPrimary,
+                ),
+              ),
             ),
+        ],
+      ),
     );
   }
 }
@@ -504,6 +568,8 @@ class _CurrentExercise extends StatelessWidget {
     required this.workout,
     required this.isNow,
     required this.onEditSet,
+    this.onHowTo,
+    this.cover,
   });
 
   final int number;
@@ -511,6 +577,10 @@ class _CurrentExercise extends StatelessWidget {
   final ActiveWorkout workout;
   final bool isNow;
   final ValueChanged<int> onEditSet;
+
+  /// "How to do it"; hidden while null.
+  final VoidCallback? onHowTo;
+  final ImageProvider? cover;
 
   @override
   Widget build(BuildContext context) {
@@ -536,11 +606,25 @@ class _CurrentExercise extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: AppDimens.sm2,
             children: [
-              _NumberDot(number: number, done: false),
+              ExerciseThumb(
+                exerciseId: exercise.id,
+                size: AppDimens.exerciseThumbLarge,
+                cover: cover,
+              ),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      l10n.workoutExerciseOf(
+                        number,
+                        workout.day.exercises.length,
+                      ),
+                      style: AppTextStyles.caption.copyWith(
+                        color: palette.trendUp,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                     Text(
                       exercise.name.of(lang),
                       style: AppTextStyles.headline.copyWith(
@@ -554,23 +638,34 @@ class _CurrentExercise extends StatelessWidget {
                         color: palette.textSecondary,
                       ),
                     ),
+                    // Under the name: beside the picture it had no room
+                    // on a small phone with large text.
+                    SizedBox(height: AppDimens.xs),
+                    AppBadge(
+                      label: switch (preview.suggestion.trend) {
+                        Trend.up => l10n.trendUp,
+                        Trend.keep => l10n.trendKeep,
+                        Trend.down => l10n.trendDown,
+                        Trend.firstTime => l10n.trendFirstTime,
+                      },
+                      tone: switch (preview.suggestion.trend) {
+                        Trend.up => AppTone.up,
+                        Trend.keep => AppTone.keep,
+                        Trend.down => AppTone.down,
+                        Trend.firstTime => AppTone.fresh,
+                      },
+                    ),
                   ],
                 ),
               ),
-              AppBadge(
-                label: switch (preview.suggestion.trend) {
-                  Trend.up => l10n.trendUp,
-                  Trend.keep => l10n.trendKeep,
-                  Trend.down => l10n.trendDown,
-                  Trend.firstTime => l10n.trendFirstTime,
-                },
-                tone: switch (preview.suggestion.trend) {
-                  Trend.up => AppTone.up,
-                  Trend.keep => AppTone.keep,
-                  Trend.down => AppTone.down,
-                  Trend.firstTime => AppTone.fresh,
-                },
-              ),
+              if (onHowTo != null && !isNow)
+                AppIconButton(
+                  key: Key('how_to_${exercise.id}'),
+                  icon: Icons.play_circle_outline,
+                  tooltip: l10n.workoutHowToLabel(exercise.name.of(lang)),
+                  onPressed: onHowTo!,
+                  plain: true,
+                ),
             ],
           ),
           if (workout.cursor?.supersetPartner != null)
@@ -651,6 +746,17 @@ class _CurrentExercise extends StatelessWidget {
                   ),
             ],
           ),
+          // The full button on the exercise being done; its superset
+          // partner keeps it small, so both cards stay in view.
+          if (onHowTo != null && isNow) ...[
+            SizedBox(height: AppDimens.xs),
+            AppSecondaryButton(
+              key: Key('how_to_current_${exercise.id}'),
+              icon: Icons.play_circle_outline,
+              label: l10n.workoutHowTo,
+              onPressed: onHowTo,
+            ),
+          ],
         ],
       ),
     );

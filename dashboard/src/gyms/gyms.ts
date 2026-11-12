@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { guard, unwrap, type Result } from '../core/result';
 import { cleanName } from '../core/text';
+import { parseBrandColor } from './brandColor';
 
 export type ManagerRole = 'owner' | 'captain';
 
@@ -12,6 +13,8 @@ export interface ManagedGym {
   readonly logoPath: string | null;
   /** What a member who leaves can still read of this gym's history (gyms.history_after_end). */
   readonly historyAfterEnd: 'readable' | 'locked';
+  /** The colour the owner chose for the app (`#rrggbb`), or null for Azm's colours (gyms.brand_color, migration 0021). */
+  readonly brandColor: string | null;
   /** Members that are active or waiting to join. */
   readonly memberCount: number;
 }
@@ -45,7 +48,7 @@ export class GymsRepository {
       const rows = unwrap(
         await this.supabase
           .from('memberships')
-          .select('role, gym:gyms(id, name, logo_path, history_after_end)')
+          .select('role, gym:gyms(id, name, logo_path, history_after_end, brand_color)')
           .eq('person_id', person.id)
           .eq('status', 'active')
           .in('role', ['owner', 'captain'])
@@ -58,7 +61,7 @@ export class GymsRepository {
         if (!gym || !isGymId(gym.id) || (role !== 'owner' && role !== 'captain')) return [];
         const logoPath = typeof gym.logo_path === 'string' && LOGO_PATH.test(gym.logo_path) && gym.logo_path.startsWith(`${gym.id}/`) ? gym.logo_path : null;
         const historyAfterEnd = gym.history_after_end === 'locked' ? 'locked' : 'readable';
-        return [{ id: gym.id, name: cleanName(gym.name), role, logoPath, historyAfterEnd }];
+        return [{ id: gym.id, name: cleanName(gym.name), role, logoPath, historyAfterEnd, brandColor: parseBrandColor(gym.brand_color) }];
       });
 
       const counted = await Promise.all(
@@ -87,4 +90,5 @@ interface GymRow {
   name: unknown;
   logo_path?: unknown;
   history_after_end?: unknown;
+  brand_color?: unknown;
 }

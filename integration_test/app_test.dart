@@ -13,6 +13,8 @@ import 'package:gym_tracker/features/gym/presentation/joined_view.dart';
 import 'package:gym_tracker/features/gym/presentation/scanner_camera.dart';
 import 'package:gym_tracker/features/gym/presentation/scanner_view.dart';
 import 'package:gym_tracker/features/gym/presentation/welcome_view.dart';
+import 'package:gym_tracker/features/library/presentation/exercise_guide_view.dart';
+import 'package:gym_tracker/features/library/presentation/widgets/exercise_thumb.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_view.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
@@ -117,7 +119,7 @@ void main() {
     await tester.pumpAndSettle();
     await beat(tester, 1200);
 
-    await tester.tap(find.text('Start workout'));
+    await tester.tap(find.byKey(const Key('home_start_button')));
     await tester.pumpAndSettle();
     expect(find.byType(ActiveWorkoutView), findsOneWidget);
     await beat(tester);
@@ -251,7 +253,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('choose_day_2')).hitTestable());
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Start workout'));
+    await tester.tap(find.byKey(const Key('home_start_button')));
     await tester.pumpAndSettle();
     await beat(tester);
 
@@ -297,10 +299,24 @@ void main() {
     await unlockPhone(tester);
     await beat(tester);
 
-    // Log set 2, then close the workout mid-rest: nothing rings later.
+    // Log set 2, then close the workout mid-rest: the pill keeps the rest,
+    // so locking the phone on the home screen still schedules it.
     await tester.tap(find.byKey(const Key('log_set_button')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('workout_close')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('workout_pill')), findsOneWidget);
+    await lockPhone(tester);
+    expect(alarm.scheduled?.body, 'Barbell Back Squat · set 3');
+    await unlockPhone(tester);
+    expect(alarm.scheduled, isNull);
+
+    // Finishing the workout from the pill's screen removes it for good.
+    await tester.tap(find.byKey(const Key('workout_pill')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('workout_finish_menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('finish_confirm')));
     await tester.pumpAndSettle();
     await lockPhone(tester);
     expect(alarm.scheduled, isNull);
@@ -525,4 +541,52 @@ Future<void> unlockPhone(WidgetTester tester) async {
     AppLifecycleState.resumed,
   ].forEach(tester.binding.handleAppLifecycleStateChanged);
   await tester.pumpAndSettle();
+
+  testWidgets('workout pill: pictures, start from settings, how-to, resume', (
+    tester,
+  ) async {
+    await freshInstall(tester);
+    await app.main();
+    useFakeRestAlarm();
+    await tester.pumpAndSettle();
+    await beat(tester);
+
+    await tester.tap(find.byKey(const Key('use_template_button')));
+    await tester.pumpAndSettle();
+    await beat(tester, 1500);
+
+    // Every exercise of the day shows its picture.
+    expect(find.byType(NumberedExerciseThumb), findsWidgets);
+
+    // Settings: the floating pill waits in the corner.
+    await tester.tap(find.byKey(const Key('home_settings_button')));
+    await tester.pumpAndSettle();
+    await beat(tester, 1200);
+    expect(find.byType(SettingsView), findsOneWidget);
+    expect(find.byKey(const Key('workout_pill')), findsOneWidget);
+
+    // One tap starts day 1 from here.
+    await tester.tap(find.byKey(const Key('workout_pill')));
+    await tester.pumpAndSettle();
+    await beat(tester, 1200);
+    expect(find.byType(ActiveWorkoutView), findsOneWidget);
+    expect(find.byKey(const Key('workout_pill')), findsNothing);
+
+    // How to do the current exercise: pictures and steps.
+    await tester.tap(find.byKey(const Key('how_to_current_flat_db_press')));
+    await tester.pumpAndSettle();
+    await beat(tester, 1800);
+    expect(find.byType(ExerciseGuideView), findsOneWidget);
+    expect(find.text('Resume workout'), findsOneWidget);
+
+    // The pill goes back to the same set.
+    await tester.tap(find.byKey(const Key('workout_pill')));
+    await tester.pumpAndSettle();
+    await beat(tester);
+    expect(find.byType(ActiveWorkoutView), findsOneWidget);
+    expect(find.byType(ExerciseGuideView), findsNothing);
+    await tester.tap(find.byKey(const Key('log_set_button')));
+    await tester.pumpAndSettle();
+    await beat(tester, 1500);
+  });
 }

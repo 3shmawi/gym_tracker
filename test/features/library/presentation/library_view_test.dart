@@ -74,7 +74,7 @@ void main() {
       expect(find.text('Flat Dumbbell Press'), findsOneWidget);
       expect(find.textContaining('دفع دمبل مستوي'), findsOneWidget);
       expect(find.textContaining('Dumbbells + Bench'), findsOneWidget);
-      expect(find.text('3 exercises'), findsOneWidget);
+      expect(find.text('6 exercises'), findsOneWidget);
     });
 
     testWidgets('Add, open and "Added"', (tester) async {

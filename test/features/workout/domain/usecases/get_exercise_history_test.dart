@@ -44,9 +44,11 @@ void main() {
   });
 
   test('the plan days it is on, in plan order', () {
-    final press = get(_plan, history, _press)!;
-    expect(press.days.map((d) => d.number), [1, 4]);
-    expect(press.days.first.name.en, 'Chest & Back');
+    // Abs is on day 1 and day 4.
+    final abs = get(_plan, history, 'abs')!;
+    expect(abs.days.map((d) => d.number), [1, 4]);
+    expect(abs.days.first.name.en, 'Chest & Back');
+    expect(get(_plan, history, _press)!.days.map((d) => d.number), [1]);
     final squat = get(_plan, history, 'barbell_squat')!;
     expect(squat.days.map((d) => d.number), [3]);
     expect(squat.days.single.name.ar, 'رجل');

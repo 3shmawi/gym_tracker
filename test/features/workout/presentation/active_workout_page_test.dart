@@ -12,6 +12,7 @@ import 'package:gym_tracker/features/workout/domain/entities/workout_draft.dart'
 import 'package:gym_tracker/features/workout/domain/services/rest_alarm.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_view.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
+import 'package:gym_tracker/features/workout/presentation/rest_alarm_host.dart';
 import 'package:gym_tracker/features/workout/presentation/rest_alarm_sync.dart';
 import 'package:gym_tracker/features/workout/presentation/widgets/rest_on_time_sheet.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
@@ -62,6 +63,8 @@ void main() {
               theme: AppTheme.light,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
+              // As in AppShell: the alarm is app-wide.
+              builder: (context, child) => RestAlarmHost(child: child!),
             ),
           ),
         ),
@@ -136,15 +139,48 @@ void main() {
     expect(alarm.scheduled, isNull);
   });
 
-  testWidgets('closing the workout removes it', (tester) async {
+  testWidgets('closing the workout mid-rest keeps it (the pill shows it)', (
+    tester,
+  ) async {
     await open(tester);
     await log(tester);
     await tester.tap(find.byKey(const Key('workout_close')));
     await tester.pumpAndSettle();
     expect(find.byType(ActiveWorkoutView), findsNothing);
-    expect(alarm.calls.last, 'cancel');
+    // Locked on another screen: still "Rest over" at the rest's end.
     await lifecycle(tester, AppLifecycleState.paused);
+    expect(alarm.scheduled?.at, now.add(const Duration(seconds: 120)));
+    expect(alarm.scheduled?.body, 'Barbell Back Squat · set 2');
+    // Back in the app: removed, nothing rings twice.
+    await lifecycle(tester, AppLifecycleState.resumed);
     expect(alarm.scheduled, isNull);
+  });
+
+  testWidgets('in front on another screen: it rings when the rest ends', (
+    tester,
+  ) async {
+    await open(tester);
+    await log(tester);
+    await tester.tap(find.byKey(const Key('workout_close')));
+    await tester.pumpAndSettle();
+    expect(alarm.rung, isEmpty);
+    await tester.pump(const Duration(seconds: 119));
+    expect(alarm.rung, isEmpty, reason: 'not before the end');
+    await tester.pump(const Duration(seconds: 2));
+    expect(alarm.rung.single.body, 'Barbell Back Squat · set 2');
+    expect(alarm.scheduled, isNull, reason: 'in front: nothing scheduled');
+  });
+
+  testWidgets('on the workout screen the screen rings, not the app', (
+    tester,
+  ) async {
+    await open(tester);
+    await log(tester);
+    // The clock is pinned here, so the rest panel never reaches 0:00 and
+    // only the app-wide timer could ring: it must stay quiet on this
+    // screen (the panel rings itself, no double sound).
+    await tester.pump(const Duration(seconds: 121));
+    expect(alarm.rung, isEmpty);
   });
 
   testWidgets('finishing removes it', (tester) async {

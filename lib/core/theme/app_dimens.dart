@@ -63,6 +63,18 @@ abstract final class AppDimens {
   /// The level figure on the home screen's level card (60×70 box).
   static double get levelFigure => scaled(48);
 
+  /// Exercise pictures (design "Azm — exercise pictures, workout pill"):
+  /// a home row's tile, a workout row's tile, the current exercise's tile.
+  static double get exerciseThumb => scaled(56);
+  static double get exerciseThumbSmall => scaled(40);
+  static double get exerciseThumbLarge => scaled(84);
+
+  /// The floating workout pill (196 × 64), its ring and the edge tab.
+  static double get pillWidth => scaled(196);
+  static double get pillHeight => math.max(minTouchTarget, scaled(64));
+  static double get pillRing => scaled(48);
+  static double get pillTab => scaled(40);
+
   static double get loadingInline => scaled(48);
   static double get loadingCard => scaled(96);
   static double get loadingScreen => scaled(166);
