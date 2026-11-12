@@ -1358,7 +1358,7 @@
   "backupDoneRestored": "{count, plural, =1{1 workout came back to this phone.} other{{count} workouts came back to this phone.}}",
   "backupHaveAccount": "I already have an account",
   "backupOfferTitle": "Keep your training safe",
-  "backupOfferBody": "Add your email and your workouts, plan and level are saved. Lose or change your phone and everything comes back. It's free, and your training stays on this phone too.",
+  "backupOfferSheetBody": "Add your email and your workouts, plan and level are saved. Lose or change your phone and everything comes back. It's free, and your training stays on this phone too.",
   "backupOfferAccept": "Back up my training",
   "backupOfferLater": "Not now",
   "backupTurnOffTitle": "Turn off backup?",

@@ -118,7 +118,7 @@ class BackupOfferSheet extends StatelessWidget {
             ),
           ),
           Text(
-            l10n.backupOfferBody,
+            l10n.backupOfferSheetBody,
             style: AppTextStyles.body.copyWith(color: palette.textSecondary),
           ),
           AppPrimaryButton(
