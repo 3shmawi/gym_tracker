@@ -10,6 +10,7 @@ import 'package:gym_tracker/core/theme/app_text_styles.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
 import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
+import 'package:gym_tracker/features/workout/presentation/home_menu_sheet.dart';
 import 'package:gym_tracker/features/workout/presentation/widgets/exercise_preview_row.dart';
 import 'package:gym_tracker/features/workout/presentation/widgets/level_card.dart';
 import 'package:gym_tracker/features/workout/presentation/widgets/train_again_sheet.dart';
@@ -35,6 +36,7 @@ class NextWorkoutView extends StatelessWidget {
     this.onOpenWorkspace,
     this.onBuildPlan,
     this.onEditDay,
+    this.onJoinGym,
     this.covers = const {},
     super.key,
   });
@@ -83,38 +85,63 @@ class NextWorkoutView extends StatelessWidget {
   /// "Where are you training?": only for people with a gym account.
   final VoidCallback? onOpenWorkspace;
 
+  /// "Join your gym": for people training alone (no gym account yet).
+  final VoidCallback? onJoinGym;
+
+  List<HomeMenuEntry> _menuEntries(
+    AppLocalizations l10n,
+    BuildContext context,
+  ) => [
+    if (onOpenWorkspace != null)
+      HomeMenuEntry(
+        key: const Key('home_workspace_button'),
+        icon: Icons.swap_horiz,
+        label: l10n.homeMenuWorkspace,
+        onTap: onOpenWorkspace!,
+      )
+    else if (onJoinGym != null)
+      HomeMenuEntry(
+        key: const Key('home_join_gym_button'),
+        icon: Icons.qr_code_scanner,
+        label: l10n.settingsJoinGym,
+        onTap: onJoinGym!,
+      ),
+    if (onOpenPlan != null && state.value != null)
+      HomeMenuEntry(
+        key: const Key('home_plan_button'),
+        icon: Icons.format_list_bulleted,
+        label: l10n.planTitle,
+        onTap: onOpenPlan!,
+      ),
+    if (onOpenProgress != null)
+      HomeMenuEntry(
+        key: const Key('home_progress_button'),
+        icon: Icons.show_chart,
+        label: l10n.progressTitle,
+        onTap: onOpenProgress!,
+      ),
+    HomeMenuEntry(
+      key: const Key('home_settings_button'),
+      icon: AdaptiveIcons.settings(context),
+      label: l10n.settingsTitle,
+      onTap: onOpenSettings,
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return AppScaffold(
       title: l10n.todayTitle,
+      // One menu button instead of four icons: what a member needs is a
+      // tap away and named, and a new destination is one more entry.
       actions: [
-        if (onOpenWorkspace != null)
-          AppIconButton(
-            key: const Key('home_workspace_button'),
-            tooltip: l10n.switchTitle,
-            icon: Icons.swap_horiz,
-            onPressed: onOpenWorkspace!,
-          ),
-        if (onOpenPlan != null && state.value != null)
-          AppIconButton(
-            key: const Key('home_plan_button'),
-            tooltip: l10n.planTitle,
-            icon: Icons.format_list_bulleted,
-            onPressed: onOpenPlan!,
-          ),
-        if (onOpenProgress != null)
-          AppIconButton(
-            key: const Key('home_progress_button'),
-            tooltip: l10n.progressTitle,
-            icon: Icons.show_chart,
-            onPressed: onOpenProgress!,
-          ),
         AppIconButton(
-          key: const Key('home_settings_button'),
-          tooltip: l10n.settingsTitle,
-          icon: AdaptiveIcons.settings(context),
-          onPressed: onOpenSettings,
+          key: const Key('home_menu_button'),
+          tooltip: l10n.homeMenuTitle,
+          icon: Icons.menu,
+          onPressed: () =>
+              unawaited(showHomeMenu(context, _menuEntries(l10n, context))),
         ),
       ],
       body: switch (state) {

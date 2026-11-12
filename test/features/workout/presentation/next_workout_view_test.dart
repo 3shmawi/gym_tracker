@@ -12,6 +12,7 @@ import 'package:gym_tracker/features/workout/domain/entities/workout_session.dar
 import 'package:gym_tracker/features/workout/domain/usecases/get_next_workout.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_view.dart';
 
+import '../../../helpers/home_menu.dart';
 import '../../../helpers/pump_app.dart';
 import '../../../helpers/ui_check.dart';
 
@@ -144,9 +145,11 @@ void main() {
     testWidgets('the plan button on the bar opens the editor', (tester) async {
       var opened = 0;
       await tester.pumpApp(view(AsyncData(day2()), onOpenPlan: () => opened++));
+      await openHomeMenu(tester);
+      expect(find.text('Your plan'), findsOneWidget);
       await tester.tap(find.byKey(const Key('home_plan_button')));
+      await tester.pumpAndSettle();
       expect(opened, 1);
-      expect(find.byTooltip('Your plan'), findsOneWidget);
     });
 
     testWidgets('no plan: build one, or start with the template', (
@@ -162,7 +165,11 @@ void main() {
         ),
       );
       // No plan yet: nothing to edit on the bar.
+      await openHomeMenu(tester);
       expect(find.byKey(const Key('home_plan_button')), findsNothing);
+      expect(find.byKey(const Key('home_settings_button')), findsOneWidget);
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('build_plan_button')));
       await tester.tap(find.byKey(const Key('use_template_button')));
       expect(built, 1);
@@ -521,6 +528,7 @@ void main() {
   group('the workspace button (gym accounts)', () {
     testWidgets('is there only for people with an account', (tester) async {
       await tester.pumpApp(view(AsyncData(day1Waiting())));
+      await openHomeMenu(tester);
       expect(find.byKey(const Key('home_workspace_button')), findsNothing);
     });
 
@@ -529,9 +537,11 @@ void main() {
       await tester.pumpApp(
         view(AsyncData(day1Waiting()), onOpenWorkspace: () => opened++),
       );
+      await openHomeMenu(tester);
+      expect(find.text(l10nEn.homeMenuWorkspace), findsOneWidget);
       await tester.tap(find.byKey(const Key('home_workspace_button')));
+      await tester.pumpAndSettle();
       expect(opened, 1);
-      expect(find.byTooltip(l10nEn.switchTitle), findsOneWidget);
     });
   });
 

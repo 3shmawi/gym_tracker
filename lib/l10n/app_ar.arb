@@ -468,5 +468,7 @@
   "pillTabLabel": "اظهر زرار التمرين",
   "pillMoveHint": "اسحبه عشان تنقله لركن تاني",
   "pillHide": "خبّي زرار التمرين على الطرف",
-  "settingsAppearance": "الشكل"
+  "settingsAppearance": "الشكل",
+  "homeMenuTitle": "القائمة",
+  "homeMenuWorkspace": "جيم أو لوحدك"
 }

@@ -33,6 +33,10 @@ class NextWorkoutPage extends ConsumerWidget {
       onOpenWorkspace: signedIn
           ? () => unawaited(openWorkspaceSwitcher(context, ref))
           : null,
+      // Training alone: the way into a gym is one tap from home.
+      onJoinGym: signedIn
+          ? null
+          : () => unawaited(context.push<void>(AppRoutes.joinScan)),
       onOpenProgress: () => unawaited(context.push<void>(AppRoutes.progress)),
       onOpenExercise: (id) =>
           unawaited(context.push<void>(AppRoutes.exerciseHistory(id))),
