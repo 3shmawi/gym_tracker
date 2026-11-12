@@ -7,6 +7,7 @@ import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
 import 'package:gym_tracker/features/gym/presentation/workspace_switcher.dart';
+import 'package:gym_tracker/features/move/presentation/move_providers.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_view.dart';
@@ -23,6 +24,7 @@ class NextWorkoutPage extends ConsumerWidget {
     if (signedIn) ref.watch(gymControllerProvider);
     final next = ref.watch(nextWorkoutControllerProvider);
     final active = ref.watch(activeWorkoutControllerProvider).value;
+    final moveOn = ref.watch(moveGamesEnabledProvider).value ?? false;
     return NextWorkoutView(
       state: next,
       covers: ref.watch(exerciseCoversProvider),
@@ -38,6 +40,14 @@ class NextWorkoutPage extends ConsumerWidget {
           ? null
           : () => unawaited(context.push<void>(AppRoutes.joinScan)),
       onOpenProgress: () => unawaited(context.push<void>(AppRoutes.progress)),
+      // Move games (behind `move_games`): a card and a menu row.
+      onOpenMove: moveOn
+          ? ({required fromCard}) => unawaited(
+              context.push<void>(
+                '${AppRoutes.move}?from=${fromCard ? 'card' : 'menu'}',
+              ),
+            )
+          : null,
       onOpenExercise: (id) =>
           unawaited(context.push<void>(AppRoutes.exerciseHistory(id))),
       onChooseDay: (day) => unawaited(controller.chooseDay(day)),

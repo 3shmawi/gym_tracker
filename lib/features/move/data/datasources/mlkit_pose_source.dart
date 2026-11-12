@@ -4,7 +4,9 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
+import 'package:gym_tracker/core/camera/camera_preview_source.dart';
 import 'package:gym_tracker/core/monitoring/monitoring.dart';
 import 'package:gym_tracker/features/move/data/datasources/landmark_mapping.dart';
 import 'package:gym_tracker/features/move/domain/entities/pose_frame.dart';
@@ -15,7 +17,7 @@ import 'package:gym_tracker/features/move/domain/repositories/pose_source.dart';
 /// no image or joint leaves this class except as a [PoseFrame] to the
 /// detector, and nothing is written anywhere (docs/designs/move_games.md
 /// §11).
-class MlKitPoseSource implements PoseSource {
+class MlKitPoseSource implements PoseSource, CameraPreviewSource {
   new({this.maxFps = 15});
 
   /// Frames sent to the model per second at most; the rest are dropped.
@@ -35,6 +37,13 @@ class MlKitPoseSource implements PoseSource {
 
   /// Starting or stopping; a second call waits for it.
   Future<void>? _change;
+
+  @override
+  Widget? buildPreview() {
+    final camera = _camera;
+    if (camera == null || !camera.value.isInitialized) return null;
+    return CameraPreview(camera);
+  }
 
   @override
   Stream<PoseFrame> get frames => _frames.stream;

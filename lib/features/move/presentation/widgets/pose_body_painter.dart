@@ -20,6 +20,7 @@ class PoseBodyPainter extends CustomPainter {
     required this.farFill,
     required this.dot,
     this.minLikelihood = 0.5,
+    this.drawBody = true,
   });
 
   final PoseFrame? frame;
@@ -30,6 +31,10 @@ class PoseBodyPainter extends CustomPainter {
   final Color farFill;
   final Color dot;
   final double minLikelihood;
+
+  /// False over the live camera picture: the member is already in it, so
+  /// only thin lines and the dots are drawn.
+  final bool drawBody;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -90,6 +95,19 @@ class PoseBodyPainter extends CustomPainter {
       _hand(canvas, w, e, unit, color);
     }
 
+    if (!drawBody) {
+      final line = Paint()
+        ..color = dot
+        ..strokeWidth = math.max(1.5, unit * 0.025)
+        ..strokeCap = StrokeCap.round;
+      for (final (a, b) in _bones) {
+        final pa = p(a);
+        final pb = p(b);
+        if (pa != null && pb != null) canvas.drawLine(pa, pb, line);
+      }
+      _dots(canvas, p, unit);
+      return;
+    }
     limbs(left: !leftNear, color: oneSideHidden ? farFill : fill);
     _capsule(canvas, shoulder, hip, unit * 0.46, fill);
     // The shoulders as one piece (from the front the torso is hidden).
@@ -102,6 +120,27 @@ class PoseBodyPainter extends CustomPainter {
     }
     limbs(left: leftNear, color: fill);
 
+    _dots(canvas, p, unit);
+  }
+
+  static const List<(PoseJoint, PoseJoint)> _bones = [
+    (PoseJoint.nose, PoseJoint.leftShoulder),
+    (PoseJoint.nose, PoseJoint.rightShoulder),
+    (PoseJoint.leftShoulder, PoseJoint.rightShoulder),
+    (PoseJoint.leftShoulder, PoseJoint.leftElbow),
+    (PoseJoint.leftElbow, PoseJoint.leftWrist),
+    (PoseJoint.rightShoulder, PoseJoint.rightElbow),
+    (PoseJoint.rightElbow, PoseJoint.rightWrist),
+    (PoseJoint.leftShoulder, PoseJoint.leftHip),
+    (PoseJoint.rightShoulder, PoseJoint.rightHip),
+    (PoseJoint.leftHip, PoseJoint.rightHip),
+    (PoseJoint.leftHip, PoseJoint.leftKnee),
+    (PoseJoint.leftKnee, PoseJoint.leftAnkle),
+    (PoseJoint.rightHip, PoseJoint.rightKnee),
+    (PoseJoint.rightKnee, PoseJoint.rightAnkle),
+  ];
+
+  void _dots(Canvas canvas, Offset? Function(PoseJoint) p, double unit) {
     final dots = Paint()..color = dot;
     final ring = Paint()
       ..color = fill

@@ -212,12 +212,15 @@ void main() {
     });
 
     test('says why the camera is used, in English and Arabic', () {
+      // The QR scanner and Move games (docs/designs/move_games.md §11).
       const en =
-          "Azm uses the camera only to scan your gym's QR code. "
-          'Nothing is recorded or saved.';
+          "Azm uses the camera to scan your gym's QR code and, in Move "
+          'games, to count your reps on your phone. Nothing is recorded, '
+          'saved or sent.';
       const ar =
-          'يستخدم عزم الكاميرا فقط لقراءة رمز QR الخاص بالجيم. '
-          'لا يتم تسجيل أو حفظ أي صور.';
+          'يستخدم عزم الكاميرا لقراءة رمز QR الخاص بالجيم، وفي ألعاب '
+          'الحركة لعدّ تكراراتك على هاتفك. لا يتم تسجيل أي صور أو '
+          'حفظها أو إرسالها.';
       expect(has('NSCameraUsageDescription', '<string>$en</string>'), isTrue);
       final strings = {
         'en': File('ios/Runner/en.lproj/InfoPlist.strings').readAsStringSync(),
