@@ -132,11 +132,11 @@ reset request.jwt.claims;
 
 -- the solo cap
 insert into public.workout_sessions (client_id, person_id, day_id, finished_at, sets)
-  select 'fill' || g, 'c0000000-0000-4000-8000-000000000005', 'd1', now(), '[]' from generate_series(1, 1000) g;
+  select 'fill' || g, 'c0000000-0000-4000-8000-000000000005', 'd1', now(), '[]' from generate_series(1, 20000) g;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000005","role":"authenticated","is_anonymous":false}';
 
-select throws_like($$ select public.import_solo_data('[{"client_id": "one-too-many", "day_id": "d1", "finished_at": "2026-10-01T10:00:00Z", "sets": [{"exercise": "e1", "weight": 60, "reps": 10}]}]'::jsonb, null) $$, 'invalid_import: too many solo sessions', 'at most 1000 solo sessions per person');
+select throws_like($$ select public.import_solo_data('[{"client_id": "one-too-many", "day_id": "d1", "finished_at": "2026-10-01T10:00:00Z", "sets": [{"exercise": "e1", "weight": 60, "reps": 10}]}]'::jsonb, null) $$, 'invalid_import: too many solo sessions', 'at most 20000 solo sessions per person');
 reset role;
 reset request.jwt.claims;
 
