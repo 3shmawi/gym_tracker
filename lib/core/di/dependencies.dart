@@ -143,7 +143,12 @@ abstract final class Dependencies {
             ? null
             : const TurnstileCaptcha(siteKey: Env.turnstileSiteKey).token,
       );
-      accountRepository = SupabaseAccountRepository(Backend.client);
+      accountRepository = SupabaseAccountRepository(
+        Backend.client,
+        captchaToken: Env.turnstileSiteKey.isEmpty
+            ? null
+            : const TurnstileCaptcha(siteKey: Env.turnstileSiteKey).token,
+      );
       soloImportRepository = SupabaseSoloImportRepository(Backend.client);
       gymPlanRepository = SupabaseGymPlanRepository(Backend.client);
       sessionUploader = SupabaseSessionUploader(Backend.client);

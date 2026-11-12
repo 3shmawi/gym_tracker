@@ -26,13 +26,15 @@ void main() {
       }
     }
     expect(events, {
+      'backup_sign_in_started',
+      'backup_code_failed',
       'backup_enabled',
       'backup_synced',
       'backup_failed',
       'backup_disabled',
     });
-    // One word: network | signin | refused. Never an email, an id, a name,
-    // a workout or a count.
+    // One word: network | signin | refused, or the kind of code problem.
+    // Never an email, a code, an id, a name, a workout or a count.
     expect(properties, {'reason'});
   });
 

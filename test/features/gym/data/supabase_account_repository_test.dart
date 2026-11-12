@@ -1,3 +1,6 @@
+// Long mock setups read better on one line here.
+// ignore_for_file: lines_longer_than_80_chars
+
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -36,7 +39,10 @@ void main() {
   late _Functions functions;
   Session? current;
 
-  setUpAll(() => registerFallbackValue(_Attributes()));
+  setUpAll(() {
+    registerFallbackValue(_Attributes());
+    registerFallbackValue(OtpType.email);
+  });
 
   setUp(() {
     client = _Client();
@@ -117,6 +123,166 @@ void main() {
     when(() => auth.updateUser(any())).thenThrow(AuthRetryableFetchException());
     final result = await repo().addEmail('me@example.com');
     expect((result as Failed<void>).failure, isA<NetworkFailure>());
+  });
+
+  group('sign in by code', () {
+    AuthResponse okResponse() => AuthResponse();
+
+    test('a signed-out person: signInWithOtp creates the user when new, with the captcha token', () async {
+      when(
+        () => auth.signInWithOtp(
+          email: any(named: 'email'),
+          shouldCreateUser: any(named: 'shouldCreateUser'),
+          captchaToken: any(named: 'captchaToken'),
+        ),
+      ).thenAnswer((_) async {});
+      final repository = SupabaseAccountRepository(
+        client,
+        captchaToken: () async => 'turnstile-token',
+      );
+      final result = await repository.sendCode('  me@example.com ');
+      expect(result, isA<Success<void>>());
+      verify(
+        () => auth.signInWithOtp(
+          email: 'me@example.com',
+          shouldCreateUser: true,
+          captchaToken: 'turnstile-token',
+        ),
+      ).called(1);
+      verifyNever(() => auth.updateUser(any()));
+    });
+
+    test('an anonymous gym trainee keeps the same account: updateUser, never a new sign-in', () async {
+      current = _session();
+      when(() => auth.updateUser(any())).thenAnswer(
+        (_) async => UserResponse.fromJson({
+          'id': 'u1',
+          'aud': 'authenticated',
+          'app_metadata': <String, Object?>{},
+          'user_metadata': <String, Object?>{},
+          'created_at': '2026-11-02T00:00:00Z',
+        }),
+      );
+      expect(await repo().sendCode('me@example.com'), isA<Success<void>>());
+      verify(() => auth.updateUser(any())).called(1);
+      verifyNever(
+        () => auth.signInWithOtp(
+          email: any(named: 'email'),
+          shouldCreateUser: any(named: 'shouldCreateUser'),
+          captchaToken: any(named: 'captchaToken'),
+        ),
+      );
+    });
+
+    test('the code is checked as an email code, or as an email change for an anonymous account', () async {
+      when(
+        () => auth.verifyOTP(
+          email: any<String?>(named: 'email'),
+          token: any<String?>(named: 'token'),
+          type: any<OtpType>(named: 'type'),
+        ),
+      ).thenAnswer((_) async => okResponse());
+      expect(
+        await repo().verifyCode(' me@example.com ', ' 123456 '),
+        isA<Success<void>>(),
+      );
+      verify(
+        () => auth.verifyOTP(
+          email: 'me@example.com',
+          token: '123456',
+          type: OtpType.email,
+        ),
+      ).called(1);
+      current = _session();
+      await repo().verifyCode('me@example.com', '123456');
+      verify(
+        () => auth.verifyOTP(
+          email: 'me@example.com',
+          token: '123456',
+          type: OtpType.emailChange,
+        ),
+      ).called(1);
+    });
+
+    test(
+      'Auth errors become what a person can act on; the rest stays generic',
+      () async {
+        Future<AppFailure> failureOf(Object error) async {
+          when(
+            () => auth.verifyOTP(
+              email: any(named: 'email'),
+              token: any(named: 'token'),
+              type: any(named: 'type'),
+            ),
+          ).thenThrow(error);
+          return ((await repo().verifyCode(
+            'me@example.com',
+            '000000',
+          )) as Failed<void>).failure;
+        }
+
+        expect(
+          await failureOf(
+            const AuthApiException('x', statusCode: '403', code: 'otp_expired'),
+          ),
+          isA<AuthCodeFailure>().having(
+            (f) => f.problem,
+            'problem',
+            AuthCodeProblem.wrongOrExpired,
+          ),
+        );
+        expect(
+          await failureOf(
+            const AuthApiException(
+              'x',
+              statusCode: '429',
+              code: 'over_email_send_rate_limit',
+            ),
+          ),
+          isA<AuthCodeFailure>().having(
+            (f) => f.problem,
+            'problem',
+            AuthCodeProblem.tooMany,
+          ),
+        );
+        expect(
+          await failureOf(const AuthApiException('x', statusCode: '429')),
+          isA<AuthCodeFailure>().having(
+            (f) => f.problem,
+            'problem',
+            AuthCodeProblem.tooMany,
+          ),
+        );
+        expect(
+          await failureOf(
+            const AuthApiException(
+              'x',
+              statusCode: '422',
+              code: 'email_exists',
+            ),
+          ),
+          isA<AuthCodeFailure>().having(
+            (f) => f.problem,
+            'problem',
+            AuthCodeProblem.emailTaken,
+          ),
+        );
+        expect(
+          await failureOf(
+            const AuthApiException(
+              'x',
+              statusCode: '400',
+              code: 'captcha_failed',
+            ),
+          ),
+          isA<UnauthorizedFailure>(),
+        );
+        expect(
+          await failureOf(AuthRetryableFetchException()),
+          isA<NetworkFailure>(),
+        );
+      },
+    );
   });
 
   group('deleteAccount', () {
