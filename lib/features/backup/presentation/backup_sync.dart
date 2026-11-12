@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
@@ -11,6 +12,7 @@ import 'package:gym_tracker/features/backup/domain/repositories/backup_repositor
 import 'package:gym_tracker/features/backup/domain/usecases/run_backup.dart';
 import 'package:gym_tracker/features/backup/domain/usecases/run_restore.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/repositories/restore_sink.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
 
@@ -121,6 +123,62 @@ class BackupSync {
     unawaited(Analytics.capture('backup_erased'));
     await _ref.read(backupQueueProvider).resetAll();
     await _forget();
+    return true;
+  }
+
+  /// After signing out with "Remove it from this phone": the workouts, level
+  /// and chosen day leave this phone (the plan stays) and backup is off. Only
+  /// offered when everything is on the account; a restore brings it back.
+  Future<void> removeTrainingFromPhone() async {
+    await _ref.read(workoutRepositoryProvider).clearHistory();
+    await _forget();
+    await _ref.read(backupQueueProvider).resetAll();
+    await _ref.read(backupSettingsProvider).setRestoreCursor(null);
+    if (_ref.mounted) _ref.invalidate(nextWorkoutControllerProvider);
+  }
+
+  /// How long the plan that lost a conflict can still be chosen.
+  static const keptPlanDays = 30;
+
+  /// The kept plan, if there is one and it is not older than 30 days.
+  WorkoutPlan? keptPlan() {
+    final settings = _ref.read(backupSettingsProvider);
+    final raw = settings.keptPlan;
+    final at = settings.keptPlanAt;
+    if (raw == null || at == null) return null;
+    final now = _ref.read(clockProvider)();
+    if (now.difference(at) > const Duration(days: keptPlanDays)) return null;
+    try {
+      return WorkoutPlan.fromJson(
+        (jsonDecode(raw) as Map).cast<String, Object?>(),
+      );
+    } on Object {
+      return null;
+    }
+  }
+
+  /// "Use the other plan": the kept plan becomes the plan and the one in use
+  /// is kept in its place, so the choice can be undone. The next backup run
+  /// saves it on top of the account's. False when there is nothing to swap.
+  Future<bool> useKeptPlan() async {
+    final kept = keptPlan();
+    if (kept == null) return false;
+    final repo = _ref.read(workoutRepositoryProvider);
+    final current = await repo.loadPlan();
+    final saved = await repo.savePlan(kept);
+    if (saved is Failed<void>) return false;
+    final settings = _ref.read(backupSettingsProvider);
+    final old = current is Success<WorkoutPlan?> ? current.value : null;
+    await settings.setKeptPlan(
+      old == null ? null : jsonEncode(old.toJson()),
+      _ref.read(clockProvider)(),
+    );
+    // An empty fingerprint never matches: the plan is uploaded again.
+    await settings.setPlan(version: settings.planVersion, fingerprint: '');
+    await settings.setPlanConflict(value: false);
+    _ref.invalidate(nextWorkoutControllerProvider);
+    unawaited(Analytics.capture('backup_plan_swapped'));
+    await run();
     return true;
   }
 

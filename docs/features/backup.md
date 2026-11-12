@@ -14,7 +14,8 @@ works as before.
 | PR 3b | Sign-in by code, the Settings card, the email path for gym trainees (behind `training_backup`) | built ("Sign in and the Settings card" below) |
 | PR 4 | Restore on a new phone | built ("Restore" below) |
 | PR 5 | Offer after the 3rd/10th workout, turn off + erase, privacy texts | this PR |
-| PR 6 | Sign-out choices (keep/remove training on the phone), choose the kept plan again in Settings, re-send an ended-membership gym workout as solo | not started |
+| PR 6 | Sign-out choices (keep/remove training on the phone), choose the kept plan again in Settings | this PR |
+| PR 7 | Re-send a gym workout of an ended membership as a solo row; integration demo of offer and erase | not started |
 
 ## Backend (migration 0022)
 All of it follows the spec's sections 2, 3 and 6. Clients call the functions;
@@ -200,3 +201,16 @@ and the whole training comes back" (a demo).
 - **Texts:** `website/privacy.html` (en + ar) has "Backing up your training";
   `website/delete-account.html` and `store/privacy_forms.md` say backup data is
   removed with the account.
+
+## Sign out and the other plan (PR 6)
+- **Sign out:** with backup on, the question says where the training stands.
+  Everything backed up → a third button "Sign out and remove my training from
+  this phone" (`BackupSync.removeTrainingFromPhone`: workouts, level, chosen
+  day, in-progress workout; the plan stays; backup turns off; the account is
+  untouched and a restore brings it back). Something not backed up yet → no
+  remove button, and the note says it stays on the phone. The default is
+  always to keep the training.
+- **The other plan:** the plan that lost a conflict is kept 30 days
+  (`BackupSync.keptPlan`). While it exists the Settings card shows "Use my
+  other plan instead": it swaps the two (so the choice can be undone) and the
+  next backup saves it on top of the account's. Event: `backup_plan_swapped`.

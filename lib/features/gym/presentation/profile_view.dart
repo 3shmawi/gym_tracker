@@ -470,12 +470,25 @@ class _AddEmailSheetState extends State<AddEmailSheet> {
   }
 }
 
+/// What the person chose in the sign-out question.
+enum SignOutAnswer { stay, signOut, signOutAndRemove }
+
 /// "Sign out?" (design board 4, fourth phone). Returns true to sign out. The
 /// safe action (stay) is the green button.
-Future<bool> confirmSignOut(BuildContext context) async {
+Future<bool> confirmSignOut(BuildContext context) async =>
+    await askSignOut(context) == SignOutAnswer.signOut;
+
+/// The sign-out question. With [canRemove] (backup is on and everything is
+/// backed up) a third choice erases the training from this phone; the default
+/// keeps it; [backupOn] makes the note say where the training stands.
+Future<SignOutAnswer> askSignOut(
+  BuildContext context, {
+  bool canRemove = false,
+  bool backupOn = false,
+}) async {
   final l10n = context.l10n;
   final palette = context.palette;
-  final result = await showDialog<bool>(
+  final result = await showDialog<SignOutAnswer>(
     context: context,
     builder: (dialog) => Dialog(
       backgroundColor: palette.surfaceSolid,
@@ -516,23 +529,33 @@ Future<bool> confirmSignOut(BuildContext context) async {
             AppBanner(
               icon: Icons.warning_amber_rounded,
               tone: AppBannerTone.warning,
-              text: l10n.signOutSoloNote,
+              text: backupOn && !canRemove
+                  ? l10n.signOutNotBackedUp
+                  : l10n.signOutSoloNote,
             ),
             AppPrimaryButton(
               key: const Key('sign_out_stay'),
               label: l10n.signOutStay,
-              onPressed: () => Navigator.of(dialog).pop(false),
+              onPressed: () => Navigator.of(dialog).pop(SignOutAnswer.stay),
             ),
             AppDangerButton(
               key: const Key('sign_out_confirm'),
               style: AppDangerStyle.outlined,
               label: l10n.signOutConfirm,
-              onPressed: () => Navigator.of(dialog).pop(true),
+              onPressed: () => Navigator.of(dialog).pop(SignOutAnswer.signOut),
             ),
+            if (canRemove)
+              AppDangerButton(
+                key: const Key('sign_out_remove'),
+                style: AppDangerStyle.outlined,
+                label: l10n.signOutRemove,
+                onPressed: () =>
+                    Navigator.of(dialog).pop(SignOutAnswer.signOutAndRemove),
+              ),
           ],
         ),
       ),
     ),
   );
-  return result ?? false;
+  return result ?? SignOutAnswer.stay;
 }

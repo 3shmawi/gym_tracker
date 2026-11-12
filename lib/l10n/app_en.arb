@@ -1366,5 +1366,8 @@
   "backupTurnOffKeep": "Turn off, keep what is saved",
   "backupTurnOffErase": "Turn off and erase my backup",
   "backupTurnOffCancel": "Cancel",
-  "backupEraseFailed": "Couldn't erase the backup. Check your connection and try again. Backup is still on."
+  "backupEraseFailed": "Couldn't erase the backup. Check your connection and try again. Backup is still on.",
+  "signOutNotBackedUp": "Some of your training is not backed up yet. It stays on this phone.",
+  "signOutRemove": "Sign out and remove my training from this phone",
+  "backupSwapPlan": "Use my other plan instead"
 }

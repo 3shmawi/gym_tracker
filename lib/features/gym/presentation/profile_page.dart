@@ -7,6 +7,8 @@ import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
+import 'package:gym_tracker/features/backup/domain/entities/backup_status.dart';
+import 'package:gym_tracker/features/backup/presentation/backup_sync.dart';
 import 'package:gym_tracker/features/gym/domain/entities/solo_import.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
 import 'package:gym_tracker/features/gym/presentation/profile_view.dart';
@@ -42,11 +44,23 @@ class ProfilePage extends ConsumerWidget {
         Failed(:final failure) => failure,
       },
       onSignOut: () async {
-        if (!await confirmSignOut(context)) return;
+        final backup = ref.read(backupStatusProvider);
+        final backupOn = backup.state != BackupState.off;
+        final answer = await askSignOut(
+          context,
+          backupOn: backupOn,
+          // Only when everything is on the account: nothing is lost.
+          canRemove: backup.state == BackupState.upToDate,
+        );
+        if (answer == SignOutAnswer.stay) return;
         final result = await actions.signOut();
         if (!context.mounted) return;
         switch (result) {
           case Success():
+            if (answer == SignOutAnswer.signOutAndRemove) {
+              await ref.read(backupSyncProvider).removeTrainingFromPhone();
+            }
+            if (!context.mounted) return;
             context.go(AppRoutes.home);
           case Failed(:final failure):
             _say(context, failure);
