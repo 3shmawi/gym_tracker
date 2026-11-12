@@ -9,6 +9,11 @@ import 'package:gym_tracker/core/legal/legal.dart';
 import 'package:gym_tracker/core/media/video_info.dart';
 import 'package:gym_tracker/core/monitoring/monitoring.dart';
 import 'package:gym_tracker/core/notifications/local_notifications.dart';
+import 'package:gym_tracker/features/backup/data/in_memory_backup.dart';
+import 'package:gym_tracker/features/backup/data/prefs_backup_settings.dart';
+import 'package:gym_tracker/features/backup/data/sqlite_backup_queue.dart';
+import 'package:gym_tracker/features/backup/data/supabase_backup_remote.dart';
+import 'package:gym_tracker/features/backup/domain/repositories/backup_repositories.dart';
 import 'package:gym_tracker/features/gym/data/datasources/secret_store.dart';
 import 'package:gym_tracker/features/gym/data/datasources/secure_install_id_store.dart';
 import 'package:gym_tracker/features/gym/data/repositories/in_memory_gym_local_repository.dart';
@@ -59,6 +64,12 @@ abstract final class Dependencies {
   /// The database under [workoutRepository]; null when the preferences are
   /// used (it could not be opened).
   static WorkoutDatabase? workoutDatabase;
+
+  /// Backing up the member's own training (docs/features/backup.md). With no
+  /// database there is nothing to queue.
+  static BackupRemote backupRemote = const UnconfiguredBackupRemote();
+  static BackupQueue backupQueue = const EmptyBackupQueue();
+  static BackupSettings backupSettings = InMemoryBackupSettings();
 
   /// Gym accounts. Until [init] runs, in widget tests and without Supabase
   /// values in the env file, joining fails with "offline" and nobody is
@@ -112,6 +123,11 @@ abstract final class Dependencies {
     );
     workoutRepository = storage.repository;
     workoutDatabase = storage.database;
+    backupSettings = PrefsBackupSettings(prefs);
+    final db = storage.database;
+    backupQueue = db == null
+        ? const EmptyBackupQueue()
+        : SqliteBackupQueue(db.database);
     restAlarm = NotificationRestAlarm(LocalNotifications(), prefs);
     gymLocalRepository = PrefsGymLocalRepository(prefs);
     soloImportStore = PrefsSoloImportStore(prefs);
@@ -131,6 +147,7 @@ abstract final class Dependencies {
       soloImportRepository = SupabaseSoloImportRepository(Backend.client);
       gymPlanRepository = SupabaseGymPlanRepository(Backend.client);
       sessionUploader = SupabaseSessionUploader(Backend.client);
+      backupRemote = SupabaseBackupRemote(Backend.client);
       gymMediaRepository = SupabaseGymMediaRepository(Backend.client);
       pictureCatalog = SupabasePictureCatalogRepository(Backend.client);
     } else {
@@ -139,6 +156,7 @@ abstract final class Dependencies {
       soloImportRepository = const UnconfiguredSoloImportRepository();
       gymPlanRepository = const UnconfiguredGymPlanRepository();
       sessionUploader = const UnconfiguredSessionUploader();
+      backupRemote = const UnconfiguredBackupRemote();
       gymMediaRepository = const UnconfiguredGymMediaRepository();
       pictureCatalog = const UnconfiguredPictureCatalogRepository();
     }

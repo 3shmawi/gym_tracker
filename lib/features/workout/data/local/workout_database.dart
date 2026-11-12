@@ -391,7 +391,7 @@ class SqliteSessionStore implements SessionStore {
     final sessions = <WorkoutSession>[];
     for (final row in rows) {
       try {
-        sessions.add(_fromRow(row));
+        sessions.add(fromRow(row));
       } on Object {
         // A row we cannot read is set aside, not an error screen for ever.
         await _db.insert('quarantine', {
@@ -410,7 +410,8 @@ class SqliteSessionStore implements SessionStore {
     return _cache = List.unmodifiable(sessions);
   }
 
-  static WorkoutSession _fromRow(Map<String, Object?> row) {
+  /// A stored row as a workout (throws when the row cannot be read).
+  static WorkoutSession fromRow(Map<String, Object?> row) {
     final sets = jsonDecode(row['sets']! as String)! as List<Object?>;
     return WorkoutSession(
       dayId: row['day_id']! as String,
