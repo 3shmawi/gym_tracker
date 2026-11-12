@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/router/app_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
@@ -32,7 +33,16 @@ class WorkoutPillCornerController extends Notifier<MiniCorner> {
   void moveTo(MiniCorner corner) => state = corner;
 }
 
-/// The screen the router shows now (its path), for the pill's visibility.
+/// The path of the screen on top of the stack. Not the router's `uri`:
+/// that is only the page the stack started from, so every screen pushed
+/// from home (the workout, Settings, the plan) read as "/".
+String topPathOf(RouteMatchList stack) {
+  if (stack.isEmpty) return stack.uri.path;
+  return Uri.tryParse(stack.last.matchedLocation)?.path ?? stack.uri.path;
+}
+
+/// The screen the router shows now (its path), for the pill's visibility
+/// and the rest alarm.
 final currentPathProvider = NotifierProvider<CurrentPathController, String>(
   CurrentPathController.new,
 );
@@ -42,20 +52,26 @@ class CurrentPathController extends Notifier<String> {
   String build() {
     final delegate = appRouter.routerDelegate;
     void update() {
-      final path = delegate.currentConfiguration.uri.path;
+      final path = topPathOf(delegate.currentConfiguration);
       if (ref.mounted && path != state) state = path;
     }
 
     delegate.addListener(update);
     ref.onDispose(() => delegate.removeListener(update));
-    return delegate.currentConfiguration.uri.path;
+    return topPathOf(delegate.currentConfiguration);
   }
 }
 
-/// Screens without the pill: the workout itself (the pill opens it) and the
-/// screens before the app (welcome, joining a gym).
+/// Screens without the pill: the workout itself (the member is already in
+/// it), the home screen (its own button starts or continues the workout),
+/// the plan editor (its action buttons sit in the same bottom corner, and
+/// the pill covered "Add exercise") and the screens before the app
+/// (welcome, joining a gym).
 bool workoutPillHiddenOn(String path) =>
     path == AppRoutes.workout ||
+    path == AppRoutes.home ||
+    path == AppRoutes.plan ||
+    path.startsWith('${AppRoutes.plan}/') ||
     path == AppRoutes.welcome ||
     path == AppRoutes.join ||
     path.startsWith('${AppRoutes.join}/');
@@ -112,11 +128,11 @@ WorkoutPillData? workoutPillData({
   return PillStart(dayNumber: nextDayNumber, dayName: nextDayName);
 }
 
-/// Floats the workout pill over every screen but the workout's own (design
-/// board 5): start the waiting workout, or go back to the one in progress,
-/// from anywhere. Drag it to any corner; drag it past a side to tuck it
-/// there as a tab. It keeps clear of the video mini player in the same
-/// corner, of the home screen's Start button, and of the keyboard.
+/// Floats the workout pill over every screen but the workout's own and the
+/// home screen (design board 5): start the waiting workout, or go back to
+/// the one in progress, from anywhere else. Drag it to any corner; drag it
+/// past a side to tuck it there as a tab. It keeps clear of the video mini
+/// player in the same corner and of the keyboard.
 class WorkoutPillHost extends ConsumerStatefulWidget {
   const new({required this.child, super.key});
 
@@ -185,7 +201,7 @@ class _WorkoutPillHostState extends ConsumerState<WorkoutPillHost> {
   /// Back to the workout when it is under this screen (the how-to page
   /// opened from it); else opens it on top.
   void _showWorkout() {
-    String path() => appRouter.routerDelegate.currentConfiguration.uri.path;
+    String path() => topPathOf(appRouter.routerDelegate.currentConfiguration);
     final inStack = appRouter.routerDelegate.currentConfiguration.matches.any(
       (m) => m.matchedLocation == AppRoutes.workout,
     );
@@ -228,7 +244,10 @@ class _WorkoutPillHostState extends ConsumerState<WorkoutPillHost> {
         data == null ||
         workoutPillHiddenOn(path) ||
         media.viewInsets.bottom > 0;
-    if (hidden) return widget.child;
+    // The app keeps its place in the tree whether the pill shows or not
+    // (swapping the Stack for the bare child re-parented the whole app
+    // and broke semantics on iOS).
+    if (hidden) return Stack(children: [widget.child]);
 
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final corner = ref.watch(workoutPillCornerProvider);
@@ -243,13 +262,9 @@ class _WorkoutPillHostState extends ConsumerState<WorkoutPillHost> {
               AppDimens.minTouchTarget +
               AppDimens.sm
         : 0.0;
-    // The home screen's Start button spans the bottom edge.
-    final homeRoom = path == AppRoutes.home
-        ? AppDimens.ctaHeight + AppDimens.md + AppDimens.sm
-        : 0.0;
     final margin = AppDimens.md;
     final top = media.padding.top + kToolbarHeight + AppDimens.sm2 + videoRoom;
-    final bottom = media.padding.bottom + AppDimens.sm2 + videoRoom + homeRoom;
+    final bottom = media.padding.bottom + AppDimens.sm2 + videoRoom;
     final l10n = context.l10n;
 
     Widget positioned({required double edge, required Widget child}) =>

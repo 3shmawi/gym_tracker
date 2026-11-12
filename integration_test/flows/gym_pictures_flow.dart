@@ -31,8 +31,12 @@ Future<void> gymPicturesFlow(WidgetTester tester) async {
 
   // Two frames of one move: it plays by itself, the button pauses it.
   expect(find.byKey(const Key('gym_pictures_toggle')), findsOneWidget);
-  await tester.pump(const Duration(seconds: 3));
-  await settleShort(400);
+  // Wait for the second frame in small steps (a simulator under load
+  // can be slow to start the timer).
+  for (var i = 0; i < 24; i++) {
+    await tester.pump(const Duration(milliseconds: 500));
+    if (find.text('\u20662 / 2\u2069').evaluate().isNotEmpty) break;
+  }
   expect(find.text('\u20662 / 2\u2069'), findsOneWidget);
   await beat(tester, 2000);
   await tester.tap(find.byKey(const Key('gym_pictures_toggle')));

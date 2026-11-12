@@ -22,6 +22,7 @@ class NextWorkoutPage extends ConsumerWidget {
     // person back in solo as soon as the app opens.
     if (signedIn) ref.watch(gymControllerProvider);
     final next = ref.watch(nextWorkoutControllerProvider);
+    final active = ref.watch(activeWorkoutControllerProvider).value;
     return NextWorkoutView(
       state: next,
       covers: ref.watch(exerciseCoversProvider),
@@ -39,6 +40,11 @@ class NextWorkoutPage extends ConsumerWidget {
       onOpenPlan: () => unawaited(context.push<void>(AppRoutes.plan)),
       onBuildPlan: () => unawaited(context.push<void>(AppRoutes.plan)),
       onEditDay: (id) => unawaited(context.push<void>(AppRoutes.planDay(id))),
+      // The pill is not on this screen, so its button says what it does.
+      inProgress: active != null,
+      // Resting only while a set is still to do, as the workout screen does.
+      restEndsAt: active?.cursor == null ? null : active?.draft.restEndsAt,
+      now: ref.watch(clockProvider),
       onStart: next.value == null
           ? null
           : () async {
