@@ -62,4 +62,22 @@ void main() {
       expect(lastOwner.isRetryable, isFalse);
     });
   });
+
+  group('AppFailure.from (database rules of the backup)', () {
+    test('the 20,000-workout cap is refused for good, never retried', () {
+      final failure = AppFailure.from(
+        const PostgrestException(message: 'too_many_workouts', code: '54000'),
+      );
+      expect(failure, isA<ValidationFailure>());
+      expect(failure.isRetryable, isFalse);
+    });
+
+    test('other database errors stay retryable server failures', () {
+      final failure = AppFailure.from(
+        const PostgrestException(message: 'boom', code: '57014'),
+      );
+      expect(failure, isA<ServerFailure>());
+      expect(failure.isRetryable, isTrue);
+    });
+  });
 }

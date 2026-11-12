@@ -76,4 +76,9 @@ abstract final class Flags {
   /// workspace. Off: Azm's colours everywhere, even if a colour is saved
   /// (docs/designs/gym_brand_colours.md → Rollout).
   static const gymBrandColours = 'gym_brand_colours';
+
+  /// Backing up a member's training to their account: the offer, the
+  /// Settings card and the "I already have an account" link. Off: nothing of
+  /// it shows (docs/designs/never_lose_history.md §8).
+  static const trainingBackup = 'training_backup';
 }
