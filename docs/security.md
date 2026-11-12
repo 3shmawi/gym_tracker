@@ -330,6 +330,48 @@ gym, an ended member or `anon` (grants are `select` to `authenticated` only).
 `supabase/tests/trainee_dashboard_views.test.sql` proves each of these.
 Anything new that reads these views must stay `security_invoker`.
 
+### Plan templates (migration 0019)
+Docs read 2026-11-10: PostgreSQL 17 "CREATE TABLE" and Supabase "Row Level
+Security". `plan_templates` follows the same rules as the other gym tables:
+RLS on, default grants revoked, column grants (`insert (gym_id, name, body)`,
+`update (name, body)`), every policy `private.i_manage(gym_id)` (permanent
+session; members and `anon` see nothing). The body and name are checked in the
+table (`plan_problem`, `plan_name_ok`), so a hostile client can't store what
+the app would refuse; stamps (`created_by`, `updated_by`, `version`) come from
+a `security definer` trigger with a pinned `search_path` that is not callable
+by clients. `apply_plan_template` is `security definer`, pinned, `execute` for
+`authenticated` only, refuses with the same `forbidden` whatever was wrong
+(no probing of other gyms' ids), and writes the plan only through `save_plan`.
+Templates hold no personal data beyond the plan content and membership ids.
+`supabase/tests/plan_templates_rls.test.sql`.
+
+### Gym settings and logo upload (dashboard D5)
+The dashboard writes `gyms` (`name`, `logo_path`, `history_after_end`) and
+`gym-logos/<gym_id>/logo.png|jpg` through the existing grants and policies
+(migrations 0005, 0008; since 0020 only the owner may write: `private.i_own`,
+active owner on a permanent session). Before any request a logo is
+checked by size (≤ 512 KB) and by its first bytes (PNG/JPEG signatures, so a
+renamed SVG or script is refused), then decoded and redrawn on a canvas so only
+pixels are uploaded (EXIF such as GPS place never leaves the computer). The
+object path is built from the gym id and the checked type, never the file name.
+Previews are canvases, so the CSP keeps `img-src` without `blob:`/`data:`.
+Only the owner sees the forms; a captain gets the page read-only, and the
+server agrees (migration 0020: "owners update their gym" and "owners
+upload / replace / delete their gym logo"). pgTAP:
+`supabase/tests/gym_settings_owner_only.test.sql` (a captain, an owner on an
+anonymous session, an ended owner and another gym's owner write nothing; no
+write policy on `gyms` or `gym-logos` still uses `private.i_manage`).
+
+**Gym brand colour** (migration 0021): `gyms.brand_color` holds one
+`#rrggbb` value or null. The table refuses anything else (`private.brand_color_ok`:
+the exact format in lower case, and channels at least 40 apart), so no markup,
+script or oversized text can be stored there. Only the owner writes it (the
+same policy and a column grant); members read it; `anon` nothing. The app
+does not trust the stored value either: it parses it again and makes its own
+colours with a guaranteed contrast, so a bad value can only mean Azm's
+colours (`docs/designs/gym_brand_colours.md`). pgTAP:
+`supabase/tests/gym_brand_color.test.sql`.
+
 ### Captain dashboard (`dashboard/`, azmm-dash.pages.dev)
 Docs read 2026-11-04: Supabase email OTP
 (https://supabase.com/docs/guides/auth/auth-email-passwordless), Cloudflare
@@ -348,6 +390,15 @@ Pages headers and Git integration. Feature doc:
   (Cloudflare's Turnstile CSP guidance, read 2026-11-04); nothing else
   changes. The site key is publishable; the Turnstile secret lives only in
   Supabase → Authentication → Attack Protection.
+  With `VITE_CLOUDINARY_CLOUD_NAME` set (D2, exercise pictures), the build
+  adds **one path prefix** to `img-src`:
+  `https://res.cloudinary.com/<cloud>/image/upload/` (never the whole host,
+  never `connect-src`). Picture URLs are built only from a library
+  `public_id` and fixed transformations (`src/exercises/pictures.ts`), images
+  load with `referrerpolicy="no-referrer"`, and the dashboard makes **no**
+  request to YouTube: a gym video is stored as its 11-character id, and
+  "Open on YouTube" is a plain link (`rel="noopener noreferrer"`) that only
+  the captain's click follows. `scripts/check_dist.mjs` checks `img-src`.
   Also: `Strict-Transport-Security: max-age=31536000; includeSubDomains`,
   `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
   `Referrer-Policy: no-referrer`, `Cross-Origin-Opener-Policy: same-origin`,

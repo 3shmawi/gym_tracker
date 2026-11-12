@@ -20,7 +20,10 @@
 | Tables, helpers, RLS: gyms, people, memberships, `leave_gym` | `supabase/migrations/0005_gym_accounts.sql` |
 | Invites, attempts, pepper, `create_invite`, `revoke_invite`, `admin_create_invites`, `redeem_invite_core` | `supabase/migrations/0006_gym_invites.sql` |
 | Plans and `save_plan` (server-side `PlanLimits`) | `supabase/migrations/0007_gym_plans.sql` |
+| The 5-day template's real days 4 and 5: stored plans whose days 4/5 are still untouched copies of days 1/2 get them (`private.template_days_upgrade`, one-off update, version + 1) | `supabase/migrations/0018_template_days_4_5.sql`, `supabase/tests/template_days_4_5.test.sql` |
 | `gym-logos` Storage bucket and its policies | `supabase/migrations/0008_gym_logos_storage.sql` |
+| Gym settings (`gyms` update) and logo writes are owner-only (`private.i_own`) | `supabase/migrations/0020_gym_settings_owner_only.sql`, `supabase/tests/gym_settings_owner_only.test.sql` |
+| Gym brand colour: `gyms.brand_color` (`#rrggbb`, lower case, not black / white / grey; null = Azm colours), owner writes, members read, and the join answer carries it | `supabase/migrations/0021_gym_brand_color.sql`, pgTAP `supabase/tests/gym_brand_color.test.sql` (62), spec [`../designs/gym_brand_colours.md`](../designs/gym_brand_colours.md) |
 | pgTAP, one file per table (+ redeem and storage) | `supabase/tests/*_rls.test.sql`, `redeem_invite.test.sql`, `gym_logos_storage.test.sql` |
 | Edge Function | `supabase/functions/redeem_invite/` (`index.ts` wiring, `handler.ts` HTTP layer, `validate.ts` input checks, Deno tests next to them) |
 | Invite tool | `scripts/make_invites/` (`run.sh`, `make_invites.py`, tests, hash-pinned `requirements.txt`) |
@@ -41,7 +44,13 @@
 - `invite_attempts` — throttle and audit rows (hashed address). No policies:
   nobody reads it through the API. Purged after 30 days.
 - `plans` — one per membership: `body` (the on-device `WorkoutPlan` JSON),
-  `version`, `updated_by` (a membership id).
+  `version`, `updated_by` (a membership id); since 0019 also `template_id`,
+  `template_version` (nullable, set only by `apply_plan_template`; the app
+  doesn't read them).
+- `plan_templates` (0019) — a gym's plan templates: `name` `{ar, en}`, `body`
+  (checked by `private.plan_problem`), `version` (grows with the body),
+  `created_by` / `updated_by` (memberships, set by the trigger); ≤ 50 per gym.
+  Only the gym's managers (permanent session) read and write.
 
 ## Who can do what
 | | anon | trainee | captain of **another** gym | captain / owner |
@@ -64,7 +73,8 @@
 | `create_invite(membership_id, kind)` | manager (permanent session) | returns `{invite_id, code, expires_at}`; **the code is shown once**; unused older invites of that member are revoked |
 | `revoke_invite(invite_id)` | manager | sets `revoked_at` |
 | `leave_gym(membership_id)` | the member | ends their own membership |
-| `save_plan(membership_id, base_version, body)` | member (with flags) or manager | validates `PlanLimits`; errors `forbidden` (42501), `invalid_plan: <why>` (22023), `plan_changed` (P0001) |
+| `save_plan(membership_id, base_version, body)` | member (with flags) or manager | validates `PlanLimits`; errors `forbidden` (42501), `invalid_plan: <why>` (22023), `plan_changed` (P0001). The base version is checked for trainees only; a manager's save always wins |
+| `apply_plan_template(membership_id, template_id, base_version)` (0019) | owner (anyone), captain (trainees) | checks the template is the member's gym's and `base_version` equals the stored version (0 = no plan) — else `forbidden` / `plan_changed` — then calls `save_plan` with the template body and sets `template_id` / `template_version` |
 | `admin_create_invites(gym, count, names, flags…)` | **secret key only** | N pending trainee memberships + N invites in one transaction |
 | `redeem_invite_core(auth_user, code, install_id, ip)` | **secret key only** (the Edge Function) | the single transaction behind `redeem_invite` |
 | `purge_invite_attempts()` | secret key only | deletes attempts older than 30 days |
@@ -174,6 +184,17 @@ Tests: `supabase/tests/workout_sessions_rls`, `personal_plans_rls`,
 `import_solo_data` (hostile chunks, retry, resume, atomicity, cap),
 `demo_invites`, `account_deletion` (161 assertions); Deno `delete-account`
 (12); Python `--demo` (4).
+
+## Plan templates (migration 0019, dashboard D4)
+Design: [`../designs/plan_templates.md`](../designs/plan_templates.md).
+Backward compatible: a new table, two nullable columns on `plans`, one new
+RPC; `save_plan` and the plan JSON are unchanged. pgTAP:
+`supabase/tests/plan_templates_rls.test.sql` (56 checks: every role, body and
+name rules, hostile input, stamps and versions, the RPC, delete keeps plans,
+the 51st template). Checked on 2026-11-10 against a local PostgreSQL 16 with
+stand-ins for Supabase's `auth`, `vault`, `storage`, `cron` schemas and the
+pgTAP functions used (all 21 pgTAP files pass there, 56/56 for this one); the
+real check is CI's `supabase test db`.
 
 ## Not done in this step (see the decision doc)
 - The app screens, the dashboard.

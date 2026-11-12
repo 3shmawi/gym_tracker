@@ -78,6 +78,24 @@
       "substituteNote": "The picture shows a barbell curl (forearms work, but it is an elbow curl)."
     },
     {
+      "exercise": "cable_bar_curl",
+      "file": "assets/exercises/cable_bar_curl.webp",
+      "thumb": "assets/exercises/cable_bar_curl_thumb.webp",
+      "title": "Standing Biceps Curl with Cable",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0212/0212-tension.png",
+      "sourceFile": "src/exercises/0212/0212-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-10",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Standing Biceps Curl with Cable\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
+    },
+    {
       "exercise": "cable_kickback",
       "file": "assets/exercises/cable_kickback.webp",
       "thumb": "assets/exercises/cable_kickback_thumb.webp",
@@ -134,6 +152,24 @@
       "attribution": "\"Front Dumbbell Raise\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
     },
     {
+      "exercise": "db_lateral_raise",
+      "file": "assets/exercises/db_lateral_raise.webp",
+      "thumb": "assets/exercises/db_lateral_raise_thumb.webp",
+      "title": "Lateral Dumbbell Raises",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0018/0018-tension.png",
+      "sourceFile": "src/exercises/0018/0018-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-10",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Lateral Dumbbell Raises\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
+    },
+    {
       "exercise": "db_lunge",
       "file": "assets/exercises/db_lunge.webp",
       "thumb": "assets/exercises/db_lunge_thumb.webp",
@@ -150,6 +186,24 @@
       "modified": true,
       "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
       "attribution": "\"Lunges: Dumbbell\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
+    },
+    {
+      "exercise": "db_overhead_extension",
+      "file": "assets/exercises/db_overhead_extension.webp",
+      "thumb": "assets/exercises/db_overhead_extension_thumb.webp",
+      "title": "Triceps Extension: Dumbbell (Seated, Two Arm)",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0192/0192-tension.png",
+      "sourceFile": "src/exercises/0192/0192-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-10",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Triceps Extension: Dumbbell (Seated, Two Arm)\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
     },
     {
       "exercise": "db_shoulder_press",
@@ -188,6 +242,26 @@
       "attribution": "\"Shoulder Shrugs: Dumbbell\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
     },
     {
+      "exercise": "face_pull",
+      "file": "assets/exercises/face_pull.webp",
+      "thumb": "assets/exercises/face_pull_thumb.webp",
+      "title": "Bent-over Lateral Cable Raises",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0017/0017-tension.png",
+      "sourceFile": "src/exercises/0017/0017-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-10",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Bent-over Lateral Cable Raises\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized.",
+      "substitute": true,
+      "substituteNote": "A rear-shoulder raise on cables; no free drawing of a face pull exists."
+    },
+    {
       "exercise": "flat_db_press",
       "file": "assets/exercises/flat_db_press.webp",
       "thumb": "assets/exercises/flat_db_press_thumb.webp",
@@ -204,6 +278,44 @@
       "modified": true,
       "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
       "attribution": "\"Bench Press: Dumbbell\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
+    },
+    {
+      "exercise": "flat_machine_press",
+      "file": "assets/exercises/flat_machine_press.webp",
+      "thumb": "assets/exercises/flat_machine_press_thumb.webp",
+      "title": "Bench Press: Machine",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0066/0066-tension.png",
+      "sourceFile": "src/exercises/0066/0066-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-10",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Bench Press: Machine\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
+    },
+    {
+      "exercise": "hammer_close_grip_row",
+      "file": "assets/exercises/hammer_close_grip_row.webp",
+      "thumb": "assets/exercises/hammer_close_grip_row_thumb.webp",
+      "title": "Seated Cable Rows",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0025/0025-tension.png",
+      "sourceFile": "src/exercises/0025/0025-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-10",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Seated Cable Rows\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized.",
+      "substitute": true,
+      "substituteNote": "The same close-grip row, seated at a cable station instead of a plate-loaded machine."
     },
     {
       "exercise": "hammer_curl",
@@ -224,6 +336,42 @@
       "attribution": "\"Biceps Curl: Dumbbell (Hammer)\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
     },
     {
+      "exercise": "high_cable_crossover",
+      "file": "assets/exercises/high_cable_crossover.webp",
+      "thumb": "assets/exercises/high_cable_crossover_thumb.webp",
+      "title": "Cable Crossover",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0048/0048-tension.png",
+      "sourceFile": "src/exercises/0048/0048-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-10",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Cable Crossover\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
+    },
+    {
+      "exercise": "incline_barbell_press",
+      "file": "assets/exercises/incline_barbell_press.webp",
+      "thumb": "assets/exercises/incline_barbell_press_thumb.webp",
+      "title": "Bench Press: Barbell (Incline)",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0043/0043-tension.png",
+      "sourceFile": "src/exercises/0043/0043-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-10",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Bench Press: Barbell (Incline)\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
+    },
+    {
       "exercise": "incline_machine_press",
       "file": "assets/exercises/incline_machine_press.webp",
       "thumb": "assets/exercises/incline_machine_press_thumb.webp",
@@ -240,6 +388,24 @@
       "modified": true,
       "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
       "attribution": "\"Incline Chest Press\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
+    },
+    {
+      "exercise": "lat_pulldown_machine",
+      "file": "assets/exercises/lat_pulldown_machine.webp",
+      "thumb": "assets/exercises/lat_pulldown_machine_thumb.webp",
+      "title": "Pull Down: V Bar",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0096/0096-tension.png",
+      "sourceFile": "src/exercises/0096/0096-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-10",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Pull Down: V Bar\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
     },
     {
       "exercise": "leg_curl",
@@ -314,6 +480,26 @@
       "attribution": "\"Standing Calf Raises using Machine\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
     },
     {
+      "exercise": "machine_shoulder_press",
+      "file": "assets/exercises/machine_shoulder_press.webp",
+      "thumb": "assets/exercises/machine_shoulder_press_thumb.webp",
+      "title": "Seated Military Press",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0004/0004-tension.png",
+      "sourceFile": "src/exercises/0004/0004-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-10",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Seated Military Press\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized.",
+      "substitute": true,
+      "substituteNote": "The same seated overhead press, with a barbell instead of a machine."
+    },
+    {
       "exercise": "pec_deck",
       "file": "assets/exercises/pec_deck.webp",
       "thumb": "assets/exercises/pec_deck_thumb.webp",
@@ -330,6 +516,24 @@
       "modified": true,
       "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour. Published here under CC BY-SA 4.0 (a later version, allowed by section 4(b) of CC BY-SA 3.0).",
       "attribution": "\"Butterfly (machine)\" by Everkinetic, https://wger.de, CC BY-SA 3.0. Changed: made transparent, resized; the adapted image is shared under CC BY-SA 4.0."
+    },
+    {
+      "exercise": "preacher_curl",
+      "file": "assets/exercises/preacher_curl.webp",
+      "thumb": "assets/exercises/preacher_curl_thumb.webp",
+      "title": "Preacher Curl: Machine",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0236/0236-tension.png",
+      "sourceFile": "src/exercises/0236/0236-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-10",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Preacher Curl: Machine\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
     },
     {
       "exercise": "reverse_pec_deck",
@@ -390,6 +594,24 @@
       "attribution": "\"Triceps Pushdown: Cable (Rope)\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
     },
     {
+      "exercise": "smith_shrug",
+      "file": "assets/exercises/smith_shrug.webp",
+      "thumb": "assets/exercises/smith_shrug_thumb.webp",
+      "title": "Shoulder Shrugs: Smith Machine",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0041/0041-tension.png",
+      "sourceFile": "src/exercises/0041/0041-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-10",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Shoulder Shrugs: Smith Machine\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
+    },
+    {
       "exercise": "straight_arm_pulldown",
       "file": "assets/exercises/straight_arm_pulldown.webp",
       "thumb": "assets/exercises/straight_arm_pulldown_thumb.webp",
@@ -424,6 +646,24 @@
       "modified": true,
       "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
       "attribution": "\"Wide Grip Lat Pull Down\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
+    },
+    {
+      "exercise": "wide_t_bar_row",
+      "file": "assets/exercises/wide_t_bar_row.webp",
+      "thumb": "assets/exercises/wide_t_bar_row_thumb.webp",
+      "title": "T-Bar Rows",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0029/0029-tension.png",
+      "sourceFile": "src/exercises/0029/0029-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-10",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"T-Bar Rows\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
     }
   ]
 }

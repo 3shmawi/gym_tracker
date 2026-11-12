@@ -73,6 +73,6 @@ Future<void> buildPlanFlow(WidgetTester tester) async {
   expect(find.text('Bench Press'), findsOneWidget);
 
   // Start it.
-  await tapAndSettle(find.text('Start workout'), 1500);
+  await tapAndSettle(find.byKey(const Key('home_start_button')), 1500);
   expect(find.text('Set 1 of 4'), findsOneWidget);
 }

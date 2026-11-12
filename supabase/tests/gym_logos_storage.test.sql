@@ -39,7 +39,7 @@ insert into public.memberships (id, gym_id, person_id, display_name, role, statu
 insert into public.memberships (id, gym_id, display_name, role, status) values
   ('e0000000-0000-4000-8000-000000000007', 'd0000000-0000-4000-8000-00000000000a', 'Pending Trainee', 'trainee', 'pending');
 
-select plan(16);
+select plan(20);
 
 
 select is((select public from storage.buckets where id = 'gym-logos'), false, 'the gym-logos bucket is private');
@@ -61,7 +61,7 @@ set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000003","r
 
 select results_eq($$ select name from storage.objects where bucket_id = 'gym-logos' $$, $$ values ('d0000000-0000-4000-8000-00000000000a/logo.png') $$, 'a trainee reads only their own gym''s logo');
 select throws_ok($$ insert into storage.objects (bucket_id, name) values ('gym-logos', 'd0000000-0000-4000-8000-00000000000a/logo.jpg') $$, '42501', null, 'a trainee cannot upload a logo');
-select ok((select qual like '%i_manage%' and roles = '{authenticated}' from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'managers delete their gym logo'), 'deleting a logo (through the Storage API, which blocks direct SQL deletes) needs a manager of that gym');
+select ok((select qual like '%i_own%' and roles = '{authenticated}' from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'owners delete their gym logo'), 'deleting a logo (through the Storage API, which blocks direct SQL deletes) needs the owner of that gym');
 reset role;
 reset request.jwt.claims;
 
@@ -70,7 +70,7 @@ set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000005","r
 
 select results_eq($$ select name from storage.objects where bucket_id = 'gym-logos' $$, $$ values ('d0000000-0000-4000-8000-00000000000b/logo.png') $$, 'a captain of gym B reads only gym B''s logo');
 select throws_ok($$ insert into storage.objects (bucket_id, name) values ('gym-logos', 'd0000000-0000-4000-8000-00000000000a/logo.jpg') $$, '42501', null, 'a captain of another gym cannot upload to gym A''s folder');
-select lives_ok($$ insert into storage.objects (bucket_id, name) values ('gym-logos', 'd0000000-0000-4000-8000-00000000000b/logo.jpg') $$, 'a captain uploads to their own gym''s folder');
+select throws_ok($$ insert into storage.objects (bucket_id, name) values ('gym-logos', 'd0000000-0000-4000-8000-00000000000b/logo.jpg') $$, '42501', null, 'a captain cannot upload to their own gym''s folder (owner only, 0020)');
 select throws_ok($$ insert into storage.objects (bucket_id, name) values ('gym-logos', 'd0000000-0000-4000-8000-00000000000b/evil.php') $$, '42501', null, 'only logo.png / logo.jpg / logo.jpeg are accepted names');
 select throws_ok($$ insert into storage.objects (bucket_id, name) values ('gym-logos', 'd0000000-0000-4000-8000-00000000000b/../d0000000-0000-4000-8000-00000000000a/logo.png') $$, '42501', null, 'path tricks are refused');
 select throws_ok($$ insert into storage.objects (bucket_id, name) values ('gym-logos', 'logo.png') $$, '42501', null, 'a file outside a gym folder is refused');
@@ -87,7 +87,17 @@ reset request.jwt.claims;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated","is_anonymous":false}';
 
-select lives_ok($$ insert into storage.objects (bucket_id, name) values ('gym-logos', 'd0000000-0000-4000-8000-00000000000a/logo.jpg') $$, 'the captain of gym A uploads a logo');
+select throws_ok($$ insert into storage.objects (bucket_id, name) values ('gym-logos', 'd0000000-0000-4000-8000-00000000000a/logo.jpg') $$, '42501', null, 'the captain of gym A cannot upload a logo');
+select results_eq($$ with c as (update storage.objects set name = name where bucket_id = 'gym-logos' and name = 'd0000000-0000-4000-8000-00000000000a/logo.png' returning 1) select count(*)::int from c $$, $$ values (0) $$, 'the captain of gym A cannot replace the logo');
+reset role;
+reset request.jwt.claims;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated","is_anonymous":false}';
+
+select lives_ok($$ insert into storage.objects (bucket_id, name) values ('gym-logos', 'd0000000-0000-4000-8000-00000000000a/logo.jpg') $$, 'the owner of gym A uploads a logo');
+select results_eq($$ with c as (update storage.objects set name = name where bucket_id = 'gym-logos' and name = 'd0000000-0000-4000-8000-00000000000a/logo.png' returning 1) select count(*)::int from c $$, $$ values (1) $$, 'the owner of gym A replaces the logo (upsert)');
+select throws_ok($$ insert into storage.objects (bucket_id, name) values ('gym-logos', 'd0000000-0000-4000-8000-00000000000b/logo.jpeg') $$, '42501', null, 'the owner of gym A cannot upload to gym B''s folder');
 reset role;
 reset request.jwt.claims;
 

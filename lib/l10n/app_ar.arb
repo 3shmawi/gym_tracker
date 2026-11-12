@@ -448,5 +448,22 @@
   "legalTerms": "شروط الاستخدام",
   "legalYouTubeTerms": "شروط خدمة YouTube",
   "legalGooglePrivacy": "سياسة خصوصية Google",
-  "consentByContinuing": "لما تكمل تبقى موافق على شروط الاستخدام وسياسة الخصوصية وشروط خدمة YouTube."
+  "consentByContinuing": "لما تكمل تبقى موافق على شروط الاستخدام وسياسة الخصوصية وشروط خدمة YouTube.",
+  "workoutHowTo": "طريقة الأداء",
+  "workoutHowToLabel": "طريقة أداء {name}",
+  "workoutExerciseOf": "التمرين {number} من {total}",
+  "pillStart": "ابدأ التمرين",
+  "pillResume": "كمّل التمرين",
+  "pillRest": "راحة",
+  "pillRestOver": "يلا!",
+  "pillDay": "اليوم {day} · {name}",
+  "pillNextSet": "الجاية: مجموعة {set}",
+  "pillStartLabel": "ابدأ التمرين: اليوم {day}، {name}",
+  "pillResumeLabel": "كمّل التمرين: {name}، خلّصت {done} من {total} تمارين",
+  "pillRestLabel": "راحة، فاضل {time}. بيفتح التمرين.",
+  "pillRestOverLabel": "الراحة خلصت: مجموعة {set}. بيفتح التمرين.",
+  "pillTabLabel": "اظهر زرار التمرين",
+  "pillMoveHint": "اسحبه عشان تنقله لركن تاني",
+  "pillHide": "خبّي زرار التمرين على الطرف",
+  "settingsAppearance": "الشكل"
 }

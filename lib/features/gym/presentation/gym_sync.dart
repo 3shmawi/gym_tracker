@@ -107,6 +107,21 @@ final activeGymMediaProvider = FutureProvider<GymMedia>((ref) async {
   ).read(membership.gym.id);
 });
 
+/// Each exercise's cover: the first picture the gym (or the solo member)
+/// chose, as a thumbnail. Exercises without one are not in the map (their
+/// bundled drawing shows).
+final exerciseCoversProvider = Provider<Map<String, ImageProvider>>((ref) {
+  final media = ref.watch(activeGymMediaProvider).value;
+  if (media == null || media.isEmpty) return const {};
+  final toImage = ref.watch(gymPictureImageProvider);
+  final ids = {for (final p in media.allPictures) p.exerciseId};
+  return {
+    for (final id in ids)
+      if (media.picturesFor(id).firstOrNull case final first?)
+        id: ?toImage(first.publicId, PictureSize.thumb),
+  };
+});
+
 /// The membership of the active gym workspace, or null when training solo.
 /// Only changes when the membership itself does (not on every refresh).
 final activeMembershipProvider = Provider<Membership?>((ref) {

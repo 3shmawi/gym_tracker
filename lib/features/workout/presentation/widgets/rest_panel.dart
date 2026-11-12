@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:gym_tracker/core/theme/app_colors.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
@@ -104,7 +103,7 @@ class _RestPanelState extends State<RestPanel> {
           child: LinearProgressIndicator(
             value: (left / total).clamp(0, 1).toDouble(),
             minHeight: 6,
-            color: AppColors.primary,
+            color: palette.brand,
             backgroundColor: palette.fillSubtle,
           ),
         ),

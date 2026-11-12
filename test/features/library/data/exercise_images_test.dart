@@ -118,6 +118,9 @@ void main() {
         'cable_kickback',
         'reverse_wrist_curl',
         'barbell_wrist_curl',
+        'hammer_close_grip_row',
+        'machine_shoulder_press',
+        'face_pull',
       });
       for (final i in manifest.images) {
         expect(i.substituteNote.isNotEmpty, i.substitute, reason: i.exercise);

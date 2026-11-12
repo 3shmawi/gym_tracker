@@ -6,6 +6,9 @@ import { test as base, expect, type Page, type Route } from '@playwright/test';
 // test can never reach a real project or a third party.
 
 export const SUPABASE = 'https://abcdefghijklmnopqrst.supabase.co';
+/** The picture CDN the e2e build points at (playwright.config.ts). */
+export const CLOUDINARY = 'https://res.cloudinary.com';
+export const CLOUD_PATH = '/azm-e2e/image/upload/';
 export const USER_ID = '11111111-1111-4111-8111-111111111111';
 export const PERSON_ID = '22222222-2222-4222-8222-222222222222';
 export const GYM_A = { id: '33333333-3333-4333-8333-333333333333', name: 'Power Gym' };
@@ -42,6 +45,84 @@ export interface FakeInvite {
   expires_at: string;
   used_at: string | null;
   revoked_at: string | null;
+}
+
+export interface FakePictureRow {
+  gym_id: string;
+  exercise_id: string;
+  public_id: string;
+  position: number;
+}
+
+export interface FakeVideoRow {
+  gym_id: string;
+  exercise_id: string;
+  video_id: string;
+  start_seconds: number | null;
+  end_seconds: number | null;
+}
+
+export interface FakeCatalogRow {
+  public_id: string;
+  exercise_key: string;
+  frame: 'tension' | 'relaxation';
+  title_en: string;
+  keywords: string[];
+}
+
+/** A small slice of the picture library (exercise_images, 0013). */
+export const CATALOG: FakeCatalogRow[] = [
+  ['ek-0055', 'Dumbbell Bench Press', ['dumbbell', 'bench', 'press', 'chest', 'صدر', 'دمبل']],
+  ['ek-0056', 'Incline Dumbbell Press', ['incline', 'dumbbell', 'press', 'chest', 'صدر', 'دمبل']],
+  ['ek-0101', 'Barbell Squat', ['barbell', 'squat', 'legs', 'رجل', 'اسكوات']],
+  ['ek-0102', 'Leg Press', ['leg', 'press', 'machine', 'legs', 'رجل']],
+].flatMap(([key, title, words]) =>
+  (['tension', 'relaxation'] as const).map((frame) => ({ public_id: `exercises/${key as string}-${frame}`, exercise_key: key as string, frame, title_en: title as string, keywords: words as string[] })),
+);
+
+export interface FakePlan {
+  body: unknown;
+  version: number;
+  updated_by: string | null;
+  updated_at: string;
+  /** D4 (migration 0019): which template the plan came from. */
+  template_id?: string | null;
+  template_version?: number | null;
+}
+
+export interface FakeTemplate {
+  id: string;
+  gym_id: string;
+  name: { ar: string; en: string };
+  body: unknown;
+  version: number;
+  updated_at: string;
+}
+
+/** A small plan in the app's JSON (two days, a superset, a plate exercise). */
+export function samplePlan(): { days: unknown[] } {
+  const ex = (id: string, en: string, ar: string, over: Record<string, unknown> = {}) => ({ id, name: { ar, en }, sets: 3, reps: 12, rest: 90, step: 2.5, superset: false, ...over });
+  return {
+    days: [
+      { id: 'day-1', name: { ar: 'صدر وضهر', en: 'Chest & Back' }, exercises: [ex('flat_db_press', 'Flat Dumbbell Press', 'دفع دمبل مستوي'), ex('pec_deck', 'Pec Deck', 'فراشة', { superset: true }), ex('abs', 'Abs', 'بطن', { reps: 15, step: 5 })] },
+      { id: 'day-2', name: { ar: 'رجل', en: 'Legs' }, exercises: [ex('leg_press', 'Leg Press', 'دفع جهاز', { unit: 'plate', step: 5 })] },
+    ],
+  };
+}
+
+export interface FakeProgress {
+  summary?: Record<string, unknown>;
+  weeks?: Record<string, unknown>[];
+  sessions?: Record<string, unknown>[];
+  points?: Record<string, unknown>[];
+}
+
+export interface FakeUpload {
+  path: string;
+  contentType: string;
+  size: number;
+  /** The first bytes, to check what was really sent. */
+  head: number[];
 }
 
 /** Member ids of the seed data (gym A), for tests. */
@@ -99,7 +180,7 @@ export function seedMembers(gymId: string = GYM_A.id, now = Date.now()): { membe
 
 export interface MockOptions {
   /** Gyms the person manages, with role. Default: both gyms. */
-  gyms?: { id: string; name: string; role: 'owner' | 'captain'; logo?: boolean; historyAfterEnd?: 'readable' | 'locked' }[];
+  gyms?: { id: string; name: string; role: 'owner' | 'captain'; logo?: boolean; historyAfterEnd?: 'readable' | 'locked'; brandColor?: string | null }[];
   /** Members and invites of the gyms (default: gym A's seed). */
   members?: FakeMember[];
   invites?: FakeInvite[];
@@ -121,6 +202,31 @@ export interface MockOptions {
   wrongCode?: 'otp_expired' | 'invalid';
   /** Make REST calls fail with 500 (until `recover()` is called). */
   restFails?: boolean;
+  /** The gyms' exercise pictures and videos (D2). Default: none. */
+  pictures?: FakePictureRow[];
+  videos?: FakeVideoRow[];
+  /** Extra rows of the picture library, e.g. hostile ones. */
+  catalogExtra?: Record<string, unknown>[];
+  /** What set_gym_exercise_images answers. */
+  savePictures?: 'ok' | 'forbidden' | 'too_many_pictures_in_gym';
+  /** What writes to gym_exercise_videos answer. */
+  saveVideo?: 'ok' | 'forbidden';
+  /** Make the media reads fail with 500. */
+  mediaFails?: boolean;
+  /** D3: members' plans by membership id. */
+  plans?: Record<string, FakePlan>;
+  /** What save_plan answers (ok = the real rules of the fake). */
+  savePlan?: 'ok' | 'forbidden' | 'invalid' | 'server_error';
+  /** Make the plan reads fail with 500. */
+  plansFail?: boolean;
+  /** D4: the gyms' plan templates. */
+  templates?: FakeTemplate[];
+  /** D5: rows of the four progress views, per membership id. */
+  progress?: Record<string, FakeProgress>;
+  /** D5: make the progress views fail with 500. */
+  progressFails?: boolean;
+  /** Answer as before migration 0019 (no plan_templates table, no template columns). */
+  noTemplates?: boolean;
 }
 
 export interface Mock {
@@ -143,8 +249,20 @@ export interface Mock {
   readonly invites: FakeInvite[];
   /** Codes handed out by create_invite, in order. */
   readonly codes: string[];
+  /** D2: the live media tables, and every picture URL the page asked the CDN for. */
+  readonly pictures: FakePictureRow[];
+  readonly videos: FakeVideoRow[];
+  readonly cdn: string[];
+  /** D3: the live plans table (membership id → row). */
+  readonly plans: Record<string, FakePlan>;
+  /** D4: the live plan_templates table. */
+  readonly templates: FakeTemplate[];
+  /** D5: the gyms as the server holds them now, uploads and removals in gym-logos. */
+  readonly gymRows: Record<string, { name: string; logo_path: string | null; history_after_end: string; brand_color: string | null }>;
+  readonly uploads: FakeUpload[];
+  readonly removed: string[];
   /** Changes failure options in the middle of a test. */
-  set(change: Pick<MockOptions, 'failInsertAt' | 'createInvite' | 'patch' | 'logoFile'>): void;
+  set(change: Pick<MockOptions, 'failInsertAt' | 'createInvite' | 'patch' | 'logoFile' | 'savePictures' | 'saveVideo' | 'mediaFails' | 'savePlan' | 'plansFail' | 'progressFails'>): void;
   recover(): void;
 }
 
@@ -188,7 +306,15 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
     createInvite: options.createInvite ?? 'ok',
     patch: options.patch ?? 'ok',
     logoFile: options.logoFile ?? 'png',
+    savePictures: options.savePictures ?? 'ok',
+    saveVideo: options.saveVideo ?? 'ok',
+    mediaFails: options.mediaFails ?? false,
+    savePlan: options.savePlan ?? 'ok',
+    plansFail: options.plansFail ?? false,
+    progressFails: options.progressFails ?? false,
   };
+  const uploaded = new Map<string, Buffer>();
+  const catalog: Record<string, unknown>[] = [...CATALOG.map((r) => ({ ...r })), ...(options.catalogExtra ?? [])];
   const seed = seedMembers();
   const mock: Mock = {
     otpRequests: [],
@@ -202,6 +328,14 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
     members: options.members ?? seed.members,
     invites: options.invites ?? seed.invites,
     codes: [],
+    pictures: options.pictures ?? [],
+    videos: options.videos ?? [],
+    cdn: [],
+    plans: options.plans ?? {},
+    templates: options.templates ?? [],
+    gymRows: Object.fromEntries(gyms.map((g) => [g.id, { name: g.name, logo_path: g.logo ? `${g.id}/logo.png` : null, history_after_end: g.historyAfterEnd ?? 'readable', brand_color: g.brandColor ?? null }])),
+    uploads: [],
+    removed: [],
     set: (change) => {
       Object.assign(behaviour, change);
     },
@@ -229,6 +363,11 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
   await page.route('**/*', async (route) => {
     const url = new URL(route.request().url());
     if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') return route.continue();
+    if (url.origin === CLOUDINARY && route.request().method() === 'GET') {
+      mock.cdn.push(url.pathname + url.search);
+      if (!url.pathname.startsWith(CLOUD_PATH)) return route.fulfill({ status: 404, body: '' });
+      return route.fulfill({ status: 200, contentType: 'image/png', body: LOGO_PNG });
+    }
     if (url.origin !== SUPABASE) return route.abort('blockedbyclient');
     const method = route.request().method();
     if (method === 'OPTIONS') {
@@ -290,7 +429,7 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
           200,
           gyms.map((g) => ({
             role: g.role,
-            gym: { id: g.id, name: g.name, logo_path: g.logo ? `${g.id}/logo.png` : null, history_after_end: g.historyAfterEnd ?? 'readable' },
+            gym: { id: g.id, ...mock.gymRows[g.id] },
           })),
         );
       }
@@ -366,6 +505,242 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
       const invite = mock.invites.find((i) => i.id === record.p_invite_id);
       if (invite) invite.revoked_at = new Date().toISOString();
       return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
+    }
+    // ---- D4: plan templates (0019) ----
+    if (path === '/rest/v1/plan_templates') {
+      if (options.noTemplates) return error(route, 404, 'PGRST205', "Could not find the table 'public.plan_templates' in the schema cache");
+      const isManager = (gymId: string) => gyms.some((g) => g.id === gymId);
+      const id = wanted(url, 'id');
+      if (method === 'GET') {
+        const gymId = wanted(url, 'gym_id');
+        return json(route, 200, mock.templates.filter((t) => t.gym_id === gymId && isManager(gymId)).map((t) => ({ id: t.id, name: t.name, body: t.body, version: t.version, updated_at: t.updated_at })));
+      }
+      if (method === 'POST') {
+        if (!isManager(String(record.gym_id))) return error(route, 403, '42501', 'new row violates row-level security policy');
+        if (Object.keys(record).some((k) => !['gym_id', 'name', 'body'].includes(k))) return error(route, 403, '42501', 'permission denied for table plan_templates');
+        if (mock.templates.filter((t) => t.gym_id === record.gym_id).length >= 50) return error(route, 400, '23514', 'too_many_templates_in_gym');
+        const row: FakeTemplate = { id: uid(++idCounter), gym_id: String(record.gym_id), name: record.name as FakeTemplate['name'], body: record.body, version: 1, updated_at: new Date().toISOString() };
+        mock.templates.push(row);
+        return json(route, 201, { id: row.id, name: row.name, body: row.body, version: row.version, updated_at: row.updated_at });
+      }
+      const row = mock.templates.find((t) => t.id === id && isManager(t.gym_id));
+      if (method === 'PATCH') {
+        if (!row) return json(route, 200, []);
+        if (record.name) row.name = record.name as FakeTemplate['name'];
+        if (record.body) {
+          row.body = record.body;
+          row.version++;
+        }
+        return json(route, 200, [{ id: row.id, version: row.version }]);
+      }
+      if (method === 'DELETE') {
+        if (!row) return json(route, 200, []);
+        mock.templates.splice(mock.templates.indexOf(row), 1);
+        for (const p of Object.values(mock.plans)) if (p.template_id === row.id) p.template_id = null;
+        return json(route, 200, [{ id: row.id }]);
+      }
+    }
+    if (path === '/rest/v1/rpc/apply_plan_template') {
+      mock.rpcs.push({ name: 'apply_plan_template', body: record });
+      const target = mock.members.find((m) => m.id === record.p_membership_id);
+      const tpl = mock.templates.find((t) => t.id === record.p_template_id);
+      const me = gyms.find((g) => g.id === target?.gym_id);
+      if (!target || !tpl || !me || tpl.gym_id !== target.gym_id || (me.role === 'captain' && target.role !== 'trainee')) return error(route, 403, '42501', 'forbidden');
+      const current = mock.plans[target.id];
+      if ((current?.version ?? 0) !== record.p_base_version) return error(route, 400, 'P0001', 'plan_changed');
+      const version = (current?.version ?? 0) + 1;
+      mock.plans[target.id] = { body: tpl.body, version, updated_by: M.owner, updated_at: new Date().toISOString(), template_id: tpl.id, template_version: tpl.version };
+      return json(route, 200, { version, updated_by: M.owner, updated_at: mock.plans[target.id]?.updated_at, template_id: tpl.id, template_version: tpl.version });
+    }
+    // ---- D3: plans (0007) ----
+    if (path === '/rest/v1/plans' && method === 'GET') {
+      if (behaviour.plansFail) return json(route, 500, { code: 'XX000', message: 'boom' });
+      const select = url.searchParams.get('select') ?? '';
+      if (options.noTemplates && select.includes('template_')) return error(route, 400, '42703', 'column plans.template_id does not exist');
+      const byTemplate = wanted(url, 'template_id');
+      if (byTemplate) {
+        return json(route, 200, Object.entries(mock.plans).filter(([, p]) => p.template_id === byTemplate).map(([id, p]) => ({ membership_id: id, version: p.version, body: p.body })));
+      }
+      const one = wanted(url, 'membership_id');
+      const inList = /^in\.\((.*)\)$/.exec(url.searchParams.get('membership_id') ?? '');
+      const ids = inList ? (inList[1] ?? '').split(',').map((w) => w.replace(/^"|"$/g, '')) : [one];
+      const rows = ids.flatMap((id) => {
+        const p = mock.plans[id];
+        return p ? [{ membership_id: id, ...p }] : [];
+      });
+      return json(route, 200, rows);
+    }
+    if (path === '/rest/v1/rpc/save_plan') {
+      mock.rpcs.push({ name: 'save_plan', body: record });
+      const target = mock.members.find((m) => m.id === record.p_membership_id);
+      const me = gyms.find((g) => g.id === target?.gym_id);
+      // i_manage_role: owners manage anyone, captains trainees only.
+      if (!target || !me || (me.role === 'captain' && target.role !== 'trainee') || behaviour.savePlan === 'forbidden') return error(route, 403, '42501', 'forbidden');
+      if (behaviour.savePlan === 'server_error') return error(route, 500, 'XX000', 'boom');
+      const body = record.p_body as { days?: unknown[] } | undefined;
+      if (behaviour.savePlan === 'invalid' || !Array.isArray(body?.days) || body.days.length === 0) return error(route, 400, '22023', 'invalid_plan: bad day count');
+      const current = mock.plans[target.id];
+      const version = (current?.version ?? 0) + 1;
+      // Like the real save_plan: the template link (0019) is kept.
+      mock.plans[target.id] = { body, version, updated_by: M.owner, updated_at: new Date().toISOString(), template_id: current?.template_id ?? null, template_version: current?.template_version ?? null };
+      return json(route, 200, { version, updated_by: M.owner, updated_at: mock.plans[target.id]?.updated_at });
+    }
+    // ---- D2: exercise media (0013, 0015, 0017) ----
+    const isManager = (gymId: string) => gyms.some((g) => g.id === gymId);
+    if (path === '/rest/v1/exercise_images' && method === 'GET') {
+      const ov = /^ov\.\{(.*)\}$/.exec(url.searchParams.get('keywords') ?? '');
+      const inList = /^in\.\((.*)\)$/.exec(url.searchParams.get('public_id') ?? '');
+      let rows = catalog;
+      if (ov) {
+        const words = (ov[1] ?? '').split(',').map((w) => w.replace(/^"|"$/g, ''));
+        rows = rows.filter((r) => Array.isArray(r.keywords) && (r.keywords as string[]).some((k) => words.includes(k)));
+      }
+      if (inList) {
+        const ids = (inList[1] ?? '').split(',').map((w) => w.replace(/^"|"$/g, ''));
+        rows = rows.filter((r) => ids.includes(String(r.public_id)));
+      }
+      return json(route, 200, rows.map((r) => ({ public_id: r.public_id, exercise_key: r.exercise_key, frame: r.frame, title_en: r.title_en })));
+    }
+    if (path === '/rest/v1/gym_exercise_images' && method === 'GET') {
+      if (behaviour.mediaFails) return json(route, 500, { code: 'XX000', message: 'boom' });
+      const gymId = wanted(url, 'gym_id');
+      return json(route, 200, mock.pictures.filter((r) => r.gym_id === gymId).sort((a, b) => a.exercise_id.localeCompare(b.exercise_id) || a.position - b.position).map((r) => ({ exercise_id: r.exercise_id, public_id: r.public_id, position: r.position })));
+    }
+    if (path === '/rest/v1/rpc/set_gym_exercise_images') {
+      mock.rpcs.push({ name: 'set_gym_exercise_images', body: record });
+      if (behaviour.savePictures === 'forbidden' || !isManager(String(record.p_gym_id))) return error(route, 403, '42501', 'forbidden');
+      if (behaviour.savePictures === 'too_many_pictures_in_gym') return error(route, 400, '23514', 'too_many_pictures_in_gym');
+      const ids = record.p_public_ids as string[];
+      if (ids.some((id) => !catalog.some((c) => c.public_id === id))) return error(route, 409, '23503', 'insert or update on table "gym_exercise_images" violates foreign key constraint');
+      const gymId = String(record.p_gym_id);
+      const exerciseId = String(record.p_exercise_id);
+      for (let i = mock.pictures.length - 1; i >= 0; i--) {
+        const r = mock.pictures[i];
+        if (r && r.gym_id === gymId && r.exercise_id === exerciseId) mock.pictures.splice(i, 1);
+      }
+      ids.forEach((id, i) => mock.pictures.push({ gym_id: gymId, exercise_id: exerciseId, public_id: id, position: i + 1 }));
+      return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
+    }
+    if (path === '/rest/v1/gym_exercise_videos') {
+      const gymId = wanted(url, 'gym_id');
+      const exerciseId = wanted(url, 'exercise_id');
+      if (method === 'GET') {
+        if (behaviour.mediaFails) return json(route, 500, { code: 'XX000', message: 'boom' });
+        return json(route, 200, mock.videos.filter((r) => r.gym_id === gymId).map((r) => ({ exercise_id: r.exercise_id, video_id: r.video_id, start_seconds: r.start_seconds, end_seconds: r.end_seconds })));
+      }
+      if (behaviour.saveVideo === 'forbidden') return error(route, 403, '42501', 'new row violates row-level security policy');
+      if (method === 'POST') {
+        if (!isManager(String(record.gym_id))) return error(route, 403, '42501', 'new row violates row-level security policy');
+        if (mock.videos.some((v) => v.gym_id === record.gym_id && v.exercise_id === record.exercise_id)) return error(route, 409, '23505', 'duplicate key value violates unique constraint "gym_exercise_videos_one_per_exercise"');
+        mock.videos.push({ gym_id: String(record.gym_id), exercise_id: String(record.exercise_id), video_id: String(record.video_id), start_seconds: (record.start_seconds as number | null) ?? null, end_seconds: (record.end_seconds as number | null) ?? null });
+        return route.fulfill({ status: 201, headers: { 'access-control-allow-origin': '*' } });
+      }
+      if (method === 'PATCH') {
+        // Only the columns 0017 lets anyone update.
+        if (Object.keys(record).some((k) => !['video_id', 'start_seconds', 'end_seconds'].includes(k))) return error(route, 403, '42501', 'permission denied for table gym_exercise_videos');
+        const row = mock.videos.find((v) => v.gym_id === gymId && v.exercise_id === exerciseId);
+        if (!row) return json(route, 200, []);
+        Object.assign(row, record);
+        return json(route, 200, [{ exercise_id: row.exercise_id }]);
+      }
+      if (method === 'DELETE') {
+        const i = mock.videos.findIndex((v) => v.gym_id === gymId && v.exercise_id === exerciseId);
+        if (i >= 0) mock.videos.splice(i, 1);
+        return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
+      }
+    }
+    // ---- D5: progress views (0012) and gym settings (0005, 0008) ----
+    if (path.startsWith('/rest/v1/member_') && method === 'GET') {
+      if (behaviour.progressFails) return json(route, 500, { code: 'XX000', message: 'boom' });
+      // RLS of the views: active members only; a captain sees trainees only.
+      const visible = (id: string) => {
+        const m = mock.members.find((x) => x.id === id);
+        const me = gyms.find((g) => g.id === m?.gym_id);
+        return !!m && !!me && m.status === 'active' && (me.role === 'owner' || m.role === 'trainee');
+      };
+      const one = wanted(url, 'membership_id');
+      const gymId = wanted(url, 'gym_id');
+      const ids = one ? [one] : mock.members.filter((m) => m.gym_id === gymId).map((m) => m.id);
+      const rows = ids.filter(visible).flatMap((id) => {
+        const p = options.progress?.[id] ?? {};
+        switch (path) {
+          case '/rest/v1/member_progress_summary': {
+            const base = { membership_id: id, level: 'beginner', best_level: 'beginner', streak_weeks: 0, comeback: false, weeks_to_next: 4, workouts_total: 0, first_workout_at: null, last_workout_at: null };
+            return [{ ...base, ...p.summary }];
+          }
+          case '/rest/v1/member_weekly_attendance':
+            return p.weeks ?? [];
+          case '/rest/v1/member_session_stats':
+            return p.sessions ?? [];
+          case '/rest/v1/member_exercise_progress':
+            return p.points ?? [];
+          default:
+            return [];
+        }
+      });
+      return json(route, 200, rows);
+    }
+    if (path === '/rest/v1/gyms' && method === 'PATCH') {
+      const id = wanted(url, 'id');
+      const row = mock.gymRows[id];
+      if (!row || !gyms.some((g) => g.id === id)) return json(route, 200, []);
+      if (Object.keys(record).some((k) => !['name', 'logo_path', 'history_after_end', 'brand_color'].includes(k))) return error(route, 403, '42501', 'permission denied for table gyms');
+      if (typeof record.name === 'string' && (record.name.length < 1 || Array.from(record.name).length > 60 || record.name !== record.name.trim())) return error(route, 400, '23514', 'new row for relation "gyms" violates check constraint "gyms_name_check"');
+      // Migration 0021: '#rrggbb' in lower case, channels at least 40 apart, or null; owners only.
+      if ('brand_color' in record) {
+        if (gyms.find((g) => g.id === id)?.role !== 'owner') return json(route, 200, []);
+        const c = record.brand_color;
+        const rgb = typeof c === 'string' && /^#[0-9a-f]{6}$/.test(c) ? [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16)) : null;
+        if (c !== null && (!rgb || Math.max(...rgb) - Math.min(...rgb) < 40)) return error(route, 400, '23514', 'new row for relation "gyms" violates check constraint "gyms_brand_color_ok"');
+      }
+      Object.assign(row, record);
+      return json(route, 200, [{ id }]);
+    }
+    if (path.startsWith('/storage/v1/object/gym-logos/') && (method === 'POST' || method === 'PUT')) {
+      const objectPath = path.replace('/storage/v1/object/gym-logos/', '');
+      // supabase-js sends a Blob as multipart/form-data: the file part carries the bytes and its type.
+      let bytes = route.request().postDataBuffer() ?? Buffer.alloc(0);
+      let type = route.request().headers()['content-type'] ?? '';
+      const boundary = /boundary=(.+)$/.exec(type)?.[1];
+      if (boundary) {
+        const marker = Buffer.from(`--${boundary}`);
+        let start = 0;
+        for (;;) {
+          const at = bytes.indexOf(marker, start);
+          if (at < 0) break;
+          const next = bytes.indexOf(marker, at + marker.length);
+          const part = bytes.subarray(at + marker.length, next < 0 ? bytes.length : next);
+          const split = part.indexOf('\r\n\r\n');
+          const headers = part.subarray(0, Math.max(0, split)).toString('latin1');
+          const partType = /content-type:\s*([^\r\n]+)/i.exec(headers)?.[1];
+          if (partType && split >= 0 && next >= 0) {
+            type = partType.trim();
+            bytes = part.subarray(split + 4, part.length - 2);
+            break;
+          }
+          start = at + marker.length;
+        }
+      }
+      if (!/^[0-9a-f-]{36}\/logo\.(png|jpe?g)$/.test(objectPath) || !gyms.some((g) => objectPath.startsWith(`${g.id}/`))) return json(route, 403, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' });
+      if (bytes.length > 524_288) return json(route, 413, { statusCode: '413', error: 'Payload too large', message: 'The object exceeded the maximum allowed size' });
+      mock.uploads.push({ path: objectPath, contentType: type, size: bytes.length, head: [...bytes.subarray(0, 8)] });
+      uploaded.set(objectPath, bytes);
+      return json(route, 200, { Key: `gym-logos/${objectPath}`, Id: uid(++idCounter) });
+    }
+    if (path === '/storage/v1/object/gym-logos' && method === 'DELETE') {
+      for (const pref of (record.prefixes as string[] | undefined) ?? []) {
+        mock.removed.push(pref);
+        uploaded.delete(pref);
+      }
+      return json(route, 200, []);
+    }
+    if (path.startsWith('/storage/v1/object/') && method === 'GET') {
+      const objectPath = path.replace(/^\/storage\/v1\/object\/(authenticated\/)?gym-logos\//, '');
+      const mine = uploaded.get(objectPath);
+      if (mine) {
+        mock.storage.push(path.replace('/storage/v1/object/', ''));
+        return route.fulfill({ status: 200, contentType: objectPath.endsWith('png') ? 'image/png' : 'image/jpeg', headers: { 'access-control-allow-origin': '*' }, body: mine });
+      }
     }
     if (path.startsWith('/storage/v1/object/') && method === 'GET') {
       mock.storage.push(path.replace('/storage/v1/object/', ''));

@@ -5,9 +5,9 @@ import type { Member, Role } from '../members/members';
 
 type T = I18n['t'];
 
-/** "12 Oct 2026" / "١٢ أكتوبر ٢٠٢٦": the app's date format. */
+/** "12 Oct 2026" / "12 أكتوبر 2026": the app's date format, Western digits. */
 export function formatDate(lang: Lang, date: Date): string {
-  return new Intl.DateTimeFormat(lang === 'ar' ? 'ar-EG' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+  return new Intl.DateTimeFormat(lang === 'ar' ? 'ar-EG-u-nu-latn' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
 }
 
 export function roleLabel(t: T, role: Role): string {

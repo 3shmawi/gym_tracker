@@ -1,6 +1,6 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { linkHandler, pathOf } from '../app/router';
+import { linkHandler, pathOf, type Route } from '../app/router';
 import type { Prefs } from '../core/prefs';
 import { initials, maskEmail } from '../core/text';
 import type { ManagedGym } from '../gyms/gyms';
@@ -16,7 +16,7 @@ export interface ShellProps {
   readonly onSignOut: (() => void) | null;
   readonly gym?: ManagedGym;
   readonly gyms?: readonly ManagedGym[];
-  readonly nav?: 'members';
+  readonly nav?: 'members' | 'exercises' | 'templates' | 'settings';
   readonly children: ComponentChildren;
 }
 
@@ -89,19 +89,31 @@ export function Shell({ prefs, onPrefs, online, email, onSignOut, gym, gyms, nav
       </a>
     ) : null;
 
-  const membersLink = (
-    <a
-      class="on"
-      href={pathOf(gym ? { name: 'members', gymId: gym.id } : { name: 'home' })}
-      aria-current="page"
-      onClick={(event) => {
-        closeMenu();
-        if (gym) linkHandler({ name: 'members', gymId: gym.id })(event);
-      }}
-    >
-      <Icon name="members" />
-      {t('nav.members')}
-    </a>
+  const navLink = (key: 'members' | 'exercises' | 'templates' | 'settings') => {
+    const route: Route = gym ? { name: key, gymId: gym.id } : { name: 'home' };
+    const on = nav === key;
+    return (
+      <a
+        class={on ? 'on' : undefined}
+        href={pathOf(route)}
+        aria-current={on ? 'page' : undefined}
+        onClick={(event) => {
+          closeMenu();
+          if (gym) linkHandler(route)(event);
+        }}
+      >
+        <Icon name={key === 'members' ? 'members' : key === 'exercises' ? 'dumbbell' : key === 'templates' ? 'copy' : 'gear'} />
+        {key === 'members' ? t('nav.members') : key === 'exercises' ? t('nav.exercises') : key === 'templates' ? t('nav.templates') : t('nav.settings')}
+      </a>
+    );
+  };
+  const navLinks = (
+    <>
+      {navLink('members')}
+      {navLink('exercises')}
+      {navLink('templates')}
+      {navLink('settings')}
+    </>
   );
 
   return (
@@ -144,7 +156,7 @@ export function Shell({ prefs, onPrefs, online, email, onSignOut, gym, gyms, nav
       {open ? (
         <nav id="menu-panel" class="nav menu-panel" aria-label={t('app.mainNav')}>
           {gymSwitch(true)}
-          {nav ? membersLink : null}
+          {nav ? navLinks : null}
           <div class="rule" />
           <button type="button" class="navitem" onClick={toggleLang} aria-label={t('app.switchLanguageLabel')}>
             <Icon name="language" />
@@ -182,7 +194,7 @@ export function Shell({ prefs, onPrefs, online, email, onSignOut, gym, gyms, nav
       <div class="body">
         {nav ? (
           <nav class="nav nav-side" aria-label={t('app.mainNav')}>
-            {membersLink}
+            {navLinks}
           </nav>
         ) : null}
         <main id="main" class="main" tabIndex={-1}>
