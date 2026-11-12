@@ -12,8 +12,9 @@ works as before.
 | PR 2 | Backend: person for solo members, personal plan, personal state, erase backup, 20,000 cap | built (this page) |
 | PR 3a | The backup engine: solo workouts, plan, best level and chosen day go up when backup is on (no screen yet) | built ("The backup engine" below) |
 | PR 3b | Sign-in by code, the Settings card, the email path for gym trainees (behind `training_backup`) | built ("Sign in and the Settings card" below) |
-| PR 4 | Restore on a new phone | not started |
-| PR 5 | Offer after the 3rd workout, full status card, sign-out choices, privacy texts | not started |
+| PR 4 | Restore on a new phone | built ("Restore" below) |
+| PR 5 | Offer after the 3rd/10th workout, turn off + erase, privacy texts | this PR |
+| PR 6 | Sign-out choices (keep/remove training on the phone), choose the kept plan again in Settings, re-send an ended-membership gym workout as solo | not started |
 
 ## Backend (migration 0022)
 All of it follows the spec's sections 2, 3 and 6. Clients call the functions;
@@ -129,3 +130,73 @@ code, done, the card).
 - Custom SMTP (already needed by the dashboard).
 - CAPTCHA on, with the app's Turnstile site key.
 
+## Restore (PR 4)
+After the code is accepted, the account's training is brought onto the phone
+(spec §4). Code: `RunRestore` (domain), `SupabaseBackupRemote.fetchSessions /
+fetchPlan / fetchState`, `RestoreRows` (what is trusted), `SqliteSessionStore`
+as the `RestoreSink`, the extra steps of `BackupSignInController` and view.
+
+**What happens, in order**
+1. A new phone, or a phone with no training: the account's workouts come down
+   **200 at a time**, oldest first (ordered by finish time and row id), with the
+   position saved after every page (`BackupSettings.restoreCursor`). A dropped
+   connection stops the screen with "Try again", and the run resumes after the
+   last page taken. If the app is closed meanwhile, `BackupSync` carries on in
+   the background the next time it runs (a restore that was started and not
+   finished). The workouts arrive already marked as backed up, with their gym
+   tag, never twice (the key is their content), and nothing is uploaded again.
+2. **A phone that already has training and an account that has some** (and the
+   sign-in made a different account): one question first, *Add this phone's
+   training to your account?* **Yes** puts them together (nothing is deleted);
+   **No** signs out and the phone stays as it was. No question when the account
+   is new (the phone's training simply starts backing up) or when it is the same
+   account (a gym trainee who added an email). *A refinement of the spec, which
+   asks whenever the phone has training: asking when there is nothing to put
+   together would only be noise.*
+3. The plan: the phone has none → the account's; the same → nothing; **both and
+   different → the person chooses** (*Keep this phone's plan* / *Use the plan from
+   my account*); nothing changes before the answer, and the plan not chosen is
+   kept on the phone for 30 days (`keptPlan`; choosing it again from Settings is
+   PR 5). Keeping this phone's plan makes the next backup run save it on top of
+   the account's version.
+4. The best level is the higher of the two (never lowered); the chosen day is
+   the account's only when the phone has none.
+5. Then backup is turned on and its first run sends what only this phone had.
+
+**What is trusted:** nothing. Every row is checked by `RestoreRows` (day and
+exercise ids, finish time between 2020 and a day ahead, at most 500 sets,
+weight 0 to 1000, whole reps 0 to 1000, a real membership id or none). A row
+that is off is skipped and counted, never an error and never stored; a plan the
+editor would refuse is a failure, not a plan. A gym that hides its history from
+former members sends nothing (the server's RLS), so it is not restored.
+
+**First screen:** with the flag on, "I already have an account" (under "I have
+a code") opens `/backup`; after a successful restore the first screen is
+answered and the app opens on home.
+
+Events (a word only): `restore_done`. Tests: `run_restore_test` (every rule, a
+drop at every page, restoring twice, 20 random interleavings of three phones:
+every phone ends with every workout), `restore_rows_test` (hostile rows and
+plans), the sink tests in `backup_data_test`, the controller tests, the view
+tests (5 new screens and states with `screensUiTests`; the working state has a
+widget test because it loops an animation), `backup_sync_test` (background
+resume), `welcome_view_test`, and the integration test "a new phone: sign in,
+and the whole training comes back" (a demo).
+
+
+## The offer, and turning off (PR 5)
+- **Offer:** after a workout is saved, `BackupOffer.afterWorkout` counts the
+  finished workouts; `shouldOfferBackup` says yes at the 3rd (nothing declined
+  yet) and at the 10th (declined once), never when backup is on or the
+  `training_backup` flag is off. `BackupOfferHost` (around the home screen)
+  opens a sheet: "Back up my training" goes to `/backup`, "Not now" counts one
+  decline (two and it only lives in Settings).
+- **Turn off:** the Settings card asks: keep what is saved, or erase it
+  (`delete_my_backup`: solo workouts, personal plan, personal state; gym rows
+  and the account stay). Erase turns backup off only if the call worked, then
+  every solo workout waits to be uploaded again if backup is turned on later.
+- **Events:** `backup_offer_shown {place}`, `backup_offer_dismissed`,
+  `backup_erased` (plus the earlier ones).
+- **Texts:** `website/privacy.html` (en + ar) has "Backing up your training";
+  `website/delete-account.html` and `store/privacy_forms.md` say backup data is
+  removed with the account.

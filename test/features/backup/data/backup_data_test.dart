@@ -301,4 +301,69 @@ void main() {
       },
     );
   });
+
+  group('SqliteSessionStore as the restore sink', () {
+    late WorkoutDatabase db;
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      db = await WorkoutDatabase.open(
+        factory: databaseFactoryFfi,
+        path: inMemoryDatabasePath,
+        prefs: await SharedPreferences.getInstance(),
+      );
+    });
+    tearDown(() => db.close());
+
+    test(
+      'restored workouts are in the history, marked as backed up, never twice',
+      () async {
+        expect(await db.sessions.addBackedUp([workout(1), workout(2)]), 2);
+        expect(await db.sessions.addBackedUp([workout(2), workout(3)]), 1);
+        expect(await db.sessions.count(), 3);
+        expect(await db.sessions.readAll(), hasLength(3));
+        final queue = SqliteBackupQueue(db.database);
+        expect(
+          await queue.pendingCount(),
+          0,
+          reason: 'they are not uploaded again',
+        );
+      },
+    );
+
+    test('a workout the phone already has stays as it was (still waiting if it was)', () async {
+      await db.sessions.add(workout(1));
+      expect(await db.sessions.addBackedUp([workout(1)]), 0);
+      final queue = SqliteBackupQueue(db.database);
+      expect(await queue.pendingCount(), 1);
+    });
+
+    test('the gym tag comes back with the workout', () async {
+      await db.sessions.addBackedUp([workout(1, membershipId: 'm-1')]);
+      final all = await db.sessions.readAll();
+      expect(all.single.membershipId, 'm-1');
+      // A gym workout is not in the solo queue.
+      expect(await SqliteBackupQueue(db.database).pendingCount(), 0);
+    });
+
+    test(
+      'the history shows restored workouts at once (no stale copy)',
+      () async {
+        await db.sessions.add(workout(5));
+        expect(await db.sessions.readAll(), hasLength(1));
+        await db.sessions.addBackedUp([workout(1)]);
+        final all = await db.sessions.readAll();
+        expect(all, hasLength(2));
+        expect(
+          all.first.finishedAt,
+          workout(1).finishedAt,
+          reason: 'oldest first',
+        );
+      },
+    );
+
+    test('an empty list does nothing', () async {
+      expect(await db.sessions.addBackedUp(const []), 0);
+    });
+  });
 }

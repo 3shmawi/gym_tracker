@@ -28,14 +28,18 @@ void main() {
     expect(events, {
       'backup_sign_in_started',
       'backup_code_failed',
+      'restore_done',
       'backup_enabled',
       'backup_synced',
       'backup_failed',
       'backup_disabled',
+      'backup_offer_shown',
+      'backup_offer_dismissed',
+      'backup_erased',
     });
     // One word: network | signin | refused, or the kind of code problem.
     // Never an email, a code, an id, a name, a workout or a count.
-    expect(properties, {'reason'});
+    expect(properties, {'reason', 'place'});
   });
 
   test('nothing logs or prints, and no secret is kept in preferences', () {

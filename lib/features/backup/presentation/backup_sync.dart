@@ -4,10 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
 import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
+import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/backup/domain/entities/backup_status.dart';
+import 'package:gym_tracker/features/backup/domain/entities/restore.dart';
 import 'package:gym_tracker/features/backup/domain/repositories/backup_repositories.dart';
 import 'package:gym_tracker/features/backup/domain/usecases/run_backup.dart';
+import 'package:gym_tracker/features/backup/domain/usecases/run_restore.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
+import 'package:gym_tracker/features/workout/domain/repositories/restore_sink.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
 
 /// Override in tests.
@@ -19,6 +23,9 @@ final backupQueueProvider = Provider<BackupQueue>(
 );
 final backupSettingsProvider = Provider<BackupSettings>(
   (ref) => Dependencies.backupSettings,
+);
+final restoreSinkProvider = Provider<RestoreSink>(
+  (ref) => Dependencies.restoreSink,
 );
 
 /// Whether backup shows at all (`Flags.trainingBackup`: the offer, the
@@ -105,15 +112,54 @@ class BackupSync {
     await run();
   }
 
-  /// Stops backing up. What is already on the account stays there until
-  /// `delete_my_backup` (a later step).
+  /// Stops backing up and erases what the account holds of it
+  /// (`delete_my_backup`). Backup is only turned off when the erase worked,
+  /// so nothing is left behind by mistake; false = nothing changed.
+  Future<bool> disableAndErase() async {
+    final result = await _ref.read(backupRemoteProvider).deleteBackup();
+    if (result is Failed<void>) return false;
+    unawaited(Analytics.capture('backup_erased'));
+    await _ref.read(backupQueueProvider).resetAll();
+    await _forget();
+    return true;
+  }
+
+  /// Stops backing up. What is already on the account stays there.
   Future<void> disable() async {
+    await _forget();
+  }
+
+  Future<void> _forget() async {
     _retry?.cancel();
-    await _ref.read(backupSettingsProvider).setEnabled(value: false);
+    final settings = _ref.read(backupSettingsProvider);
+    await settings.setEnabled(value: false);
+    // A later "on" starts from nothing: the account has no plan or workouts
+    // now, so the old versions and fingerprints must not hide what is new.
+    await settings.setPlan(version: 0, fingerprint: '');
+    await settings.setStateFingerprint('');
     if (_ref.mounted) {
       _ref.read(backupStatusProvider.notifier).update(BackupStatus.off);
     }
     unawaited(Analytics.capture('backup_disabled'));
+  }
+
+  /// A restore that was started and not finished (the app was closed, the
+  /// network dropped) goes on in the background, from the saved position. A
+  /// plan conflict it meets is left for the card to say (nothing is
+  /// changed): the person is asked the next time they sign in.
+  Future<void> _resumeRestore(BackupSettings settings) async {
+    final cursor = settings.restoreCursor;
+    if (cursor == null || cursor == RestoreCursor.done) return;
+    final result = await RunRestore(
+      remote: _ref.read(backupRemoteProvider),
+      sink: _ref.read(restoreSinkProvider),
+      settings: settings,
+      workouts: _ref.read(localWorkoutRepositoryProvider),
+      now: _ref.read(clockProvider),
+    )();
+    if (result case Success(:final value) when value.plan is PlanNeedsChoice) {
+      await settings.setPlanConflict(value: true);
+    }
   }
 
   Future<void> run() async {
@@ -127,6 +173,8 @@ class BackupSync {
     }
     _running = true;
     try {
+      await _resumeRestore(settings);
+      if (!_ref.mounted) return;
       final queue = _ref.read(backupQueueProvider);
       final before = await queue.pendingCount();
       final status = await RunBackup(

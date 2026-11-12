@@ -7,6 +7,7 @@ import 'package:gym_tracker/features/workout/data/local/workout_stores.dart';
 import 'package:gym_tracker/features/workout/domain/entities/chosen_day.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
+import 'package:gym_tracker/features/workout/domain/repositories/restore_sink.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -356,7 +357,7 @@ class SqliteWorkoutKv implements WorkoutKv {
 /// [SessionStore] on the `sessions` table. No cap on history (a sanity limit
 /// of [maxRows] stops a runaway bug); the parsed list is kept in memory and
 /// dropped on a write.
-class SqliteSessionStore implements SessionStore {
+class SqliteSessionStore implements SessionStore, RestoreSink {
   new _(this._db, this._rows);
 
   final Database _db;
@@ -441,6 +442,34 @@ class SqliteSessionStore implements SessionStore {
     if (id != 0) _rows++;
     _cache = null;
   }
+
+  /// Workouts of the account, taken onto this phone: already backed up
+  /// (`synced_at` set), never twice (the key is the content), in one
+  /// transaction. Returns how many were new.
+  @override
+  Future<int> addBackedUp(List<WorkoutSession> sessions) async {
+    if (sessions.isEmpty) return 0;
+    if (_rows + sessions.length > maxRows) {
+      throw StateError('workout history is over $maxRows workouts');
+    }
+    final at = DateTime.now().millisecondsSinceEpoch;
+    var added = 0;
+    await _db.transaction((txn) async {
+      for (final s in sessions) {
+        final id = await txn.insert('sessions', {
+          ...toRow(s),
+          'synced_at': at,
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        if (id != 0) added++;
+      }
+    });
+    _rows += added;
+    _cache = null;
+    return added;
+  }
+
+  @override
+  Future<int> count() async => _rows;
 
   @override
   Future<void> clear() async {

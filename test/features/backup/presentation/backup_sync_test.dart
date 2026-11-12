@@ -135,4 +135,84 @@ void main() {
     expect(BackupSync.backoff(3), const Duration(minutes: 2));
     expect(BackupSync.backoff(20), const Duration(minutes: 15));
   });
+
+  test(
+    'a restore that was started and not finished goes on by itself',
+    () async {
+      final c = await app();
+      for (var i = 1; i <= 4; i++) {
+        server.sessions[workout(i).clientId] = workout(i);
+      }
+      settings
+        ..enabled = true
+        ..restoreCursor = '2026-01-01T01:00:00.000Z|x';
+      final sink = FakeSink(queue);
+      final c2 = ProviderContainer(
+        overrides: [
+          backupRemoteProvider.overrideWithValue(server.phone()),
+          backupQueueProvider.overrideWithValue(queue),
+          backupSettingsProvider.overrideWithValue(settings),
+          restoreSinkProvider.overrideWithValue(sink),
+          accountSessionProvider.overrideWith(_SignedIn.new),
+          localWorkoutRepositoryProvider.overrideWithValue(
+            LocalWorkoutRepository(await SharedPreferences.getInstance()),
+          ),
+        ],
+      );
+      addTearDown(c2.dispose);
+      addTearDown(c.dispose);
+      await c2.read(backupSyncProvider).run();
+      expect(settings.restoreCursor, 'done');
+      expect(sink.local, isNotEmpty);
+    },
+  );
+
+  test(
+    'no restore was ever started: nothing is downloaded in the background',
+    () async {
+      final c = await app();
+      settings.enabled = true;
+      await c.read(backupSyncProvider).run();
+      expect(server.fetchCalls, 0);
+    },
+  );
+
+  group('erase', () {
+    test(
+      'turn off and erase: the account is emptied, the phone is not',
+      () async {
+        final c = await app();
+        queue.all.addAll([workout(1), workout(2)]);
+        await c.read(backupSyncProvider).enable();
+        expect(server.sessions, hasLength(2));
+        expect(await c.read(backupSyncProvider).disableAndErase(), isTrue);
+        expect(server.sessions, isEmpty);
+        expect(server.deleteCalls, 1);
+        expect(settings.enabled, isFalse);
+        expect(c.read(backupStatusProvider), BackupStatus.off);
+        // The phone's own workouts are still there, waiting for a next "on".
+        expect(queue.all, hasLength(2));
+        expect(await queue.pendingCount(), 2);
+      },
+    );
+
+    test('turning it on again uploads everything again', () async {
+      final c = await app();
+      queue.all.add(workout(1));
+      await c.read(backupSyncProvider).enable();
+      await c.read(backupSyncProvider).disableAndErase();
+      await c.read(backupSyncProvider).enable();
+      expect(server.sessions, hasLength(1));
+    });
+
+    test('the erase failing changes nothing', () async {
+      final c = await app();
+      queue.all.add(workout(1));
+      await c.read(backupSyncProvider).enable();
+      server.failWith = const NetworkFailure();
+      expect(await c.read(backupSyncProvider).disableAndErase(), isFalse);
+      expect(settings.enabled, isTrue);
+      expect(server.sessions, hasLength(1));
+    });
+  });
 }

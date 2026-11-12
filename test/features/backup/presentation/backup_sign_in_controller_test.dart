@@ -6,17 +6,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/backup/data/in_memory_backup.dart';
+import 'package:gym_tracker/features/backup/domain/entities/restore.dart';
 import 'package:gym_tracker/features/backup/presentation/backup_sign_in_controller.dart';
 import 'package:gym_tracker/features/backup/presentation/backup_sync.dart';
 import 'package:gym_tracker/features/gym/domain/entities/account_session.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
+import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../helpers/gym_fakes.dart';
 import '../fakes.dart';
+
+class _Anonymous extends AccountSessionNotifier {
+  @override
+  AccountSession build() => anonymousSession;
+}
 
 class _Signed extends AccountSessionNotifier {
   @override
@@ -29,19 +38,24 @@ void main() {
   late FakeServer server;
   late InMemoryBackupSettings settings;
   late DateTime now;
+  late FakeQueue queue;
+  late FakeSink sink;
+  late LocalWorkoutRepository local;
 
-  Future<ProviderContainer> app() async {
+  Future<ProviderContainer> app({bool anonymous = false}) async {
     SharedPreferences.setMockInitialValues({});
+    local = LocalWorkoutRepository(await SharedPreferences.getInstance());
     final c = ProviderContainer(
       overrides: [
         accountRepositoryProvider.overrideWithValue(account),
-        accountSessionProvider.overrideWith(_Signed.new),
-        backupRemoteProvider.overrideWithValue(server.phone()),
-        backupQueueProvider.overrideWithValue(FakeQueue()),
-        backupSettingsProvider.overrideWithValue(settings),
-        localWorkoutRepositoryProvider.overrideWithValue(
-          LocalWorkoutRepository(await SharedPreferences.getInstance()),
+        accountSessionProvider.overrideWith(
+          anonymous ? _Anonymous.new : _Signed.new,
         ),
+        backupRemoteProvider.overrideWithValue(server.phone()),
+        backupQueueProvider.overrideWithValue(queue),
+        restoreSinkProvider.overrideWithValue(sink),
+        backupSettingsProvider.overrideWithValue(settings),
+        localWorkoutRepositoryProvider.overrideWithValue(local),
         clockProvider.overrideWithValue(() => now),
       ],
     );
@@ -54,6 +68,8 @@ void main() {
     account = FakeAccountRepository();
     server = FakeServer();
     settings = InMemoryBackupSettings();
+    queue = FakeQueue();
+    sink = FakeSink(queue);
     now = DateTime.utc(2026, 11, 12, 10);
   });
 
@@ -219,5 +235,142 @@ void main() {
       controller.submitEmail('me@example.com'),
     ]);
     expect(account.codesSentTo, hasLength(1));
+  });
+
+  WorkoutSession workout(int i) => WorkoutSession(
+    dayId: legacyDayId(i % 5),
+    finishedAt: DateTime.utc(2026).add(Duration(hours: i)),
+    sets: const [],
+  );
+
+  Future<void> signIn(ProviderContainer c) async {
+    final controller = c.read(backupSignInProvider.notifier);
+    await controller.submitEmail('me@example.com');
+    await controller.submitCode('123456');
+  }
+
+  group('after the code: bringing the training back', () {
+    test(
+      "a new phone: the account's workouts come back, then backup is on",
+      () async {
+        for (var i = 1; i <= 5; i++) {
+          server.sessions[workout(i).clientId] = workout(i);
+        }
+        final c = await app();
+        await signIn(c);
+        final state = c.read(backupSignInProvider);
+        expect(state.step, BackupStep.done);
+        expect(state.restored, 5);
+        expect(sink.local, hasLength(5));
+        expect(settings.enabled, isTrue);
+        expect(settings.restoreCursor, RestoreCursor.done);
+      },
+    );
+
+    test(
+      'a phone with training and an account with training: it asks first',
+      () async {
+        server.sessions[workout(1).clientId] = workout(1);
+        final c = await app();
+        sink.local.add(workout(2));
+        queue.all.add(workout(2));
+        await signIn(c);
+        expect(c.read(backupSignInProvider).step, BackupStep.askMerge);
+        expect(settings.enabled, isFalse, reason: 'nothing happens before yes');
+        expect(sink.local, hasLength(1));
+        await c.read(backupSignInProvider.notifier).mergeYes();
+        expect(c.read(backupSignInProvider).step, BackupStep.done);
+        expect(sink.local, hasLength(2), reason: 'both are there now');
+        expect(settings.enabled, isTrue);
+        // This phone's own workout goes up on the first backup.
+        expect(
+          server.sessions.keys,
+          containsAll([workout(1).clientId, workout(2).clientId]),
+        );
+      },
+    );
+
+    test('"No" cancels the sign-in and the phone stays as it was', () async {
+      server.sessions[workout(1).clientId] = workout(1);
+      final c = await app();
+      sink.local.add(workout(2));
+      queue.all.add(workout(2));
+      await signIn(c);
+      await c.read(backupSignInProvider.notifier).mergeNo();
+      expect(account.signOuts, 1);
+      expect(c.read(backupSignInProvider).step, BackupStep.email);
+      expect(settings.enabled, isFalse);
+      expect([for (final s in sink.local) s.clientId], [workout(2).clientId]);
+      expect(queue.synced, isEmpty);
+    });
+
+    test('a phone with training and a new, empty account: no question, it just backs up', () async {
+      final c = await app();
+      sink.local.add(workout(2));
+      queue.all.add(workout(2));
+      await signIn(c);
+      expect(c.read(backupSignInProvider).step, BackupStep.done);
+      expect(server.sessions.keys, [workout(2).clientId]);
+    });
+
+    test('a gym trainee keeps the same account: nothing to put together, no question', () async {
+      server.sessions[workout(1).clientId] = workout(1);
+      final c = await app(anonymous: true);
+      sink.local.add(workout(2));
+      queue.all.add(workout(2));
+      await signIn(c);
+      expect(c.read(backupSignInProvider).step, BackupStep.done);
+    });
+
+    test(
+      'the connection drops: it says so, and "try again" carries on',
+      () async {
+        for (var i = 1; i <= 4; i++) {
+          server.sessions[workout(i).clientId] = workout(i);
+        }
+        final c = await app();
+        server.failWith = const NetworkFailure();
+        await signIn(c);
+        var state = c.read(backupSignInProvider);
+        expect(state.step, BackupStep.restoring);
+        expect(state.problem, BackupProblem.offline);
+        expect(settings.enabled, isFalse);
+        server.failWith = null;
+        await c.read(backupSignInProvider.notifier).retryRestore();
+        state = c.read(backupSignInProvider);
+        expect(state.step, BackupStep.done);
+        expect(sink.local, hasLength(4));
+      },
+    );
+
+    test(
+      'two different plans: the person chooses, the other is kept 30 days',
+      () async {
+        server
+          ..plan = PlanTemplates.fiveDaySplit
+          ..planVersion = 2;
+        final c = await app();
+        final mine = PlanTemplates.fiveDaySplit.toJson();
+        ((mine['days']! as List<Object?>).first!
+            as Map<String, Object?>)['name'] = {
+          'ar': 'س',
+          'en': 'Mine',
+        };
+        await local.savePlan(WorkoutPlan.fromJson(mine));
+        await signIn(c);
+        // Both hold training: asked first, then the two plans.
+        expect(c.read(backupSignInProvider).step, BackupStep.askMerge);
+        await c.read(backupSignInProvider.notifier).mergeYes();
+        expect(c.read(backupSignInProvider).step, BackupStep.planChoice);
+        await c
+            .read(backupSignInProvider.notifier)
+            .choosePlan(PlanChoice.account);
+        expect(c.read(backupSignInProvider).step, BackupStep.done);
+        final now = (await local.loadPlan() as Success<WorkoutPlan?>).value!;
+        expect(now.days.first.name.en, isNot('Mine'));
+        expect(settings.keptPlan, contains('Mine'));
+        expect(settings.enabled, isTrue);
+      },
+    );
   });
 }

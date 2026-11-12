@@ -17,6 +17,7 @@ class WelcomeView extends StatelessWidget {
     required this.onJoin,
     required this.onSolo,
     required this.onHaveCode,
+    this.onHaveAccount,
     this.legalLinks = const [],
     super.key,
   });
@@ -24,6 +25,10 @@ class WelcomeView extends StatelessWidget {
   final VoidCallback onJoin;
   final VoidCallback onSolo;
   final VoidCallback onHaveCode;
+
+  /// "I already have an account": sign in by email code and bring the
+  /// training back (behind the `training_backup` flag; hidden while null).
+  final VoidCallback? onHaveAccount;
 
   /// Shown under "By continuing you agree to…": choosing how to start is
   /// agreeing (YouTube API Services Developer Policies III.A).
@@ -112,6 +117,26 @@ class WelcomeView extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (onHaveAccount != null)
+                    Center(
+                      child: TextButton(
+                        key: const Key('welcome_have_account'),
+                        onPressed: onHaveAccount,
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(0, AppDimens.minTouchTarget),
+                          foregroundColor: Theme.of(context)
+                              .colorScheme
+                              .primary,
+                        ),
+                        child: Text(
+                          l10n.backupHaveAccount,
+                          style: AppTextStyles.label.copyWith(
+                            fontSize: AppDimens.scaled(15),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
                   if (legalLinks.isNotEmpty) ...[
                     Text(
                       l10n.consentByContinuing,

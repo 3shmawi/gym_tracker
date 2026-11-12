@@ -4,13 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/core/network/result.dart';
+import 'package:gym_tracker/features/backup/domain/entities/restore.dart';
 import 'package:gym_tracker/features/backup/domain/usecases/email_rules.dart';
+import 'package:gym_tracker/features/backup/domain/usecases/run_restore.dart';
 import 'package:gym_tracker/features/backup/presentation/backup_sync.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
+import 'package:gym_tracker/features/workout/domain/repositories/workout_repository.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
 import 'package:meta/meta.dart';
 
-enum BackupStep { email, code, done }
+enum BackupStep { email, code, askMerge, restoring, planChoice, done }
 
 /// What the person can act on; shown as a line under the field.
 enum BackupProblem {
@@ -31,6 +34,8 @@ class BackupSignInState {
     this.busy = false,
     this.problem,
     this.resendAt,
+    this.restored = 0,
+    this.planChoice,
   });
 
   final BackupStep step;
@@ -42,18 +47,28 @@ class BackupSignInState {
   /// per 60 seconds).
   final DateTime? resendAt;
 
+  /// Workouts that came back to this phone so far.
+  final int restored;
+
+  /// The two plans, while the person chooses.
+  final PlanNeedsChoice? planChoice;
+
   BackupSignInState copyWith({
     BackupStep? step,
     String? email,
     bool? busy,
     BackupProblem? Function()? problem,
     DateTime? Function()? resendAt,
+    int? restored,
+    PlanNeedsChoice? Function()? planChoice,
   }) => BackupSignInState(
     step: step ?? this.step,
     email: email ?? this.email,
     busy: busy ?? this.busy,
     problem: problem == null ? this.problem : problem(),
     resendAt: resendAt == null ? this.resendAt : resendAt(),
+    restored: restored ?? this.restored,
+    planChoice: planChoice == null ? this.planChoice : planChoice(),
   );
 }
 
@@ -124,17 +139,15 @@ class BackupSignInController extends Notifier<BackupSignInState> {
       return;
     }
     state = state.copyWith(busy: true, problem: () => null);
+    // A gym trainee keeps the same account: there is nothing to put together.
+    final sameAccount = ref.read(accountSessionProvider).isAnonymous;
     final result = await ref
         .read(accountRepositoryProvider)
         .verifyCode(state.email, code);
     if (!ref.mounted) return;
     switch (result) {
       case Success():
-        // Signed in with an email: backup starts, and the first run sends
-        // the whole history.
-        await ref.read(backupSyncProvider).enable();
-        if (!ref.mounted) return;
-        state = state.copyWith(busy: false, step: BackupStep.done);
+        await _afterSignIn(sameAccount: sameAccount);
       case Failed(:final failure):
         final problem = _problemOf(failure);
         unawaited(
@@ -142,6 +155,129 @@ class BackupSignInController extends Notifier<BackupSignInState> {
         );
         state = state.copyWith(busy: false, problem: () => problem);
     }
+  }
+
+  RunRestore _restore() => RunRestore(
+    remote: ref.read(backupRemoteProvider),
+    sink: ref.read(restoreSinkProvider),
+    settings: ref.read(backupSettingsProvider),
+    workouts: ref.read(localWorkoutRepositoryProvider),
+    now: ref.read(clockProvider),
+  );
+
+  /// Signed in. If both the phone and the account hold training, ask first;
+  /// otherwise bring the account's training back (or, when the account is
+  /// new, just start backing up).
+  Future<void> _afterSignIn({required bool sameAccount}) async {
+    state = state.copyWith(busy: true, step: BackupStep.restoring, restored: 0);
+    final workouts = ref.read(localWorkoutRepositoryProvider);
+    final phoneHas =
+        await ref.read(restoreSinkProvider).count() > 0 ||
+        await _hasPlan(workouts);
+    if (!ref.mounted) return;
+    if (!sameAccount && phoneHas) {
+      final remote = ref.read(backupRemoteProvider);
+      final first = await remote.fetchSessions(limit: 1);
+      final plan = await remote.fetchPlan();
+      if (!ref.mounted) return;
+      final accountHas = switch ((first, plan)) {
+        (Success(value: final f), _)
+            when f.sessions.isNotEmpty || f.skipped > 0 =>
+          true,
+        (_, Success(value: final p)) when p != null => true,
+        // Could not look: ask, the safe side (nothing changes until yes).
+        (Failed(), _) || (_, Failed()) => true,
+        _ => false,
+      };
+      if (accountHas) {
+        state = state.copyWith(busy: false, step: BackupStep.askMerge);
+        return;
+      }
+    }
+    await _bringBack();
+  }
+
+  static Future<bool> _hasPlan(WorkoutRepository workouts) async =>
+      switch (await workouts.loadPlan()) {
+        Success(:final value) => value != null,
+        Failed() => false,
+      };
+
+  /// Brings the account's training onto the phone (resumes after a drop),
+  /// then turns backup on.
+  Future<void> _bringBack() async {
+    state = state.copyWith(
+      busy: true,
+      step: BackupStep.restoring,
+      problem: () => null,
+    );
+    final result = await _restore()(
+      onProgress: (added) {
+        if (ref.mounted) state = state.copyWith(restored: added);
+      },
+    );
+    if (!ref.mounted) return;
+    switch (result) {
+      case Failed(:final failure):
+        state = state.copyWith(busy: false, problem: () => _problemOf(failure));
+      case Success(:final value):
+        final plan = value.plan;
+        if (plan is PlanNeedsChoice) {
+          state = state.copyWith(
+            busy: false,
+            step: BackupStep.planChoice,
+            planChoice: () => plan,
+            restored: value.sessionsAdded,
+          );
+          return;
+        }
+        await _finish(value.sessionsAdded);
+    }
+  }
+
+  Future<void> _finish(int restored) async {
+    // Backup starts, and its first run sends what only this phone has.
+    await ref.read(backupSyncProvider).enable();
+    if (!ref.mounted) return;
+    unawaited(Analytics.capture('restore_done'));
+    state = state.copyWith(
+      busy: false,
+      step: BackupStep.done,
+      restored: restored,
+    );
+  }
+
+  /// "Yes, put them together".
+  Future<void> mergeYes() async {
+    if (state.busy || state.step != BackupStep.askMerge) return;
+    await _bringBack();
+  }
+
+  /// "No": the sign-in is cancelled and the phone stays as it was.
+  Future<void> mergeNo() async {
+    if (state.busy || state.step != BackupStep.askMerge) return;
+    state = state.copyWith(busy: true);
+    await ref.read(accountRepositoryProvider).signOut();
+    if (!ref.mounted) return;
+    state = const BackupSignInState();
+  }
+
+  /// "Try again" after a restore that stopped (it resumes where it was).
+  Future<void> retryRestore() async {
+    if (state.busy || state.step != BackupStep.restoring) return;
+    await _bringBack();
+  }
+
+  /// Which plan stays; the other is kept on the phone for 30 days.
+  Future<void> choosePlan(PlanChoice choice) async {
+    final need = state.planChoice;
+    if (state.busy || state.step != BackupStep.planChoice || need == null) {
+      return;
+    }
+    state = state.copyWith(busy: true);
+    await _restore().resolvePlan(need, choice);
+    if (!ref.mounted) return;
+    await _finish(state.restored);
   }
 
   /// The email belongs to another account: sign in to that one. A gym trainee
