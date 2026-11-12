@@ -177,6 +177,21 @@ Status: slice 3 started (rest notification), plus levels.
   are not records).
 - Inputs are clamped: weight 0–1000 kg (NaN/∞ → 0), reps 0–999.
 
+## Move games rounds in the history
+A Move games round (`docs/features/move_games.md`) is saved as its own
+session: `day_id` `move` (`WorkoutSession.moveDayId`), one set of
+`push_ups`, weight 0. It is not a plan day:
+- the next workout never moves on because of it, and it never makes
+  "you trained today" true (`GetNextWorkout` skips Move sessions);
+- for the level it counts as one workout on a day with at least 20 reps
+  of rounds, never more than one a day (`GetLevel.moveRepsForLevel`);
+- saving a round keeps the day the member chose (`SaveMoveRound`);
+- Progress lists push-ups once they have history, even when push-ups is
+  not in the plan (`extraHistoryExercisesProvider`); `/progress/push_ups`
+  opens its history with no plan days;
+- in a gym it uploads like any workout; the captain's dashboard shows it as
+  "Move · push-up round (camera)".
+
 ## Plan editor
 Days: add, rename (Arabic + English), delete, reorder. Exercises in a day:
 add, rename, delete, reorder, superset with the next one. Targets: sets,

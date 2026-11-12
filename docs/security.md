@@ -522,6 +522,24 @@ Spec: `docs/designs/move_games.md` §11. Checked in the built release APK
   bundles it needs are **not** set up yet, and the iOS source refuses to
   run the model until they are (pinned by checksum when added).
 
+### Move games screens (PR 2, behind `move_games`)
+- **A link never opens the camera:** `/move/<exercise>/play` needs a
+  `MoveLaunch` object only the app creates after the member's tap on
+  *Start camera*; from a link it lands on the tip / "why the camera" screen
+  (`deep_link_test.dart` → `/move (Move games)`: no camera source is ever
+  made from a link, hostile exercises and rounds, extra segments).
+- **The camera stops** on End, on the results, on background and when the
+  screen closes; the round's end never waits on anything else (a test
+  caught the end hanging on a platform channel).
+- **Saved reps** are clamped to 0..999 like a logged set, a 0-rep round
+  can't be saved, and best scores read back only 1..999 (a corrupt or
+  edited preferences file is ignored).
+- **Screen awake** (`azm/screen_awake`): one boolean in, nothing out;
+  failures are ignored (the phone just locks as usual).
+- The camera permission text now names Move games (English and Arabic,
+  `platform_config_test.dart`). The privacy page and store forms change
+  in PR 4, before the flag is turned on for anyone.
+
 ## If a key leaks (log, chat, commit)
 1. **Revoke or rotate it first**, then clean up. Logs can be copied in the
    minutes they are public.
