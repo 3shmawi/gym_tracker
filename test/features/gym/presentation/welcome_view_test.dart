@@ -27,6 +27,28 @@ void main() {
       expect(calls, ['join', 'solo', 'code']);
     });
 
+    testWidgets('"I already have an account" is there only when offered', (
+      tester,
+    ) async {
+      await tester.pumpApp(
+        WelcomeView(onJoin: () {}, onSolo: () {}, onHaveCode: () {}),
+      );
+      expect(find.byKey(const Key('welcome_have_account')), findsNothing);
+      var taps = 0;
+      await tester.pumpApp(
+        WelcomeView(
+          onJoin: () {},
+          onSolo: () {},
+          onHaveCode: () {},
+          onHaveAccount: () => taps++,
+        ),
+      );
+      expect(find.text(l10nEn.backupHaveAccount), findsOneWidget);
+      await tester.tap(find.byKey(const Key('welcome_have_account')));
+      expect(taps, 1);
+      await tester.expectAccessible();
+    });
+
     testWidgets('nothing is chosen for the person', (tester) async {
       final calls = <String>[];
       await tester.pumpApp(

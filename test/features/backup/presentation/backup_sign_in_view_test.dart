@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gym_tracker/features/backup/domain/entities/restore.dart';
 import 'package:gym_tracker/features/backup/presentation/backup_sign_in_controller.dart';
 import 'package:gym_tracker/features/backup/presentation/backup_sign_in_view.dart';
 import 'package:gym_tracker/l10n/gen/app_localizations.dart';
@@ -19,6 +20,11 @@ BackupSignInView view({
   VoidCallback? onChangeEmail,
   VoidCallback? onUseExisting,
   VoidCallback? onDone,
+  int restored = 0,
+  VoidCallback? onMergeYes,
+  VoidCallback? onMergeNo,
+  VoidCallback? onRetryRestore,
+  ValueChanged<PlanChoice>? onChoosePlan,
 }) => BackupSignInView(
   step: step,
   email: email,
@@ -31,6 +37,11 @@ BackupSignInView view({
   onChangeEmail: onChangeEmail ?? () {},
   onUseExisting: onUseExisting ?? () {},
   onDone: onDone ?? () {},
+  restored: restored,
+  onMergeYes: onMergeYes ?? () {},
+  onMergeNo: onMergeNo ?? () {},
+  onRetryRestore: onRetryRestore ?? () {},
+  onChoosePlan: onChoosePlan ?? (_) {},
 );
 
 void main() {
@@ -161,6 +172,66 @@ void main() {
       expect(closed, 1);
     });
 
+    testWidgets('the question: put them together, or cancel', (tester) async {
+      final calls = <String>[];
+      await tester.pumpApp(
+        view(
+          step: BackupStep.askMerge,
+          onMergeYes: () => calls.add('yes'),
+          onMergeNo: () => calls.add('no'),
+        ),
+      );
+      expect(find.text(l10nEn.backupMergeTitle), findsOneWidget);
+      expect(find.text(l10nEn.backupMergeNoNote), findsOneWidget);
+      await tester.tap(find.byKey(const Key('backup_merge_yes')));
+      await tester.tap(find.byKey(const Key('backup_merge_no')));
+      expect(calls, ['yes', 'no']);
+    });
+
+    testWidgets('restoring: the count of workouts that came back', (
+      tester,
+    ) async {
+      await tester.pumpApp(
+        view(step: BackupStep.restoring, busy: true, restored: 42),
+      );
+      expect(find.text(l10nEn.backupRestoringBody(42)), findsOneWidget);
+      expect(find.byKey(const Key('backup_progress')), findsOneWidget);
+    });
+
+    testWidgets('a restore that stopped says so and offers to go on', (
+      tester,
+    ) async {
+      var retried = 0;
+      await tester.pumpApp(
+        view(
+          step: BackupStep.restoring,
+          restored: 10,
+          problem: BackupProblem.offline,
+          onRetryRestore: () => retried++,
+        ),
+      );
+      await tester.tap(find.byKey(const Key('backup_restore_retry')));
+      expect(retried, 1);
+    });
+
+    testWidgets('two plans: one stays', (tester) async {
+      final chosen = <PlanChoice>[];
+      await tester.pumpApp(
+        view(step: BackupStep.planChoice, onChoosePlan: chosen.add),
+      );
+      await tester.tap(find.byKey(const Key('backup_plan_this_phone')));
+      await tester.tap(find.byKey(const Key('backup_plan_account')));
+      expect(chosen, [PlanChoice.thisPhone, PlanChoice.account]);
+    });
+
+    testWidgets('done after a restore says how many came back', (tester) async {
+      await tester.pumpApp(view(step: BackupStep.done, restored: 128));
+      expect(
+        find.textContaining(l10nEn.backupDoneRestored(128)),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('Arabic: the same screens read right to left', (tester) async {
       await tester.pumpApp(view(), locale: const Locale('ar'));
       expect(
@@ -187,5 +258,15 @@ void main() {
     'backup_code_busy': () =>
         view(step: BackupStep.code, email: 'me@example.com', busy: true),
     'backup_done': () => view(step: BackupStep.done),
+    'backup_done_restored': () => view(step: BackupStep.done, restored: 128),
+    'backup_merge': () => view(step: BackupStep.askMerge),
+    // (The working state loops an animation, so it has a widget test, not a
+    // golden: see "restoring: the count of workouts that came back".)
+    'backup_restoring_offline': () => view(
+      step: BackupStep.restoring,
+      restored: 42,
+      problem: BackupProblem.offline,
+    ),
+    'backup_plan_choice': () => view(step: BackupStep.planChoice),
   });
 }

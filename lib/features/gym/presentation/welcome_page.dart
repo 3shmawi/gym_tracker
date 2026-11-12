@@ -8,6 +8,7 @@ import 'package:gym_tracker/core/legal/consent_gate.dart';
 import 'package:gym_tracker/core/legal/legal.dart';
 import 'package:gym_tracker/core/legal/legal_links_row.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
+import 'package:gym_tracker/features/backup/presentation/backup_sync.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
 import 'package:gym_tracker/features/gym/presentation/welcome_view.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
@@ -38,6 +39,19 @@ class WelcomePage extends ConsumerWidget {
         agree();
         unawaited(context.push<void>(AppRoutes.join));
       },
+      onHaveAccount: ref.watch(trainingBackupEnabledProvider)
+          ? () async {
+              agree();
+              await context.push<void>(AppRoutes.backup);
+              // Signed in (and restored): the first screen is answered.
+              if (!context.mounted ||
+                  !ref.read(accountSessionProvider).isSignedIn) {
+                return;
+              }
+              await ref.read(gymLocalRepositoryProvider).saveOnboardingDone();
+              if (context.mounted) context.go(AppRoutes.home);
+            }
+          : null,
       onSolo: () {
         agree();
         // Answered once: the next launch goes straight to the workout.

@@ -1342,5 +1342,19 @@
   "backupSafe": "Your training is safe on this phone.",
   "backupRetry": "Try again",
   "backupTurnOff": "Turn off backup",
-  "backupSignIn": "Sign in"
+  "backupSignIn": "Sign in",
+  "backupRestoringTitle": "Bringing back your training",
+  "backupRestoringBody": "{count, plural, =0{Looking for your workouts…} =1{1 workout is back} other{{count} workouts are back}}",
+  "backupRestoreRetry": "Try again",
+  "backupMergeTitle": "Add this phone's training to your account?",
+  "backupMergeBody": "This phone already has training and so does your account. They are put together: nothing is deleted.",
+  "backupMergeYes": "Yes, put them together",
+  "backupMergeNo": "No, cancel",
+  "backupMergeNoNote": "Cancelling signs you out. This phone stays as it is.",
+  "backupPlanTitle": "Which plan do you want?",
+  "backupPlanBody": "The plan on this phone and the one on your account are different. The one you don't pick stays on this phone for 30 days.",
+  "backupPlanThisPhone": "Keep this phone's plan",
+  "backupPlanAccount": "Use the plan from my account",
+  "backupDoneRestored": "{count, plural, =1{1 workout came back to this phone.} other{{count} workouts came back to this phone.}}",
+  "backupHaveAccount": "I already have an account"
 }

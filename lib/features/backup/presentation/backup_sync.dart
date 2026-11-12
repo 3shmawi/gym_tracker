@@ -4,10 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
 import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
+import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/backup/domain/entities/backup_status.dart';
+import 'package:gym_tracker/features/backup/domain/entities/restore.dart';
 import 'package:gym_tracker/features/backup/domain/repositories/backup_repositories.dart';
 import 'package:gym_tracker/features/backup/domain/usecases/run_backup.dart';
+import 'package:gym_tracker/features/backup/domain/usecases/run_restore.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
+import 'package:gym_tracker/features/workout/domain/repositories/restore_sink.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
 
 /// Override in tests.
@@ -19,6 +23,9 @@ final backupQueueProvider = Provider<BackupQueue>(
 );
 final backupSettingsProvider = Provider<BackupSettings>(
   (ref) => Dependencies.backupSettings,
+);
+final restoreSinkProvider = Provider<RestoreSink>(
+  (ref) => Dependencies.restoreSink,
 );
 
 /// Whether backup shows at all (`Flags.trainingBackup`: the offer, the
@@ -116,6 +123,25 @@ class BackupSync {
     unawaited(Analytics.capture('backup_disabled'));
   }
 
+  /// A restore that was started and not finished (the app was closed, the
+  /// network dropped) goes on in the background, from the saved position. A
+  /// plan conflict it meets is left for the card to say (nothing is
+  /// changed): the person is asked the next time they sign in.
+  Future<void> _resumeRestore(BackupSettings settings) async {
+    final cursor = settings.restoreCursor;
+    if (cursor == null || cursor == RestoreCursor.done) return;
+    final result = await RunRestore(
+      remote: _ref.read(backupRemoteProvider),
+      sink: _ref.read(restoreSinkProvider),
+      settings: settings,
+      workouts: _ref.read(localWorkoutRepositoryProvider),
+      now: _ref.read(clockProvider),
+    )();
+    if (result case Success(:final value) when value.plan is PlanNeedsChoice) {
+      await settings.setPlanConflict(value: true);
+    }
+  }
+
   Future<void> run() async {
     final settings = _ref.read(backupSettingsProvider);
     if (_running || !settings.enabled) return;
@@ -127,6 +153,8 @@ class BackupSync {
     }
     _running = true;
     try {
+      await _resumeRestore(settings);
+      if (!_ref.mounted) return;
       final queue = _ref.read(backupQueueProvider);
       final before = await queue.pendingCount();
       final status = await RunBackup(
