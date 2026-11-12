@@ -239,7 +239,60 @@ void main() {
     });
   });
 
+  group('askSignOut with backup', () {
+    Future<SignOutAnswer> run(
+      WidgetTester tester,
+      String button, {
+      bool canRemove = true,
+    }) async {
+      var answer = SignOutAnswer.stay;
+      await tester.pumpApp(
+        SheetHost(
+          background: const SizedBox(),
+          open: (context) async => answer = await askSignOut(
+            context,
+            backupOn: true,
+            canRemove: canRemove,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(Key(button)));
+      await tester.pumpAndSettle();
+      return answer;
+    }
+
+    testWidgets('everything backed up: a third way removes it', (tester) async {
+      expect(
+        await run(tester, 'sign_out_remove'),
+        SignOutAnswer.signOutAndRemove,
+      );
+    });
+
+    testWidgets('the plain sign out keeps the training', (tester) async {
+      expect(await run(tester, 'sign_out_confirm'), SignOutAnswer.signOut);
+    });
+
+    testWidgets('not everything backed up: no remove, and it says so', (
+      tester,
+    ) async {
+      await tester.pumpApp(
+        SheetHost(
+          background: const SizedBox(),
+          open: (context) => askSignOut(context, backupOn: true),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('sign_out_remove')), findsNothing);
+      expect(find.text(l10nEn.signOutNotBackedUp), findsOneWidget);
+    });
+  });
+
   screensUiTests({
+    'profile_sign_out_dialog_remove': () => SheetHost(
+      background: view(),
+      open: (context) => askSignOut(context, backupOn: true, canRemove: true),
+    ),
     'profile_anonymous': () => view(onAddEmail: (_) async => null),
     'profile_with_email': () => view(session: emailSession),
     'profile_no_gym': () => view(state: const AsyncData(GymSnapshot())),

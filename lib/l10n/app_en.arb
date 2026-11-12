@@ -1402,5 +1402,8 @@
   "moveCheckDenied": "The camera is off for Azm. Allow it in Settings.",
   "moveCheckNoCamera": "This phone has no front camera, or it didn't start.",
   "moveCheckModelFailed": "The pose model can't run on this phone yet.",
-  "moveCheckBodyLabel": "Your body as the camera sees it"
+  "moveCheckBodyLabel": "Your body as the camera sees it",
+  "signOutNotBackedUp": "Some of your training is not backed up yet. It stays on this phone.",
+  "signOutRemove": "Sign out and remove my training from this phone",
+  "backupSwapPlan": "Use my other plan instead"
 }

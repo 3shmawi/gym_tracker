@@ -22,6 +22,7 @@ class BackupCardView extends StatelessWidget {
     required this.onOpen,
     required this.onRetry,
     required this.onTurnOff,
+    this.onSwapPlan,
     super.key,
   });
 
@@ -31,6 +32,9 @@ class BackupCardView extends StatelessWidget {
   final VoidCallback onOpen;
   final VoidCallback onRetry;
   final VoidCallback onTurnOff;
+
+  /// "Use the other plan": only while a plan that lost a conflict is kept.
+  final VoidCallback? onSwapPlan;
 
   @override
   Widget build(BuildContext context) {
@@ -136,6 +140,12 @@ class BackupCardView extends StatelessWidget {
                   label: l10n.backupRetry,
                   onPressed: onRetry,
                 ),
+              if (onSwapPlan != null)
+                AppSecondaryButton(
+                  key: const Key('backup_swap_plan'),
+                  label: l10n.backupSwapPlan,
+                  onPressed: onSwapPlan,
+                ),
               AppSecondaryButton(
                 key: const Key('backup_turn_off'),
                 label: l10n.backupTurnOff,
@@ -169,6 +179,9 @@ class BackupCard extends ConsumerWidget {
       onOpen: onOpen,
       onRetry: sync.run,
       onTurnOff: () => unawaited(_turnOff(context, sync)),
+      onSwapPlan: sync.keptPlan() == null
+          ? null
+          : () => unawaited(sync.useKeptPlan()),
     );
   }
 

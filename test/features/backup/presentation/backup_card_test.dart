@@ -11,6 +11,7 @@ Widget card(
   VoidCallback? onOpen,
   VoidCallback? onRetry,
   VoidCallback? onTurnOff,
+  VoidCallback? onSwapPlan,
 }) => Scaffold(
   body: ListView(
     padding: const EdgeInsets.all(16),
@@ -20,6 +21,7 @@ Widget card(
         onOpen: onOpen ?? () {},
         onRetry: onRetry ?? () {},
         onTurnOff: onTurnOff ?? () {},
+        onSwapPlan: onSwapPlan,
       ),
     ],
   ),
@@ -110,6 +112,22 @@ void main() {
     });
   });
 
+  testWidgets('the other plan: a button only while one is kept', (
+    tester,
+  ) async {
+    var swapped = 0;
+    await tester.pumpApp(
+      card(
+        const BackupStatus(state: BackupState.upToDate),
+        onSwapPlan: () => swapped++,
+      ),
+    );
+    await tester.tap(find.byKey(const Key('backup_swap_plan')));
+    expect(swapped, 1);
+    await tester.pumpApp(card(const BackupStatus(state: BackupState.upToDate)));
+    expect(find.byKey(const Key('backup_swap_plan')), findsNothing);
+  });
+
   group(BackupTurnOffSheet, () {
     testWidgets('three ways out, each pops its own answer', (tester) async {
       BackupTurnOff? answer;
@@ -143,6 +161,10 @@ void main() {
   });
 
   screensUiTests({
+    'backup_card_swap_plan': () => card(
+      BackupStatus(state: BackupState.upToDate, lastSyncedAt: _when),
+      onSwapPlan: () {},
+    ),
     'backup_turn_off_sheet': () => const Scaffold(body: BackupTurnOffSheet()),
     'backup_card_off': () => card(BackupStatus.off),
     'backup_card_up_to_date': () =>
