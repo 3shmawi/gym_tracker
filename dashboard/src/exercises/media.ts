@@ -28,6 +28,8 @@ export const MAX_PICTURE_ROWS = 1200;
 export const MAX_VIDEO_ROWS = 300;
 /** Search results at most (as the app). */
 export const MAX_SEARCH_ROWS = 60;
+/** Rows fetched for the "any word" fallback, before ranking and cutting to MAX_SEARCH_ROWS. */
+const MAX_ANY_ROWS = 400;
 const TITLE_MAX = 80;
 
 interface PictureRow {
@@ -46,6 +48,13 @@ interface CatalogRow {
   exercise_key: unknown;
   frame: unknown;
   title_en: unknown;
+  keywords?: unknown;
+}
+
+/** How many of the searched words an exercise's keywords hold. */
+function matchedWords(row: CatalogRow, words: readonly string[]): number {
+  const keywords = Array.isArray(row.keywords) ? (row.keywords as unknown[]) : [];
+  return words.filter((w) => keywords.includes(w)).length;
 }
 
 const intOrNull = (v: unknown): number | null => (typeof v === 'number' && Number.isInteger(v) ? v : null);
@@ -114,22 +123,43 @@ export class MediaRepository {
     });
   }
 
-  /** Library pictures matching any of the words; both frames of a move next to each other. */
+  /**
+   * Library pictures for the typed words; both frames of a move next to each
+   * other. Exercises that have **all** the words come first and alone: "Flat
+   * Dumbbell Press" finds the flat dumbbell press, not every dumbbell or
+   * press exercise. Only when none has them all, exercises with **any** of the
+   * words are listed, the ones with the most words first.
+   */
   async search(text: string): Promise<Result<CatalogPicture[]>> {
     const words = searchWords(text);
     return guard(async () => {
       if (words.length === 0) return [];
-      const rows = unwrap(
+      const all = unwrap(
         await this.supabase
           .from('exercise_images')
           .select('public_id, exercise_key, frame, title_en')
-          .overlaps('keywords', words)
+          .contains('keywords', words)
           .order('exercise_key')
           .order('frame', { ascending: false })
           .limit(MAX_SEARCH_ROWS)
           .overrideTypes<CatalogRow[], { merge: false }>(),
       );
-      return (rows ?? []).flatMap((row) => {
+      let rows: CatalogRow[] = all ?? [];
+      if (rows.length === 0 && words.length > 1) {
+        const any = unwrap(
+          await this.supabase
+            .from('exercise_images')
+            .select('public_id, exercise_key, frame, title_en, keywords')
+            .overlaps('keywords', words)
+            .order('exercise_key')
+            .order('frame', { ascending: false })
+            .limit(MAX_ANY_ROWS)
+            .overrideTypes<CatalogRow[], { merge: false }>(),
+        );
+        // Stable sort: the server's order (exercise, then frame) is kept among equals.
+        rows = [...(any ?? [])].sort((a, b) => matchedWords(b, words) - matchedWords(a, words)).slice(0, MAX_SEARCH_ROWS);
+      }
+      return rows.flatMap((row) => {
         const picture = toCatalogPicture(row);
         return picture ? [picture] : [];
       });

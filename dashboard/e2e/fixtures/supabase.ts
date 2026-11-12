@@ -589,17 +589,22 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
     const isManager = (gymId: string) => gyms.some((g) => g.id === gymId);
     if (path === '/rest/v1/exercise_images' && method === 'GET') {
       const ov = /^ov\.\{(.*)\}$/.exec(url.searchParams.get('keywords') ?? '');
+      const cs = /^cs\.\{(.*)\}$/.exec(url.searchParams.get('keywords') ?? '');
       const inList = /^in\.\((.*)\)$/.exec(url.searchParams.get('public_id') ?? '');
       let rows = catalog;
       if (ov) {
         const words = (ov[1] ?? '').split(',').map((w) => w.replace(/^"|"$/g, ''));
         rows = rows.filter((r) => Array.isArray(r.keywords) && (r.keywords as string[]).some((k) => words.includes(k)));
       }
+      if (cs) {
+        const words = (cs[1] ?? '').split(',').map((w) => w.replace(/^"|"$/g, ''));
+        rows = rows.filter((r) => Array.isArray(r.keywords) && words.every((w) => (r.keywords as string[]).includes(w)));
+      }
       if (inList) {
         const ids = (inList[1] ?? '').split(',').map((w) => w.replace(/^"|"$/g, ''));
         rows = rows.filter((r) => ids.includes(String(r.public_id)));
       }
-      return json(route, 200, rows.map((r) => ({ public_id: r.public_id, exercise_key: r.exercise_key, frame: r.frame, title_en: r.title_en })));
+      return json(route, 200, rows.map((r) => ({ public_id: r.public_id, exercise_key: r.exercise_key, frame: r.frame, title_en: r.title_en, keywords: r.keywords })));
     }
     if (path === '/rest/v1/gym_exercise_images' && method === 'GET') {
       if (behaviour.mediaFails) return json(route, 500, { code: 'XX000', message: 'boom' });
