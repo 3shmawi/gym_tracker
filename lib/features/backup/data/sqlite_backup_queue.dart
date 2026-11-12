@@ -56,6 +56,12 @@ class SqliteBackupQueue implements BackupQueue {
   );
 
   @override
+  Future<void> resetAll() => _db.update('sessions', {
+    'synced_at': null,
+    'sync_problem': null,
+  }, where: 'membership_id IS NULL');
+
+  @override
   Future<int> pendingCount() => _count(_waiting);
 
   @override

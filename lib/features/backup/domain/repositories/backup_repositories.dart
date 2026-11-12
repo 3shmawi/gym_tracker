@@ -12,6 +12,10 @@ abstract interface class BackupRemote {
   /// session without a gym) and says whether the account can be written to.
   Future<Result<void>> ensurePerson();
 
+  /// Erases the solo backup (workouts, personal plan, state) from the
+  /// account; gym rows and the account stay (`delete_my_backup`).
+  Future<Result<void>> deleteBackup();
+
   /// Stores up to 50 **solo** workouts; ones the server has (same
   /// `clientId`) are not stored again.
   Future<Result<void>> uploadSessions(List<WorkoutSession> sessions);
@@ -51,6 +55,10 @@ abstract interface class BackupQueue {
   Future<void> markProblem(String clientId, String reason);
 
   Future<int> pendingCount();
+
+  /// Forgets what was backed up (and every refusal), so all solo workouts
+  /// wait again: used after the backup on the account was erased.
+  Future<void> resetAll();
   Future<int> problemCount();
 }
 
@@ -86,4 +94,9 @@ abstract interface class BackupSettings {
   String? get keptPlan;
   DateTime? get keptPlanAt;
   Future<void> setKeptPlan(String? json, DateTime at);
+
+  /// How many times the offer was turned down ("Not now"). Two and it is
+  /// never shown again; Settings stays.
+  int get offerDismissals;
+  Future<void> setOfferDismissals(int value);
 }

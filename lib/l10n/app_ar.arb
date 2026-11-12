@@ -519,5 +519,15 @@
   "backupPlanThisPhone": "خلّي خطة الموبايل ده",
   "backupPlanAccount": "استخدم الخطة اللي في حسابي",
   "backupDoneRestored": "{count, plural, =1{رجع تمرين واحد للموبايل ده.} other{رجعوا {count} تمارين للموبايل ده.}}",
-  "backupHaveAccount": "عندي حساب بالفعل"
+  "backupHaveAccount": "عندي حساب بالفعل",
+  "backupOfferTitle": "خلّي تمرينك في أمان",
+  "backupOfferSheetBody": "ضيف إيميلك وتمارينك وخطتك ومستواك يتحفظوا. لو الموبايل ضاع أو غيّرته، كل حاجة بترجع. ببلاش، وتمرينك كمان بيفضل على الموبايل ده.",
+  "backupOfferAccept": "احفظ تمريني",
+  "backupOfferLater": "مش دلوقتي",
+  "backupTurnOffTitle": "تقفل النسخ الاحتياطي؟",
+  "backupTurnOffBody": "تمرينك بيفضل على الموبايل ده في الحالتين. تقدر تسيب اللي اتحفظ، أو تمسحه من حسابك. سجلات الجيم بتاعك مش بتتأثر.",
+  "backupTurnOffKeep": "اقفل واسيب اللي اتحفظ",
+  "backupTurnOffErase": "اقفل وامسح نسختي",
+  "backupTurnOffCancel": "إلغاء",
+  "backupEraseFailed": "معرفناش نمسح النسخة. اتأكد من الإنترنت وجرّب تاني. النسخ الاحتياطي لسه شغال."
 }

@@ -101,6 +101,10 @@ class SupabaseBackupRemote implements BackupRemote {
       }, retries: 0);
 
   @override
+  Future<Result<void>> deleteBackup() =>
+      guard(() => (call ?? _rpc)('delete_my_backup', null), retries: retries);
+
+  @override
   Future<Result<void>> saveState(Level bestLevel, ChosenDay? chosenDay) =>
       guard(
         () => (call ?? _rpc)('save_personal_state', {

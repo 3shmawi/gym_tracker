@@ -19,6 +19,9 @@ class UnconfiguredBackupRemote implements BackupRemote {
   Future<Result<void>> ensurePerson() async => _no;
 
   @override
+  Future<Result<void>> deleteBackup() async => _no;
+
+  @override
   Future<Result<void>> uploadSessions(List<WorkoutSession> sessions) async =>
       _no;
 
@@ -70,6 +73,9 @@ class EmptyBackupQueue implements BackupQueue {
   Future<int> pendingCount() async => 0;
 
   @override
+  Future<void> resetAll() async {}
+
+  @override
   Future<int> problemCount() async => 0;
 }
 
@@ -85,6 +91,7 @@ class InMemoryBackupSettings implements BackupSettings {
     this.restoreCursor,
     this.keptPlan,
     this.keptPlanAt,
+    this.offerDismissals = 0,
   });
 
   @override
@@ -105,6 +112,11 @@ class InMemoryBackupSettings implements BackupSettings {
   String? keptPlan;
   @override
   DateTime? keptPlanAt;
+  @override
+  int offerDismissals;
+
+  @override
+  Future<void> setOfferDismissals(int value) async => offerDismissals = value;
 
   @override
   Future<void> setEnabled({required bool value}) async => enabled = value;

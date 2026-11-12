@@ -17,6 +17,7 @@ class PrefsBackupSettings implements BackupSettings {
   static const restoreCursorKey = 'backup.restore_cursor';
   static const keptPlanKey = 'backup.kept_plan';
   static const keptPlanAtKey = 'backup.kept_plan_at';
+  static const offerKey = 'backup.offer_dismissals';
 
   @override
   bool get enabled => _prefs.getBool(enabledKey) ?? false;
@@ -99,4 +100,10 @@ class PrefsBackupSettings implements BackupSettings {
       await _prefs.setInt(keptPlanAtKey, at.millisecondsSinceEpoch);
     }
   }
+
+  @override
+  int get offerDismissals => _prefs.getInt(offerKey) ?? 0;
+
+  @override
+  Future<void> setOfferDismissals(int value) => _prefs.setInt(offerKey, value);
 }

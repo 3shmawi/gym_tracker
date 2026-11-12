@@ -1356,5 +1356,15 @@
   "backupPlanThisPhone": "Keep this phone's plan",
   "backupPlanAccount": "Use the plan from my account",
   "backupDoneRestored": "{count, plural, =1{1 workout came back to this phone.} other{{count} workouts came back to this phone.}}",
-  "backupHaveAccount": "I already have an account"
+  "backupHaveAccount": "I already have an account",
+  "backupOfferTitle": "Keep your training safe",
+  "backupOfferSheetBody": "Add your email and your workouts, plan and level are saved. Lose or change your phone and everything comes back. It's free, and your training stays on this phone too.",
+  "backupOfferAccept": "Back up my training",
+  "backupOfferLater": "Not now",
+  "backupTurnOffTitle": "Turn off backup?",
+  "backupTurnOffBody": "Your training stays on this phone either way. You can keep what is already saved, or erase it from your account. Your gym's records are not affected.",
+  "backupTurnOffKeep": "Turn off, keep what is saved",
+  "backupTurnOffErase": "Turn off and erase my backup",
+  "backupTurnOffCancel": "Cancel",
+  "backupEraseFailed": "Couldn't erase the backup. Check your connection and try again. Backup is still on."
 }
