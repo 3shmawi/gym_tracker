@@ -490,27 +490,14 @@ class _HomeRestLineState extends State<HomeRestLine> {
     final palette = context.palette;
     final left = _left;
     final clock = '${left ~/ 60}:${(left % 60).toString().padLeft(2, '0')}';
-    return Row(
+    return Text(
+      left > 0 ? l10n.todayRest(clock) : l10n.todayRestOver,
       key: const Key('home_rest_line'),
-      mainAxisAlignment: MainAxisAlignment.center,
-      spacing: AppDimens.xs,
-      children: [
-        Icon(
-          Icons.timer_outlined,
-          size: AppDimens.scaled(18),
-          color: palette.textSecondary,
-        ),
-        Flexible(
-          child: Text(
-            left > 0 ? l10n.todayRest(clock) : l10n.todayRestOver,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.label.copyWith(
-              color: palette.textPrimary,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ),
-      ],
+      textAlign: TextAlign.center,
+      style: AppTextStyles.label.copyWith(
+        color: palette.textPrimary,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
     );
   }
 }
