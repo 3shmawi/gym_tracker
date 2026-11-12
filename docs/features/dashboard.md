@@ -317,6 +317,12 @@ reopen it). Copy and Save-as-template open only when the member has a plan.
 Phone cards still open the member page, where the same actions are. Tests:
 `test/router.test.ts`, `e2e/templates.spec.ts` ("quick actions on a member").
 
+**Simpler to get to (UX pass).**
+- Member page order: the plan card (with its quick actions) and the progress come first, then phone recovery / codes / end membership, and the person's own name and permissions last.
+- Members list: a "Needs you" row shows only when something needs doing: members without a plan (a button that filters the list to them, read with one `plans.versions` request for the active people you manage; a failure hides it) and expired codes (opens the Waiting tab).
+- Phone: each card has a "more" button with Plan, Template and Copy, so the actions of the wide table exist on a phone too.
+- Exercises: a "No pictures" tab next to "No video".
+
 **Picture search cards in Arabic.** The English picture title and the two
 frames keep their own left-to-right order inside the card (title isolated and
 wrapped cleanly; "start of the move" then "end of the move" like a timeline),

@@ -12,14 +12,15 @@ import { Icon } from '../ui/icons';
 import { ExerciseThumb } from '../ui/Picture';
 import { ErrorView, LoadingView, StateBlock } from '../ui/states';
 
-type Tab = 'all' | 'mine' | 'no_video';
-const TABS: readonly Tab[] = ['all', 'mine', 'no_video'];
+type Tab = 'all' | 'mine' | 'no_video' | 'no_pictures';
+const TABS: readonly Tab[] = ['all', 'mine', 'no_pictures', 'no_video'];
 const SEARCH_MAX = 60;
 const LISTED = LIBRARY.map(asListed);
 
 const hasMine = (media: GymMedia, e: ExerciseLike) => media.pictures.has(e.id) || media.videos.has(e.id);
 const hasNoVideo = (media: GymMedia, e: ExerciseLike) => !media.videos.has(e.id) && !e.libraryVideo;
-const inTab = (media: GymMedia, e: ExerciseLike, tab: Tab) => tab === 'all' || (tab === 'mine' ? hasMine(media, e) : hasNoVideo(media, e));
+const inTab = (media: GymMedia, e: ExerciseLike, tab: Tab) =>
+  tab === 'all' || (tab === 'mine' ? hasMine(media, e) : tab === 'no_pictures' ? !media.pictures.has(e.id) : hasNoVideo(media, e));
 
 /** Both names, the one of the page's language first. */
 export function exerciseNames(lang: I18n['lang'], e: Pick<ExerciseLike, 'en' | 'ar'>): { primary: string; secondary: string; secondaryLang: 'en' | 'ar' } {
@@ -65,7 +66,7 @@ export function ExercisesPage({ gym, media, cloudName }: { readonly gym: Managed
   const withPictures = all.filter((e) => m.pictures.has(e.id)).length;
   const withVideo = all.filter((e) => m.videos.has(e.id)).length;
   const countOf = (k: Tab) => all.filter((e) => inTab(m, e, k)).length;
-  const tabLabel: Record<Tab, string> = { all: t('ex.tabAll'), mine: t('ex.tabMine'), no_video: t('ex.tabNoVideo') };
+  const tabLabel: Record<Tab, string> = { all: t('ex.tabAll'), mine: t('ex.tabMine'), no_video: t('ex.tabNoVideo'), no_pictures: t('ex.tabNoPictures') };
 
   const empty =
     needle !== '' ? (

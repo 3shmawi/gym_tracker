@@ -1,5 +1,6 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
+import type { PlansRepository } from '../plans/plans';
 import type { LastWorkout, ProgressRepository } from '../progress/progress';
 import { dateLabel } from '../progress/weeks';
 import { linkHandler, pathOf, type Route } from '../app/router';
@@ -25,7 +26,7 @@ function Link({ route, class: cls, label, children }: { readonly route: Route; r
   );
 }
 
-export function MembersPage({ gym, members, progress }: { readonly gym: ManagedGym; readonly members: MembersRepository; readonly progress?: ProgressRepository }) {
+export function MembersPage({ gym, members, progress, plans }: { readonly gym: ManagedGym; readonly members: MembersRepository; readonly progress?: ProgressRepository; readonly plans?: PlansRepository }) {
   const { t, lang } = useI18n();
   const { data, reload } = useMembersList(members, gym.id);
   // D5 (board 10): "Last workout" per member; optional, a failure just hides it.
@@ -37,6 +38,18 @@ export function MembersPage({ gym, members, progress }: { readonly gym: ManagedG
       alive = false;
     };
   }, [progress, gym.id]);
+  // "What needs you": active people you can manage who have no plan yet. Optional; a failure just hides it.
+  const [planned, setPlanned] = useState<ReadonlyMap<string, number> | null>(null);
+  const memberIds = data.state === 'ready' ? data.members.filter((m) => m.status === 'active' && canManage(gym.role, m.role)).map((m) => m.id).join(',') : '';
+  useEffect(() => {
+    let alive = true;
+    if (plans && memberIds !== '') void plans.versions(memberIds.split(',')).then((r) => { if (alive && r.ok) setPlanned(r.value); });
+    return () => {
+      alive = false;
+    };
+  }, [plans, memberIds]);
+  const [onlyNoPlan, setOnlyNoPlan] = useState(false);
+  const [menuFor, setMenuFor] = useState<string | null>(null);
   const lastText = (m: Member) => {
     const l = last?.get(m.id);
     if (!l || m.status !== 'active') return t('prog.dash');
@@ -69,7 +82,10 @@ export function MembersPage({ gym, members, progress }: { readonly gym: ManagedG
   const waiting = all.filter((m) => m.status === 'pending' && m.invite.state === 'sent').length;
   const countOf = (k: Tab) => all.filter((m) => matches(m, k)).length;
   const needle = cleanName(query).toLocaleLowerCase();
-  const rows = all.filter((m) => matches(m, tab) && (needle === '' || m.name.toLocaleLowerCase().includes(needle)));
+  const withoutPlan = (m: Member) => planned !== null && m.status === 'active' && canManage(gym.role, m.role) && !planned.has(m.id);
+  const noPlanCount = all.filter(withoutPlan).length;
+  const expiredCount = all.filter((m) => m.status === 'pending' && m.invite.state === 'expired').length;
+  const rows = all.filter((m) => matches(m, tab) && (!onlyNoPlan || withoutPlan(m)) && (needle === '' || m.name.toLocaleLowerCase().includes(needle)));
   const tabLabel: Record<Tab, string> = {
     all: t('members.tabAll'),
     active: t('members.tabActive'),
@@ -123,6 +139,23 @@ export function MembersPage({ gym, members, progress }: { readonly gym: ManagedG
           {t('members.addTrainees')}
         </Link>
       </div>
+
+      {noPlanCount > 0 || expiredCount > 0 ? (
+        <div class="attn" role="group" aria-label={t('members.attnTitle')}>
+          <b>{t('members.attnTitle')}</b>
+          {noPlanCount > 0 ? (
+            <button type="button" class="btn sm" aria-pressed={onlyNoPlan} onClick={() => { setOnlyNoPlan(!onlyNoPlan); setTab('all'); }}>
+              {noPlanCount === 1 ? t('members.attnNoPlanOne') : t('members.attnNoPlanMany', { count: noPlanCount })}
+            </button>
+          ) : null}
+          {expiredCount > 0 ? (
+            <button type="button" class="btn sm" onClick={() => { setOnlyNoPlan(false); setTab('pending'); }}>
+              {expiredCount === 1 ? t('members.attnExpiredOne') : t('members.attnExpiredMany', { count: expiredCount })}
+            </button>
+          ) : null}
+          {onlyNoPlan ? <button type="button" class="btn sm ghost" onClick={() => { setOnlyNoPlan(false); }}>{t('members.attnClear')}</button> : null}
+        </div>
+      ) : null}
 
       <div class="toolbar">
         <div class="field search">
@@ -206,8 +239,11 @@ export function MembersPage({ gym, members, progress }: { readonly gym: ManagedG
               const status = statusOf(t, lang, m, now);
               const route: Route = { name: 'member', gymId: gym.id, memberId: m.id };
               const sub = [roleLabel(t, m.role), m.status === 'pending' || m.status === 'ended' ? status.when : permsText(t, m), last && m.status === 'active' ? `${t('members.colLast')}: ${lastText(m)}` : null].filter(Boolean).join(' · ');
+              const quick = canManage(gym.role, m.role) && m.status === 'active';
+              const base: Route = { name: 'member_plan', gymId: gym.id, memberId: m.id };
+              const menuId = `mq-${m.id}`;
               return (
-                <li key={m.id}>
+                <li key={m.id} class="mcard-wrap">
                   <Link route={route} class="panel mcard">
                     <span class="av" aria-hidden="true">{initials(m.name)}</span>
                     <span class="meta">
@@ -216,6 +252,20 @@ export function MembersPage({ gym, members, progress }: { readonly gym: ManagedG
                     </span>
                     <span class={`badge ${status.badge}`}>{status.label}</span>
                   </Link>
+                  {quick ? (
+                    <>
+                      <button type="button" class="ib mcard-more" aria-expanded={menuFor === m.id} aria-controls={menuId} aria-label={t('members.quickMore', { name: m.name })} onClick={() => { setMenuFor(menuFor === m.id ? null : m.id); }}>
+                        <Icon name="more" />
+                      </button>
+                      {menuFor === m.id ? (
+                        <div class="mcard-menu acts-row" id={menuId}>
+                          <Link route={base} class="btn sm" label={t('members.quickPlanName', { name: m.name })}>{t('members.quickPlan')}</Link>
+                          <Link route={{ ...base, open: 'replace' }} class="btn sm" label={t('members.quickTemplateName', { name: m.name })}>{t('members.quickTemplate')}</Link>
+                          <Link route={{ ...base, open: 'copy' }} class="btn sm" label={t('members.quickCopyName', { name: m.name })}>{t('members.quickCopy')}</Link>
+                        </div>
+                      ) : null}
+                    </>
+                  ) : null}
                 </li>
               );
             })}
