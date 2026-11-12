@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/features/move/data/datasources/recorded_pose_source.dart';
 import 'package:gym_tracker/features/move/domain/entities/pose_frame.dart';
+import 'package:gym_tracker/features/move/presentation/game/stack_game_view.dart';
 import 'package:gym_tracker/features/workout/presentation/exercise_history_view.dart';
 
 import '../../test/features/move/helpers/synthetic_pose.dart';
@@ -21,6 +22,9 @@ List<PoseFrame> demoPushUps() => SynthSet(
   ),
   noise: 0.002,
 ).frames();
+
+/// The game's name on the running screen (the demo runs in English).
+const l10nEnStack = 'Stack';
 
 RecordedPoseSource demoPoseSource() => RecordedPoseSource(demoPushUps());
 
@@ -52,7 +56,8 @@ Future<void> waitFor(
 
 /// Move games, the camera round (docs/features/move_games.md → Demo):
 /// home → Move → 10 reps → tip → why the camera → placement turns green →
-/// 3-2-1 → ten push-ups → results → Save → the exercise's history. Starts on
+/// 3-2-1 → ten push-ups build a tower of ten blocks →
+/// results → Save → the exercise's history. Starts on
 /// the home screen with a plan; the camera is [demoPoseSource].
 Future<void> moveFlow(WidgetTester tester) async {
   Future<void> tap(Finder finder, [int pause = 900]) async {
@@ -77,6 +82,14 @@ Future<void> moveFlow(WidgetTester tester) async {
   // Placement: the checks turn green, 3-2-1 starts by itself.
   await waitFor(tester, find.byKey(const Key('move_countdown')));
   await waitFor(tester, find.byKey(const Key('move_reps')));
+  // Each push-up drops a block on the tower (the Stack game).
+  await waitFor(
+    tester,
+    find.byWidgetPredicate(
+      (w) => w is StackGameView && w.state.floors.length >= 5,
+    ),
+  );
+  expect(find.text(l10nEnStack), findsOneWidget);
   // Ten push-ups end the round.
   await waitFor(tester, find.byKey(const Key('move_results_save')));
   await tester.pumpAndSettle();

@@ -1,3 +1,7 @@
+import 'package:gym_tracker/features/move/domain/entities/move_exercise.dart';
+import 'package:gym_tracker/features/move/domain/entities/round.dart';
+import 'package:gym_tracker/features/move/domain/move_exercises.dart';
+
 /// Analytics for Move games use buckets, never exact numbers, and never
 /// images, landmarks or personal data (docs/designs/move_games.md §11).
 abstract final class MoveAnalytics {
@@ -23,5 +27,12 @@ abstract final class MoveAnalytics {
     < 8 => 'lt_8',
     < 15 => '8_15',
     _ => '15_plus',
+  };
+
+  /// The game played: the exercise's game with the camera, `none` when
+  /// counting by hand (no game is shown).
+  static String game(MoveExerciseId exercise, RoundMode mode) => switch (mode) {
+    RoundMode.camera => MoveExercises.gameFor(exercise).id.id,
+    RoundMode.manual => 'none',
   };
 }

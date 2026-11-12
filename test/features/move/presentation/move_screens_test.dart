@@ -1,3 +1,4 @@
+import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/features/library/domain/entities/library_exercise.dart';
@@ -6,9 +7,13 @@ import 'package:gym_tracker/features/move/domain/entities/pose_frame.dart';
 import 'package:gym_tracker/features/move/domain/entities/rep_event.dart';
 import 'package:gym_tracker/features/move/domain/entities/rep_state.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
+import 'package:gym_tracker/features/move/domain/games/game_rules.dart';
+import 'package:gym_tracker/features/move/domain/games/stack_rules.dart';
 import 'package:gym_tracker/features/move/domain/usecases/placement.dart';
 import 'package:gym_tracker/features/move/presentation/camera_round_controller.dart';
 import 'package:gym_tracker/features/move/presentation/camera_round_view.dart';
+import 'package:gym_tracker/features/move/presentation/game/stack_game.dart';
+import 'package:gym_tracker/features/move/presentation/game/stack_game_view.dart';
 import 'package:gym_tracker/features/move/presentation/manual_counter_view.dart';
 import 'package:gym_tracker/features/move/presentation/manual_round_controller.dart';
 import 'package:gym_tracker/features/move/presentation/move_hub_view.dart';
@@ -76,21 +81,55 @@ RoundOutcome outcome({
   save: save,
 );
 
-CameraRoundView camera(CameraRoundState state) => CameraRoundView(
-  state: state,
-  now: now,
-  exerciseName: 'Push-ups',
-  onClose: () {},
-  onPause: () {},
-  onResume: () {},
-  onEnd: () {},
-  onManual: () {},
-  onSave: () {},
-  onPlayAgain: () {},
-  onDone: () {},
-  onOpenSettings: () {},
-  onOpenProgress: () {},
-);
+/// A tower of [floors] blocks (every other one steady, every third a bit
+/// shallow), and maybe a rep that didn't count [ago].
+StackState tower(
+  int floors, {
+  GameMomentKind? last,
+  Duration ago = const Duration(seconds: 1),
+}) {
+  const rules = StackRules();
+  var s = rules.start();
+  for (var i = 0; i < floors; i++) {
+    s = rules.onEvent(
+      s,
+      RepCounted(
+        total: i + 1,
+        took: Duration(milliseconds: i.isEven ? 1500 : 1000),
+        depth: i % 3 == 0 ? 0.86 : 1,
+      ),
+      t0,
+    );
+  }
+  final at = now.subtract(ago);
+  return switch (last) {
+    GameMomentKind.halfRep => rules.onEvent(s, const HalfRep(depth: 0.5), at),
+    GameMomentKind.tooFast => rules.onEvent(
+      s,
+      const TooFast(took: Duration(milliseconds: 400)),
+      at,
+    ),
+    GameMomentKind.rep || null => s,
+  };
+}
+
+CameraRoundView camera(CameraRoundState state, {VoidCallback? onToggleSound}) =>
+    CameraRoundView(
+      state: state,
+      onToggleSound: onToggleSound ?? () {},
+      now: now,
+      exerciseName: 'Push-ups',
+      onClose: () {},
+      onPause: () {},
+      onResume: () {},
+      onEnd: () {},
+      onManual: () {},
+      onSave: () {},
+      onPlayAgain: () {},
+      onDone: () {},
+      onOpenSettings: () {},
+      onOpenProgress: () {},
+    );
 
 CameraRoundState cam({
   CameraStage stage = CameraStage.live,
@@ -100,6 +139,8 @@ CameraRoundState cam({
   CameraTrouble? trouble,
   RoundOutcome? done,
   PoseFrame? frame,
+  GameState? game,
+  bool soundOn = true,
 }) => CameraRoundState(
   stage: stage,
   round: r ?? round(RoundPhase.ready),
@@ -108,6 +149,8 @@ CameraRoundState cam({
   trouble: trouble,
   outcome: done,
   frame: frame,
+  game: game ?? tower(r?.reps ?? 0),
+  soundOn: soundOn,
   rep: const RepState(phase: RepPhase.goingDown, depth: 0.6, reps: 7),
   cameraOn: true,
 );
@@ -220,6 +263,117 @@ void main() {
       // 12 s before a pause + 20 s since: 28 s left of 60.
       expect(find.text('0:28'), findsOneWidget);
       expect(find.byKey(const Key('move_round_pause')), findsOneWidget);
+    });
+
+    testWidgets('the reps build the tower; a screen reader hears a label', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpApp(
+        camera(cam(r: round(RoundPhase.running, reps: 7), game: tower(7))),
+      );
+      expect(find.byType(StackGameView), findsOneWidget);
+      expect(find.bySemanticsLabel('Stack: 7 floors'), findsOneWidget);
+      expect(find.text(l10nEn.moveGameName), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('a block lands, then the engine rests (Reduce Motion too)', (
+      tester,
+    ) async {
+      for (final reduce in [false, true]) {
+        Widget at(int floors) => MediaQuery(
+          data: MediaQueryData(disableAnimations: reduce),
+          child: camera(
+            cam(
+              r: round(RoundPhase.running, reps: floors),
+              game: tower(floors),
+            ),
+          ),
+        );
+        await tester.pumpApp(at(3));
+        final game = tester
+            .widget<GameWidget<StackGame>>(find.byType(GameWidget<StackGame>))
+            .game!;
+        expect(game.paused, isTrue, reason: 'idle: nothing to draw');
+        await tester.pumpApp(at(4));
+        expect(game.tower.state.floors, hasLength(4));
+        expect(game.paused, isFalse, reason: 'the new block falls');
+        await tester.pumpAndSettle();
+        expect(game.paused, isTrue);
+        // A long tower scrolls down instead of growing off the screen.
+        await tester.pumpApp(at(40));
+        await tester.pumpAndSettle();
+        expect(game.paused, isTrue);
+        await tester.pumpWidget(const SizedBox());
+      }
+    });
+
+    testWidgets('a half rep or a rushed rep says why, for a moment', (
+      tester,
+    ) async {
+      await tester.pumpApp(
+        camera(
+          cam(
+            r: round(RoundPhase.running, reps: 4),
+            game: tower(4, last: GameMomentKind.halfRep),
+          ),
+        ),
+      );
+      expect(find.text(l10nEn.moveHalfRepNotice), findsOneWidget);
+
+      await tester.pumpApp(
+        camera(
+          cam(
+            r: round(RoundPhase.running, reps: 4),
+            hint: FormHintKind.straightBody,
+            game: tower(4, last: GameMomentKind.tooFast),
+          ),
+        ),
+      );
+      expect(find.text(l10nEn.moveTooFastNotice), findsOneWidget);
+      expect(
+        find.text(l10nEn.moveHintStraightBody),
+        findsNothing,
+        reason: 'one message at a time',
+      );
+
+      // Gone after a few seconds: the form hint shows again.
+      await tester.pumpApp(
+        camera(
+          cam(
+            r: round(RoundPhase.running, reps: 4),
+            hint: FormHintKind.straightBody,
+            game: tower(
+              4,
+              last: GameMomentKind.tooFast,
+              ago: const Duration(seconds: 5),
+            ),
+          ),
+        ),
+      );
+      expect(find.byKey(const Key('move_game_notice')), findsNothing);
+      expect(find.text(l10nEn.moveHintStraightBody), findsOneWidget);
+    });
+
+    testWidgets('the sound button mutes and unmutes', (tester) async {
+      var taps = 0;
+      await tester.pumpApp(
+        camera(
+          cam(r: round(RoundPhase.running, reps: 2)),
+          onToggleSound: () => taps++,
+        ),
+      );
+      expect(find.byIcon(Icons.volume_up), findsOneWidget);
+      expect(find.byTooltip(l10nEn.moveSoundMute), findsOneWidget);
+      await tester.tap(find.byKey(const Key('move_round_sound')));
+      expect(taps, 1);
+
+      await tester.pumpApp(
+        camera(cam(r: round(RoundPhase.running, reps: 2), soundOn: false)),
+      );
+      expect(find.byIcon(Icons.volume_off), findsOneWidget);
+      expect(find.byTooltip(l10nEn.moveSoundUnmute), findsOneWidget);
     });
 
     testWidgets('body lost: come back, the reps are kept', (tester) async {
@@ -364,6 +518,21 @@ void main() {
         camera(cam(r: round(RoundPhase.countdown), frame: frameAt(500))),
     'move_running': () => camera(
       cam(r: round(RoundPhase.running, reps: 7), frame: frameAt(2400)),
+    ),
+    'move_running_tall': () => camera(
+      cam(
+        r: round(RoundPhase.running, reps: 24),
+        frame: frameAt(1200),
+        game: tower(24),
+        soundOn: false,
+      ),
+    ),
+    'move_running_half_rep': () => camera(
+      cam(
+        r: round(RoundPhase.running, reps: 5),
+        frame: frameAt(2400),
+        game: tower(5, last: GameMomentKind.halfRep),
+      ),
     ),
     'move_running_front': () => camera(
       cam(

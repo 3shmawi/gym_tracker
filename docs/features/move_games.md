@@ -32,8 +32,18 @@ camera leaves the phone; only the reps the member chooses to save are kept.
   exercise **Push-ups**; the history fixes below.
 - The captain's dashboard names a Move round and knows Push-ups.
 
-Next: PR 3 (the Stack game in the running screen, sounds), PR 4 (privacy
-page, store forms, flag on for staging), then iOS model set-up.
+**PR 3 (behind `move_games`):**
+- The **Stack** game («البُرج») in the camera round: every counted rep
+  drops a glass block on a tower. A deep rep gives a centred block, a
+  steady one (≥ 1.4 s) a green rim; a half rep shows a fading outline
+  and "Go lower", a rushed rep adds nothing and says "Slow down". There
+  is no way to lose. Rules are pure Dart (`StackRules`), Flame only draws.
+- Short **sounds** (a note per block, two notes every fifth), our own
+  tones, with a mute button in the round's bar (remembered).
+- Not in the manual counter (a tap counter would reward tapping).
+
+Next: PR 4 (privacy page, store forms, flag on for staging), then iOS
+model set-up.
 
 ## User flows
 **Camera round:** Today → *Move* card (or menu → *Move · rep games*) →
@@ -88,6 +98,34 @@ last event or hint. *Stop* or leaving the app releases the camera.
   screen); presentation reads it through `poseSourceFactoryProvider`.
 - Routes: `/move/check` (`move_check`), testers only. Opening it never
   starts the camera.
+- **Games** (PR 3):
+  - `domain/games/game_rules.dart`: `GameRules` (`start`, `onEvent`),
+    `GameState` (score, last `GameMoment`), `MoveGameId`. A game never
+    fails and has no time rule; a round ends on its time or target.
+  - `domain/games/stack_rules.dart`: `StackRules` / `StackState` (floors:
+    steady or not, offset from the centre by depth).
+  - `MoveExercises.gameFor(exercise)` picks the game (push-ups → Stack).
+    A new exercise can start with Stack: any rep can be a block.
+  - `CameraRoundController` feeds each event to the game only while the
+    round runs (the last rep of a target round included) and plays a
+    sound for a new block.
+  - `presentation/game/stack_game.dart`: `StackGame` (`FlameGame`) with a
+    `TowerComponent` that draws the state: a block falls (350 ms ease;
+    150 ms fade with Reduce Motion), a half rep's outline fades over
+    1.2 s, every fifth block glows once (not with Reduce Motion), a tall
+    tower scrolls down. **The engine runs only while something moves**
+    and pauses itself after, so an idle round costs nothing and tests
+    settle. No text is drawn in the canvas.
+  - `stack_game_view.dart`: `GameWidget` inside the app's UI, clipped,
+    one picture to a screen reader ("Stack: 7 floors"); colours from
+    `MoveGameTheme.of(context.palette)`.
+- **Sounds**: `MoveSounds` (domain) → `FlameMoveSounds` (`flame_audio`
+  `AudioPool`s of `assets/audio/move_rep.wav` and `move_five.wav`).
+  `Dependencies.moveSounds` is silent until `init` (and in widget tests).
+  iOS: the **ambient** session (mixes with music, the silent switch
+  mutes it); Android: **no audio focus** (music is never paused or
+  lowered). A sound that fails is reported to monitoring once and the
+  game goes on silently.
 
 ### How a push-up is counted
 1. **Signal (0 = top, 1 = full depth).** Side view: the elbow angle of the
@@ -148,6 +186,12 @@ frames, gaps, half and rushed reps, sagging hips).
   upload like any workout, and the dashboard names them.
 - **Best score** per exercise and round kind, on the phone (`move.best.*`
   in shared preferences, 1..999 only).
+- **Stack:** score = floors + steady bonuses (the same as the round's
+  score); saved reps are reps only. A block is centred at depth ≥ 0.95,
+  otherwise off centre by up to 12 % of its width, alternating sides (it
+  never falls). Every 5th block is a milestone (the other sound, a glow).
+- **Sound** on by default; the mute button keeps the choice
+  (`move.sound_on`; anything but a stored `false` means on).
 - **Screen on** during the camera round (`azm/screen_awake`), off at the
   end, on pause by background and when the screen closes.
 
@@ -160,8 +204,8 @@ buckets (`MoveAnalytics`). The pose check sends none.
 | `move_opened` | the hub opens | `source`: `card`, `menu`, `link` |
 | `move_camera_answered` | the camera was asked for (first time, or refused) | `result`: `granted`, `denied` |
 | `move_unsupported` | the camera can't be used | `reason`: `no_camera`, `model_failed`, `too_slow` |
-| `move_game_started` | a round starts (after 3-2-1 or Start) | `exercise`, `mode` (`camera`/`manual`), `round` |
-| `move_game_finished` | a round ends | `exercise`, `mode`, `round`, `reps_bucket`, `duration_bucket`, `ended` (`completed`/`quit`), `fps_bucket` (camera only) |
+| `move_game_started` | a round starts (after 3-2-1 or Start) | `exercise`, `game` (`stack` with the camera, `none` by hand), `mode` (`camera`/`manual`), `round` |
+| `move_game_finished` | a round ends | `exercise`, `game`, `mode`, `round`, `reps_bucket`, `duration_bucket`, `ended` (`completed`/`quit`), `fps_bucket` (camera only) |
 | `move_round_saved` | *Save to my training* | `exercise`, `mode` |
 
 ## Feature flags
@@ -187,8 +231,16 @@ buckets (`MoveAnalytics`). The pose check sends none.
   `save_move_round_test.dart`, `placement_test.dart`,
   `presentation/round_controllers_test.dart` (placement → round → results
   → saved; refused; too slow; background; body lost; 0 reps; saving once).
-- Screens: `presentation/move_screens_test.dart` (`screensUiTests` for 19
-  states: hub, tip, why, placement, 3-2-1, running side and front, paused,
+- Game: `domain/games/stack_rules_test.dart` (floors, steady bonus, score
+  = the round's score, half and rushed reps, milestones, offsets for
+  hostile depths, a 500-rep round), `round_controllers_test.dart` (the
+  game grows only while running, sounds per block and per fifth, muted,
+  the stored choice, sounds freed on close),
+  `data/flame_move_sounds_test.dart` (no audio focus, ambient on iOS,
+  small mono WAVs).
+- Screens: `presentation/move_screens_test.dart` (`screensUiTests` for 21
+  states: hub, tip, why, placement, 3-2-1, running side and front, a tall
+  tower muted, a half-rep notice, paused,
   body lost, results, saved, refused, too slow, manual ready / running /
   paused / results).
 - History: `get_next_workout_test`, `get_level_test`,
@@ -198,8 +250,10 @@ buckets (`MoveAnalytics`). The pose check sends none.
   exercises and rounds; flag off → home.
 - Demo: `integration_test/flows/move_flow.dart`, run on the simulator
   (`app_test.dart`) and headless (`test/features/move/move_e2e_test.dart`):
-  a recorded synthetic set, ten push-ups counted by the real detector,
-  saved, shown in history.
+  a recorded synthetic set, ten push-ups counted by the real detector
+  build the tower, saved, shown in history. Widget tests also check that
+  a new block wakes the engine and it rests again, with and without
+  Reduce Motion, and that a tall tower scrolls.
 
 ## Decisions & edge cases
 - Approved spec: [`docs/designs/move_games.md`](../designs/move_games.md)
@@ -219,23 +273,33 @@ buckets (`MoveAnalytics`). The pose check sends none.
   the camera goes off before the listeners are dropped.
 - Only ML Kit's **base** model ships; the accurate one is excluded in
   Gradle (R8 is told its classes are missing on purpose).
+- **Sounds** are ours: plain tones made by `scripts/move_sounds.py`
+  (no samples), released as **CC0 1.0**; the script makes the same files
+  every time. Decision 6 of the spec.
+- The HUD is real widgets in a `Stack` around the `GameWidget`, not Flame
+  overlays: the same `app_ui` parts, RTL, fonts and `screensUiTests` as
+  every other screen. The body preview and the rep count sit in a row
+  above the game, so the tower never hides behind them.
+- `GameRules` has no `onTick` (the spec listed one): Stack has no rule in
+  time; animation is drawing only.
 - Measured app growth (Android, arm64, release, 2026-11-12): **+17.7 MB**
   installed (ML Kit native library 10.3 MB, models 5.8 MB, code); the
   spec's 10 MB was Google's figure and too low. Universal APKs (the staging
   pre-release) carry the native library for three CPU types: +35 MB.
 
 ## Demo & post
-<!-- The video is recorded on demand (the `demo` label); this is PR 2's
-     version (the counter, before the Stack game). -->
-**Hook (first 2 seconds):** a phone on the floor counting push-ups out
-loud on screen: "7… 8… 9… 10".
+<!-- The video is recorded on demand (the `demo` label). -->
+**Hook (first 2 seconds):** a glass tower rising one block per push-up,
+"7… 8… 9… 10".
 **Scenario:** home → Move → 10 reps → the form tip → why the camera →
-the checks turn green → 3-2-1 → ten push-ups → results → Save → push-ups
-in the exercise's history.
-**Caption (English):** Your phone counts your push-ups now. The camera
-watches on the phone only (nothing recorded, nothing sent), half reps
-don't count, and the round goes straight into your training log.
-**Caption (Egyptian Arabic):** موبايلك بقى بيعدّ عدّات الضغط. الكاميرا
-بتتابعك على الموبايل بس (مفيش تسجيل ولا حاجة بتتبعت)، نص العدّة مبتتحسبش،
-والجولة بتتحفظ على طول في تمرينك.
-**Hashtags:** #flutter #buildinpublic #fitness #pushups #عزم
+the checks turn green → 3-2-1 → ten push-ups, each one drops a block on
+the tower → results → Save → push-ups in the exercise's history.
+**Caption (English):** Every push-up builds the tower. Your phone counts
+real reps with its camera (on the phone only: nothing recorded, nothing
+sent); half reps and rushed reps add nothing, slow ones get a green
+rim. The round goes straight into your training log.
+**Caption (Egyptian Arabic):** كل عدّة ضغط بتبني دور في البُرج. الموبايل
+بيعدّ العدّات الحقيقية بالكاميرا (على الموبايل بس: مفيش تسجيل ولا حاجة
+بتتبعت)، نص العدّة والعدّة المستعجلة مابتضيفش حاجة، والبطيئة بتاخد إطار
+أخضر. والجولة بتتحفظ على طول في تمرينك.
+**Hashtags:** #flutter #flame #buildinpublic #fitness #pushups #عزم

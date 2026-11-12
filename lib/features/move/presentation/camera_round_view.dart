@@ -7,7 +7,10 @@ import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
 import 'package:gym_tracker/features/move/domain/entities/pose_frame.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
+import 'package:gym_tracker/features/move/domain/games/game_rules.dart';
+import 'package:gym_tracker/features/move/domain/games/stack_rules.dart';
 import 'package:gym_tracker/features/move/presentation/camera_round_controller.dart';
+import 'package:gym_tracker/features/move/presentation/game/stack_game_view.dart';
 import 'package:gym_tracker/features/move/presentation/move_words.dart';
 import 'package:gym_tracker/features/move/presentation/widgets/move_parts.dart';
 import 'package:gym_tracker/features/move/presentation/widgets/move_results_view.dart';
@@ -15,8 +18,8 @@ import 'package:gym_tracker/features/move/presentation/widgets/pose_body_painter
 import 'package:gym_tracker/l10n/l10n.dart';
 
 /// `/move/<exercise>/play`: placement, 3-2-1, the round, pause and results
-/// (design boards 3 and 5). The Stack game (PR 3) goes in the middle of
-/// the running screen; until then it shows the count and the depth.
+/// (design boards 3 and 5). While the round runs, the reps build the
+/// exercise's game (Stack) in the middle of the screen.
 class CameraRoundView extends StatelessWidget {
   const new({
     required this.state,
@@ -33,6 +36,7 @@ class CameraRoundView extends StatelessWidget {
     this.preview,
     this.onOpenSettings,
     this.onOpenProgress,
+    this.onToggleSound,
     super.key,
   });
 
@@ -53,6 +57,9 @@ class CameraRoundView extends StatelessWidget {
   final VoidCallback onDone;
   final VoidCallback? onOpenSettings;
   final VoidCallback? onOpenProgress;
+
+  /// Mutes or unmutes the game; no button without it.
+  final VoidCallback? onToggleSound;
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +92,7 @@ class CameraRoundView extends StatelessWidget {
     final live = state.stage == CameraStage.live;
     final running = live && round.phase == RoundPhase.running;
     return AppScaffold(
-      title: running ? null : l10n.moveGetInPosition,
+      title: running ? l10n.moveGameName : l10n.moveGetInPosition,
       leading: AppIconButton(
         key: const Key('move_round_close'),
         icon: Icons.close,
@@ -93,6 +100,14 @@ class CameraRoundView extends StatelessWidget {
         onPressed: onClose,
       ),
       actions: [
+        if (onToggleSound case final toggle?
+            when state.stage != CameraStage.starting)
+          AppIconButton(
+            key: const Key('move_round_sound'),
+            icon: state.soundOn ? Icons.volume_up : Icons.volume_off,
+            tooltip: state.soundOn ? l10n.moveSoundMute : l10n.moveSoundUnmute,
+            onPressed: toggle,
+          ),
         if (running)
           AppIconButton(
             key: const Key('move_round_pause'),
@@ -268,8 +283,8 @@ class _Placement extends StatelessWidget {
   }
 }
 
-/// The round: time, reps, depth and the body in the corner. The game goes
-/// in the middle in PR 3.
+/// The round: the time, the game in the middle, the body and the reps
+/// above it, the depth under it, and one notice or hint at a time.
 class _Running extends StatelessWidget {
   const new({required this.state, required this.now, this.preview});
 
@@ -277,12 +292,18 @@ class _Running extends StatelessWidget {
   final DateTime now;
   final Widget? preview;
 
+  /// A half rep's or rushed rep's notice stays this long.
+  static const noticeFor = Duration(milliseconds: 2500);
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final palette = context.palette;
     final round = state.round;
+    final game = state.game;
+    final notice = _notice(l10n, game?.last);
     final hint = state.hint;
+    final chip = notice ?? (hint == null ? null : hintLabel(l10n, hint));
     return Padding(
       padding: EdgeInsetsDirectional.fromSTEB(
         AppDimens.md,
@@ -292,63 +313,83 @@ class _Running extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: AppDimens.sm2,
+        spacing: AppDimens.sm,
         children: [
           RoundHud(clock: round.clock(now), reps: round.reps),
-          Expanded(
-            child: Stack(
-              children: [
-                Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    spacing: AppDimens.sm2,
-                    children: [
-                      RepsCounter(reps: round.reps),
-                      SizedBox(
-                        width: AppDimens.scaled(200),
-                        child: Semantics(
-                          label: l10n.moveDepth,
-                          value: '${(state.rep.depth * 100).round()}%',
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(
-                              AppDimens.radiusSm,
-                            ),
-                            child: LinearProgressIndicator(
-                              value: state.rep.depth,
-                              minHeight: AppDimens.sm,
-                              color: palette.brand,
-                              backgroundColor: palette.fillSubtle,
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (hint != null) HintChip(text: hintLabel(l10n, hint)),
-                    ],
-                  ),
-                ),
-                PositionedDirectional(
-                  top: 0,
-                  start: 0,
-                  width: AppDimens.scaled(96),
-                  height: AppDimens.scaled(128),
-                  child: ExcludeSemantics(
-                    child: AppCameraBackdrop(
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          ?preview,
-                          _Pose(frame: state.frame, drawBody: preview == null),
-                        ],
-                      ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: AppDimens.scaled(72),
+                height: AppDimens.scaled(96),
+                child: ExcludeSemantics(
+                  child: AppCameraBackdrop(
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        ?preview,
+                        _Pose(frame: state.frame, drawBody: preview == null),
+                      ],
                     ),
                   ),
                 ),
+              ),
+              Expanded(child: RepsCounter(reps: round.reps)),
+              SizedBox(width: AppDimens.scaled(72)),
+            ],
+          ),
+          Expanded(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (game case final StackState stack)
+                  StackGameView(state: stack),
+                if (chip != null)
+                  Align(
+                    alignment: AlignmentDirectional.topCenter,
+                    child: HintChip(
+                      key: notice == null
+                          ? null
+                          : const Key('move_game_notice'),
+                      text: chip,
+                    ),
+                  ),
               ],
+            ),
+          ),
+          Center(
+            child: SizedBox(
+              width: AppDimens.scaled(200),
+              child: Semantics(
+                label: l10n.moveDepth,
+                value: '${(state.rep.depth * 100).round()}%',
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+                  child: LinearProgressIndicator(
+                    value: state.rep.depth,
+                    minHeight: AppDimens.sm,
+                    color: palette.brand,
+                    backgroundColor: palette.fillSubtle,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  /// "Go lower" or "slow down" for a moment after a rep that didn't count.
+  String? _notice(AppLocalizations l10n, GameMoment? last) {
+    if (last == null) return null;
+    final age = now.difference(last.at);
+    if (age.isNegative || age > noticeFor) return null;
+    return switch (last.kind) {
+      GameMomentKind.halfRep => l10n.moveHalfRepNotice,
+      GameMomentKind.tooFast => l10n.moveTooFastNotice,
+      GameMomentKind.rep => null,
+    };
   }
 }
 

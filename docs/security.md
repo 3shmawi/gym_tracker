@@ -540,6 +540,21 @@ Spec: `docs/designs/move_games.md` §11. Checked in the built release APK
   `platform_config_test.dart`). The privacy page and store forms change
   in PR 4, before the flag is turned on for anyone.
 
+### Move games: the Stack game and sounds (PR 3, behind `move_games`)
+- New packages, pinned: `flame` 1.38.2, `flame_audio` 2.12.2 (brings
+  `audioplayers` 6.8.1 and its platform packages); OSV clean on
+  2026-11-12. `audioplayers_android` adds **no permission** (its manifest
+  is empty); the merged-manifest checks in `platform_config_test.dart`
+  still pass.
+- The sounds are two WAVs in the app (`assets/audio/`), made by our own
+  script; nothing is downloaded. `audioplayers` copies an asset to the
+  app's temporary folder before playing it, nothing else.
+- Sounds never take audio focus (Android) and use the ambient session
+  (iOS); a failure is reported once to monitoring with the error only.
+- The game reads only `RepEvent`s (no images, no joints); the sound
+  setting is one boolean in shared preferences (`move.sound_on`; any odd
+  stored value means on, tested).
+
 ## If a key leaks (log, chat, commit)
 1. **Revoke or rotate it first**, then clean up. Logs can be copied in the
    minutes they are public.

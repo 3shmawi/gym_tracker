@@ -236,6 +236,7 @@ class _CameraRoundPageState extends ConsumerState<CameraRoundPage>
       preview: state.cameraOn ? _c.preview() : null,
       onClose: () => _leave(context),
       onPause: _c.pause,
+      onToggleSound: () => unawaited(_c.toggleSound()),
       onResume: () => unawaited(_c.resume()),
       onEnd: _c.end,
       onManual: _manual,
