@@ -35,6 +35,7 @@ function fake(answer: (call: Call, n: number) => Answer = () => ({ data: [], err
       eq: (c: string, v: unknown) => (call.filters.push(['eq', c, v]), b),
       in: (c: string, v: unknown) => (call.filters.push(['in', c, v]), b),
       overlaps: (c: string, v: unknown) => (call.filters.push(['overlaps', c, v]), b),
+      contains: (c: string, v: unknown) => (call.filters.push(['contains', c, v]), b),
       order: (c: string, o?: unknown) => (call.filters.push(['order', c, o ?? null]), b),
       limit: (n: number) => (call.filters.push(['limit', 'rows', n]), b),
       overrideTypes: () => b,
@@ -162,7 +163,7 @@ describe('reading a gym\'s choices', () => {
 });
 
 describe('searching the picture library', () => {
-  it('sends the words as values of the "any word" filter, 60 rows at most', async () => {
+  it('asks for exercises that have all the words first, 60 rows at most', async () => {
     const rows = [
       { public_id: pid(55, 'tension'), exercise_key: 'ek-0055', frame: 'tension', title_en: 'Bench Press' },
       { public_id: 'exercises/../../x', exercise_key: 'ek-0055', frame: 'tension', title_en: 'bad' },
@@ -172,8 +173,33 @@ describe('searching the picture library', () => {
     expect(result.ok && result.value.map((p) => p.publicId)).toEqual([pid(55)]);
     expect(calls[0]?.table).toBe('exercise_images');
     expect(calls[0]?.columns).toBe('public_id, exercise_key, frame, title_en');
-    expect(calls[0]?.filters).toContainEqual(['overlaps', 'keywords', ['bench', 'drop', 'table', 'x']]);
+    expect(calls[0]?.filters).toContainEqual(['contains', 'keywords', ['bench', 'drop', 'table', 'x']]);
     expect(calls[0]?.filters).toContainEqual(['limit', 'rows', 60]);
+    // Something matched all the words: no second, wider question.
+    expect(calls).toHaveLength(1);
+  });
+
+  it('with no exercise holding all the words: any word, the most words first', async () => {
+    const row = (n: number, words: string[]) => ({ public_id: pid(n, 'tension'), exercise_key: `ek-${String(n).padStart(4, '0')}`, frame: 'tension', title_en: `E${n}`, keywords: words });
+    const wide = [row(1, ['press']), row(2, ['flat', 'press']), row(3, ['dumbbell']), row(4, ['flat', 'dumbbell', 'x']), row(5, ['press', 'dumbbell'])];
+    const { client, calls } = fake((_c, n) => ({ data: n === 1 ? [] : wide, error: null }));
+    const result = await new MediaRepository(client).search('Flat Dumbbell Press');
+    expect(calls).toHaveLength(2);
+    expect(calls[1]?.columns).toBe('public_id, exercise_key, frame, title_en, keywords');
+    expect(calls[1]?.filters).toContainEqual(['overlaps', 'keywords', ['flat', 'dumbbell', 'press']]);
+    // Two words each first (4, 2, 5 in the server's order), then one word (1, 3).
+    expect(result.ok && result.value.map((p) => p.publicId)).toEqual([pid(2), pid(4), pid(5), pid(1), pid(3)]);
+  });
+
+  it('a single word that matches nothing asks once and finds nothing', async () => {
+    const { client, calls } = fake();
+    expect(await new MediaRepository(client).search('zzzz')).toEqual({ ok: true, value: [] });
+    expect(calls).toHaveLength(1);
+  });
+
+  it('a failing search is a failure, never a throw', async () => {
+    const { client } = fake(() => ({ data: null, error: { code: 'XX000', message: 'boom' } }));
+    expect((await new MediaRepository(client).search('bench press')).ok).toBe(false);
   });
 
   it('asks nothing for empty or symbol-only text', async () => {

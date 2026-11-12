@@ -46,6 +46,9 @@ test.describe('one exercise: the main flow', () => {
     const box = page.getByLabel(en('pic.searchLabel'));
     await box.fill('dumbbell press');
     await page.getByRole('button', { name: en('pic.searchGo') }).click();
+    // Exercises with every word only: the leg press has "press" but no "dumbbell".
+    await expect(page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Incline Dumbbell Press' }) })).toBeVisible();
+    await expect(page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Leg Press' }) })).toHaveCount(0);
     await page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Dumbbell Bench Press' }) }).click();
     await page.getByRole('button', { name: en('pic.frame', { frame: en('pic.start'), name: 'Incline Dumbbell Press' }) }).click();
     await expect(page.locator('.pic-card')).toHaveCount(3);
@@ -136,6 +139,20 @@ test.describe('exercise media states', () => {
     mock.set({ mediaFails: false });
     await page.getByRole('button', { name: en('state.retry') }).click();
     await expect(rows(page)).toHaveCount(36);
+  });
+
+  test('search: nothing has every word, so exercises with any of them are listed, best match first', async ({ page }) => {
+    await open(page, { path: exercisePath('flat_db_press') });
+    await page.getByLabel(en('pic.searchLabel')).fill('squat press');
+    await page.getByRole('button', { name: en('pic.searchGo') }).click();
+    await expect(page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Barbell Squat' }) })).toBeVisible();
+    await expect(page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Leg Press' }) })).toBeVisible();
+    // A search with every word does not widen: "leg press" finds the leg press only.
+    await page.getByLabel(en('pic.searchLabel')).fill('leg press');
+    await page.getByRole('button', { name: en('pic.searchGo') }).click();
+    await expect(page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Leg Press' }) })).toBeVisible();
+    await expect(page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Barbell Squat' }) })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Incline Dumbbell Press' }) })).toHaveCount(0);
   });
 
   test('offline: what is loaded stays, saving and searching wait', async ({ page, context }) => {
