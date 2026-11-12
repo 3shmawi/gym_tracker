@@ -6,7 +6,7 @@ import { linkHandler, pathOf, type Route } from '../app/router';
 import { cleanName, initials } from '../core/text';
 import type { ManagedGym } from '../gyms/gyms';
 import { useI18n } from '../i18n';
-import { NAME_MAX, type Member, type MembersRepository } from '../members/members';
+import { canManage, NAME_MAX, type Member, type MembersRepository } from '../members/members';
 import { Icon } from '../ui/icons';
 import { permsText, roleBadge, roleLabel, statusOf } from '../ui/memberText';
 import { ErrorView, LoadingView, StateBlock } from '../ui/states';
@@ -184,7 +184,16 @@ export function MembersPage({ gym, members, progress }: { readonly gym: ManagedG
                       <td><span class="cap">{permsText(t, m)}</span></td>
                       {last ? <td><span class="cap">{lastText(m)}</span></td> : null}
                       <td class="end">
-                        <Link route={route} class="btn sm" label={t('members.manageName', { name: m.name })}>{t('members.manage')}</Link>
+                        <div class="acts-row">
+                          {canManage(gym.role, m.role) && m.status === 'active' ? (
+                            <>
+                              <Link route={{ name: 'member_plan', gymId: gym.id, memberId: m.id }} class="btn sm ghost" label={t('members.quickPlanName', { name: m.name })}>{t('members.quickPlan')}</Link>
+                              <Link route={{ name: 'member_plan', gymId: gym.id, memberId: m.id, open: 'replace' }} class="btn sm ghost" label={t('members.quickTemplateName', { name: m.name })}>{t('members.quickTemplate')}</Link>
+                              <Link route={{ name: 'member_plan', gymId: gym.id, memberId: m.id, open: 'copy' }} class="btn sm ghost" label={t('members.quickCopyName', { name: m.name })}>{t('members.quickCopy')}</Link>
+                            </>
+                          ) : null}
+                          <Link route={route} class="btn sm" label={t('members.manageName', { name: m.name })}>{t('members.manage')}</Link>
+                        </div>
                       </td>
                     </tr>
                   );

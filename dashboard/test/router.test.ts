@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parsePath } from '../src/app/router';
+import { parsePath, pathOf } from '../src/app/router';
 
 const ID = '0b1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d';
 
@@ -33,6 +33,15 @@ describe('parsePath', () => {
     expect(parsePath(`/g/${ID}/exercises/ex-lq3k9a-2`).name).toBe('exercise');
     for (const bad of ['ex-', 'ex-UPPER', 'ex-a b', 'ex-%2e%2e', 'ex-<script>', 'x-lq3k9a', `ex-${'a'.repeat(21)}`, 'ex-a-12345']) {
       expect(parsePath(`/g/${ID}/exercises/${bad}`).name, bad).toBe('not_found');
+    }
+  });
+  it('quick actions of a member\'s plan have their own fixed paths', () => {
+    expect(parsePath(`/g/${ID}/members/${ID}/plan/replace`)).toEqual({ name: 'member_plan', gymId: ID, memberId: ID, open: 'replace' });
+    expect(parsePath(`/g/${ID}/members/${ID}/plan/copy`)).toEqual({ name: 'member_plan', gymId: ID, memberId: ID, open: 'copy' });
+    expect(parsePath(`/g/${ID}/members/${ID}/plan/save-template/`)).toEqual({ name: 'member_plan', gymId: ID, memberId: ID, open: 'save_template' });
+    expect(pathOf({ name: 'member_plan', gymId: ID, memberId: ID, open: 'save_template' })).toBe(`/g/${ID}/members/${ID}/plan/save-template`);
+    for (const bad of ['delete', 'Copy', 'copy/extra', 'save_template', '%2e%2e', 'copy%00']) {
+      expect(parsePath(`/g/${ID}/members/${ID}/plan/${bad}`).name, bad).toBe('not_found');
     }
   });
 });
