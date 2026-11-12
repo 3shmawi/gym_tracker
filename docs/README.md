@@ -27,3 +27,4 @@ Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 - [Captain web dashboard](features/dashboard.md) (`dashboard/`, own origin `azmm-dash.pages.dev`; D0: email-code sign-in, my gyms; D1: members, invite codes, QR cards, names from Excel; deploy, owner bootstrap)
 - [Trainee dashboard data](features/trainee_dashboard_data.md) (SQL views the captain's dashboard will read; privacy)
 - [Gym accounts — the app](features/gym_account_app.md) (first screen, scanner, join, switcher, profile, delete account, solo data import)
+- [Gym brand colours](features/gym_brand_colours.md) (a gym's members see the colour its owner chose; the contrast rule, the flag, how it reaches the phone)

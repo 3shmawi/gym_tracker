@@ -8,6 +8,7 @@ import 'package:gym_tracker/core/legal/consent_view.dart';
 import 'package:gym_tracker/core/legal/legal.dart';
 import 'package:gym_tracker/core/router/app_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
+import 'package:gym_tracker/core/theme/azm_theme.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -106,17 +107,19 @@ class _ConsentGateState extends State<ConsentGate> {
     await showAppSheet<void>(
       context: context,
       dismissible: false,
-      builder: (sheet) => PopScope(
-        canPop: false,
-        child: ConsentView(
-          onAgree: () async {
-            await acceptTerms(_store, via: 'sheet');
-            if (sheet.mounted) Navigator.of(sheet).pop();
-          },
-          onOpenPrivacy: () => open(LegalLinks.privacy),
-          onOpenTerms: () => open(LegalLinks.terms),
-          onOpenYouTubeTerms: () => open(LegalLinks.youTubeTerms),
-          onOpenGooglePrivacy: () => open(LegalLinks.googlePrivacy),
+      builder: (sheet) => AzmTheme(
+        child: PopScope(
+          canPop: false,
+          child: ConsentView(
+            onAgree: () async {
+              await acceptTerms(_store, via: 'sheet');
+              if (sheet.mounted) Navigator.of(sheet).pop();
+            },
+            onOpenPrivacy: () => open(LegalLinks.privacy),
+            onOpenTerms: () => open(LegalLinks.terms),
+            onOpenYouTubeTerms: () => open(LegalLinks.youTubeTerms),
+            onOpenGooglePrivacy: () => open(LegalLinks.googlePrivacy),
+          ),
         ),
       ),
     );

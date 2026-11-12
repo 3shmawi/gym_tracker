@@ -79,6 +79,7 @@ class Membership {
       'id': gym.id,
       'name': gym.name,
       'history_after_end': gym.historyAfterEnd.name,
+      'brand_color': gym.brandColor,
     },
     'role': role.name,
     'status': status.name,

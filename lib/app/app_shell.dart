@@ -5,6 +5,7 @@ import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_theme.dart';
 import 'package:gym_tracker/core/update/app_update_listener.dart';
 import 'package:gym_tracker/core/widgets/offline_banner.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_brand.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
 import 'package:gym_tracker/features/settings/domain/entities/app_settings.dart';
 import 'package:gym_tracker/features/video/presentation/mini_player_host.dart';
@@ -35,12 +36,15 @@ class AppShell extends StatelessWidget {
         builder: (context, child) => AppUpdateListener(
           // Nothing of the app opens before the member agreed (III.A).
           child: ConsentGate(
-            child: GymSyncHost(
-              child: OfflineBanner(
-                child: MiniPlayerHost(
-                  child: WorkoutPillHost(
-                    child: RestAlarmHost(
-                      child: child ?? const SizedBox.shrink(),
+            // The gym's colour, for everything inside the app itself.
+            child: BrandThemeHost(
+              child: GymSyncHost(
+                child: OfflineBanner(
+                  child: MiniPlayerHost(
+                    child: WorkoutPillHost(
+                      child: RestAlarmHost(
+                        child: child ?? const SizedBox.shrink(),
+                      ),
                     ),
                   ),
                 ),
