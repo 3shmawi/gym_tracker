@@ -13,7 +13,8 @@ works as before.
 | PR 3a | The backup engine: solo workouts, plan, best level and chosen day go up when backup is on (no screen yet) | built ("The backup engine" below) |
 | PR 3b | Sign-in by code, the Settings card, the email path for gym trainees (behind `training_backup`) | built ("Sign in and the Settings card" below) |
 | PR 4 | Restore on a new phone | built ("Restore" below) |
-| PR 5 | Offer after the 3rd workout, full status card, sign-out choices, privacy texts | not started |
+| PR 5 | Offer after the 3rd/10th workout, turn off + erase, privacy texts | this PR |
+| PR 6 | Sign-out choices (keep/remove training on the phone), choose the kept plan again in Settings, re-send an ended-membership gym workout as solo | not started |
 
 ## Backend (migration 0022)
 All of it follows the spec's sections 2, 3 and 6. Clients call the functions;
@@ -182,3 +183,20 @@ widget test because it loops an animation), `backup_sync_test` (background
 resume), `welcome_view_test`, and the integration test "a new phone: sign in,
 and the whole training comes back" (a demo).
 
+
+## The offer, and turning off (PR 5)
+- **Offer:** after a workout is saved, `BackupOffer.afterWorkout` counts the
+  finished workouts; `shouldOfferBackup` says yes at the 3rd (nothing declined
+  yet) and at the 10th (declined once), never when backup is on or the
+  `training_backup` flag is off. `BackupOfferHost` (around the home screen)
+  opens a sheet: "Back up my training" goes to `/backup`, "Not now" counts one
+  decline (two and it only lives in Settings).
+- **Turn off:** the Settings card asks: keep what is saved, or erase it
+  (`delete_my_backup`: solo workouts, personal plan, personal state; gym rows
+  and the account stay). Erase turns backup off only if the call worked, then
+  every solo workout waits to be uploaded again if backup is turned on later.
+- **Events:** `backup_offer_shown {place}`, `backup_offer_dismissed`,
+  `backup_erased` (plus the earlier ones).
+- **Texts:** `website/privacy.html` (en + ar) has "Backing up your training";
+  `website/delete-account.html` and `store/privacy_forms.md` say backup data is
+  removed with the account.

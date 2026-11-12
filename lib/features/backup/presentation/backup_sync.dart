@@ -112,11 +112,31 @@ class BackupSync {
     await run();
   }
 
-  /// Stops backing up. What is already on the account stays there until
-  /// `delete_my_backup` (a later step).
+  /// Stops backing up and erases what the account holds of it
+  /// (`delete_my_backup`). Backup is only turned off when the erase worked,
+  /// so nothing is left behind by mistake; false = nothing changed.
+  Future<bool> disableAndErase() async {
+    final result = await _ref.read(backupRemoteProvider).deleteBackup();
+    if (result is Failed<void>) return false;
+    unawaited(Analytics.capture('backup_erased'));
+    await _ref.read(backupQueueProvider).resetAll();
+    await _forget();
+    return true;
+  }
+
+  /// Stops backing up. What is already on the account stays there.
   Future<void> disable() async {
+    await _forget();
+  }
+
+  Future<void> _forget() async {
     _retry?.cancel();
-    await _ref.read(backupSettingsProvider).setEnabled(value: false);
+    final settings = _ref.read(backupSettingsProvider);
+    await settings.setEnabled(value: false);
+    // A later "on" starts from nothing: the account has no plan or workouts
+    // now, so the old versions and fingerprints must not hide what is new.
+    await settings.setPlan(version: 0, fingerprint: '');
+    await settings.setStateFingerprint('');
     if (_ref.mounted) {
       _ref.read(backupStatusProvider.notifier).update(BackupStatus.off);
     }

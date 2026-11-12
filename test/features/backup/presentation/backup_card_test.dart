@@ -110,7 +110,40 @@ void main() {
     });
   });
 
+  group(BackupTurnOffSheet, () {
+    testWidgets('three ways out, each pops its own answer', (tester) async {
+      BackupTurnOff? answer;
+      await tester.pumpApp(
+        Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              key: const Key('open'),
+              onPressed: () async => answer = await showModalBottomSheet(
+                context: context,
+                builder: (_) => const BackupTurnOffSheet(),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      for (final (key, want) in [
+        ('backup_turn_off_keep', BackupTurnOff.keep),
+        ('backup_turn_off_erase', BackupTurnOff.erase),
+        ('backup_turn_off_cancel', null),
+      ]) {
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(Key(key)));
+        await tester.pumpAndSettle();
+        expect(answer, want);
+        answer = BackupTurnOff.keep;
+      }
+    });
+  });
+
   screensUiTests({
+    'backup_turn_off_sheet': () => const Scaffold(body: BackupTurnOffSheet()),
     'backup_card_off': () => card(BackupStatus.off),
     'backup_card_up_to_date': () =>
         card(BackupStatus(state: BackupState.upToDate, lastSyncedAt: _when)),

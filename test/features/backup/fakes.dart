@@ -22,6 +22,7 @@ class FakeServer {
   final Set<String> refused = {};
   AppFailure? failWith;
   int uploadCalls = 0;
+  int deleteCalls = 0;
   int planCalls = 0;
   int stateCalls = 0;
   final List<int> chunkSizes = [];
@@ -49,6 +50,17 @@ class _Remote implements BackupRemote {
   @override
   Future<Result<void>> ensurePerson() async =>
       _down<void>() ?? const Success(null);
+
+  @override
+  Future<Result<void>> deleteBackup() async {
+    final down = _down<void>();
+    if (down != null) return down;
+    server.sessions.clear();
+    server.plan = null;
+    server.planVersion = 0;
+    server.deleteCalls++;
+    return const Success(null);
+  }
 
   @override
   Future<Result<void>> uploadSessions(List<WorkoutSession> sessions) async {
@@ -180,6 +192,12 @@ class FakeQueue implements BackupQueue {
 
   @override
   Future<int> pendingCount() async => _waiting.length;
+
+  @override
+  Future<void> resetAll() async {
+    synced.clear();
+    problems.clear();
+  }
 
   @override
   Future<int> problemCount() async => problems.length;
