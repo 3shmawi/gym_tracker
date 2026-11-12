@@ -25,6 +25,7 @@ const PATHS = {
   play: 'M8 5v14l11-7z',
   copy: 'M8 8h11a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1zM4 16V4a1 1 0 0 1 1-1h11',
   pencil: 'M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4',
+  more: 'M5 12h.01M12 12h.01M19 12h.01',
   external: 'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5',
 } as const;
 
@@ -32,7 +33,7 @@ export type IconName = keyof typeof PATHS;
 
 export function Icon({ name }: { readonly name: IconName }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
       <path d={PATHS[name]} />
     </svg>
   );

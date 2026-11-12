@@ -64,7 +64,13 @@ API (PostgREST) with the publishable key. It never sends a URL, only
 
 ### 1. Find pictures (table `exercise_images`, public read)
 `keywords` holds English and Arabic words (lower case), with a GIN index.
-- **Any word** (search box, OR): SQL `keywords && array['chest','دمبل']`;
+- **All words, then any word** (search box; the dashboard since 2026-11-12):
+  all words first, `keywords @> array['flat','dumbbell','press']` (REST
+  `keywords=cs.{…}`), so "Flat Dumbbell Press" finds that exercise and not
+  every press or dumbbell exercise; when nothing has all the words, any word
+  as below, with the exercises matching most words first. (The app's search
+  still uses any word only.)
+- **Any word** (OR): SQL `keywords && array['chest','دمبل']`;
   REST `GET /rest/v1/exercise_images?keywords=ov.{chest,دمبل}`.
 - **All words** (AND, for "chest dumbbell"): SQL `keywords @> array['chest','dumbbell']`;
   REST `?keywords=cs.{chest,dumbbell}`.

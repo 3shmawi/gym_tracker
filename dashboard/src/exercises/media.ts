@@ -3,8 +3,10 @@ import { CodedError } from '../core/failure';
 import { failed, guard, unwrap, type Result } from '../core/result';
 import { cleanName } from '../core/text';
 import { isGymId } from '../gyms/gyms';
+import { cleanPlanName } from '../plans/model';
+import { isCustomId } from './catalog';
 import { EXERCISE_KEY, MAX_PICTURES, PUBLIC_ID, searchWords } from './pictures';
-import type { CatalogPicture, GymMedia, VideoRef } from './types';
+import type { CatalogPicture, ExerciseLike, GymMedia, VideoRef } from './types';
 import { isValidVideo } from './youtube';
 
 // A gym's exercise media. Every rule lives in the database; this file only
@@ -28,6 +30,8 @@ export const MAX_PICTURE_ROWS = 1200;
 export const MAX_VIDEO_ROWS = 300;
 /** Search results at most (as the app). */
 export const MAX_SEARCH_ROWS = 60;
+/** Rows fetched for the "any word" fallback, before ranking and cutting to MAX_SEARCH_ROWS. */
+const MAX_ANY_ROWS = 400;
 const TITLE_MAX = 80;
 
 interface PictureRow {
@@ -46,6 +50,13 @@ interface CatalogRow {
   exercise_key: unknown;
   frame: unknown;
   title_en: unknown;
+  keywords?: unknown;
+}
+
+/** How many of the searched words an exercise's keywords hold. */
+function matchedWords(row: CatalogRow, words: readonly string[]): number {
+  const keywords = Array.isArray(row.keywords) ? (row.keywords as unknown[]) : [];
+  return words.filter((w) => keywords.includes(w)).length;
 }
 
 const intOrNull = (v: unknown): number | null => (typeof v === 'number' && Number.isInteger(v) ? v : null);
@@ -87,6 +98,36 @@ export function toCatalogPicture(row: CatalogRow): CatalogPicture | null {
 
 const refuse = (code: string, reason: string) => new CodedError(code, reason);
 
+/** Exercises named in plans, at most (a gym's members times their days). */
+export const MAX_CUSTOM = 200;
+const MAX_PLAN_ROWS = 500;
+
+/**
+ * The exercises in these plan day lists that are not the library's: one
+ * entry per id, the first name seen. Anything off the rules is dropped.
+ */
+export function customFromDays(dayLists: readonly unknown[]): ExerciseLike[] {
+  const found = new Map<string, ExerciseLike>();
+  for (const days of dayLists) {
+    if (!Array.isArray(days)) continue;
+    for (const day of days as unknown[]) {
+      const exercises = (day as { exercises?: unknown } | null)?.exercises;
+      if (!Array.isArray(exercises)) continue;
+      for (const raw of exercises as unknown[]) {
+        const e = raw as { id?: unknown; name?: { en?: unknown; ar?: unknown } | null } | null;
+        const id = e?.id;
+        if (typeof id !== 'string' || !isCustomId(id) || found.has(id)) continue;
+        const en = cleanPlanName(e?.name?.en);
+        const ar = cleanPlanName(e?.name?.ar);
+        if (en === '' && ar === '') continue;
+        found.set(id, { id, en: en || ar, ar: ar || en, muscle: null, libraryVideo: false, custom: true });
+        if (found.size >= MAX_CUSTOM) return [...found.values()];
+      }
+    }
+  }
+  return [...found.values()];
+}
+
 export class MediaRepository {
   constructor(private readonly supabase: SupabaseClient) {}
 
@@ -114,22 +155,59 @@ export class MediaRepository {
     });
   }
 
-  /** Library pictures matching any of the words; both frames of a move next to each other. */
+  /** Exercises the gym's members have in their plans that are not in the app's library. */
+  async customExercises(gymId: string): Promise<Result<ExerciseLike[]>> {
+    if (!isGymId(gymId)) return failed({ kind: 'not_found' });
+    return guard(async () => {
+      const members = unwrap(
+        await this.supabase.from('memberships').select('id').eq('gym_id', gymId).limit(MAX_PLAN_ROWS).overrideTypes<{ id: unknown }[], { merge: false }>(),
+      );
+      const ids = (members ?? []).flatMap((m) => (typeof m.id === 'string' && isGymId(m.id) ? [m.id] : []));
+      if (ids.length === 0) return [];
+      const rows = unwrap(
+        await this.supabase.from('plans').select('days:body->days').in('membership_id', ids).limit(MAX_PLAN_ROWS).overrideTypes<{ days: unknown }[], { merge: false }>(),
+      );
+      return customFromDays((rows ?? []).map((r) => r.days));
+    });
+  }
+
+  /**
+   * Library pictures for the typed words; both frames of a move next to each
+   * other. Exercises that have **all** the words come first and alone: "Flat
+   * Dumbbell Press" finds the flat dumbbell press, not every dumbbell or
+   * press exercise. Only when none has them all, exercises with **any** of the
+   * words are listed, the ones with the most words first.
+   */
   async search(text: string): Promise<Result<CatalogPicture[]>> {
     const words = searchWords(text);
     return guard(async () => {
       if (words.length === 0) return [];
-      const rows = unwrap(
+      const all = unwrap(
         await this.supabase
           .from('exercise_images')
           .select('public_id, exercise_key, frame, title_en')
-          .overlaps('keywords', words)
+          .contains('keywords', words)
           .order('exercise_key')
           .order('frame', { ascending: false })
           .limit(MAX_SEARCH_ROWS)
           .overrideTypes<CatalogRow[], { merge: false }>(),
       );
-      return (rows ?? []).flatMap((row) => {
+      let rows: CatalogRow[] = all ?? [];
+      if (rows.length === 0 && words.length > 1) {
+        const any = unwrap(
+          await this.supabase
+            .from('exercise_images')
+            .select('public_id, exercise_key, frame, title_en, keywords')
+            .overlaps('keywords', words)
+            .order('exercise_key')
+            .order('frame', { ascending: false })
+            .limit(MAX_ANY_ROWS)
+            .overrideTypes<CatalogRow[], { merge: false }>(),
+        );
+        // Stable sort: the server's order (exercise, then frame) is kept among equals.
+        rows = [...(any ?? [])].sort((a, b) => matchedWords(b, words) - matchedWords(a, words)).slice(0, MAX_SEARCH_ROWS);
+      }
+      return rows.flatMap((row) => {
         const picture = toCatalogPicture(row);
         return picture ? [picture] : [];
       });

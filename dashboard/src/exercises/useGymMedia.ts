@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import type { Failure } from '../core/failure';
 import type { MessageKey } from '../i18n';
 import type { MediaRepository } from './media';
-import type { GymMedia, VideoRef } from './types';
+import type { ExerciseLike, GymMedia, VideoRef } from './types';
 
 export type MediaState =
   | { readonly state: 'loading' }
@@ -74,4 +74,24 @@ export function saveFailureKey(failure: Failure): MessageKey {
     default:
       return 'media.errServer';
   }
+}
+
+/**
+ * Exercises the members wrote into their plans. Quiet on purpose: when the
+ * read fails the library is still there, so the list just has no extras.
+ * `null` while loading.
+ */
+export function useCustomExercises(repo: MediaRepository, gymId: string): readonly ExerciseLike[] | null {
+  const [list, setList] = useState<readonly ExerciseLike[] | null>(null);
+  useEffect(() => {
+    let alive = true;
+    setList(null);
+    void repo.customExercises(gymId).then((result) => {
+      if (alive) setList(result.ok ? result.value : []);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [repo, gymId]);
+  return list;
 }

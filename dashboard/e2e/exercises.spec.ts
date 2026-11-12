@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { CLOUD_PATH, GYM_A, expect, test } from './fixtures/supabase';
+import { CLOUD_PATH, GYM_A, M, expect, test } from './fixtures/supabase';
 import { msg } from './fixtures/helpers';
 import { isPhone, open } from './fixtures/members';
 
@@ -46,6 +46,9 @@ test.describe('one exercise: the main flow', () => {
     const box = page.getByLabel(en('pic.searchLabel'));
     await box.fill('dumbbell press');
     await page.getByRole('button', { name: en('pic.searchGo') }).click();
+    // Exercises with every word only: the leg press has "press" but no "dumbbell".
+    await expect(page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Incline Dumbbell Press' }) })).toBeVisible();
+    await expect(page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Leg Press' }) })).toHaveCount(0);
     await page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Dumbbell Bench Press' }) }).click();
     await page.getByRole('button', { name: en('pic.frame', { frame: en('pic.start'), name: 'Incline Dumbbell Press' }) }).click();
     await expect(page.locator('.pic-card')).toHaveCount(3);
@@ -138,6 +141,20 @@ test.describe('exercise media states', () => {
     await expect(rows(page)).toHaveCount(36);
   });
 
+  test('search: nothing has every word, so exercises with any of them are listed, best match first', async ({ page }) => {
+    await open(page, { path: exercisePath('flat_db_press') });
+    await page.getByLabel(en('pic.searchLabel')).fill('squat press');
+    await page.getByRole('button', { name: en('pic.searchGo') }).click();
+    await expect(page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Barbell Squat' }) })).toBeVisible();
+    await expect(page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Leg Press' }) })).toBeVisible();
+    // A search with every word does not widen: "leg press" finds the leg press only.
+    await page.getByLabel(en('pic.searchLabel')).fill('leg press');
+    await page.getByRole('button', { name: en('pic.searchGo') }).click();
+    await expect(page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Leg Press' }) })).toBeVisible();
+    await expect(page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Barbell Squat' }) })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Incline Dumbbell Press' }) })).toHaveCount(0);
+  });
+
   test('offline: what is loaded stays, saving and searching wait', async ({ page, context }) => {
     await open(page, { path: exercisePath('abs') });
     await expect(page.getByRole('heading', { level: 1, name: 'Abs' })).toBeVisible();
@@ -176,5 +193,46 @@ test.describe('exercise media states', () => {
     await page.getByLabel(en('pic.searchLabel')).fill('leg');
     await page.getByRole('button', { name: en('pic.searchGo') }).click();
     await expect(page.getByRole('button', { name: en('pic.frame', { frame: en('pic.start'), name: 'Leg Press' }) })).toBeDisabled();
+  });
+});
+
+test.describe('exercises written into a plan', () => {
+  const plan = (name: string) => ({
+    body: {
+      days: [{ id: 'day-1', name: { ar: 'يوم', en: 'Day' }, exercises: [{ id: 'ex-lq3k9a', name: { ar: 'تيست', en: name }, sets: 3, reps: 12, rest: 90, step: 2.5, superset: false, unit: 'kg' }] }],
+    },
+    version: 1,
+    updated_by: M.captain,
+    updated_at: '2026-11-09T10:00:00Z',
+  });
+
+  test('a member\'s own exercise is listed, opens, and takes pictures like a library one', async ({ page }) => {
+    const mock = await open(page, { path: EXERCISES_PATH, plans: { [M.ahmed]: plan('Testt') } });
+    await expect(rows(page)).toHaveCount(37);
+    const own = rows(page).filter({ hasText: 'Testt' });
+    await expect(own).toContainText(en('plan.ownExercise'));
+    await own.click();
+    await expect(page.getByRole('heading', { level: 1, name: 'Testt' })).toBeVisible();
+    await page.getByLabel(en('pic.searchLabel')).fill('dumbbell bench press');
+    await page.getByRole('button', { name: en('pic.searchGo') }).click();
+    await page.getByRole('button', { name: en('pic.addBothLabel', { name: 'Dumbbell Bench Press' }) }).first().click();
+    await page.getByRole('button', { name: en('pic.save') }).click();
+    await expect(page.getByText(en('pic.saved'))).toBeVisible();
+    expect(mock.rpcs.some((r) => r.name === 'set_gym_exercise_images' && r.body.p_exercise_id === 'ex-lq3k9a')).toBe(true);
+    // Straight to the page (reload) works too: the plans name it.
+    await page.reload();
+    await expect(page.getByRole('heading', { level: 1, name: 'Testt' })).toBeVisible();
+  });
+
+  test('a hostile name is shown as text', async ({ page }) => {
+    const dialogs: string[] = [];
+    page.on('dialog', (d) => {
+      dialogs.push(d.message());
+      void d.dismiss();
+    });
+    await open(page, { path: EXERCISES_PATH, plans: { [M.ahmed]: plan('<img src=x onerror=alert(1)>') } });
+    await expect(rows(page)).toHaveCount(37);
+    await expect(rows(page).filter({ hasText: '<img src=x' })).toHaveCount(1);
+    expect(dialogs).toEqual([]);
   });
 });

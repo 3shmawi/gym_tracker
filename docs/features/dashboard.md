@@ -100,8 +100,9 @@ dashboard/
 | `/g/<gym-uuid>/members/add-captain` | add a captain, owners only (D1) |
 | `/g/<gym-uuid>/templates` | the gym's plan templates (D4) |
 | `/g/<gym-uuid>/settings` | gym settings (D5) |
+| `/g/<gym-uuid>/members/<member-uuid>/plan/{replace,copy,save-template}` | the member's plan with that quick-action dialog open (D3/D4) |
 | `/g/<gym-uuid>/exercises` | the exercise list (D2) |
-| `/g/<gym-uuid>/exercises/<library-id>` | one exercise's pictures and video (D2); an id that is not in the library is "not found" |
+| `/g/<gym-uuid>/exercises/<library-id>` | one exercise's pictures and video (D2); an id that is neither in the library nor an `ex-…` plan id is "not found" |
 | anything else | not found |
 
   The gym id must match the UUID pattern, otherwise the route is "not found";
@@ -289,9 +290,43 @@ There is no table for it, so the dashboard keeps a **generated copy**:
 names, muscle, whether the library has a video). `test/library.test.ts` fails
 when the copy drifts from the Dart files, so a new library exercise is one
 command away. Today: **36 exercises**, 23 with a library video (the 13 added for
-days 4 and 5 have none yet). Exercises a captain wrote in a plan (`ex-…` ids)
-show in D3's plan editor (with the gym's cover if one was ever saved for that
-id); choosing pictures for them is not built yet.
+days 4 and 5 have none yet). Exercises written into a plan (`ex-…` ids)
+show in D3's plan editor (with the gym's cover if one was saved for that id).
+
+**Exercises written into plans (follow-up to D2).** The Exercises tab lists
+them after the 36 library exercises, marked "Written by you", with no muscle
+group; they count in the summary and the "No video" filter, and search finds
+them in both languages. `MediaRepository.customExercises(gymId)` reads the
+gym's membership ids, then only `days:body->days` of their plans (≤ 500 rows),
+and `customFromDays` keeps ids of the app's shape (`^ex-[a-z0-9]{1,20}(-n)?$`,
+never a library id), one entry per id, names cleaned like the plan editor and
+capped at 200. A failed read leaves just the library (quiet on purpose). The
+route `/g/<gym>/exercises/ex-…` opens the same page as a library exercise
+(pictures and video saved under that id); an `ex-` id no plan names and no
+media row mentions is "not found". Tests: `test/media.test.ts` (extraction,
+hostile entries, query), `test/router.test.ts`, `test/exercises-ui.test.tsx`,
+`e2e/exercises.spec.ts`, `e2e/exercises-a11y.spec.ts`.
+
+**Quick actions per member.** The wide members table has *Plan*, *Template* and
+*Copy* buttons next to *Manage* for active members you can manage; the member
+page's Plan card has *Open the plan*, *Replace with template*, *Copy to other
+members* and *Save as template*. They are links to fixed paths
+`/g/<gym>/members/<id>/plan/{replace|copy|save-template}`; the plan page opens
+that dialog once and puts the address back to the plain plan (a reload does not
+reopen it). Copy and Save-as-template open only when the member has a plan.
+Phone cards still open the member page, where the same actions are. Tests:
+`test/router.test.ts`, `e2e/templates.spec.ts` ("quick actions on a member").
+
+**Simpler to get to (UX pass).**
+- Member page order: the plan card (with its quick actions) and the progress come first, then phone recovery / codes / end membership, and the person's own name and permissions last.
+- Members list: a "Needs you" row shows only when something needs doing: members without a plan (a button that filters the list to them, read with one `plans.versions` request for the active people you manage; a failure hides it) and expired codes (opens the Waiting tab).
+- Phone: each card has a "more" button with Plan, Template and Copy, so the actions of the wide table exist on a phone too.
+- Exercises: a "No pictures" tab next to "No video".
+
+**Picture search cards in Arabic.** The English picture title and the two
+frames keep their own left-to-right order inside the card (title isolated and
+wrapped cleanly; "start of the move" then "end of the move" like a timeline),
+so mixed Arabic/English no longer pushes the title to the far edge.
 
 ### Contracts used (migrations 0013, 0015, 0017; nothing new)
 `src/exercises/media.ts` only asks; Row Level Security decides.
@@ -300,7 +335,7 @@ id); choosing pictures for them is not built yet.
 |---|---|---|
 | Read the gym's pictures | `gym_exercise_images` (`exercise_id, public_id, position`, `gym_id = eq.<gym>`, ordered, ≤ 1200 rows) | "members read …" (`private.my_role_in`) |
 | Read the gym's videos | `gym_exercise_videos` (`exercise_id, video_id, start_seconds, end_seconds`, ≤ 300 rows) | same |
-| Search the library | `exercise_images` (`public_id, exercise_key, frame, title_en`, `keywords=ov.{…}`, ≤ 60 rows) | public read (0013). Words are cleaned like the app (lower case, Latin/Arabic letters and digits, ≤ 5 words of ≤ 30) and sent as **values** of the array filter, never as SQL |
+| Search the library | `exercise_images` (`public_id, exercise_key, frame, title_en`, `keywords=cs.{…}` (all the words), ≤ 60 rows; only when that finds nothing and there are two or more words, `keywords=ov.{…}` (any word, ≤ 400 rows, ranked by how many words match, cut to 60)) | public read (0013). Words are cleaned like the app (lower case, Latin/Arabic letters and digits, ≤ 5 words of ≤ 30) and sent as **values** of the array filter, never as SQL |
 | Picture titles (alt text) | `exercise_images` (`public_id=in.(…)`, ≤ 6) | public read |
 | Save an exercise's pictures | RPC `set_gym_exercise_images(p_gym_id, p_exercise_id, p_public_ids)` | one transaction replaces the list; array order = position, `[]` removes all; security invoker, `private.i_manage` (permanent session) |
 | Set the video | `gym_exercise_videos` **update** (`video_id, start_seconds, end_seconds`) when the gym has one, else **insert** (`gym_id, exercise_id, video_id, start_seconds, end_seconds`) | insert/update policies (`private.i_manage`); a `23505` on insert (someone added one meanwhile) turns into an update, an update that changes no row into an insert |
@@ -685,6 +720,79 @@ screens follow the Design System and D0–D4.
   وشعاره وإعداد الخصوصية في مكان واحد."
 - **Hashtags:** #Azm #GymApp #BuildInPublic #Supabase #Preact #Egypt
 
+## D6 Gym brand colour
+Spec: [`../designs/gym_brand_colours.md`](../designs/gym_brand_colours.md)
+(approved 2026-11-11). The app side:
+[`gym_brand_colours.md`](gym_brand_colours.md).
+
+A **Brand colour** panel on the settings page (`src/ui/BrandColour.tsx`,
+`src/gyms/brandColor.ts`, `GymSettingsRepository.setBrandColor`).
+- **Pick:** the browser's colour input, a code field (`#RRGGBB`, any letter
+  case, saved in lower case) and seven starting colours.
+- **What the app will use:** a light and a dark sample with the generated
+  button colour, the coloured text, and a sentence when the colour was made
+  darker or lighter ("Buttons are 33% darker than your colour, so they show
+  on light").
+- **Readability check:** the three contrast ratios for light and dark
+  (buttons against the background ≥ 3:1, text on buttons ≥ 4.5:1, coloured
+  text ≥ 4.5:1). They always pass: the rule adjusts the colour, so the table
+  explains, it does not block. Numbers are rounded down.
+- **Refused before any request:** a code that is not `#` + six hex digits,
+  and black, white and greys (channels less than 40 apart). A colour close
+  to the error red gets a note, not a refusal.
+- **Preview:** two small drawings of the app (light, dark) with three
+  screens: home with exercise pictures, the workout with the pill, a sheet.
+  With no colour, or a code that can't be saved, they show Azm's colours,
+  as the app would.
+- **Save** sends `{brand_color: '#rrggbb'}` only; **Reset to Azm colours**
+  sends `{brand_color: null}`. RLS answering with no row is "You can't
+  change this gym's settings".
+- **Who:** the owner. A captain sees the saved colour, the samples and the
+  preview read-only: no field, no button, no request that writes. The
+  database agrees (migration `0021_gym_brand_color.sql` + the 0020 policy).
+- **The same rule as the app.** `brandColor.ts` is a port of the app's
+  `brand_color_rule.dart`; both are tested against
+  `docs/features/brand_colour_vectors.json`, so the preview shows what the
+  phone shows.
+- **CSP unchanged.** A gym's colours reach the page as CSS custom
+  properties set from script (`style.setProperty`), never a `style`
+  attribute; an e2e test checks no CSP violation is reported.
+- The dashboard itself stays in Azm's colours.
+
+### Contract (migration 0021)
+| Action | Request |
+|---|---|
+| Read | `brand_color` in the `gym:gyms(...)` list of the memberships query |
+| Save / reset | `PATCH gyms?id=eq.<gym>` with `{brand_color}` |
+
+### Events
+**None** (no analytics in the dashboard).
+
+### D6 tests
+- `test/brandColor.test.ts`: the rule against the shared vectors (the
+  luminance table, 64 colours × 2 modes), valid and hostile stored values,
+  the guarantees on a sweep of the colour cube, what the owner types.
+- `test/settings.test.ts`: only a valid colour or null is sent, alone;
+  hostile values and a crafted gym id never reach the network; RLS = forbidden.
+- `test/gyms.test.ts`: a bad stored value reads as no colour.
+- `e2e/brand-colour.spec.ts` (desktop and phone): pick, samples, numbers,
+  preview, save, reset; a saved colour on open; keyboard only; captain
+  read-only; offline; hostile codes; the request body and target; another
+  gym's id; a server refusal; no CSP violation; axe (WCAG 2.1 AA) for five
+  states in English light and Arabic dark; Arabic right to left without
+  page overflow.
+
+### Demo & post (D6)
+Hook: "One colour. Your gym's app."
+Scenario: Settings → Brand colour → tap yellow → the two phones turn
+yellow, the light one a darker gold with the reason written under it →
+Save.
+Captions: EN "Pick your gym's colour once. Azm makes it readable in light
+and dark, and your members see it the next time they open the app." · AR
+"اختار لون جيمك مرة واحدة. Azm بيظبطه يبان في الفاتح والغامق، وأعضاءك
+يشوفوه أول ما يفتحوا التطبيق."
+Hashtags: #Azm #GymApp #BuildInPublic #Preact
+
 ## Sign-in flow and session
 1. **Ask for a code.** `signInWithOtp({ email, options: { shouldCreateUser: false } })`.
    The dashboard never creates users. An unknown address makes Supabase answer
@@ -899,9 +1007,6 @@ values (
 - **Hashtags:** #Azm #GymApp #BuildInPublic #Supabase #Preact #Egypt
 
 ## What's next
-**D6 gym brand colours** is approved and being built: spec
-[`../designs/gym_brand_colours.md`](../designs/gym_brand_colours.md).
-
-All planned phases (D0–D5) are built. Open items are listed in each phase's
+All planned phases (D0–D6) are built. Open items are listed in each phase's
 "Open points" / "Needs a backend step" and in
 [`../designs/plan_templates.md`](../designs/plan_templates.md).

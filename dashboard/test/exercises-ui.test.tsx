@@ -6,14 +6,14 @@ import type { Failure } from '../src/core/failure';
 import type { Lang } from '../src/core/prefs';
 import { failed, ok } from '../src/core/result';
 import type { MediaRepository } from '../src/exercises/media';
-import type { CatalogPicture, GymMedia, VideoRef } from '../src/exercises/types';
+import type { CatalogPicture, ExerciseLike, GymMedia, VideoRef } from '../src/exercises/types';
 import type { ManagedGym } from '../src/gyms/gyms';
 import { I18nContext, makeI18n, translate, type MessageKey } from '../src/i18n';
 import { ExercisePage } from '../src/pages/ExercisePage';
 import { ExercisesPage } from '../src/pages/ExercisesPage';
 
 const GYM_ID = 'b0000000-0000-4000-8000-000000000001';
-const gym: ManagedGym = { id: GYM_ID, name: 'Power Gym', role: 'captain', logoPath: null, historyAfterEnd: 'readable', memberCount: 5 };
+const gym: ManagedGym = { id: GYM_ID, name: 'Power Gym', role: 'captain', logoPath: null, historyAfterEnd: 'readable', brandColor: null, memberCount: 5 };
 const pid = (n: number, frame: 'tension' | 'relaxation' = 'tension') => `exercises/ek-${String(n).padStart(4, '0')}-${frame}`;
 const pic = (n: number, frame: 'tension' | 'relaxation', title: string): CatalogPicture => ({ publicId: pid(n, frame), exerciseKey: `ek-${String(n).padStart(4, '0')}`, frame, title });
 const en = (key: MessageKey, params?: Record<string, string | number>) => translate('en', key, params);
@@ -37,6 +37,7 @@ function fakeRepo(media: GymMedia = gymMedia(), over: Record<string, unknown> = 
     savePictures: vi.fn(() => Promise.resolve(ok(undefined))),
     saveVideo: vi.fn(() => Promise.resolve(ok(undefined))),
     removeVideo: vi.fn(() => Promise.resolve(ok(undefined))),
+    customExercises: vi.fn(() => Promise.resolve(ok([]))),
     ...over,
   };
   return { ...repo, repo: repo as unknown as MediaRepository };
@@ -166,6 +167,54 @@ describe('ExercisesPage', () => {
 });
 
 // ------------------------------------------------------------ one page ----
+
+const OWN: ExerciseLike = { id: 'ex-lq3k9a', en: 'Testt', ar: 'تيست', muscle: null, libraryVideo: false, custom: true };
+
+describe('exercises written into plans', () => {
+  it('are listed after the library, marked, and open to pictures and video', async () => {
+    const f = fakeRepo(gymMedia(), { customExercises: vi.fn(() => Promise.resolve(ok([OWN]))) });
+    await mount(<ExercisesPage gym={gym} media={f.repo} cloudName={null} />);
+    const rows = all('.ex-row');
+    expect(rows).toHaveLength(37);
+    const own = rows.find((r) => r.textContent.includes('Testt'));
+    expect(own?.getAttribute('href')).toBe(`/g/${GYM_ID}/exercises/ex-lq3k9a`);
+    expect(own?.textContent).toContain(en('plan.ownExercise'));
+    expect(own?.textContent).toContain(en('ex.videoNone'));
+    expect(host.textContent).toContain(en('ex.summary', { shown: 37, total: 37, pictures: 0, videos: 0 }));
+  });
+
+  it('are found by search in both languages', async () => {
+    const f = fakeRepo(gymMedia(), { customExercises: vi.fn(() => Promise.resolve(ok([OWN]))) });
+    await mount(<ExercisesPage gym={gym} media={f.repo} cloudName={null} />);
+    await type(m<HTMLInputElement>('#exercise-search'), 'تيست');
+    expect(all('.ex-row')).toHaveLength(1);
+  });
+
+  it('a failed read leaves the library list as it was', async () => {
+    const f = fakeRepo(gymMedia(), { customExercises: vi.fn(() => Promise.resolve(failed({ kind: 'offline' }))) });
+    await mount(<ExercisesPage gym={gym} media={f.repo} cloudName={null} />);
+    expect(all('.ex-row')).toHaveLength(36);
+  });
+
+  it('the page of one saves pictures under its own id', async () => {
+    const f = fakeRepo(gymMedia(), { customExercises: vi.fn(() => Promise.resolve(ok([OWN]))) });
+    await mount(<ExercisePage gym={gym} exerciseId="ex-lq3k9a" media={f.repo} cloudName={null} online />);
+    expect(m('h1').textContent).toBe('Testt');
+    await submit(m<HTMLFormElement>('form[role="search"]'));
+    await click(byLabel(en('pic.addBothLabel', { name: 'Dumbbell Bench Press' })));
+    await click(byLabel(en('pic.save')));
+    expect(f.savePictures).toHaveBeenCalledWith(GYM_ID, 'ex-lq3k9a', [pid(55), pid(55, 'relaxation')]);
+  });
+
+  it('an unknown plan id with no media is not found; one with media opens by its id', async () => {
+    const none = fakeRepo(gymMedia());
+    await mount(<ExercisePage gym={gym} exerciseId="ex-zzzz" media={none.repo} cloudName={null} online />);
+    expect(host.textContent).not.toContain('ex-zzzz');
+    const has = fakeRepo(gymMedia([['ex-zzzz', [pid(55)]]]));
+    await mount(<ExercisePage gym={gym} exerciseId="ex-zzzz" media={has.repo} cloudName={null} online />);
+    expect(m('h1').textContent).toBe('ex-zzzz');
+  });
+});
 
 describe('ExercisePage: pictures', () => {
   it('searches, adds both frames, reorders, sets the cover and saves the list in order', async () => {

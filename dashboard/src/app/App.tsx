@@ -203,12 +203,12 @@ export function App({ services }: { readonly services: AppServices }) {
         }
         return (
           <Shell {...shellBase} gyms={list} gym={gym} nav="members">
-            {route.name === 'members' && <MembersPage gym={gym} members={services.members} progress={services.progress} />}
+            {route.name === 'members' && <MembersPage gym={gym} members={services.members} progress={services.progress} plans={services.plans} />}
             {route.name === 'member' && (
               <MemberPage gym={gym} memberId={route.memberId} members={services.members} loadLogo={services.loadLogo} progressDeps={{ progress: services.progress, plans: services.plans, media: services.media, cloudName: services.cloudName }} />
             )}
             {route.name === 'member_plan' && (
-              <PlanPage gym={gym} memberId={route.memberId} members={services.members} plans={services.plans} templates={services.templates} media={services.media} cloudName={services.cloudName} online={online} />
+              <PlanPage gym={gym} memberId={route.memberId} open={route.open} members={services.members} plans={services.plans} templates={services.templates} media={services.media} cloudName={services.cloudName} online={online} />
             )}
             {route.name === 'add_members' && (
               <AddMembersPage gym={gym} role={route.role} userId={session.user.userId} members={services.members} loadLogo={services.loadLogo} />
