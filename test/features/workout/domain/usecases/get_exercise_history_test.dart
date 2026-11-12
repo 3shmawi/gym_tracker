@@ -108,4 +108,42 @@ void main() {
   test('no history: nothing started', () {
     expect(get.overview(_plan, const []).every((p) => !p.started), isTrue);
   });
+
+  group('Move games exercises (extra)', () {
+    const pushUps = Exercise(
+      id: 'push_ups',
+      name: LocalizedName(ar: 'ضغط', en: 'Push-ups'),
+      unit: ExerciseUnit.reps,
+    );
+    final round = WorkoutSession(
+      dayId: WorkoutSession.moveDayId,
+      finishedAt: DateTime(2026, 11),
+      sets: const [LoggedSet(exerciseId: 'push_ups', weight: 0, reps: 22)],
+    );
+
+    test('shown after the plan once it has history', () {
+      final all = get.overview(_plan, [...history, round], extra: [pushUps]);
+      expect(all.last.exercise.id, 'push_ups');
+      expect(all.where((p) => p.exercise.id == 'push_ups'), hasLength(1));
+    });
+
+    test('not shown without history', () {
+      final all = get.overview(_plan, history, extra: [pushUps]);
+      expect(all.any((p) => p.exercise.id == 'push_ups'), isFalse);
+    });
+
+    test('its own history opens, with no plan days', () {
+      final h = get(_plan, [round], 'push_ups', extra: [pushUps]);
+      expect(h, isNotNull);
+      expect(h!.entries.single.sets.single.reps, 22);
+      expect(h.days, isEmpty);
+      expect(get(_plan, [round], 'push_ups'), isNull);
+    });
+
+    test('an extra already in the plan is listed once, in plan order', () {
+      final press = _plan.days.first.exercises.first;
+      final all = get.overview(_plan, history, extra: [press]);
+      expect(all.where((p) => p.exercise.id == press.id), hasLength(1));
+    });
+  });
 }

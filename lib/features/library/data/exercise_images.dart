@@ -45,6 +45,7 @@ abstract final class ExerciseImages {
     'machine_shoulder_press',
     'pec_deck',
     'preacher_curl',
+    'push_ups',
     'reverse_pec_deck',
     'reverse_wrist_curl',
     'rope_pushdown',

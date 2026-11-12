@@ -65,8 +65,16 @@ class WorkoutSession {
     },
   );
 
-  /// The plan day done ([WorkoutDay.id]).
+  /// The day id of a Move games round (docs/designs/move_games.md §8): not a
+  /// plan day. Plan day ids are `day-…`, so they never collide with it.
+  static const moveDayId = 'move';
+
+  /// The plan day done ([WorkoutDay.id]), or [moveDayId].
   final String dayId;
+
+  /// A Move games round, saved as its own session: it never moves the plan
+  /// on and counts for the level only in part (`GetLevel`).
+  bool get isMove => dayId == moveDayId;
   final DateTime finishedAt;
   final List<LoggedSet> sets;
 
