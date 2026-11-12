@@ -272,3 +272,15 @@ test.describe('member page: codes', () => {
     await expect(page).toHaveURL(/\/members$/);
   });
 });
+
+test.describe('member page: what a captain opens it for comes first', () => {
+  test('the plan card and progress sit above the name and permissions', async ({ page }) => {
+    await open(page, { path: memberPath(M.ahmed) });
+    const plan = page.getByRole('heading', { name: en('member.sectionPlan') });
+    const details = page.getByRole('heading', { name: en('member.sectionName') });
+    await expect(plan).toBeVisible();
+    const a = await plan.boundingBox();
+    const b = await details.boundingBox();
+    expect(a && b && a.y < b.y).toBe(true);
+  });
+});

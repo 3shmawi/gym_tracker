@@ -251,6 +251,10 @@ select.in{appearance:auto}
 .mcard{flex-direction:row;align-items:center;gap:12px;padding:12px 14px;text-decoration:none;color:inherit;min-height:64px}
 .mcard .meta{flex:1;min-width:0;display:flex;flex-direction:column}
 .mcard:hover{border-color:var(--t3)}
+.mcard-wrap{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.mcard-wrap .mcard{flex:1;min-width:0}
+.mcard-menu{flex-basis:100%}
+.attn{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;border:1px solid var(--edge);border-radius:14px;background:var(--bg2,transparent)}
 .phone-only{display:none}
 .drop{border:1px dashed var(--edge);border-radius:16px;padding:14px}
 .file-in{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
