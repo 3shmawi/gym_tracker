@@ -1485,5 +1485,8 @@
   "homeMenuMove": "Move · rep games",
   "todayMoveLabel": "MOVE",
   "todayMoveTitle": "Push-up game",
-  "todayMoveBody": "1 min · the camera counts your reps"
+  "todayMoveBody": "1 min · the camera counts your reps",
+  "signOutNotBackedUp": "Some of your training is not backed up yet. It stays on this phone.",
+  "signOutRemove": "Sign out and remove my training from this phone",
+  "backupSwapPlan": "Use my other plan instead"
 }

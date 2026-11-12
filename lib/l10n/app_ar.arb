@@ -635,5 +635,8 @@
   "homeMenuMove": "حركة · ألعاب بالعدّات",
   "todayMoveLabel": "حركة",
   "todayMoveTitle": "لعبة الضغط",
-  "todayMoveBody": "دقيقة · الكاميرا بتعدّ عدّاتك"
+  "todayMoveBody": "دقيقة · الكاميرا بتعدّ عدّاتك",
+  "signOutNotBackedUp": "جزء من تمرينك لسه متحفظش في النسخة الاحتياطية. هيفضل على الموبايل ده.",
+  "signOutRemove": "اخرج وامسح تمريني من الموبايل ده",
+  "backupSwapPlan": "استخدم خطتي التانية بدل دي"
 }
