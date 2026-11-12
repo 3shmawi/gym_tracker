@@ -10,6 +10,9 @@ abstract final class AppColors {
   static const primary = Color(0xFF22C55E);
   static const primaryText = Color(0xFF15803D);
 
+  /// The dark end of the brand gradient (the profile avatar, design `.av`).
+  static const primaryDeep = Color(0xFF0B6B33);
+
   /// Gym logo tiles (design `.lg`): blue first, amber second, then again.
   static const gymBlueStart = Color(0xFF2563EB);
   static const gymBlueEnd = Color(0xFF1E3A8A);
@@ -20,8 +23,12 @@ abstract final class AppColors {
   static const cameraCenter = Color(0xFF2B3A33);
   static const cameraEdge = Color(0xFF0B100D);
 
-  /// Text/icons on a [primary] fill (9.6:1).
+  /// Text/icons on a [primary] fill.
   static const onPrimary = Color(0xFF04210F);
+
+  /// The accent of the rest-timer notification. Always Azm's green: the
+  /// notification belongs to the app, not to a gym.
+  static const Color notificationAccent = primary;
 
   // Dark theme (primary)
   static const darkBg = Color(0xFF07120C);

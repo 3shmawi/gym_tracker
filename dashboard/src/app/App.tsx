@@ -8,7 +8,17 @@ import type { GymsRepository, ManagedGym } from '../gyms/gyms';
 import { I18nContext, makeI18n } from '../i18n';
 import { GymPickerPage } from '../pages/GymPickerPage';
 import type { MembersRepository } from '../members/members';
+import type { MediaRepository } from '../exercises/media';
+import type { PlansRepository } from '../plans/plans';
+import type { TemplatesRepository } from '../plans/templates';
+import type { ProgressRepository } from '../progress/progress';
+import type { GymSettingsRepository } from '../gyms/settings';
+import { SettingsPage } from '../pages/SettingsPage';
+import { TemplatesPage } from '../pages/TemplatesPage';
+import { PlanPage } from '../pages/PlanPage';
 import { AddMembersPage } from '../pages/AddMembersPage';
+import { ExercisePage } from '../pages/ExercisePage';
+import { ExercisesPage } from '../pages/ExercisesPage';
 import { MemberPage } from '../pages/MemberPage';
 import { MembersPage } from '../pages/MembersPage';
 import { SignInPage } from '../pages/SignInPage';
@@ -24,6 +34,18 @@ export interface AppServices {
   readonly members: MembersRepository;
   /** The bitmap for the middle of the QR: the gym's logo, else the app icon. */
   readonly loadLogo: (logoPath: string | null) => Promise<ImageBitmap | null>;
+  /** Exercise pictures and videos (D2). */
+  readonly media: MediaRepository;
+  /** Cloudinary cloud name of the picture library, or null (plain tiles). */
+  readonly cloudName: string | null;
+  /** Members' plans (D3). */
+  readonly plans: PlansRepository;
+  /** The gym's plan templates (D4). */
+  readonly templates: TemplatesRepository;
+  /** Members' progress (D5, views of migration 0012). */
+  readonly progress: ProgressRepository;
+  /** Gym settings: name, logo, history after a membership ends (D5). */
+  readonly gymSettings: GymSettingsRepository;
 }
 
 type Session =
@@ -90,6 +112,14 @@ export function App({ services }: { readonly services: AppServices }) {
   useEffect(() => {
     if (session.state === 'signed_in') loadGyms(session.user);
   }, [session, loadGyms]);
+
+  // After a settings change: swap the list without the loading skeleton.
+  const refreshGyms = useCallback(() => {
+    if (session.state !== 'signed_in') return;
+    void services.gyms.managedGyms(session.user.userId).then((result) => {
+      if (result.ok) setGyms({ state: 'ready', gyms: result.value });
+    });
+  }, [services, session]);
 
   const signOut = useCallback(() => {
     signingOut.current = true;
@@ -161,6 +191,7 @@ export function App({ services }: { readonly services: AppServices }) {
       }
       case 'members':
       case 'member':
+      case 'member_plan':
       case 'add_members': {
         const gym = list.find((g) => g.id === route.gymId);
         if (!gym) {
@@ -172,12 +203,65 @@ export function App({ services }: { readonly services: AppServices }) {
         }
         return (
           <Shell {...shellBase} gyms={list} gym={gym} nav="members">
-            {route.name === 'members' && <MembersPage gym={gym} members={services.members} />}
+            {route.name === 'members' && <MembersPage gym={gym} members={services.members} progress={services.progress} />}
             {route.name === 'member' && (
-              <MemberPage gym={gym} memberId={route.memberId} members={services.members} loadLogo={services.loadLogo} />
+              <MemberPage gym={gym} memberId={route.memberId} members={services.members} loadLogo={services.loadLogo} progressDeps={{ progress: services.progress, plans: services.plans, media: services.media, cloudName: services.cloudName }} />
+            )}
+            {route.name === 'member_plan' && (
+              <PlanPage gym={gym} memberId={route.memberId} members={services.members} plans={services.plans} templates={services.templates} media={services.media} cloudName={services.cloudName} online={online} />
             )}
             {route.name === 'add_members' && (
               <AddMembersPage gym={gym} role={route.role} userId={session.user.userId} members={services.members} loadLogo={services.loadLogo} />
+            )}
+          </Shell>
+        );
+      }
+      case 'settings': {
+        const gym = list.find((g) => g.id === route.gymId);
+        if (!gym) {
+          return (
+            <Shell {...shellBase} gyms={list}>
+              <ForbiddenView onPickAnother={() => { navigate({ name: 'gyms' }); }} onSignOut={signOut} />
+            </Shell>
+          );
+        }
+        return (
+          <Shell {...shellBase} gyms={list} gym={gym} nav="settings">
+            <SettingsPage key={gym.id} gym={gym} settings={services.gymSettings} loadLogo={services.loadLogo} online={online} onChanged={refreshGyms} />
+          </Shell>
+        );
+      }
+      case 'templates': {
+        const gym = list.find((g) => g.id === route.gymId);
+        if (!gym) {
+          return (
+            <Shell {...shellBase} gyms={list}>
+              <ForbiddenView onPickAnother={() => { navigate({ name: 'gyms' }); }} onSignOut={signOut} />
+            </Shell>
+          );
+        }
+        return (
+          <Shell {...shellBase} gyms={list} gym={gym} nav="templates">
+            <TemplatesPage gym={gym} templates={services.templates} online={online} />
+          </Shell>
+        );
+      }
+      case 'exercises':
+      case 'exercise': {
+        const gym = list.find((g) => g.id === route.gymId);
+        if (!gym) {
+          return (
+            <Shell {...shellBase} gyms={list}>
+              <ForbiddenView onPickAnother={() => { navigate({ name: 'gyms' }); }} onSignOut={signOut} />
+            </Shell>
+          );
+        }
+        return (
+          <Shell {...shellBase} gyms={list} gym={gym} nav="exercises">
+            {route.name === 'exercises' ? (
+              <ExercisesPage gym={gym} media={services.media} cloudName={services.cloudName} />
+            ) : (
+              <ExercisePage key={route.exerciseId} gym={gym} exerciseId={route.exerciseId} media={services.media} cloudName={services.cloudName} online={online} />
             )}
           </Shell>
         );

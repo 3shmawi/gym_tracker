@@ -256,7 +256,7 @@ const gym = (n: number, role: 'owner' | 'captain', name: string): ManagedGym => 
   name,
   role,
   memberCount: n * 10,
-  logoPath: null, historyAfterEnd: 'readable',
+  logoPath: null, historyAfterEnd: 'readable', brandColor: null,
 });
 
 describe('GymPickerPage', () => {

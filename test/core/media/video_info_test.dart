@@ -171,7 +171,9 @@ void main() {
   group(ExerciseVideos, () {
     test('every approved video is a valid id of a library exercise', () {
       final ids = {for (final e in ExerciseCatalog.all) e.id};
-      expect(ExerciseVideos.exerciseIds, hasLength(ids.length));
+      // Videos are approved by the owner; the 13 exercises added on
+      // 2026-11-10 (days 4 and 5) have none yet and show pictures and steps.
+      expect(ExerciseVideos.exerciseIds, hasLength(23));
       for (final id in ExerciseVideos.exerciseIds) {
         expect(ids, contains(id));
         final v = ExerciseVideos.of(id)!;

@@ -5,12 +5,23 @@ import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/domain/entities/exercise_history.dart';
+import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/get_exercise_history.dart';
 import 'package:gym_tracker/features/workout/presentation/exercise_history_view.dart';
 
 import '../../../helpers/pump_app.dart';
 import '../../../helpers/ui_check.dart';
 import 'progress_samples.dart';
+
+/// Abs is on days 1 and 4 (the other exercises of those days differ).
+ExerciseHistory _absHistory() =>
+    const GetExerciseHistory()(PlanTemplates.fiveDaySplit, [
+      WorkoutSession(
+        dayId: 'day-1',
+        finishedAt: DateTime(2026, 10, 27, 18),
+        sets: const [LoggedSet(exerciseId: 'abs', weight: 10, reps: 15)],
+      ),
+    ], 'abs')!;
 
 Widget view(AsyncValue<ExerciseHistory?> state, {VoidCallback? onRetry}) =>
     ExerciseHistoryView(
@@ -42,15 +53,13 @@ void main() {
     testWidgets('shows the workout it belongs to, a repeated day once', (
       tester,
     ) async {
-      await tester.pumpApp(
-        view(AsyncData(exerciseHistory('wide_lat_pulldown'))),
-      );
+      await tester.pumpApp(view(AsyncData(_absHistory())));
       expect(find.text('Chest & Back · Days 1, 4'), findsOneWidget);
     });
 
     testWidgets('the workout it belongs to, in Arabic', (tester) async {
       await tester.pumpApp(
-        view(AsyncData(exerciseHistory('wide_lat_pulldown'))),
+        view(AsyncData(_absHistory())),
         locale: const Locale('ar'),
       );
       // Arabic comma, so the day numbers read in order right to left.

@@ -40,7 +40,7 @@ class NotificationRestAlarm implements RestAlarm {
     body: notice.body,
     channelId: channelId,
     channelName: notice.channelName,
-    color: AppColors.primary,
+    color: AppColors.notificationAccent,
   );
 
   @override
@@ -50,7 +50,7 @@ class NotificationRestAlarm implements RestAlarm {
     body: notice.body,
     channelId: channelId,
     channelName: notice.channelName,
-    color: AppColors.primary,
+    color: AppColors.notificationAccent,
   );
 
   @override

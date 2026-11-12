@@ -29,4 +29,15 @@ describe('security headers', () => {
     expect(off).toContain("frame-src 'none'");
     expect(off).not.toContain('cloudflare');
   });
+
+  it('allows pictures only from the library cloud path, when set', () => {
+    const off = contentSecurityPolicy({ supabaseUrl });
+    expect(off).toContain("img-src 'self';");
+    expect(off).not.toContain('cloudinary');
+    const on = contentSecurityPolicy({ supabaseUrl, cloudinaryCloudName: 'azm-media' });
+    expect(on).toContain("img-src 'self' https://res.cloudinary.com/azm-media/image/upload/;");
+    // Never the whole host, never in connect-src.
+    expect(on).not.toMatch(/res\.cloudinary\.com[;\s]/);
+    expect(/connect-src ([^;]+)/.exec(on)?.[1]).not.toContain('cloudinary');
+  });
 });

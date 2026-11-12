@@ -13,6 +13,18 @@ import { PrintSheet, usePrint } from '../ui/PrintSheet';
 import { drawChecked, logoFor } from '../ui/qrCards';
 import { ErrorView, LoadingView, StateBlock } from '../ui/states';
 import { useLeaveWarning, useMembersList } from './useMembersList';
+import { MemberProgress } from '../ui/MemberProgress';
+import type { ProgressRepository } from '../progress/progress';
+import type { PlansRepository } from '../plans/plans';
+import type { MediaRepository } from '../exercises/media';
+
+/** D5: what the progress panel needs (absent: no panel, as in D1's tests). */
+export interface ProgressDeps {
+  readonly progress: ProgressRepository;
+  readonly plans: PlansRepository;
+  readonly media: MediaRepository;
+  readonly cloudName: string | null;
+}
 
 interface ShownCode {
   readonly code: NewCode;
@@ -31,11 +43,13 @@ export function MemberPage({
   memberId,
   members,
   loadLogo,
+  progressDeps,
 }: {
   readonly gym: ManagedGym;
   readonly memberId: string;
   readonly members: MembersRepository;
   readonly loadLogo: (logoPath: string | null) => Promise<ImageBitmap | null>;
+  readonly progressDeps?: ProgressDeps;
 }) {
   const { t, lang } = useI18n();
   const online = useOnline();
@@ -154,6 +168,7 @@ export function MemberPage({
   };
 
   const manageable = canManage(gym.role, member.role);
+  const planRoute: Route = { name: 'member_plan', gymId: gym.id, memberId: member.id };
   const ended = member.status === 'ended';
   const locked = !manageable || ended;
   const status = statusOf(t, lang, member, new Date());
@@ -216,7 +231,18 @@ export function MemberPage({
           onSave={(change) => void save(change)}
         />
 
+        {progressDeps && manageable ? <MemberProgress gym={gym} member={member} {...progressDeps} /> : null}
+
         <div class="grid2">
+          {manageable && !ended ? (
+            <section class="panel" aria-labelledby="s-plan">
+              <h2 class="h2" id="s-plan">{t('member.sectionPlan')}</h2>
+              <p class="sub">{t('member.planBody')}</p>
+              <a class="btn pri self-start" href={pathOf(planRoute)} onClick={linkHandler(planRoute)}>
+                {t('member.openPlan')}
+              </a>
+            </section>
+          ) : null}
           {!locked && member.status === 'active' ? (
             <section class="panel" aria-labelledby="s-phone">
               <h2 class="h2" id="s-phone">{t('member.sectionPhone')}</h2>

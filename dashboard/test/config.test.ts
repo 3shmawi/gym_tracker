@@ -9,7 +9,7 @@ const SERVICE_JWT = 'eyJhbGciOiJIUzI1NiJ9.' + btoa('{"role":"service' + '_role"}
 
 describe('parseConfig', () => {
   it('accepts a valid config and trims a trailing slash', () => {
-    expect(parseConfig({ VITE_SUPABASE_URL: `${URL}/`, VITE_SUPABASE_PUBLISHABLE_KEY: KEY })).toEqual({ supabaseUrl: URL, supabaseKey: KEY, turnstileSiteKey: null });
+    expect(parseConfig({ VITE_SUPABASE_URL: `${URL}/`, VITE_SUPABASE_PUBLISHABLE_KEY: KEY })).toEqual({ supabaseUrl: URL, supabaseKey: KEY, turnstileSiteKey: null, cloudinaryCloudName: null });
   });
   it('rejects a secret key without echoing it', () => {
     expect(() => parseConfig({ VITE_SUPABASE_URL: URL, VITE_SUPABASE_PUBLISHABLE_KEY: SECRET_KEY })).toThrow(ConfigError);
@@ -48,6 +48,23 @@ describe('parseConfig', () => {
     it('rejects spaces and markup', () => {
       expect(() => parseConfig({ ...base, VITE_TURNSTILE_SITE_KEY: '0x4AAAA AAAAAAAAAAAAAAA' })).toThrow(ConfigError);
       expect(() => parseConfig({ ...base, VITE_TURNSTILE_SITE_KEY: '<script>alert(1)</script>' })).toThrow(ConfigError);
+    });
+  });
+
+  describe('Cloudinary cloud name (D2 pictures)', () => {
+    const base = { VITE_SUPABASE_URL: URL, VITE_SUPABASE_PUBLISHABLE_KEY: KEY };
+    it('is null when empty or missing', () => {
+      expect(parseConfig(base).cloudinaryCloudName).toBeNull();
+      expect(parseConfig({ ...base, VITE_CLOUDINARY_CLOUD_NAME: '  ' }).cloudinaryCloudName).toBeNull();
+      expect(parseConfig({ ...base, VITE_CLOUDINARY_CLOUD_NAME: 5 }).cloudinaryCloudName).toBeNull();
+    });
+    it('accepts a cloud name', () => {
+      expect(parseConfig({ ...base, VITE_CLOUDINARY_CLOUD_NAME: ' azm-media_1 ' }).cloudinaryCloudName).toBe('azm-media_1');
+    });
+    it('refuses anything that could change the picture URL', () => {
+      for (const bad of ['Azm', 'azm/../x', 'azm.evil.example', 'https://res.cloudinary.com/azm', 'azm%2f', '-azm', 'a'.repeat(64), 'аzm']) {
+        expect(() => parseConfig({ ...base, VITE_CLOUDINARY_CLOUD_NAME: bad }), bad).toThrow(ConfigError);
+      }
     });
   });
 });
