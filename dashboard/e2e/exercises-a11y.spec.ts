@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
-import { GYM_A, expect, test } from './fixtures/supabase';
+import { GYM_A, M, expect, test } from './fixtures/supabase';
 import { msg, type Lang, type Theme } from './fixtures/helpers';
 import { open, type OpenOptions } from './fixtures/members';
 
@@ -68,6 +68,23 @@ const screens: Screen[] = [
       await page.getByLabel(msg(lang, 'vid.paste')).fill('https://youtu.be/dQw4w9WgXcQ');
       await page.getByRole('button', { name: msg(lang, 'vid.save') }).click();
       await expect(page.getByRole('alert')).toBeVisible();
+    },
+  },
+  {
+    name: 'exercises list with a plan exercise',
+    options: {
+      path: LIST,
+      plans: {
+        [M.ahmed]: {
+          body: { days: [{ id: 'day-1', name: { ar: 'يوم', en: 'Day' }, exercises: [{ id: 'ex-lq3k9a', name: { ar: 'تيست', en: 'Testt' }, sets: 3, reps: 12, rest: 90, step: 2.5, superset: false, unit: 'kg' }] }] },
+          version: 1,
+          updated_by: M.captain,
+          updated_at: '2026-11-09T10:00:00Z',
+        },
+      },
+    },
+    ready: async (page) => {
+      await expect(page.locator('.ex-row')).toHaveCount(37);
     },
   },
   {

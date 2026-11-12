@@ -1,11 +1,11 @@
 import { useState } from 'preact/hooks';
 import { linkHandler, pathOf, type Route } from '../app/router';
 import { cleanName } from '../core/text';
-import { matchesQuery } from '../exercises/catalog';
+import { asListed, matchesQuery } from '../exercises/catalog';
 import { LIBRARY } from '../exercises/library';
 import type { MediaRepository } from '../exercises/media';
-import type { GymMedia, LibraryExercise } from '../exercises/types';
-import { useGymMedia } from '../exercises/useGymMedia';
+import type { ExerciseLike, GymMedia } from '../exercises/types';
+import { useCustomExercises, useGymMedia } from '../exercises/useGymMedia';
 import type { ManagedGym } from '../gyms/gyms';
 import { useI18n, type I18n } from '../i18n';
 import { Icon } from '../ui/icons';
@@ -15,19 +15,21 @@ import { ErrorView, LoadingView, StateBlock } from '../ui/states';
 type Tab = 'all' | 'mine' | 'no_video';
 const TABS: readonly Tab[] = ['all', 'mine', 'no_video'];
 const SEARCH_MAX = 60;
+const LISTED = LIBRARY.map(asListed);
 
-const hasMine = (media: GymMedia, e: LibraryExercise) => media.pictures.has(e.id) || media.videos.has(e.id);
-const hasNoVideo = (media: GymMedia, e: LibraryExercise) => !media.videos.has(e.id) && !e.libraryVideo;
-const inTab = (media: GymMedia, e: LibraryExercise, tab: Tab) => tab === 'all' || (tab === 'mine' ? hasMine(media, e) : hasNoVideo(media, e));
+const hasMine = (media: GymMedia, e: ExerciseLike) => media.pictures.has(e.id) || media.videos.has(e.id);
+const hasNoVideo = (media: GymMedia, e: ExerciseLike) => !media.videos.has(e.id) && !e.libraryVideo;
+const inTab = (media: GymMedia, e: ExerciseLike, tab: Tab) => tab === 'all' || (tab === 'mine' ? hasMine(media, e) : hasNoVideo(media, e));
 
 /** Both names, the one of the page's language first. */
-export function exerciseNames(lang: I18n['lang'], e: LibraryExercise): { primary: string; secondary: string; secondaryLang: 'en' | 'ar' } {
+export function exerciseNames(lang: I18n['lang'], e: Pick<ExerciseLike, 'en' | 'ar'>): { primary: string; secondary: string; secondaryLang: 'en' | 'ar' } {
   return lang === 'ar' ? { primary: e.ar, secondary: e.en, secondaryLang: 'en' } : { primary: e.en, secondary: e.ar, secondaryLang: 'ar' };
 }
 
 export function ExercisesPage({ gym, media, cloudName }: { readonly gym: ManagedGym; readonly media: MediaRepository; readonly cloudName: string | null }) {
   const { t, lang } = useI18n();
   const { data, reload } = useGymMedia(media, gym.id);
+  const custom = useCustomExercises(media, gym.id);
   const [tab, setTab] = useState<Tab>('all');
   const [query, setQuery] = useState('');
 
@@ -56,10 +58,13 @@ export function ExercisesPage({ gym, media, cloudName }: { readonly gym: Managed
 
   const m = data.media;
   const needle = cleanName(query);
-  const rows = LIBRARY.filter((e) => inTab(m, e, tab) && matchesQuery(e, needle));
-  const withPictures = LIBRARY.filter((e) => m.pictures.has(e.id)).length;
-  const withVideo = LIBRARY.filter((e) => m.videos.has(e.id)).length;
-  const countOf = (k: Tab) => LIBRARY.filter((e) => inTab(m, e, k)).length;
+  // The library, then what members wrote into plans (and that has media already).
+  const own = (custom ?? []).filter((e) => e.custom);
+  const all = [...LISTED, ...own];
+  const rows = all.filter((e) => inTab(m, e, tab) && matchesQuery(e, needle));
+  const withPictures = all.filter((e) => m.pictures.has(e.id)).length;
+  const withVideo = all.filter((e) => m.videos.has(e.id)).length;
+  const countOf = (k: Tab) => all.filter((e) => inTab(m, e, k)).length;
   const tabLabel: Record<Tab, string> = { all: t('ex.tabAll'), mine: t('ex.tabMine'), no_video: t('ex.tabNoVideo') };
 
   const empty =
@@ -100,7 +105,7 @@ export function ExercisesPage({ gym, media, cloudName }: { readonly gym: Managed
         </div>
       </div>
       <p class="cap" role="status">
-        {t('ex.summary', { shown: rows.length, total: LIBRARY.length, pictures: withPictures, videos: withVideo })}
+        {t('ex.summary', { shown: rows.length, total: all.length, pictures: withPictures, videos: withVideo })}
       </p>
 
       {rows.length === 0 ? (
@@ -120,8 +125,9 @@ export function ExercisesPage({ gym, media, cloudName }: { readonly gym: Managed
                     <b>{names.primary}</b>
                     <span class="cap">
                       <span lang={names.secondaryLang}>{names.secondary}</span>
-                      {' · '}
-                      {t(`ex.muscle.${e.muscle}`)}
+                      {e.muscle ? ` · ${t(`ex.muscle.${e.muscle}`)}` : null}
+                      {e.custom ? ' ' : null}
+                      {e.custom ? <span class="badge own">{t('plan.ownExercise')}</span> : null}
                     </span>
                   </span>
                   <span class="badges ex-badges">

@@ -9,7 +9,7 @@ const PAYLOAD = '<img src=x onerror=alert(1)>';
 const RLO = String.fromCharCode(0x202e);
 
 test.describe('crafted URLs', () => {
-  for (const id of ['nope', 'LEG_PRESS', 'ex-abc', '..%2f..%2fplans', "abs'%20or%201=1", '%3Cscript%3E', '__proto__', 'abs%00']) {
+  for (const id of ['nope', 'LEG_PRESS', 'ex-', 'EX-ABC', '..%2f..%2fplans', "abs'%20or%201=1", '%3Cscript%3E', '__proto__', 'abs%00']) {
     test(`exercise id "${id}" is not found and never reaches the server`, async ({ page }) => {
       const mock = await open(page, { path: one(id) });
       await expect(page.getByRole('heading', { name: en('state.notFoundTitle') })).toBeVisible();

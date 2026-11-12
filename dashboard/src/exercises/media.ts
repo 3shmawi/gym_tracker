@@ -3,8 +3,10 @@ import { CodedError } from '../core/failure';
 import { failed, guard, unwrap, type Result } from '../core/result';
 import { cleanName } from '../core/text';
 import { isGymId } from '../gyms/gyms';
+import { cleanPlanName } from '../plans/model';
+import { isCustomId } from './catalog';
 import { EXERCISE_KEY, MAX_PICTURES, PUBLIC_ID, searchWords } from './pictures';
-import type { CatalogPicture, GymMedia, VideoRef } from './types';
+import type { CatalogPicture, ExerciseLike, GymMedia, VideoRef } from './types';
 import { isValidVideo } from './youtube';
 
 // A gym's exercise media. Every rule lives in the database; this file only
@@ -96,6 +98,36 @@ export function toCatalogPicture(row: CatalogRow): CatalogPicture | null {
 
 const refuse = (code: string, reason: string) => new CodedError(code, reason);
 
+/** Exercises named in plans, at most (a gym's members times their days). */
+export const MAX_CUSTOM = 200;
+const MAX_PLAN_ROWS = 500;
+
+/**
+ * The exercises in these plan day lists that are not the library's: one
+ * entry per id, the first name seen. Anything off the rules is dropped.
+ */
+export function customFromDays(dayLists: readonly unknown[]): ExerciseLike[] {
+  const found = new Map<string, ExerciseLike>();
+  for (const days of dayLists) {
+    if (!Array.isArray(days)) continue;
+    for (const day of days as unknown[]) {
+      const exercises = (day as { exercises?: unknown } | null)?.exercises;
+      if (!Array.isArray(exercises)) continue;
+      for (const raw of exercises as unknown[]) {
+        const e = raw as { id?: unknown; name?: { en?: unknown; ar?: unknown } | null } | null;
+        const id = e?.id;
+        if (typeof id !== 'string' || !isCustomId(id) || found.has(id)) continue;
+        const en = cleanPlanName(e?.name?.en);
+        const ar = cleanPlanName(e?.name?.ar);
+        if (en === '' && ar === '') continue;
+        found.set(id, { id, en: en || ar, ar: ar || en, muscle: null, libraryVideo: false, custom: true });
+        if (found.size >= MAX_CUSTOM) return [...found.values()];
+      }
+    }
+  }
+  return [...found.values()];
+}
+
 export class MediaRepository {
   constructor(private readonly supabase: SupabaseClient) {}
 
@@ -120,6 +152,22 @@ export class MediaRepository {
           .overrideTypes<VideoRow[], { merge: false }>(),
       ]);
       return toGymMedia(unwrap(pictures) ?? [], unwrap(videos) ?? []);
+    });
+  }
+
+  /** Exercises the gym's members have in their plans that are not in the app's library. */
+  async customExercises(gymId: string): Promise<Result<ExerciseLike[]>> {
+    if (!isGymId(gymId)) return failed({ kind: 'not_found' });
+    return guard(async () => {
+      const members = unwrap(
+        await this.supabase.from('memberships').select('id').eq('gym_id', gymId).limit(MAX_PLAN_ROWS).overrideTypes<{ id: unknown }[], { merge: false }>(),
+      );
+      const ids = (members ?? []).flatMap((m) => (typeof m.id === 'string' && isGymId(m.id) ? [m.id] : []));
+      if (ids.length === 0) return [];
+      const rows = unwrap(
+        await this.supabase.from('plans').select('days:body->days').in('membership_id', ids).limit(MAX_PLAN_ROWS).overrideTypes<{ days: unknown }[], { merge: false }>(),
+      );
+      return customFromDays((rows ?? []).map((r) => r.days));
     });
   }
 

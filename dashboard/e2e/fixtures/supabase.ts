@@ -568,6 +568,8 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
         const p = mock.plans[id];
         return p ? [{ membership_id: id, ...p }] : [];
       });
+      // The Exercises tab reads only the day lists (select=days:body->days).
+      if (select.includes('days:body->days')) return json(route, 200, rows.map((r) => ({ days: (r.body as { days?: unknown } | null)?.days ?? null })));
       return json(route, 200, rows);
     }
     if (path === '/rest/v1/rpc/save_plan') {

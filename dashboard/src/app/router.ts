@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { isLibraryId } from '../exercises/catalog';
+import { isCustomId, isLibraryId } from '../exercises/catalog';
 import { isGymId } from '../gyms/gyms';
 
 export type Route =
@@ -37,7 +37,7 @@ export function parsePath(pathname: string): Route {
   const exercises = /^\/g\/([^/]+)\/exercises$/.exec(path);
   if (exercises?.[1] && isGymId(exercises[1])) return { name: 'exercises', gymId: exercises[1] };
   const exercise = /^\/g\/([^/]+)\/exercises\/([^/]+)$/.exec(path);
-  if (exercise?.[1] && exercise[2] && isGymId(exercise[1]) && isLibraryId(exercise[2])) return { name: 'exercise', gymId: exercise[1], exerciseId: exercise[2] };
+  if (exercise?.[1] && exercise[2] && isGymId(exercise[1]) && (isLibraryId(exercise[2]) || isCustomId(exercise[2]))) return { name: 'exercise', gymId: exercise[1], exerciseId: exercise[2] };
   return { name: 'not_found' };
 }
 

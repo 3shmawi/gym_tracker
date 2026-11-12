@@ -22,6 +22,18 @@ export interface LibraryExercise {
   readonly step: number;
 }
 
+/** What the Exercises tab and page need of any exercise, the library's or one a captain wrote into a plan. */
+export interface ExerciseLike {
+  readonly id: string;
+  readonly en: string;
+  readonly ar: string;
+  /** null for an exercise written into a plan: it has no muscle group. */
+  readonly muscle: Muscle | null;
+  readonly libraryVideo: boolean;
+  /** Written in a member's plan, not part of the app's library. */
+  readonly custom: boolean;
+}
+
 /** A gym's own video for an exercise: the id only, never a URL. */
 export interface VideoRef {
   readonly id: string;
