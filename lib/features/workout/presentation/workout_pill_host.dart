@@ -63,11 +63,15 @@ class CurrentPathController extends Notifier<String> {
 }
 
 /// Screens without the pill: the workout itself (the member is already in
-/// it), the home screen (its own button starts or continues the workout)
-/// and the screens before the app (welcome, joining a gym).
+/// it), the home screen (its own button starts or continues the workout),
+/// the plan editor (its action buttons sit in the same bottom corner, and
+/// the pill covered "Add exercise") and the screens before the app
+/// (welcome, joining a gym).
 bool workoutPillHiddenOn(String path) =>
     path == AppRoutes.workout ||
     path == AppRoutes.home ||
+    path == AppRoutes.plan ||
+    path.startsWith('${AppRoutes.plan}/') ||
     path == AppRoutes.welcome ||
     path == AppRoutes.join ||
     path.startsWith('${AppRoutes.join}/');

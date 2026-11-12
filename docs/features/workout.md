@@ -64,7 +64,9 @@ Status: slice 3 started (rest notification), plus levels.
   the workout itself (the member is already in it), **the home screen** (its
   own button starts the workout, and says **Continue workout** while one is
   in progress; owner's choice, 2026-11-11, replacing "the home screen
-  included") and the screens before the app (welcome, joining a gym). Also
+  included"), **the plan editor** (its "Add exercise" and other bottom buttons
+  sit in the same corner; the pill covered them once the screen was tracked
+  correctly) and the screens before the app (welcome, joining a gym). Also
   hidden while the keyboard is open and when there is nothing to start (no
   plan, empty day). On home, *Continue workout* goes straight back and never
   asks "You already trained today"; while resting, a line above it counts

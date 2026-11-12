@@ -152,7 +152,7 @@ void main() {
     unawaited(router.push<void>('/plan/day-1?x=1'));
     await tester.pumpAndSettle();
     expect(top(), '/plan/day-1');
-    expect(workoutPillHiddenOn(top()), isFalse);
+    expect(workoutPillHiddenOn(top()), isTrue);
     router
       ..pop()
       ..pop();
@@ -165,32 +165,38 @@ void main() {
     expect(top(), '/plan/day-2');
   });
 
-  test('hidden on the workout screen, on home and before the app', () {
-    for (final path in [
-      AppRoutes.workout,
-      // Home has its own Start / Continue button.
-      AppRoutes.home,
-      AppRoutes.welcome,
-      AppRoutes.join,
-      AppRoutes.joinScan,
-      AppRoutes.joinCode('ABC123'),
-    ]) {
-      expect(workoutPillHiddenOn(path), isTrue, reason: path);
-    }
-    for (final path in [
-      AppRoutes.settings,
-      AppRoutes.plan,
-      AppRoutes.progress,
-      AppRoutes.library,
-      AppRoutes.libraryExercise('flat_db_press'),
-      AppRoutes.profile,
-      // Hostile paths are just "another screen": shown, never a crash.
-      '/workout/../join',
-      "/'; drop table",
-    ]) {
-      expect(workoutPillHiddenOn(path), isFalse, reason: path);
-    }
-  });
+  test(
+    'hidden on the workout screen, home, the plan editor and before the app',
+    () {
+      for (final path in [
+        AppRoutes.workout,
+        // Home has its own Start / Continue button.
+        AppRoutes.home,
+        // The plan editor's buttons sit where the pill would.
+        AppRoutes.plan,
+        AppRoutes.planDay('day-1'),
+        AppRoutes.planExercise('day-1', 'bench'),
+        AppRoutes.welcome,
+        AppRoutes.join,
+        AppRoutes.joinScan,
+        AppRoutes.joinCode('ABC123'),
+      ]) {
+        expect(workoutPillHiddenOn(path), isTrue, reason: path);
+      }
+      for (final path in [
+        AppRoutes.settings,
+        AppRoutes.progress,
+        AppRoutes.library,
+        AppRoutes.libraryExercise('flat_db_press'),
+        AppRoutes.profile,
+        // Hostile paths are just "another screen": shown, never a crash.
+        '/workout/../join',
+        "/'; drop table",
+      ]) {
+        expect(workoutPillHiddenOn(path), isFalse, reason: path);
+      }
+    },
+  );
 
   group(WorkoutPillView, () {
     testWidgets('one tap, with a label that says what it does', (tester) async {
