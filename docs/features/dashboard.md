@@ -100,6 +100,7 @@ dashboard/
 | `/g/<gym-uuid>/members/add-captain` | add a captain, owners only (D1) |
 | `/g/<gym-uuid>/templates` | the gym's plan templates (D4) |
 | `/g/<gym-uuid>/settings` | gym settings (D5) |
+| `/g/<gym-uuid>/members/<member-uuid>/plan/{replace,copy,save-template}` | the member's plan with that quick-action dialog open (D3/D4) |
 | `/g/<gym-uuid>/exercises` | the exercise list (D2) |
 | `/g/<gym-uuid>/exercises/<library-id>` | one exercise's pictures and video (D2); an id that is neither in the library nor an `ex-…` plan id is "not found" |
 | anything else | not found |
@@ -305,6 +306,21 @@ route `/g/<gym>/exercises/ex-…` opens the same page as a library exercise
 media row mentions is "not found". Tests: `test/media.test.ts` (extraction,
 hostile entries, query), `test/router.test.ts`, `test/exercises-ui.test.tsx`,
 `e2e/exercises.spec.ts`, `e2e/exercises-a11y.spec.ts`.
+
+**Quick actions per member.** The wide members table has *Plan*, *Template* and
+*Copy* buttons next to *Manage* for active members you can manage; the member
+page's Plan card has *Open the plan*, *Replace with template*, *Copy to other
+members* and *Save as template*. They are links to fixed paths
+`/g/<gym>/members/<id>/plan/{replace|copy|save-template}`; the plan page opens
+that dialog once and puts the address back to the plain plan (a reload does not
+reopen it). Copy and Save-as-template open only when the member has a plan.
+Phone cards still open the member page, where the same actions are. Tests:
+`test/router.test.ts`, `e2e/templates.spec.ts` ("quick actions on a member").
+
+**Picture search cards in Arabic.** The English picture title and the two
+frames keep their own left-to-right order inside the card (title isolated and
+wrapped cleanly; "start of the move" then "end of the move" like a timeline),
+so mixed Arabic/English no longer pushes the title to the far edge.
 
 ### Contracts used (migrations 0013, 0015, 0017; nothing new)
 `src/exercises/media.ts` only asks; Row Level Security decides.

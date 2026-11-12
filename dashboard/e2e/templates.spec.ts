@@ -1,6 +1,6 @@
 import { GYM_A, M, expect, samplePlan, test, type FakePlan, type FakeTemplate } from './fixtures/supabase';
 import { msg } from './fixtures/helpers';
-import { isPhone, memberPath, open } from './fixtures/members';
+import { MEMBERS_PATH, isPhone, memberPath, open } from './fixtures/members';
 
 const en = (key: Parameters<typeof msg>[1], values?: Record<string, string | number>) => msg('en', key, values);
 const planPath = (id: string) => `${memberPath(id)}/plan`;
@@ -112,5 +112,34 @@ test.describe('gym templates', () => {
     await page.getByRole('dialog').getByRole('button', { name: en('tpl.replaceGo') }).click();
     await expect(page.getByRole('alert').filter({ hasText: en('conflict.title') })).toBeVisible();
     expect(mock.plans[M.ahmed]?.template_id).toBeUndefined();
+  });
+});
+
+test.describe('quick actions on a member', () => {
+  test('from the members list: the template dialog opens on the plan page, and the address is the plain plan', async ({ page }) => {
+    test.skip(isPhone(page), 'the table with the row actions is the wide layout');
+    await open(page, { path: MEMBERS_PATH, templates: [tpl()] });
+    await page.getByRole('link', { name: en('members.quickTemplateName', { name: 'Youssef Khaled' }) }).click();
+    await expect(page.getByRole('dialog').getByText(en('tpl.replaceBody', { name: 'Youssef Khaled' }))).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`${planPath(M.youssef)}$`));
+    // Closing leaves the plan page; a reload does not open the dialog again.
+    await page.keyboard.press('Escape');
+    await page.reload();
+    await expect(page.getByRole('heading', { name: en('plan.emptyTitle') })).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  });
+
+  test('from the member page: Replace with template, Copy and Save as template open their dialogs', async ({ page }) => {
+    await open(page, { path: memberPath(M.ahmed), templates: [tpl()], plans: { [M.ahmed]: linked(2) } });
+    await page.getByRole('link', { name: en('plan.copy') }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.goBack();
+    await page.getByRole('link', { name: en('tpl.saveAs') }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.goBack();
+    await page.getByRole('link', { name: en('tpl.replace') }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
   });
 });

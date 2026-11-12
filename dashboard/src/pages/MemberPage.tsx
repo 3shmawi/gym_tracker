@@ -238,9 +238,17 @@ export function MemberPage({
             <section class="panel" aria-labelledby="s-plan">
               <h2 class="h2" id="s-plan">{t('member.sectionPlan')}</h2>
               <p class="sub">{t('member.planBody')}</p>
-              <a class="btn pri self-start" href={pathOf(planRoute)} onClick={linkHandler(planRoute)}>
-                {t('member.openPlan')}
-              </a>
+              <div class="acts-row" role="group" aria-label={t('member.quickActions')}>
+                <a class="btn pri" href={pathOf(planRoute)} onClick={linkHandler(planRoute)}>
+                  {t('member.openPlan')}
+                </a>
+                {([['replace', 'tpl.replace'], ['copy', 'plan.copy'], ['save_template', 'tpl.saveAs']] as const).map(([open, label]) => {
+                  const r: Route = { ...planRoute, open };
+                  return (
+                    <a key={open} class="btn" href={pathOf(r)} onClick={linkHandler(r)}>{t(label)}</a>
+                  );
+                })}
+              </div>
             </section>
           ) : null}
           {!locked && member.status === 'active' ? (
