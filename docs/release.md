@@ -323,6 +323,7 @@ are pinned by hand — bump them here and in the kit together:
 | `@supabase/server`, `@std/assert` | `supabase/functions/redeem_invite/deno.json` + `deno.lock` | 1.9.2, 1.0.19 |
 | Python packages for `scripts/make_invites` | `scripts/make_invites/requirements.txt` (hashes) | qrcode 8.2, pillow 13.0.0, reportlab 5.0.1, zxing-cpp 3.1.1, charset-normalizer 3.5.2 |
 | EGM plugin (`google/elephant-goldfish-model`) | `.claude/settings.json` (`ref`), design reviews | v0.1.1 |
+| `camera`, `google_mlkit_pose_detection` (native code, ML Kit models) | `pubspec.yaml` (exact), Move games; bump by hand, re-check app size, the merged Android manifest and OSV for the Android libraries (`docs/security.md` → Move games) | 0.12.2, 1.0.2 |
 
 ## One-time setup
 - Create the app in Play Console and App Store Connect (bundle id

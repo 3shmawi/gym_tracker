@@ -109,6 +109,27 @@ void main() {
       expect(opened, 1);
     });
 
+    testWidgets('the pose check row shows only when it is allowed', (
+      tester,
+    ) async {
+      var opened = 0;
+      Widget settings({VoidCallback? onOpenMoveCheck}) => SettingsView(
+        settings: const AppSettings(),
+        onLocaleChanged: (_) {},
+        onThemeModeChanged: (_) {},
+        onOpenMoveCheck: onOpenMoveCheck,
+      );
+      await tester.pumpApp(settings());
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('settings_move_check')), findsNothing);
+
+      await tester.pumpApp(settings(onOpenMoveCheck: () => opened++));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('settings_move_check')));
+      await tester.tap(find.text(l10nEn.settingsMoveCheck));
+      expect(opened, 1);
+    });
+
     testWidgets('privacy policy and terms are always one tap away', (
       tester,
     ) async {

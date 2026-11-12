@@ -17,6 +17,8 @@ import 'package:gym_tracker/features/gym/presentation/scanner_page.dart';
 import 'package:gym_tracker/features/gym/presentation/welcome_page.dart';
 import 'package:gym_tracker/features/library/presentation/exercise_guide_page.dart';
 import 'package:gym_tracker/features/library/presentation/library_page.dart';
+import 'package:gym_tracker/features/move/presentation/move_check_controller.dart';
+import 'package:gym_tracker/features/move/presentation/move_check_page.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_page.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_page.dart';
 import 'package:gym_tracker/features/workout/presentation/exercise_history_page.dart';
@@ -206,6 +208,15 @@ final appRouter = GoRouter(
       path: AppRoutes.settings,
       name: 'settings',
       builder: (context, state) => const SettingsPage(),
+    ),
+    // Testers only: never in prod builds, and only with the
+    // `move_games_debug` flag; otherwise the home screen.
+    GoRoute(
+      path: AppRoutes.moveCheck,
+      name: 'move_check',
+      redirect: (context, state) async =>
+          await moveCheckAllowed() ? null : AppRoutes.home,
+      builder: (context, state) => const MoveCheckPage(),
     ),
   ],
   errorBuilder: (context, state) => const NotFoundPage(),

@@ -67,4 +67,8 @@ abstract final class AppRoutes {
   /// One exercise's history. [exerciseId] is encoded, so any id is safe.
   static String exerciseHistory(String exerciseId) =>
       '$progress/${Uri.encodeComponent(exerciseId)}';
+
+  /// The pose check for testers (not in prod builds; `move_games_debug`
+  /// flag). Opening it never starts the camera: that needs a tap.
+  static const moveCheck = '/move/check';
 }

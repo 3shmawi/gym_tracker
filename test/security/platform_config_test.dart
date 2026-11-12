@@ -8,6 +8,13 @@ void main() {
     final manifest = File('android/app/src/main/AndroidManifest.xml')
         .readAsStringSync();
 
+    /// Permissions the app asks for: every <uses-permission> except the
+    /// ones that remove a library's permission from the merged manifest.
+    final granted = [
+      for (final m in RegExp('<uses-permission[^>]*>').allMatches(manifest))
+        if (!m.group(0)!.contains('tools:node="remove"')) m.group(0)!,
+    ].join('\n');
+
     test('does not allow cleartext (http) traffic', () {
       expect(manifest, isNot(contains('usesCleartextTraffic="true"')));
     });
@@ -64,8 +71,55 @@ void main() {
         'READ_CONTACTS',
         'USE_BIOMETRIC',
       ]) {
-        expect(manifest, isNot(contains('permission.$p')), reason: p);
+        expect(granted, isNot(contains('permission.$p')), reason: p);
       }
+    });
+
+    // Move games (docs/designs/move_games.md §11): the camera plugin and
+    // ML Kit bring permissions the app never uses; the app removes them.
+    test('Move games: library permissions removed, camera still optional', () {
+      for (final p in [
+        'RECORD_AUDIO',
+        'WRITE_EXTERNAL_STORAGE',
+        'READ_EXTERNAL_STORAGE',
+        'RECEIVE_BOOT_COMPLETED',
+      ]) {
+        expect(
+          RegExp(
+            '<uses-permission android:name="android.permission.$p" '
+            'tools:node="remove"/>',
+          ).hasMatch(manifest),
+          isTrue,
+          reason: '$p must be removed from the merged manifest',
+        );
+      }
+      expect(
+        manifest,
+        contains(
+          '<uses-feature android:name="android.hardware.camera.any" '
+          'android:required="false" tools:replace="android:required"/>',
+        ),
+      );
+      expect(
+        manifest,
+        contains('xmlns:tools="http://schemas.android.com/tools"'),
+      );
+    });
+
+    test("Move games: ML Kit's unused accurate model is not shipped", () {
+      final gradle = File('android/app/build.gradle.kts').readAsStringSync();
+      expect(
+        gradle,
+        contains(
+          'exclude(group = "com.google.mlkit", module = '
+          '"pose-detection-accurate")',
+        ),
+      );
+      final rules = File('android/app/proguard-rules.pro').readAsStringSync();
+      expect(
+        rules,
+        contains('-dontwarn com.google.mlkit.vision.pose.accurate.**'),
+      );
     });
 
     test('only the launcher activity is exported', () {
@@ -83,7 +137,7 @@ void main() {
         'USE_FULL_SCREEN_INTENT',
         'RECEIVE_BOOT_COMPLETED',
       ]) {
-        expect(manifest, isNot(contains('permission.$p"')), reason: p);
+        expect(granted, isNot(contains('permission.$p"')), reason: p);
       }
       expect(
         RegExp(

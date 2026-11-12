@@ -1,19 +1,19 @@
 # Design: Move games (camera rep games, starting with push-ups)
 
-> **Status: proposed. No code is written until the owner approves this spec
-> and picks a game concept.**
+> **Status: approved by the owner on 2026-11-12, with game concept
+> A · Stack and the recommended choice in each decision** (see
+> "Decisions" at the end).
 > `CLAUDE.md` asks for an EGM-reviewed spec. The EGM plugin is installed, but
 > its `/egm:` commands can be started only by a person
 > (`disable-model-invocation`), not by the agent that wrote this. So this
-> spec was written by hand with the same sections and has **not** had an
-> EGM review yet. To get one, run
-> `/egm:egm-review docs/designs/move_games.md`, then `/egm:egm-resolve`.
+> spec was written by hand with the same sections. The owner approved it
+> without an EGM review.
 
 Mockup (Move card, hub, "why" screen, placement with live feedback, three
 game concepts in play, pause, results with "Save to my training", manual
 counter, denied / unsupported / body-lost states; English and Arabic, light
 and dark): https://claude.ai/artifact/V6dWNvw3rFaUKBtMoaeJ26
-No person has reviewed it yet.
+Approved with the spec (2026-11-12); the game is concept A · Stack.
 
 ## Goal
 1. Short rounds (30–60 s) where the phone's front camera counts **real**
@@ -324,8 +324,9 @@ class MoveExercise {
    phone is too slow: section 9): "Camera games don't work on this phone"
    + **Count by hand**. The hub still shows Move; nothing is hidden.
 5. **Placement guide:** the live camera preview (full screen, mirrored like
-   a mirror) with the detected joints drawn as small glass dots and lines,
-   a picture of where to put the phone, and **live checks** that turn green
+   a mirror) with the detected joints drawn as small green dots and thin
+   lines on top of the member's real image, a picture of where to put the
+   phone, and **live checks** that turn green
    one by one: "Whole body in view", "Both arms visible" (front) / "Side
    view found", "Good light", "Get into plank position". When all are
    green for 1 s the 3-2-1 starts by itself (no tap needed: the member is on
@@ -666,8 +667,12 @@ lib/features/move/
 - **Integration (demo):** a `RecordedPoseSource` replays a push-up set:
   open Move → placement turns green → play a 30 s round → results → Save →
   see push-ups in the exercise's history. Written with `beat(tester)`; it
-  is the "Demo & post" video. On the simulator the camera preview is the
-  recorded skeleton on the brand backdrop (no fake person).
+  is the "Demo & post" video. On the simulator there is no camera, so the
+  recorded landmarks are drawn as a **body**, not a stick figure: limbs,
+  torso, head, hands and feet in the line-drawing style of the exercise
+  pictures (outlined, light fill, shorts), with the dots on top. The
+  same `PoseBodyPainter` draws the diagnostic screen. Asked by the owner
+  on 2026-11-12 after seeing the mockup's stick figure.
 - **Security:** `/move/push_ups/play` from a link never starts the camera
   (`deep_link_test.dart`); hostile `:exercise` values; permission denied /
   restricted / revoked mid-round; the merged Android manifest; no landmark
@@ -694,6 +699,28 @@ rules, analytics events, Demo & post), `docs/README.md`,
 `docs/security.md` (camera, ML Kit, bundle checksums, merged manifest),
 `docs/performance.md` (fps, battery, size), `docs/release.md` (pinned
 versions, store forms), `store/privacy_forms.md`, `website/privacy.html`.
+
+## As built: where it differs from this spec
+PR 1 (2026-11-12):
+- **Android size is +17.7 MB, not ~10 MB** (measured on a release build:
+  ML Kit's native library 10.3 MB + models 5.8 MB + code; Google's 10.1 MB
+  figure is too low). Universal APKs carry the library for 3 CPU types
+  (+35 MB). `docs/performance.md` → Move games.
+- **iOS is not wired yet.** The ML Kit model bundles (from the plugin's
+  third-party SwiftPM mirror) and `-ObjC -all_load` need a Mac to set up and
+  test; until then `MlKitPoseSource` reports "model unavailable" on iOS
+  instead of calling ML Kit. A follow-up PR, before PR 2 ships to iOS.
+- **Front view top:** the highest shoulder height of the last 6 s, not "the
+  max of the last 3 tops" (same effect, no circular dependency on the
+  cycle). The calibration needs no separate plank step.
+- **ML Kit also brings WorkManager** (and its permissions); the merged
+  manifest is cut down as described in `docs/security.md` → Move games.
+- **The QR scanner already sends ML Kit metrics** (ML Kit barcode
+  scanning): the privacy text in §11 is needed for today's app too, not
+  only for Move games.
+- The diagnostic screen is `/move/check` ("Pose check", Settings → About),
+  not a separate debug flag screen elsewhere; recorded fixtures wait for
+  the owner's videos (decision 9), synthetic sets cover every case meanwhile.
 
 ## Official docs checked (2026-11-12)
 - pub.dev API: `flame` 1.38.2 (2026-08-27, Flutter ≥ 3.41; 1.38.0 had
@@ -727,7 +754,7 @@ versions, store forms), `store/privacy_forms.md`, `website/privacy.html`.
   App Review 5.1.1(ii) on purpose strings), the `camera` plugin's image
   stream format docs, Flame's overlays docs for 1.38.
 
-## Decisions needed from the owner
+## Decisions (approved 2026-11-12: concept A · Stack, and the recommended choice in each)
 1. **Game concept:** A · Stack, B · Summit or C · Charge.
    *Recommended: A · Stack.*
 2. **Pose model and app size:** ML Kit through

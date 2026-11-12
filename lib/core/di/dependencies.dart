@@ -31,6 +31,8 @@ import 'package:gym_tracker/features/gym/domain/repositories/gym_repository.dart
 import 'package:gym_tracker/features/gym/domain/repositories/picture_catalog_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/session_outbox.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/solo_import_repository.dart';
+import 'package:gym_tracker/features/move/data/datasources/mlkit_pose_source.dart';
+import 'package:gym_tracker/features/move/domain/repositories/pose_source.dart';
 import 'package:gym_tracker/features/settings/data/repositories/shared_prefs_settings_repository.dart';
 import 'package:gym_tracker/features/settings/domain/repositories/settings_repository.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
@@ -50,6 +52,10 @@ abstract final class Dependencies {
   /// The last known feature flag answers (`FlagCache`).
   static FlagCache flagCache = InMemoryFlagCache();
   static late WorkoutRepository workoutRepository;
+
+  /// Move games: a new pose source (front camera + on-device model) per
+  /// screen. Tests and the simulator demo replay recorded frames instead.
+  static PoseSource Function() poseSource = MlKitPoseSource.new;
 
   /// Gym accounts. Until [init] runs, in widget tests and without Supabase
   /// values in the env file, joining fails with "offline" and nobody is

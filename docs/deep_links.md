@@ -15,6 +15,7 @@ also a deep link.
 | `/library?day=<dayId>` | The exercise library, picking an exercise for that plan day (no day or an unknown day: "This day isn't in your plan"; a gym that keeps exercises to the captain: no picker) |
 | `/library/<exerciseId>[?day=<dayId>]` | One library exercise: picture and steps (unknown ids: "isn't in the library"); with a valid day it offers *Add*, otherwise it only reads |
 | `/settings` | Settings |
+| `/move/check` | The pose check, **testers only**: a non-prod build with the `move_games_debug` flag; otherwise home. Opening it never starts the camera (a tap does). `/move` and `/move/<exercise>` come with Move games (PR 2) |
 | `/welcome` | "How do you want to start?" (join a gym / train alone). Behind the `gym_join` flag |
 | `/join/scan` | The QR scanner. Reads nothing from its address. Behind the flag |
 | `/join/joined` | "Welcome to <gym>" right after a code was accepted; opened any other way it goes home. Behind the flag |

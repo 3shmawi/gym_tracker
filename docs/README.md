@@ -28,3 +28,4 @@ Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 - [Trainee dashboard data](features/trainee_dashboard_data.md) (SQL views the captain's dashboard will read; privacy)
 - [Gym accounts — the app](features/gym_account_app.md) (first screen, scanner, join, switcher, profile, delete account, solo data import)
 - [Gym brand colours](features/gym_brand_colours.md) (a gym's members see the colour its owner chose; the contrast rule, the flag, how it reaches the phone)
+- [Move games](features/move_games.md) (camera rep games: on-device push-up counting, the diagnostic screen; spec: [designs/move_games.md](designs/move_games.md))

@@ -19,6 +19,7 @@ class SettingsView extends StatelessWidget {
     this.onOpenLicenses,
     this.onOpenPrivacy,
     this.onOpenTerms,
+    this.onOpenMoveCheck,
     super.key,
   });
 
@@ -42,6 +43,10 @@ class SettingsView extends StatelessWidget {
   /// (YouTube API Services Developer Policies III.A).
   final VoidCallback? onOpenPrivacy;
   final VoidCallback? onOpenTerms;
+
+  /// The pose check for testers (null in prod builds and with the
+  /// `move_games_debug` flag off).
+  final VoidCallback? onOpenMoveCheck;
 
   @override
   Widget build(BuildContext context) {
@@ -169,6 +174,13 @@ class SettingsView extends StatelessWidget {
                   label: l10n.settingsLicenses,
                   icon: Icons.description_outlined,
                   onTap: onOpenLicenses,
+                ),
+              if (onOpenMoveCheck != null)
+                SettingsRow(
+                  key: const Key('settings_move_check'),
+                  label: l10n.settingsMoveCheck,
+                  icon: Icons.accessibility_new_rounded,
+                  onTap: onOpenMoveCheck,
                 ),
             ],
           ),

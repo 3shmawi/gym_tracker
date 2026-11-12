@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
   <!-- "Rest over" must ring on time; an inexact alarm can be 10+ minutes
        late. Android 14+: off until the member turns on "Alarms & reminders"
        (asked once, at the first rest). Not USE_EXACT_ALARM: Google Play
@@ -9,6 +9,22 @@
        the app installs on phones without a camera (typing the code works). -->
   <uses-permission android:name="android.permission.CAMERA"/>
   <uses-feature android:name="android.hardware.camera" android:required="false"/>
+  <!-- Move games (camera plugin, CameraX): it declares the microphone and
+       old storage permissions for video recording, which the app never
+       does, and a required camera. Removed here so the merged manifest
+       asks for the camera only and the app still installs without one
+       (docs/designs/move_games.md §11). -->
+  <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove"/>
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove"/>
+  <!-- The merger adds this one because CameraX asked for the line above. -->
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
+  <!-- ML Kit's pose model brings WorkManager (androidx.work) for its own
+       background checks. Its boot receiver is off by default and work is
+       rescheduled when the app next starts, so the app does not need to
+       start at boot. WAKE_LOCK and FOREGROUND_SERVICE stay: WorkManager may
+       need them (docs/security.md → "Move games"). -->
+  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" tools:node="remove"/>
+  <uses-feature android:name="android.hardware.camera.any" android:required="false" tools:replace="android:required"/>
   <application android:label="@string/app_name" android:name="${applicationName}" android:icon="@mipmap/ic_launcher">
     <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop" android:taskAffinity="" android:theme="@style/LaunchTheme" android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode" android:hardwareAccelerated="true" android:windowSoftInputMode="adjustResize">
       <!-- Specifies an Android theme to apply to this Activity as soon as
