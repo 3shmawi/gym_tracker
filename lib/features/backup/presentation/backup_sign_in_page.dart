@@ -57,6 +57,11 @@ class _BackupSignInPageState extends ConsumerState<BackupSignInPage> {
       onResend: () => unawaited(controller.resend()),
       onChangeEmail: controller.changeEmail,
       onUseExisting: () => unawaited(controller.useExistingAccount()),
+      restored: state.restored,
+      onMergeYes: () => unawaited(controller.mergeYes()),
+      onMergeNo: () => unawaited(controller.mergeNo()),
+      onRetryRestore: () => unawaited(controller.retryRestore()),
+      onChoosePlan: (choice) => unawaited(controller.choosePlan(choice)),
       onDone: () => context.pop(),
     );
   }

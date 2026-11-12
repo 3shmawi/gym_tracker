@@ -1,4 +1,5 @@
 import 'package:gym_tracker/core/network/result.dart';
+import 'package:gym_tracker/features/backup/domain/entities/restore.dart';
 import 'package:gym_tracker/features/workout/domain/entities/chosen_day.dart';
 import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
@@ -10,6 +11,10 @@ abstract interface class BackupRemote {
   /// Gives the signed-in account its person (creating it for a permanent
   /// session without a gym) and says whether the account can be written to.
   Future<Result<void>> ensurePerson();
+
+  /// Erases the solo backup (workouts, personal plan, state) from the
+  /// account; gym rows and the account stay (`delete_my_backup`).
+  Future<Result<void>> deleteBackup();
 
   /// Stores up to 50 **solo** workouts; ones the server has (same
   /// `clientId`) are not stored again.
@@ -23,6 +28,19 @@ abstract interface class BackupRemote {
   /// Saves the best level (it only goes up on the server) and the chosen
   /// day (the last write wins).
   Future<Result<void>> saveState(Level bestLevel, ChosenDay? chosenDay);
+
+  /// The next page of the account's workouts after [after] (null = from the
+  /// start), oldest first. Rows the app cannot read are skipped and counted.
+  Future<Result<RestorePage>> fetchSessions({
+    RestoreCursor? after,
+    int limit = 200,
+  });
+
+  /// The account's plan, or null when it has none.
+  Future<Result<RemotePlan?>> fetchPlan();
+
+  /// The account's best level and chosen day, or null when it has none.
+  Future<Result<RemoteState?>> fetchState();
 }
 
 /// The workouts waiting on the phone. Only **solo** workouts: a gym workout
@@ -37,6 +55,10 @@ abstract interface class BackupQueue {
   Future<void> markProblem(String clientId, String reason);
 
   Future<int> pendingCount();
+
+  /// Forgets what was backed up (and every refusal), so all solo workouts
+  /// wait again: used after the backup on the account was erased.
+  Future<void> resetAll();
   Future<int> problemCount();
 }
 
@@ -62,4 +84,19 @@ abstract interface class BackupSettings {
   /// Fingerprint of the level and chosen day last uploaded.
   String? get stateFingerprint;
   Future<void> setStateFingerprint(String fingerprint);
+
+  /// Where the download of the account's workouts stopped (`RestoreCursor`
+  /// text; `done` once everything was taken; null = not started).
+  String? get restoreCursor;
+  Future<void> setRestoreCursor(String? value);
+
+  /// The plan that lost a conflict, kept for 30 days (JSON text and when).
+  String? get keptPlan;
+  DateTime? get keptPlanAt;
+  Future<void> setKeptPlan(String? json, DateTime at);
+
+  /// How many times the offer was turned down ("Not now"). Two and it is
+  /// never shown again; Settings stays.
+  int get offerDismissals;
+  Future<void> setOfferDismissals(int value);
 }

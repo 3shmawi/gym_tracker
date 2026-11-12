@@ -26,7 +26,7 @@ Definitions used (read 2026-11-04):
 | Install id (random, made by the app, not a device id) | joined a gym | Supabase (sign-in) | while the account exists | yes |
 | Email | only if the member adds one | Supabase Auth | while the account exists | yes |
 | Manager email (captain dashboard, web) | an owner or captain signs in at `azmm-dash.pages.dev` | Supabase Auth (sign-in code email), Cloudflare (hosting) | while the account exists | yes |
-| Workouts and plan | logged **in a gym** (solo workouts stay on the phone, unless the member chooses to copy them) | Supabase | while the account exists | yes |
+| Workouts, plan, best level, chosen day | logged **in a gym**, or the member **turns on backup** (otherwise they stay on the phone) | Supabase | while the account exists | yes |
 | Failed join attempts with a **hashed** network address | a wrong code | Supabase | 30 days | no |
 | Bot check signals (Turnstile) | joining a gym | Cloudflare | Cloudflare's addendum | no |
 | Usage events + random analytics id (PostHog anonymous id; `identify` is never called) | always | PostHog | PostHog retention | no |

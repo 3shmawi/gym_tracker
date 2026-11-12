@@ -23,6 +23,7 @@ import 'package:gym_tracker/features/settings/presentation/settings_view.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/data/local/workout_database.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
+import 'package:gym_tracker/features/workout/domain/entities/level.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:gym_tracker/features/workout/domain/services/rest_alarm.dart';
@@ -503,6 +504,67 @@ void main() {
     final history = await Dependencies.workoutRepository.loadHistory();
     expect(history, isA<Success<List<WorkoutSession>>>());
     expect((history as Success<List<WorkoutSession>>).value, hasLength(1));
+    await beat(tester, 2000);
+  });
+
+  testWidgets('a new phone: sign in, and the whole training comes back', (
+    tester,
+  ) async {
+    FeatureFlags.overrides[Flags.gymJoin] = true;
+    FeatureFlags.overrides[Flags.trainingBackup] = true;
+    addTearDown(FeatureFlags.overrides.clear);
+    await freshInstall(tester);
+    await app.main();
+    useFakeRestAlarm();
+    // The account holds what an old phone backed up: three workouts, a plan
+    // and the best level. This phone is new and empty.
+    final account = FakeAccountRepository();
+    Dependencies.accountRepository = account;
+    final server = FakeServer()
+      ..plan = PlanTemplates.fiveDaySplit
+      ..planVersion = 2
+      ..bestLevel = Level.intermediate;
+    for (var i = 1; i <= 3; i++) {
+      final w = WorkoutSession(
+        dayId: legacyDayId(i - 1),
+        finishedAt: DateTime.now().subtract(Duration(days: 10 - i)),
+        sets: [LoggedSet(exerciseId: 'pec_deck', weight: 30.0 + i, reps: 10)],
+      );
+      server.sessions[w.clientId] = w;
+    }
+    Dependencies.backupRemote = server.phone();
+    await tester.pumpAndSettle();
+    await beat(tester, 1200);
+
+    // The first screen: "I already have an account".
+    expect(find.byType(WelcomeView), findsOneWidget);
+    await tester.tap(find.byKey(const Key('welcome_have_account')));
+    await tester.pumpAndSettle();
+    await beat(tester);
+    await tester.enterText(
+      find.byKey(const Key('backup_email')),
+      'me@example.com',
+    );
+    await tester.tap(find.byKey(const Key('backup_send_code')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '123456');
+    await tester.pump();
+    await beat(tester, 1200);
+    await tester.tap(find.byKey(const Key('backup_verify')));
+    await tester.pumpAndSettle();
+
+    // Everything is back: workouts, plan and level.
+    expect(find.text("You're backed up"), findsOneWidget);
+    expect(find.textContaining('3 workouts came back'), findsOneWidget);
+    final history = await Dependencies.workoutRepository.loadHistory();
+    expect((history as Success<List<WorkoutSession>>).value, hasLength(3));
+    final plan = await Dependencies.workoutRepository.loadPlan();
+    expect((plan as Success<WorkoutPlan?>).value, isNotNull);
+    await beat(tester, 2000);
+    await tester.tap(find.byKey(const Key('backup_done')));
+    await tester.pumpAndSettle();
+    // Home shows the restored plan's next workout.
+    expect(find.byType(NextWorkoutPage), findsOneWidget);
     await beat(tester, 2000);
   });
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
@@ -166,7 +168,82 @@ class BackupCard extends ConsumerWidget {
       status: status,
       onOpen: onOpen,
       onRetry: sync.run,
-      onTurnOff: sync.disable,
+      onTurnOff: () => unawaited(_turnOff(context, sync)),
+    );
+  }
+
+  Future<void> _turnOff(BuildContext context, BackupSync sync) async {
+    final choice = await showAppSheet<BackupTurnOff>(
+      context: context,
+      builder: (sheet) => const BackupTurnOffSheet(),
+    );
+    switch (choice) {
+      case BackupTurnOff.keep:
+        await sync.disable();
+      case BackupTurnOff.erase:
+        final ok = await sync.disableAndErase();
+        if (!ok && context.mounted) {
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            SnackBar(content: Text(context.l10n.backupEraseFailed)),
+          );
+        }
+      case null:
+        break;
+    }
+  }
+}
+
+enum BackupTurnOff { keep, erase }
+
+/// "Turn off backup": stop and keep what is saved, or stop and erase it from
+/// the account. The training on the phone is never touched.
+class BackupTurnOffSheet extends StatelessWidget {
+  const new({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final palette = context.palette;
+    return SingleChildScrollView(
+      padding: EdgeInsetsDirectional.fromSTEB(
+        AppDimens.md,
+        0,
+        AppDimens.md,
+        AppDimens.lg,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppDimens.sm,
+        children: [
+          Semantics(
+            header: true,
+            child: Text(
+              l10n.backupTurnOffTitle,
+              style: AppTextStyles.title.copyWith(color: palette.textPrimary),
+            ),
+          ),
+          Text(
+            l10n.backupTurnOffBody,
+            style: AppTextStyles.body.copyWith(color: palette.textSecondary),
+          ),
+          AppPrimaryButton(
+            key: const Key('backup_turn_off_keep'),
+            label: l10n.backupTurnOffKeep,
+            onPressed: () => Navigator.of(context).pop(BackupTurnOff.keep),
+          ),
+          AppSecondaryButton(
+            key: const Key('backup_turn_off_erase'),
+            label: l10n.backupTurnOffErase,
+            onPressed: () => Navigator.of(context).pop(BackupTurnOff.erase),
+          ),
+          AppSecondaryButton(
+            key: const Key('backup_turn_off_cancel'),
+            label: l10n.backupTurnOffCancel,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
     );
   }
 }

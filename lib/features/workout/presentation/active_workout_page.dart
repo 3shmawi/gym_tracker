@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/router/link_guard.dart';
+import 'package:gym_tracker/features/backup/presentation/backup_offer.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
 import 'package:gym_tracker/features/video/presentation/mini_player.dart';
 import 'package:gym_tracker/features/workout/domain/services/rest_alarm.dart';
@@ -82,7 +83,10 @@ class _ActiveWorkoutPageState extends ConsumerState<ActiveWorkoutPage>
             unawaited(controller.addRest(const Duration(seconds: 15))),
         onEndRest: () => unawaited(controller.endRest()),
         onFinish: () async {
-          if (await controller.finish() && context.mounted) home();
+          if (await controller.finish() && context.mounted) {
+            unawaited(ref.read(backupOfferProvider.notifier).afterWorkout());
+            home();
+          }
         },
         onClose: home,
         onRetry: () => unawaited(controller.retry()),

@@ -14,6 +14,10 @@ class PrefsBackupSettings implements BackupSettings {
   static const planFingerprintKey = 'backup.plan_fingerprint';
   static const planConflictKey = 'backup.plan_conflict';
   static const stateFingerprintKey = 'backup.state_fingerprint';
+  static const restoreCursorKey = 'backup.restore_cursor';
+  static const keptPlanKey = 'backup.kept_plan';
+  static const keptPlanAtKey = 'backup.kept_plan_at';
+  static const offerKey = 'backup.offer_dismissals';
 
   @override
   bool get enabled => _prefs.getBool(enabledKey) ?? false;
@@ -62,4 +66,44 @@ class PrefsBackupSettings implements BackupSettings {
   @override
   Future<void> setStateFingerprint(String fingerprint) =>
       _prefs.setString(stateFingerprintKey, fingerprint);
+
+  @override
+  String? get restoreCursor => _prefs.getString(restoreCursorKey);
+
+  @override
+  Future<void> setRestoreCursor(String? value) async {
+    if (value == null) {
+      await _prefs.remove(restoreCursorKey);
+    } else {
+      await _prefs.setString(restoreCursorKey, value);
+    }
+  }
+
+  @override
+  String? get keptPlan => _prefs.getString(keptPlanKey);
+
+  @override
+  DateTime? get keptPlanAt {
+    final ms = _prefs.getInt(keptPlanAtKey);
+    return ms == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
+  }
+
+  @override
+  Future<void> setKeptPlan(String? json, DateTime at) async {
+    if (json == null) {
+      await _prefs.remove(keptPlanKey);
+      await _prefs.remove(keptPlanAtKey);
+    } else {
+      await _prefs.setString(keptPlanKey, json);
+      await _prefs.setInt(keptPlanAtKey, at.millisecondsSinceEpoch);
+    }
+  }
+
+  @override
+  int get offerDismissals => _prefs.getInt(offerKey) ?? 0;
+
+  @override
+  Future<void> setOfferDismissals(int value) => _prefs.setInt(offerKey, value);
 }
