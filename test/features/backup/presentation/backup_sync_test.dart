@@ -1,11 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
+import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/backup/data/in_memory_backup.dart';
 import 'package:gym_tracker/features/backup/domain/entities/backup_status.dart';
 import 'package:gym_tracker/features/backup/presentation/backup_sync.dart';
 import 'package:gym_tracker/features/gym/domain/entities/account_session.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
+import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
@@ -213,6 +217,76 @@ void main() {
       expect(await c.read(backupSyncProvider).disableAndErase(), isFalse);
       expect(settings.enabled, isTrue);
       expect(server.sessions, hasLength(1));
+    });
+  });
+
+  test(
+    'sign out and remove: the phone is emptied, the account is not',
+    () async {
+      final c = await app();
+      final repo = c.read(localWorkoutRepositoryProvider);
+      await repo.saveSession(workout(1));
+      queue.all.add(workout(1));
+      await c.read(backupSyncProvider).enable();
+      await c.read(backupSyncProvider).removeTrainingFromPhone();
+      final history = await repo.loadHistory();
+      expect((history as Success<List<WorkoutSession>>).value, isEmpty);
+      expect(settings.enabled, isFalse);
+      expect(settings.restoreCursor, isNull);
+      expect(server.sessions, hasLength(1));
+      expect(c.read(backupStatusProvider), BackupStatus.off);
+    },
+  );
+
+  group('the other plan', () {
+    WorkoutPlan named(String name) {
+      final json = PlanTemplates.fiveDaySplit.toJson();
+      ((json['days']! as List<Object?>).first!
+          as Map<String, Object?>)['name'] = {
+        'ar': 'س',
+        'en': name,
+      };
+      return WorkoutPlan.fromJson(json);
+    }
+
+    Future<String?> firstDay(ProviderContainer c) async {
+      final plan = await c.read(localWorkoutRepositoryProvider).loadPlan();
+      return (plan as Success<WorkoutPlan?>).value?.days.first.name.en;
+    }
+
+    test('swapping puts the kept plan in use and keeps the other', () async {
+      final c = await app();
+      final repo = c.read(localWorkoutRepositoryProvider);
+      await repo.savePlan(named('Mine'));
+      await settings.setKeptPlan(
+        jsonEncode(named('Other').toJson()),
+        DateTime.now(),
+      );
+      final sync = c.read(backupSyncProvider);
+      expect(sync.keptPlan(), isNotNull);
+      expect(await sync.useKeptPlan(), isTrue);
+      expect(await firstDay(c), 'Other');
+      expect(settings.keptPlan, contains('Mine'));
+      // And back again.
+      expect(await sync.useKeptPlan(), isTrue);
+      expect(await firstDay(c), 'Mine');
+    });
+
+    test('after 30 days it is gone', () async {
+      final c = await app();
+      await settings.setKeptPlan(
+        jsonEncode(named('Old').toJson()),
+        DateTime.now().subtract(const Duration(days: 31)),
+      );
+      final sync = c.read(backupSyncProvider);
+      expect(sync.keptPlan(), isNull);
+      expect(await sync.useKeptPlan(), isFalse);
+    });
+
+    test('a damaged kept plan is ignored', () async {
+      final c = await app();
+      await settings.setKeptPlan('{not json', DateTime.now());
+      expect(c.read(backupSyncProvider).keptPlan(), isNull);
     });
   });
 }
