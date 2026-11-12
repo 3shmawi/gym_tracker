@@ -39,6 +39,12 @@ import 'flows/build_plan_flow.dart';
 import 'flows/gym_pictures_flow.dart';
 import 'helpers/demo.dart';
 
+/// The home bar's one menu button, then the row.
+Future<void> openHomeMenu(WidgetTester tester) async {
+  await tester.tap(find.byKey(const Key('home_menu_button')));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -80,6 +86,7 @@ void main() {
     await tester.pumpAndSettle();
     await beat(tester);
 
+    await openHomeMenu(tester);
     await tester.tap(find.byKey(const Key('home_settings_button')));
     await tester.pumpAndSettle();
     await beat(tester);
@@ -161,6 +168,7 @@ void main() {
     await beat(tester, 1500);
 
     // Progress: the squat now has today's two sets.
+    await openHomeMenu(tester);
     await tester.tap(find.byKey(const Key('home_progress_button')));
     await tester.pumpAndSettle();
     expect(find.byType(ProgressView), findsOneWidget);
@@ -507,6 +515,7 @@ void main() {
     expect(find.byType(NumberedExerciseThumb), findsWidgets);
 
     // Settings: the floating pill waits in the corner.
+    await openHomeMenu(tester);
     await tester.tap(find.byKey(const Key('home_settings_button')));
     await tester.pumpAndSettle();
     await beat(tester, 1200);

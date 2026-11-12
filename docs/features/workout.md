@@ -567,3 +567,14 @@ back to the same set → log it.
 **Caption (English):** Every exercise now has its picture, and how to do it is one tap away. The little workout button follows you everywhere: start, resume, or watch your rest from any screen.
 **Caption (Egyptian Arabic):** كل تمرين بقى ليه صورته، وطريقة الأداء على بعد دوسة. وزرار التمرين الصغير معاك في كل حتة: تبدأ أو تكمّل أو تشوف الراحة من أي صفحة.
 **Hashtags:** #flutter #buildinpublic #gym #fitness
+
+## Home menu (UX pass)
+The home bar has one button, **Menu** (`home_menu_button`). It opens a sheet
+(`home_menu_sheet.dart`, built on `showAppSheet`) with big rows: *Gym or solo*
+(people with a gym account), *Join your gym* (people training alone, so the
+way into a gym is one tap from home, not hidden in Settings), *Your plan*
+(when there is one), *Progress* and *Settings*. Each row keeps its old key
+(`home_plan_button`, ...). To add a destination, add one `HomeMenuEntry` in
+`NextWorkoutView._menuEntries`. A side drawer can later render the same
+entries. Tests: `home_menu_sheet_test.dart`, `next_workout_view_test.dart`,
+`gym_flows_test.dart`, the integration tests (`openHomeMenu`).
