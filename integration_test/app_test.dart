@@ -21,6 +21,7 @@ import 'package:gym_tracker/features/library/presentation/exercise_guide_view.da
 import 'package:gym_tracker/features/library/presentation/widgets/exercise_thumb.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_view.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
+import 'package:gym_tracker/features/workout/data/local/workout_database.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
@@ -34,6 +35,7 @@ import 'package:gym_tracker/features/workout/presentation/widgets/level_card.dar
 import 'package:gym_tracker/main.dart' as app;
 import 'package:integration_test/integration_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../test/helpers/fake_rest_alarm.dart';
 import '../test/helpers/gym_app.dart' show FakeCamera;
@@ -634,6 +636,13 @@ Future<void> freshInstall(WidgetTester tester, {bool agreed = true}) async {
   await tester.pumpWidget(const SizedBox.shrink());
   final prefs = await SharedPreferences.getInstance();
   await prefs.clear();
+  // The phone's database too, or the next test starts with this one's
+  // workouts.
+  await Dependencies.workoutDatabase?.close();
+  Dependencies.workoutDatabase = null;
+  await deleteDatabase(
+    '${await getDatabasesPath()}/${WorkoutDatabase.fileName}',
+  );
   if (agreed) {
     await prefs.setString(PrefsConsentStore.key, ConsentStore.current);
   }

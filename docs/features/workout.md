@@ -578,3 +578,44 @@ way into a gym is one tap from home, not hidden in Settings), *Your plan*
 `NextWorkoutView._menuEntries`. A side drawer can later render the same
 entries. Tests: `home_menu_sheet_test.dart`, `next_workout_view_test.dart`,
 `gym_flows_test.dart`, the integration tests (`openHomeMenu`).
+
+## The phone's database
+Workouts, the plan, the draft, the chosen day and the best level live in a
+SQLite database (`azm.db`, `sqflite`) instead of one JSON list in
+SharedPreferences. Spec: `docs/designs/never_lose_history.md` §1.
+
+- **Tables:** `sessions` (a row per finished workout; the key is its content
+  hash `sha256(day_id|finished_at|sets)`, so the same workout can never be
+  stored twice), `kv` (plan, draft, chosen day, level, markers) and
+  `quarantine` (what could not be read). **No cap** on history (a sanity limit
+  of 100,000 rows only stops a runaway bug); the preferences fallback still
+  keeps the last 200.
+- **Code:** `WorkoutDatabase` (open, create, repair, the move),
+  `SqliteSessionStore` / `SqliteWorkoutKv` (`lib/features/workout/data/local/`),
+  `LocalWorkoutRepository.stores(kv, sessions)` (the one repository, on either
+  storage: all its behaviour tests run against both),
+  `openWorkoutRepository` (the start-up choice). `WorkoutSession.clientId` is
+  the hash (also the server's `client_id`).
+- **The one-time move** (first start after the update): one transaction copies
+  every workout (`insert or ignore`), the plan, draft, chosen day and level as
+  their raw strings, checks the row count, then writes the marker. The old
+  preference keys are **not** deleted: they are the fallback, and a start that
+  finds them changed (a start on preferences, or an older release) moves the
+  changes in again. Unreadable history goes to `quarantine` (the app starts
+  with an empty history instead of an error for ever); one bad workout among
+  good ones is set aside and the rest move.
+- **When something is wrong:** the database cannot be opened → this start uses
+  the preferences (reported to monitoring, tried again next start, no error
+  screen). The file is not a database → it is renamed `azm.db.corrupt-<time>`,
+  a new one is made and filled from the old keys.
+- **Speed** (CI numbers, 5,000 workouts): first read about 25 ms, saving a
+  workout about 3 ms; moving 50,000 workouts about 2 s. Targets on a mid-range
+  phone: save ≤ 50 ms, first read ≤ 300 ms.
+- **Analytics** (no workout in them): `local_db_migrated` `{sessions:
+  0|1-50|51-200|200+, ms: <50|<250|<1000|1000+}`, `local_db_migration_failed`
+  `{reason: open|verify|repaired}`.
+- **Tests:** `test/features/workout/data/local/workout_database_test.dart`
+  (every row of the spec's move table, crashes, a corrupt file, 50,000
+  workouts, speed), the repository suite on both storages, and
+  `test/security/local_database_test.dart`.
+

@@ -1,9 +1,13 @@
+import 'dart:async';
+
+import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/backend/backend.dart';
 import 'package:gym_tracker/core/captcha/turnstile_captcha.dart';
 import 'package:gym_tracker/core/config/env.dart';
 import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
 import 'package:gym_tracker/core/legal/legal.dart';
 import 'package:gym_tracker/core/media/video_info.dart';
+import 'package:gym_tracker/core/monitoring/monitoring.dart';
 import 'package:gym_tracker/core/notifications/local_notifications.dart';
 import 'package:gym_tracker/features/gym/data/datasources/secret_store.dart';
 import 'package:gym_tracker/features/gym/data/datasources/secure_install_id_store.dart';
@@ -33,7 +37,8 @@ import 'package:gym_tracker/features/gym/domain/repositories/session_outbox.dart
 import 'package:gym_tracker/features/gym/domain/repositories/solo_import_repository.dart';
 import 'package:gym_tracker/features/settings/data/repositories/shared_prefs_settings_repository.dart';
 import 'package:gym_tracker/features/settings/domain/repositories/settings_repository.dart';
-import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
+import 'package:gym_tracker/features/workout/data/local/open_workout_repository.dart';
+import 'package:gym_tracker/features/workout/data/local/workout_database.dart';
 import 'package:gym_tracker/features/workout/data/services/notification_rest_alarm.dart';
 import 'package:gym_tracker/features/workout/domain/repositories/workout_repository.dart';
 import 'package:gym_tracker/features/workout/domain/services/rest_alarm.dart';
@@ -50,6 +55,10 @@ abstract final class Dependencies {
   /// The last known feature flag answers (`FlagCache`).
   static FlagCache flagCache = InMemoryFlagCache();
   static late WorkoutRepository workoutRepository;
+
+  /// The database under [workoutRepository]; null when the preferences are
+  /// used (it could not be opened).
+  static WorkoutDatabase? workoutDatabase;
 
   /// Gym accounts. Until [init] runs, in widget tests and without Supabase
   /// values in the env file, joining fails with "offline" and nobody is
@@ -93,7 +102,16 @@ abstract final class Dependencies {
     settingsRepository = SharedPrefsSettingsRepository(prefs);
     consentStore = PrefsConsentStore(prefs);
     flagCache = PrefsFlagCache(prefs);
-    workoutRepository = LocalWorkoutRepository(prefs);
+    // The phone's database; the preferences if it cannot be opened.
+    await workoutDatabase?.close();
+    final storage = await openWorkoutRepository(
+      prefs,
+      onEvent: (name, data) => unawaited(Analytics.capture(name, data)),
+      onError: (error, stack) =>
+          unawaited(Monitoring.captureException(error, stack)),
+    );
+    workoutRepository = storage.repository;
+    workoutDatabase = storage.database;
     restAlarm = NotificationRestAlarm(LocalNotifications(), prefs);
     gymLocalRepository = PrefsGymLocalRepository(prefs);
     soloImportStore = PrefsSoloImportStore(prefs);

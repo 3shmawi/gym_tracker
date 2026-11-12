@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:crypto/crypto.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
 import 'package:meta/meta.dart';
 
@@ -42,11 +41,8 @@ class ImportSession {
   factory fromSession(WorkoutSession session) {
     final finished = session.finishedAt.toUtc().toIso8601String();
     final sets = [for (final s in session.sets) s.toJson()];
-    final digest = sha256.convert(
-      utf8.encode('${session.dayId}|$finished|${jsonEncode(sets)}'),
-    );
     return ImportSession(
-      clientId: digest.toString(),
+      clientId: session.clientId,
       dayId: session.dayId,
       finishedAt: finished,
       sets: sets,
