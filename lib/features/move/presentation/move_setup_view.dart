@@ -163,9 +163,17 @@ class _Line extends StatelessWidget {
       spacing: AppDimens.sm2,
       children: [
         ExcludeSemantics(
-          child: CircleAvatar(
-            radius: AppDimens.scaled(14),
-            backgroundColor: palette.fillSubtle,
+          child: Container(
+            constraints: BoxConstraints(
+              minWidth: AppDimens.scaled(28),
+              minHeight: AppDimens.scaled(28),
+            ),
+            padding: EdgeInsets.all(AppDimens.xs),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: palette.fillSubtle,
+              shape: BoxShape.circle,
+            ),
             child: Text(
               '$number',
               style: AppTextStyles.label.copyWith(color: palette.textSecondary),

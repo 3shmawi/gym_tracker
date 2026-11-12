@@ -24,6 +24,7 @@ import 'package:gym_tracker/features/gym/presentation/scanner_view.dart';
 import 'package:gym_tracker/features/gym/presentation/welcome_view.dart';
 import 'package:gym_tracker/features/move/domain/repositories/pose_source.dart';
 import 'package:gym_tracker/features/move/presentation/move_check_page.dart';
+import 'package:gym_tracker/features/move/presentation/move_pages.dart';
 import 'package:gym_tracker/features/settings/data/repositories/shared_prefs_settings_repository.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_controller.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
@@ -813,6 +814,124 @@ void main() {
         expect(find.byType(MoveCheckPage), findsNothing, reason: path);
       }
       expect(made, 0);
+    });
+  });
+
+  group('/move (Move games)', () {
+    var made = 0;
+    late PoseSource Function() original;
+    setUp(() {
+      made = 0;
+      original = Dependencies.poseSource;
+      Dependencies.poseSource = () {
+        made++;
+        return original();
+      };
+    });
+    tearDown(() {
+      Dependencies.poseSource = original;
+      FeatureFlags.overrides.clear();
+    });
+
+    testWidgets('flag off: every /move link opens home', (tester) async {
+      await pumpRouter(tester);
+      for (final path in [
+        '/move',
+        '/move/push_ups',
+        '/move/push_ups/play',
+        '/move/push_ups/count',
+      ]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.byType(NextWorkoutPage), findsOneWidget, reason: path);
+      }
+      expect(made, 0);
+    });
+
+    testWidgets('a link never opens the camera: play lands on the tip', (
+      tester,
+    ) async {
+      FeatureFlags.overrides[Flags.moveGames] = true;
+      await pumpRouter(tester);
+      for (final path in [
+        '/move/push_ups/play',
+        '/move/push_ups/play?camera=on',
+        '/move/push_ups/play?round=s30&start=1',
+      ]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.byType(MoveSetupPage), findsOneWidget, reason: path);
+        expect(find.byType(CameraRoundPage), findsNothing, reason: path);
+      }
+      expect(made, 0);
+    });
+
+    testWidgets('the hub, the tip and the manual counter open from links', (
+      tester,
+    ) async {
+      FeatureFlags.overrides[Flags.moveGames] = true;
+      await pumpRouter(tester);
+      appRouter.go('/move?from=evil');
+      await tester.pumpAndSettle();
+      expect(find.byType(MoveHubPage), findsOneWidget);
+      appRouter.go('/move/push_ups?round=r10');
+      await tester.pumpAndSettle();
+      expect(find.byType(MoveSetupPage), findsOneWidget);
+      for (final round in ['r20', 'x', '%3Cscript%3E', "'; drop table;--"]) {
+        appRouter.go('/move/push_ups/count?round=$round');
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: round);
+        expect(find.byType(ManualCounterPage), findsOneWidget, reason: round);
+      }
+      expect(made, 0);
+    });
+
+    testWidgets('unknown or crafted exercises go to the hub, never crash', (
+      tester,
+    ) async {
+      FeatureFlags.overrides[Flags.moveGames] = true;
+      await pumpRouter(tester);
+      for (final path in [
+        '/move/pull_ups',
+        '/move/PUSH_UPS',
+        '/move/%3Cscript%3Ealert(1)%3C%2Fscript%3E',
+        '/move/${'x' * 5000}',
+        '/move/../settings',
+        '/move/x/play',
+        '/move/x/count',
+      ]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.byType(CameraRoundPage), findsNothing, reason: path);
+      }
+      expect(made, 0);
+    });
+
+    testWidgets('extra segments are not found', (tester) async {
+      FeatureFlags.overrides[Flags.moveGames] = true;
+      await pumpRouter(tester);
+      for (final path in [
+        '/move/push_ups/play/x',
+        '/move/push_ups/count/x',
+        '/movex',
+      ]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.byType(NotFoundPage), findsOneWidget, reason: path);
+      }
+    });
+
+    test('built paths encode their parts', () {
+      expect(
+        AppRoutes.moveSetup('a/b', round: 'x&y'),
+        '/move/a%2Fb?round=x%26y',
+      );
+      expect(AppRoutes.movePlay('a b'), '/move/a%20b/play');
+      expect(AppRoutes.moveCount('p', round: 's30'), '/move/p/count?round=s30');
     });
   });
 }

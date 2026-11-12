@@ -85,6 +85,7 @@ Widget view(
   VoidCallback? onBuildPlan,
   ValueChanged<String>? onEditDay,
   VoidCallback? onOpenWorkspace,
+  void Function({required bool fromCard})? onOpenMove,
   bool inProgress = false,
   DateTime? restEndsAt,
   DateTime Function()? now,
@@ -102,6 +103,7 @@ Widget view(
   onBuildPlan: onBuildPlan ?? () {},
   onEditDay: onEditDay ?? (_) {},
   onOpenWorkspace: onOpenWorkspace,
+  onOpenMove: onOpenMove,
 );
 
 /// The waiting day has no exercises yet (a day just added in the editor).
@@ -525,6 +527,56 @@ void main() {
     });
   });
 
+  group('Move games (behind move_games)', () {
+    testWidgets('the card and the menu row open Move, saying from where', (
+      tester,
+    ) async {
+      final opened = <bool>[];
+      await tester.pumpApp(
+        view(
+          AsyncData(day1Waiting()),
+          onOpenMove: ({required fromCard}) => opened.add(fromCard),
+        ),
+      );
+      final card = find.byKey(const Key('home_move_card'));
+      await tester.scrollUntilVisible(
+        card,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.ensureVisible(card);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('home_move_card')));
+      await openHomeMenu(tester);
+      await tester.tap(find.byKey(const Key('home_move_button')));
+      await tester.pumpAndSettle();
+      expect(opened, [true, false]);
+    });
+
+    testWidgets('flag off: no card, no row', (tester) async {
+      await tester.pumpApp(view(AsyncData(day1Waiting())));
+      expect(find.byKey(const Key('home_move_card')), findsNothing);
+      await openHomeMenu(tester);
+      expect(find.byKey(const Key('home_move_button')), findsNothing);
+    });
+
+    testWidgets('during a workout the card hides; the menu row stays', (
+      tester,
+    ) async {
+      await tester.pumpApp(
+        view(
+          AsyncData(day1Waiting()),
+          inProgress: true,
+          onStart: () {},
+          onOpenMove: ({required fromCard}) {},
+        ),
+      );
+      expect(find.byKey(const Key('home_move_card')), findsNothing);
+      await openHomeMenu(tester);
+      expect(find.byKey(const Key('home_move_button')), findsOneWidget);
+    });
+  });
+
   group('the workspace button (gym accounts)', () {
     testWidgets('is there only for people with an account', (tester) async {
       await tester.pumpApp(view(AsyncData(day1Waiting())));
@@ -546,6 +598,11 @@ void main() {
   });
 
   screensUiTests({
+    'next_workout_move_card': () => view(
+      AsyncData(withLevel(intermediate)),
+      onStart: () {},
+      onOpenMove: ({required fromCard}) {},
+    ),
     'next_workout_with_workspace_button': () =>
         view(AsyncData(day1Waiting()), onStart: () {}, onOpenWorkspace: () {}),
     'next_workout_intermediate': () =>

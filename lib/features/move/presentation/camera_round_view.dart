@@ -213,6 +213,7 @@ class _Placement extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
+          flex: 3,
           child: _Camera(
             state: state,
             preview: preview,
@@ -224,38 +225,40 @@ class _Placement extends StatelessWidget {
                   ),
           ),
         ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: EdgeInsetsDirectional.fromSTEB(
-              AppDimens.md,
-              0,
-              AppDimens.md,
-              AppDimens.md,
-            ),
-            child: AppCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: AppDimens.sm,
-                children: [
-                  if (!checks.bodyFound)
-                    Text(
-                      l10n.movePlacementHow,
-                      style: AppTextStyles.body.copyWith(
-                        color: context.palette.textPrimary,
+        Flexible(
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              padding: EdgeInsetsDirectional.fromSTEB(
+                AppDimens.md,
+                0,
+                AppDimens.md,
+                AppDimens.md,
+              ),
+              child: AppCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: AppDimens.sm,
+                  children: [
+                    if (!checks.bodyFound)
+                      Text(
+                        l10n.movePlacementHow,
+                        style: AppTextStyles.body.copyWith(
+                          color: context.palette.textPrimary,
+                        ),
                       ),
+                    CheckRow(
+                      done: checks.bodyFound && checks.inFrame,
+                      text: l10n.moveCheckBody,
                     ),
-                  CheckRow(
-                    done: checks.bodyFound && checks.inFrame,
-                    text: l10n.moveCheckBody,
-                  ),
-                  CheckRow(
-                    done: checks.viewFound,
-                    text: l10n.movePlacementView,
-                  ),
-                  CheckRow(done: checks.light, text: l10n.moveCheckLight),
-                  CheckRow(done: checks.plank, text: l10n.moveCheckPlank),
-                ],
+                    CheckRow(
+                      done: checks.viewFound,
+                      text: l10n.movePlacementView,
+                    ),
+                    CheckRow(done: checks.light, text: l10n.moveCheckLight),
+                    CheckRow(done: checks.plank, text: l10n.moveCheckPlank),
+                  ],
+                ),
               ),
             ),
           ),
