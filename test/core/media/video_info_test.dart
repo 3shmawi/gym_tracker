@@ -149,7 +149,11 @@ void main() {
           store,
         );
         expect((await online(video))!.title, 'T');
-        await Future<void>.delayed(Duration.zero);
+        // The copy is saved without waiting (fire and forget): wait until it
+        // is there, instead of guessing how many event-loop turns it takes.
+        for (var i = 0; i < 100 && store.load(video.id) == null; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
         final offline = LoadVideoInfo(
           repo((_) => throw http.ClientException('offline')),
           store,
