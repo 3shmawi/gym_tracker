@@ -90,6 +90,16 @@
     }
   },
   "todayStart": "Start workout",
+  "todayContinue": "Continue workout",
+  "todayRest": "Rest · \u2066{time}\u2069 left",
+  "@todayRest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todayRestOver": "Rest is over. Next set!",
   "todayNoPlan": "No plan yet. Start with a ready 5-day plan and change it later.",
   "todayUseTemplate": "Start with the 5-day plan",
   "exerciseLast": "Last: {sets}",
@@ -1293,5 +1303,9 @@
   "settingsAppearance": "Appearance",
   "@settingsAppearance": {
     "description": "Settings group with language and theme (design board 4)."
-  }
+  },
+  "homeMenuTitle": "Menu",
+  "@homeMenuTitle": {"description": "Title of the home menu and its button's tooltip."},
+  "homeMenuWorkspace": "Gym or solo",
+  "@homeMenuWorkspace": {"description": "Home menu row: choose where you train (solo or one of your gyms)."}
 }

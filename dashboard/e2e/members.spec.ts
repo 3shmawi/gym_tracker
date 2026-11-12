@@ -1,6 +1,6 @@
-import { GYM_A, expect, test } from './fixtures/supabase';
+import { GYM_A, M, expect, samplePlan, test } from './fixtures/supabase';
 import { msg } from './fixtures/helpers';
-import { ADD_CAPTAIN_PATH, MEMBERS_PATH, open, rowOf } from './fixtures/members';
+import { ADD_CAPTAIN_PATH, MEMBERS_PATH, isPhone, open, rowOf } from './fixtures/members';
 
 const en = (key: Parameters<typeof msg>[1], values?: Record<string, string | number>) => msg('en', key, values);
 
@@ -117,5 +117,38 @@ test.describe('members list', () => {
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(page.getByRole('heading', { level: 1, name: msg('ar', 'members.title') })).toBeVisible();
     await expect(rowOf(page, 'Ahmed Hassan')).toBeVisible();
+  });
+});
+
+test.describe('simple to get to what people need', () => {
+  const plan = { body: samplePlan(), version: 1, updated_by: null, updated_at: '2026-11-09T10:00:00Z' };
+
+  test('"Needs you" counts members without a plan and filters to them', async ({ page }) => {
+    await open(page, { plans: { [M.ahmed]: plan } });
+    const strip = page.getByRole('group', { name: en('members.attnTitle') });
+    await expect(strip).toBeVisible();
+    // Active people you can manage without a plan: everyone but Ahmed.
+    const button = strip.getByRole('button', { name: /no plan|have no plan/ });
+    await button.click();
+    await expect(button).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByText('Ahmed Hassan').locator('visible=true')).toHaveCount(0);
+    await expect(page.getByText('Mona Ali').locator('visible=true').first()).toBeVisible();
+    await strip.getByRole('button', { name: en('members.attnClear') }).click();
+    await expect(page.getByText('Ahmed Hassan').locator('visible=true').first()).toBeVisible();
+  });
+
+  test('everyone has a plan: no "Needs you" row for plans', async ({ page }) => {
+    const plans = Object.fromEntries([M.owner, M.captain, M.ahmed, M.mona, M.youssef].map((id) => [id, plan]));
+    await open(page, { plans });
+    await expect(page.getByRole('button', { name: /no plan|have no plan/ })).toHaveCount(0);
+  });
+
+  test('on a phone each card has a "more" menu with Plan, Template and Copy', async ({ page }) => {
+    test.skip(!isPhone(page), 'the card list is the phone layout');
+    await open(page);
+    await page.getByRole('button', { name: en('members.quickMore', { name: 'Ahmed Hassan' }) }).click();
+    await expect(page.getByRole('link', { name: en('members.quickTemplateName', { name: 'Ahmed Hassan' }) })).toBeVisible();
+    await page.getByRole('link', { name: en('members.quickPlanName', { name: 'Ahmed Hassan' }) }).click();
+    await expect(page).toHaveURL(/\/plan$/);
   });
 });

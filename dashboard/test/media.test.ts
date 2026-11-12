@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { describe, expect, it } from 'vitest';
-import { MediaRepository, toCatalogPicture, toGymMedia } from '../src/exercises/media';
+import { customFromDays, MediaRepository, toCatalogPicture, toGymMedia } from '../src/exercises/media';
 import { addAll, addPicture, movePicture, pictureBase, pictureUrl, removePicture, sameList, searchWords, togglePicture } from '../src/exercises/pictures';
 import { saveFailureKey } from '../src/exercises/useGymMedia';
 
@@ -35,6 +35,7 @@ function fake(answer: (call: Call, n: number) => Answer = () => ({ data: [], err
       eq: (c: string, v: unknown) => (call.filters.push(['eq', c, v]), b),
       in: (c: string, v: unknown) => (call.filters.push(['in', c, v]), b),
       overlaps: (c: string, v: unknown) => (call.filters.push(['overlaps', c, v]), b),
+      contains: (c: string, v: unknown) => (call.filters.push(['contains', c, v]), b),
       order: (c: string, o?: unknown) => (call.filters.push(['order', c, o ?? null]), b),
       limit: (n: number) => (call.filters.push(['limit', 'rows', n]), b),
       overrideTypes: () => b,
@@ -162,7 +163,7 @@ describe('reading a gym\'s choices', () => {
 });
 
 describe('searching the picture library', () => {
-  it('sends the words as values of the "any word" filter, 60 rows at most', async () => {
+  it('asks for exercises that have all the words first, 60 rows at most', async () => {
     const rows = [
       { public_id: pid(55, 'tension'), exercise_key: 'ek-0055', frame: 'tension', title_en: 'Bench Press' },
       { public_id: 'exercises/../../x', exercise_key: 'ek-0055', frame: 'tension', title_en: 'bad' },
@@ -172,8 +173,33 @@ describe('searching the picture library', () => {
     expect(result.ok && result.value.map((p) => p.publicId)).toEqual([pid(55)]);
     expect(calls[0]?.table).toBe('exercise_images');
     expect(calls[0]?.columns).toBe('public_id, exercise_key, frame, title_en');
-    expect(calls[0]?.filters).toContainEqual(['overlaps', 'keywords', ['bench', 'drop', 'table', 'x']]);
+    expect(calls[0]?.filters).toContainEqual(['contains', 'keywords', ['bench', 'drop', 'table', 'x']]);
     expect(calls[0]?.filters).toContainEqual(['limit', 'rows', 60]);
+    // Something matched all the words: no second, wider question.
+    expect(calls).toHaveLength(1);
+  });
+
+  it('with no exercise holding all the words: any word, the most words first', async () => {
+    const row = (n: number, words: string[]) => ({ public_id: pid(n, 'tension'), exercise_key: `ek-${String(n).padStart(4, '0')}`, frame: 'tension', title_en: `E${n}`, keywords: words });
+    const wide = [row(1, ['press']), row(2, ['flat', 'press']), row(3, ['dumbbell']), row(4, ['flat', 'dumbbell', 'x']), row(5, ['press', 'dumbbell'])];
+    const { client, calls } = fake((_c, n) => ({ data: n === 1 ? [] : wide, error: null }));
+    const result = await new MediaRepository(client).search('Flat Dumbbell Press');
+    expect(calls).toHaveLength(2);
+    expect(calls[1]?.columns).toBe('public_id, exercise_key, frame, title_en, keywords');
+    expect(calls[1]?.filters).toContainEqual(['overlaps', 'keywords', ['flat', 'dumbbell', 'press']]);
+    // Two words each first (4, 2, 5 in the server's order), then one word (1, 3).
+    expect(result.ok && result.value.map((p) => p.publicId)).toEqual([pid(2), pid(4), pid(5), pid(1), pid(3)]);
+  });
+
+  it('a single word that matches nothing asks once and finds nothing', async () => {
+    const { client, calls } = fake();
+    expect(await new MediaRepository(client).search('zzzz')).toEqual({ ok: true, value: [] });
+    expect(calls).toHaveLength(1);
+  });
+
+  it('a failing search is a failure, never a throw', async () => {
+    const { client } = fake(() => ({ data: null, error: { code: 'XX000', message: 'boom' } }));
+    expect((await new MediaRepository(client).search('bench press')).ok).toBe(false);
   });
 
   it('asks nothing for empty or symbol-only text', async () => {
@@ -301,5 +327,65 @@ describe('saving the video', () => {
     const crafted = fake();
     expect((await new MediaRepository(crafted.client).removeVideo(GYM, '*')).ok).toBe(false);
     expect(crafted.calls).toHaveLength(0);
+  });
+});
+
+// ------------------------------------------------- exercises in plans ----
+
+const MEMBER = 'c0000000-0000-4000-8000-000000000002';
+const planDay = (...exercises: unknown[]) => ({ id: 'd1', name: { en: 'Day', ar: 'يوم' }, exercises });
+const ex = (id: unknown, en: unknown, ar: unknown) => ({ id, name: { en, ar }, sets: 3, reps: 10, rest: 90, step: 2.5, superset: false, unit: 'kg' });
+
+describe('exercises written into plans', () => {
+  it('keeps only ids of the app\'s shape that are not the library\'s, once each', () => {
+    const list = customFromDays([
+      [planDay(ex('flat_db_press', 'Press', 'ضغط'), ex('ex-abc123', 'Testt', 'تيست'), ex('ex-abc123', 'Again', 'تاني'))],
+      [planDay(ex('ex-abc123-2', 'Second', ''))],
+    ]);
+    expect(list.map((e) => e.id)).toEqual(['ex-abc123', 'ex-abc123-2']);
+    expect(list[0]).toMatchObject({ en: 'Testt', ar: 'تيست', muscle: null, custom: true, libraryVideo: false });
+    // A missing language falls back to the other one.
+    expect(list[1]).toMatchObject({ en: 'Second', ar: 'Second' });
+  });
+
+  it('drops hostile or malformed entries without throwing', () => {
+    const bad = [
+      null,
+      'x',
+      42,
+      {},
+      [null, 'x', { exercises: 'no' }, { exercises: [null, 1, 'x', {}] }],
+      [planDay(ex('ex-<img src=x>', 'A', 'A'), ex('../../etc', 'A', 'A'), ex('EX-ABC', 'A', 'A'), ex(7, 'A', 'A'), ex('ex-ok1', '', ''), ex('ex-ok2', 12, null))],
+      [planDay(ex(`ex-${'a'.repeat(30)}`, 'Long', 'Long'))],
+    ];
+    expect(customFromDays(bad)).toEqual([]);
+  });
+
+  it('cleans names (control and bidi characters) and stops at the cap', () => {
+    const [one] = customFromDays([[planDay(ex('ex-aa1', 'Bench\u202E  Press\u0007', 'x'))]]);
+    expect(one?.en).toBe('Bench Press');
+    const many = Array.from({ length: 300 }, (_, i) => ex(`ex-n${i}`, `E${i}`, `E${i}`));
+    expect(customFromDays([[planDay(...many)]])).toHaveLength(200);
+  });
+
+  it('asks for the gym\'s memberships, then only their plans\' day lists', async () => {
+    const { client, calls } = fake((call) =>
+      call.table === 'memberships' ? { data: [{ id: MEMBER }, { id: 'nope' }], error: null } : { data: [{ days: [planDay(ex('ex-abc123', 'Testt', 'تيست'))] }], error: null },
+    );
+    const result = await new MediaRepository(client).customExercises(GYM);
+    expect(result.ok && result.value.map((e) => e.id)).toEqual(['ex-abc123']);
+    expect(calls[0]).toMatchObject({ table: 'memberships', columns: 'id' });
+    expect(calls[0]?.filters).toContainEqual(['eq', 'gym_id', GYM]);
+    expect(calls[1]).toMatchObject({ table: 'plans', columns: 'days:body->days' });
+    expect(calls[1]?.filters).toContainEqual(['in', 'membership_id', [MEMBER]]);
+  });
+
+  it('refuses a bad gym id and survives a failed read', async () => {
+    const { client, calls } = fake();
+    const bad = await new MediaRepository(client).customExercises('x');
+    expect(bad.ok).toBe(false);
+    expect(calls).toHaveLength(0);
+    const down = fake(() => ({ data: null, error: { code: '42501', message: 'denied' } }));
+    expect((await new MediaRepository(down.client).customExercises(GYM)).ok).toBe(false);
   });
 });

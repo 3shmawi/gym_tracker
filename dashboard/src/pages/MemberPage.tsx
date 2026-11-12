@@ -221,28 +221,26 @@ export function MemberPage({
           </div>
         ) : null}
 
-        <MemberForm
-          key={formKey(member)}
-          member={member}
-          isOwner={gym.role === 'owner'}
-          locked={locked}
-          busy={busy !== null}
-          online={online}
-          onSave={(change) => void save(change)}
-        />
-
+        {manageable && !ended ? (
+          <section class="panel" aria-labelledby="s-plan">
+            <h2 class="h2" id="s-plan">{t('member.sectionPlan')}</h2>
+            <p class="sub">{t('member.planBody')}</p>
+            <div class="acts-row" role="group" aria-label={t('member.quickActions')}>
+              <a class="btn pri" href={pathOf(planRoute)} onClick={linkHandler(planRoute)}>
+                {t('member.openPlan')}
+              </a>
+              {([['replace', 'tpl.replace'], ['copy', 'plan.copy'], ['save_template', 'tpl.saveAs']] as const).map(([open, label]) => {
+                const r: Route = { ...planRoute, open };
+                return (
+                  <a key={open} class="btn" href={pathOf(r)} onClick={linkHandler(r)}>{t(label)}</a>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
         {progressDeps && manageable ? <MemberProgress gym={gym} member={member} {...progressDeps} /> : null}
 
         <div class="grid2">
-          {manageable && !ended ? (
-            <section class="panel" aria-labelledby="s-plan">
-              <h2 class="h2" id="s-plan">{t('member.sectionPlan')}</h2>
-              <p class="sub">{t('member.planBody')}</p>
-              <a class="btn pri self-start" href={pathOf(planRoute)} onClick={linkHandler(planRoute)}>
-                {t('member.openPlan')}
-              </a>
-            </section>
-          ) : null}
           {!locked && member.status === 'active' ? (
             <section class="panel" aria-labelledby="s-phone">
               <h2 class="h2" id="s-phone">{t('member.sectionPhone')}</h2>
@@ -314,6 +312,17 @@ export function MemberPage({
             </section>
           ) : null}
         </div>
+
+        {/* The person's own details come last: the plan and progress are what a captain opens this page for. */}
+        <MemberForm
+          key={formKey(member)}
+          member={member}
+          isOwner={gym.role === 'owner'}
+          locked={locked}
+          busy={busy !== null}
+          online={online}
+          onSave={(change) => void save(change)}
+        />
       </div>
 
       {print.printing && printable.length > 0 ? <PrintSheet gymName={gym.name} cards={printable} /> : null}

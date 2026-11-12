@@ -22,6 +22,10 @@ test.describe('member progress', () => {
     await expect(panel.getByText('38', { exact: true })).toBeVisible();
     await expect(panel.getByText(en('prog.level.intermediate'), { exact: true })).toBeVisible();
     await expect(panel.getByText(en('prog.levelNote'))).toBeVisible();
+    // The note's info icon is text-sized (it once filled the whole panel).
+    const noteIcon = await panel.locator('p.cap svg').first().boundingBox();
+    expect(noteIcon?.width).toBeLessThanOrEqual(20);
+    expect(noteIcon?.height).toBeLessThanOrEqual(20);
     await expect(panel.getByRole('img', { name: /Workouts per week, last 12 weeks/ })).toBeVisible();
     await panel.getByText(en('prog.showTable')).first().click();
     await expect(panel.getByRole('row').filter({ hasText: '72 / 80' })).toBeVisible();

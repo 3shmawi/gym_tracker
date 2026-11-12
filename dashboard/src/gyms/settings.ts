@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { CodedError } from '../core/failure';
 import { guard, unwrap, type Result } from '../core/result';
 import { cleanName } from '../core/text';
+import { parseBrandColor } from './brandColor';
 import { isGymId, LOGO_PATH } from './gyms';
 
 // Gym settings (D5): what the gyms table lets the owner change (migration
@@ -9,6 +10,8 @@ import { isGymId, LOGO_PATH } from './gyms';
 // "owners update their gym" = private.i_own, active owner, permanent session)
 // and the logo in the private bucket gym-logos (0008: png/jpeg, ≤ 512 KB,
 // path <gym_id>/logo.png|jpg|jpeg, members read; 0020: the owner writes).
+// D6 adds brand_color (0021: '#rrggbb' in lower case, not black / white /
+// grey, or null; the same owner-only policy).
 
 export const GYM_NAME_MAX = 60;
 export const LOGO_MAX_BYTES = 512 * 1024;
@@ -74,6 +77,19 @@ export class GymSettingsRepository {
     return guard(async () => {
       if (!isGymId(gymId) || (value !== 'readable' && value !== 'locked')) throw refuse('22023', 'invalid_history');
       await this.update(gymId, { history_after_end: value });
+    });
+  }
+
+  /**
+   * Sets the gym's colour for the app, or null for Azm's colours. Only a
+   * value the table accepts is ever sent (`parseBrandColor`).
+   */
+  async setBrandColor(gymId: string, hex: string | null): Promise<Result<string | null>> {
+    return guard(async () => {
+      const value = hex === null ? null : parseBrandColor(hex);
+      if (!isGymId(gymId) || (hex !== null && value === null)) throw refuse('22023', 'invalid_color');
+      await this.update(gymId, { brand_color: value });
+      return value;
     });
   }
 

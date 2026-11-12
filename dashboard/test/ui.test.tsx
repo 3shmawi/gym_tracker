@@ -9,6 +9,7 @@ import { I18nContext, makeI18n, messageTables } from '../src/i18n';
 import type { Lang } from '../src/core/prefs';
 import { GymPickerPage } from '../src/pages/GymPickerPage';
 import { SignInPage } from '../src/pages/SignInPage';
+import { Icon } from '../src/ui/icons';
 import { Shell } from '../src/ui/Shell';
 import { ErrorView, ForbiddenView, LoadingView, NoGymView, NotFoundView, SessionEndedView } from '../src/ui/states';
 import type { ComponentChildren } from 'preact';
@@ -256,7 +257,7 @@ const gym = (n: number, role: 'owner' | 'captain', name: string): ManagedGym => 
   name,
   role,
   memberCount: n * 10,
-  logoPath: null, historyAfterEnd: 'readable',
+  logoPath: null, historyAfterEnd: 'readable', brandColor: null,
 });
 
 describe('GymPickerPage', () => {
@@ -368,5 +369,16 @@ describe('Shell', () => {
   it('hides sign out when signed out', async () => {
     await mount(<Shell {...base} email={null} onSignOut={null} onPrefs={vi.fn()}>x</Shell>);
     expect([...host.querySelectorAll('button')].some((b) => b.textContent === 'Sign out')).toBe(false);
+  });
+});
+
+describe('icons', () => {
+  it('every icon has a size of its own, so one with no CSS rule is never as big as its box', () => {
+    const host = document.createElement('div');
+    render(<Icon name="info" />, host);
+    const svg = host.querySelector('svg');
+    expect(svg?.getAttribute('width')).toBe('18');
+    expect(svg?.getAttribute('height')).toBe('18');
+    expect(svg?.getAttribute('aria-hidden')).toBe('true');
   });
 });

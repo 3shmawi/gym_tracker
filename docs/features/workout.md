@@ -60,10 +60,22 @@ Status: slice 3 started (rest notification), plus levels.
   name) shows "not in the library".
 - **Workout pill** (`WorkoutPillHost`, mounted in `AppShell` under the
   video mini player's overlay). A floating card, 196 × 64 (wider for long
-  names or large text, never past the screen), on **every screen but the
-  workout itself** and the screens before the app (welcome, joining a gym);
-  the home screen included (owner's choice). Hidden while the keyboard is
-  open and when there is nothing to start (no plan, empty day). States:
+  names or large text, never past the screen), on every screen **except**:
+  the workout itself (the member is already in it), **the home screen** (its
+  own button starts the workout, and says **Continue workout** while one is
+  in progress; owner's choice, 2026-11-11, replacing "the home screen
+  included"), **the plan editor** (its "Add exercise" and other bottom buttons
+  sit in the same corner; the pill covered them once the screen was tracked
+  correctly) and the screens before the app (welcome, joining a gym). Also
+  hidden while the keyboard is open and when there is nothing to start (no
+  plan, empty day). On home, *Continue workout* goes straight back and never
+  asks "You already trained today"; while resting, a line above it counts
+  the rest down ("Rest · 1:12 left", then "Rest is over. Next set!";
+  `HomeRestLine`, the only thing that repaints each second). "The screen
+  on top" comes from `topPathOf` (the last match of the router's stack): the
+  router's `uri` is only the page the stack started from, so until
+  2026-11-12 every screen pushed from home counted as home, and the pill
+  showed on the workout screen. States:
   - **Start workout** · "Day 2 · Shoulders & Arms": starts the waiting
     day; asks "You already trained today" first when needed (same sheet as
     the home screen, `confirmTrainAgain`).
@@ -77,12 +89,14 @@ Status: slice 3 started (rest notification), plus levels.
   (the how-to page opened from it) it goes back to it instead of opening a
   second one. Drag it to any corner (`workoutPillCornerProvider`, default
   bottom end); drag it past a side to tuck it there as a tab; one tap brings
-  it back. It sits above the home screen's Start button and stacks above the
-  video mini player when both are in the same corner. Screen readers: one
+  it back. It stacks above the video mini player when both are in the same
+  corner. Screen readers: one
   button with the whole state ("Resume workout: Flat Dumbbell Press, 2 of 7
   exercises done"), and a "Tuck the workout button at the edge" action.
 - The "Rest over" alarm follows the pill: closing the workout screen
   mid-rest no longer cancels it (see Rules → Rest over notification).
+  It does not depend on the pill being on screen: on home (no pill) a rest
+  that runs out still rings.
 
 ## Rules
 - **Days have stable ids** (`WorkoutDay.id`). Finished workouts, the workout
@@ -553,3 +567,14 @@ back to the same set → log it.
 **Caption (English):** Every exercise now has its picture, and how to do it is one tap away. The little workout button follows you everywhere: start, resume, or watch your rest from any screen.
 **Caption (Egyptian Arabic):** كل تمرين بقى ليه صورته، وطريقة الأداء على بعد دوسة. وزرار التمرين الصغير معاك في كل حتة: تبدأ أو تكمّل أو تشوف الراحة من أي صفحة.
 **Hashtags:** #flutter #buildinpublic #gym #fitness
+
+## Home menu (UX pass)
+The home bar has one button, **Menu** (`home_menu_button`). It opens a sheet
+(`home_menu_sheet.dart`, built on `showAppSheet`) with big rows: *Gym or solo*
+(people with a gym account), *Join your gym* (people training alone, so the
+way into a gym is one tap from home, not hidden in Settings), *Your plan*
+(when there is one), *Progress* and *Settings*. Each row keeps its old key
+(`home_plan_button`, ...). To add a destination, add one `HomeMenuEntry` in
+`NextWorkoutView._menuEntries`. A side drawer can later render the same
+entries. Tests: `home_menu_sheet_test.dart`, `next_workout_view_test.dart`,
+`gym_flows_test.dart`, the integration tests (`openHomeMenu`).

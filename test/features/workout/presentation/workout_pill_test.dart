@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_controller.dart';
@@ -97,31 +100,103 @@ void main() {
     });
   });
 
-  test('hidden on the workout screen and before the app', () {
-    for (final path in [
-      AppRoutes.workout,
-      AppRoutes.welcome,
-      AppRoutes.join,
-      AppRoutes.joinScan,
-      AppRoutes.joinCode('ABC123'),
-    ]) {
-      expect(workoutPillHiddenOn(path), isTrue, reason: path);
-    }
-    for (final path in [
-      AppRoutes.home,
-      AppRoutes.settings,
-      AppRoutes.plan,
-      AppRoutes.progress,
-      AppRoutes.library,
-      AppRoutes.libraryExercise('flat_db_press'),
-      AppRoutes.profile,
-      // Hostile paths are just "another screen": shown, never a crash.
-      '/workout/../join',
-      "/'; drop table",
-    ]) {
-      expect(workoutPillHiddenOn(path), isFalse, reason: path);
-    }
+  testWidgets('the screen on top is what counts, also when it was pushed', (
+    tester,
+  ) async {
+    GoRoute page(String path) => GoRoute(
+      path: path,
+      builder: (_, _) => Text(path, textDirection: TextDirection.ltr),
+    );
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => const Text('/', textDirection: TextDirection.ltr),
+        ),
+        page('/workout'),
+        page('/settings'),
+        GoRoute(
+          path: '/plan',
+          builder: (_, _) =>
+              const Text('plan', textDirection: TextDirection.ltr),
+          routes: [page(':dayId')],
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    String top() => topPathOf(router.routerDelegate.currentConfiguration);
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: Router.withConfig(config: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(top(), '/');
+    expect(workoutPillHiddenOn(top()), isTrue);
+
+    // Pushed from home, as the app opens the workout and Settings.
+    unawaited(router.push<void>('/workout'));
+    await tester.pumpAndSettle();
+    expect(top(), '/workout');
+    expect(workoutPillHiddenOn(top()), isTrue);
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(top(), '/');
+
+    unawaited(router.push<void>('/settings'));
+    await tester.pumpAndSettle();
+    expect(top(), '/settings');
+    expect(workoutPillHiddenOn(top()), isFalse);
+    // A page pushed on a pushed page.
+    unawaited(router.push<void>('/plan/day-1?x=1'));
+    await tester.pumpAndSettle();
+    expect(top(), '/plan/day-1');
+    expect(workoutPillHiddenOn(top()), isTrue);
+    router
+      ..pop()
+      ..pop();
+    await tester.pumpAndSettle();
+    expect(top(), '/');
+
+    // Replaced, not pushed.
+    router.go('/plan/day-2');
+    await tester.pumpAndSettle();
+    expect(top(), '/plan/day-2');
   });
+
+  test(
+    'hidden on the workout screen, home, the plan editor and before the app',
+    () {
+      for (final path in [
+        AppRoutes.workout,
+        // Home has its own Start / Continue button.
+        AppRoutes.home,
+        // The plan editor's buttons sit where the pill would.
+        AppRoutes.plan,
+        AppRoutes.planDay('day-1'),
+        AppRoutes.planExercise('day-1', 'bench'),
+        AppRoutes.welcome,
+        AppRoutes.join,
+        AppRoutes.joinScan,
+        AppRoutes.joinCode('ABC123'),
+      ]) {
+        expect(workoutPillHiddenOn(path), isTrue, reason: path);
+      }
+      for (final path in [
+        AppRoutes.settings,
+        AppRoutes.progress,
+        AppRoutes.library,
+        AppRoutes.libraryExercise('flat_db_press'),
+        AppRoutes.profile,
+        // Hostile paths are just "another screen": shown, never a crash.
+        '/workout/../join',
+        "/'; drop table",
+      ]) {
+        expect(workoutPillHiddenOn(path), isFalse, reason: path);
+      }
+    },
+  );
 
   group(WorkoutPillView, () {
     testWidgets('one tap, with a label that says what it does', (tester) async {

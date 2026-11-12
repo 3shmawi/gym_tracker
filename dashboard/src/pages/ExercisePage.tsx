@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { linkHandler, navigate, pathOf, type Route } from '../app/router';
 import { cleanName } from '../core/text';
-import { libraryExercise } from '../exercises/catalog';
+import { asListed, isCustomId, libraryExercise } from '../exercises/catalog';
 import type { MediaRepository } from '../exercises/media';
 import { addAll, MAX_PICTURES, movePicture, removePicture, sameList, searchWords, togglePicture } from '../exercises/pictures';
-import type { CatalogPicture, LibraryExercise, VideoRef } from '../exercises/types';
-import { saveFailureKey, useGymMedia } from '../exercises/useGymMedia';
+import type { CatalogPicture, ExerciseLike, VideoRef } from '../exercises/types';
+import { saveFailureKey, useCustomExercises, useGymMedia } from '../exercises/useGymMedia';
 import { formatSeconds, parseYouTubeLink, watchUrl } from '../exercises/youtube';
 import type { ManagedGym } from '../gyms/gyms';
 import { useI18n, type MessageKey } from '../i18n';
@@ -31,26 +31,45 @@ type Note = { readonly tone: 'ok' | 'err'; readonly key: MessageKey } | null;
 
 export function ExercisePage({ gym, exerciseId, media, cloudName, online }: Props) {
   const { t } = useI18n();
-  const exercise = libraryExercise(exerciseId);
+  const lib = libraryExercise(exerciseId);
   const { data, reload, applyPictures, applyVideo } = useGymMedia(media, gym.id);
+  // Written into a plan: its name comes from the plans (null while they load).
+  const custom = useCustomExercises(media, gym.id);
+  const own = lib ? undefined : (custom ?? []).find((e) => e.id === exerciseId);
+  const exercise: ExerciseLike | undefined = lib ? asListed(lib) : own;
   const back: Route = { name: 'exercises', gymId: gym.id };
 
-  if (!exercise) return <NotFoundView onHome={() => { navigate(back); }} />;
+  if (!exercise) {
+    // A plan id that is not (yet) known: wait for the plans, then show the
+    // page by its id when the gym already has pictures or a video for it.
+    if (!lib && isCustomId(exerciseId) && (custom === null || data.state === 'loading')) {
+      return (
+        <section class="stack" data-gym={gym.id}>
+          <LoadingView />
+        </section>
+      );
+    }
+    const known = data.state === 'ready' && isCustomId(exerciseId) && (data.media.pictures.has(exerciseId) || data.media.videos.has(exerciseId));
+    if (!known) return <NotFoundView onHome={() => { navigate(back); }} />;
+    return renderExercise({ id: exerciseId, en: exerciseId, ar: exerciseId, muscle: null, libraryVideo: false, custom: true });
+  }
+  return renderExercise(exercise);
 
-  const backLink = (
-    <a class="btn ghost sm back" href={pathOf(back)} onClick={linkHandler(back)}>
-      <span class="flip" aria-hidden="true"><Icon name="chevronLeft" /></span>
-      {t('ex.back')}
-    </a>
-  );
-  if (data.state !== 'ready') {
-    return (
-      <section class="stack" data-gym={gym.id}>
-        {backLink}
-        <Heading exercise={exercise} />
-        {data.state === 'loading' ? <LoadingView /> : <ErrorView failure={data.failure} onRetry={() => void reload()} />}
-      </section>
+  function renderExercise(exercise: ExerciseLike) {
+    const backLink = (
+      <a class="btn ghost sm back" href={pathOf(back)} onClick={linkHandler(back)}>
+        <span class="flip" aria-hidden="true"><Icon name="chevronLeft" /></span>
+        {t('ex.back')}
+      </a>
     );
+    if (data.state !== 'ready') {
+      return (
+        <section class="stack" data-gym={gym.id}>
+          {backLink}
+          <Heading exercise={exercise} />
+          {data.state === 'loading' ? <LoadingView /> : <ErrorView failure={data.failure} onRetry={() => void reload()} />}
+        </section>
+      );
   }
 
   const saved = data.media.pictures.get(exercise.id) ?? [];
@@ -80,9 +99,10 @@ export function ExercisePage({ gym, exerciseId, media, cloudName, online }: Prop
       />
     </section>
   );
+  }
 }
 
-function Heading({ exercise }: { readonly exercise: LibraryExercise }) {
+function Heading({ exercise }: { readonly exercise: ExerciseLike }) {
   const { t, lang } = useI18n();
   const names = exerciseNames(lang, exercise);
   return (
@@ -90,8 +110,8 @@ function Heading({ exercise }: { readonly exercise: LibraryExercise }) {
       <h1 class="h1">{names.primary}</h1>
       <p class="sub">
         <span lang={names.secondaryLang}>{names.secondary}</span>
-        {' · '}
-        {t(`ex.muscle.${exercise.muscle}`)}
+        {exercise.muscle ? ` · ${t(`ex.muscle.${exercise.muscle}`)}` : null}
+        {exercise.custom ? <span class="badge own">{t('plan.ownExercise')}</span> : null}
         {' · '}
         <span class="num">{exercise.id}</span>
       </p>
@@ -109,7 +129,7 @@ type Search =
 
 interface PicturesProps {
   readonly gymId: string;
-  readonly exercise: LibraryExercise;
+  readonly exercise: ExerciseLike;
   readonly saved: readonly string[];
   readonly media: MediaRepository;
   readonly cloudName: string | null;
@@ -410,7 +430,7 @@ function SearchResults({ search, online, draft, cloudName, onToggle, onAddAll, o
 
 interface VideoProps {
   readonly gymId: string;
-  readonly exercise: LibraryExercise;
+  readonly exercise: ExerciseLike;
   readonly video: VideoRef | null;
   readonly media: MediaRepository;
   readonly online: boolean;

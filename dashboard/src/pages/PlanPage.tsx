@@ -1,6 +1,6 @@
 import type { ComponentChildren } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { linkHandler, pathOf, type Route } from '../app/router';
+import { linkHandler, pathOf, type PlanAction, type Route } from '../app/router';
 import type { Failure } from '../core/failure';
 import type { MediaRepository } from '../exercises/media';
 import type { LibraryExercise } from '../exercises/types';
@@ -33,6 +33,8 @@ interface Props {
   readonly media: MediaRepository;
   readonly cloudName: string | null;
   readonly online: boolean;
+  /** A quick action (from the members list or the member page) whose dialog opens first. */
+  readonly open?: PlanAction | undefined;
 }
 
 type Loaded = { readonly state: 'loading' } | { readonly state: 'failed'; readonly failure: Failure } | { readonly state: 'ready'; readonly stored: StoredPlan };
@@ -159,11 +161,15 @@ interface EditorProps extends Props {
   readonly onStored: (stored: StoredPlan, saved: boolean) => void;
 }
 
-function PlanEditor({ gym, member, everyone, stored, plans, templates, media, cloudName, online, back, justSaved, flash, onReload, onStored }: EditorProps) {
+function PlanEditor({ open, gym, member, everyone, stored, plans, templates, media, cloudName, online, back, justSaved, flash, onReload, onStored }: EditorProps) {
   const { t, lang } = useI18n();
   const [draft, setDraft] = useState<Plan | null>(stored.plan);
   const [dayId, setDayId] = useState<string | null>(stored.plan?.days[0]?.id ?? null);
-  const [modal, setModal] = useState<Modal | null>(null);
+  // A quick action opens its dialog once; the address goes back to the plain plan.
+  const [modal, setModal] = useState<Modal | null>(() => (open && canManage(gym.role, member.role) && member.status !== 'ended' && !stored.unreadable && (open !== 'copy' && open !== 'save_template' ? true : stored.plan !== null) ? { kind: open } : null));
+  useEffect(() => {
+    if (open) window.history.replaceState(null, '', pathOf({ name: 'member_plan', gymId: gym.id, memberId: member.id }));
+  }, []);
   const [note, setNote] = useState<Note>(null);
   const [saving, setSaving] = useState(false);
   const [conflict, setConflict] = useState<Conflict | null>(null);

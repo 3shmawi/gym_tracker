@@ -97,7 +97,10 @@ void main() {
     await tester.tap(find.byKey(const Key('workout_close')));
     await tester.pumpAndSettle();
     expect(find.text('Day 3 of 5'), findsOneWidget);
-    await tester.tap(find.text('Start workout'));
+    // Home says what its button does now, and has no floating pill.
+    expect(find.text('Start workout'), findsNothing);
+    expect(find.byKey(const Key('workout_pill')), findsNothing);
+    await tester.tap(find.text('Continue workout'));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('set_chip_barbell_squat_2')), findsOneWidget);
 

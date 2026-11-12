@@ -180,7 +180,7 @@ export function seedMembers(gymId: string = GYM_A.id, now = Date.now()): { membe
 
 export interface MockOptions {
   /** Gyms the person manages, with role. Default: both gyms. */
-  gyms?: { id: string; name: string; role: 'owner' | 'captain'; logo?: boolean; historyAfterEnd?: 'readable' | 'locked' }[];
+  gyms?: { id: string; name: string; role: 'owner' | 'captain'; logo?: boolean; historyAfterEnd?: 'readable' | 'locked'; brandColor?: string | null }[];
   /** Members and invites of the gyms (default: gym A's seed). */
   members?: FakeMember[];
   invites?: FakeInvite[];
@@ -258,7 +258,7 @@ export interface Mock {
   /** D4: the live plan_templates table. */
   readonly templates: FakeTemplate[];
   /** D5: the gyms as the server holds them now, uploads and removals in gym-logos. */
-  readonly gymRows: Record<string, { name: string; logo_path: string | null; history_after_end: string }>;
+  readonly gymRows: Record<string, { name: string; logo_path: string | null; history_after_end: string; brand_color: string | null }>;
   readonly uploads: FakeUpload[];
   readonly removed: string[];
   /** Changes failure options in the middle of a test. */
@@ -333,7 +333,7 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
     cdn: [],
     plans: options.plans ?? {},
     templates: options.templates ?? [],
-    gymRows: Object.fromEntries(gyms.map((g) => [g.id, { name: g.name, logo_path: g.logo ? `${g.id}/logo.png` : null, history_after_end: g.historyAfterEnd ?? 'readable' }])),
+    gymRows: Object.fromEntries(gyms.map((g) => [g.id, { name: g.name, logo_path: g.logo ? `${g.id}/logo.png` : null, history_after_end: g.historyAfterEnd ?? 'readable', brand_color: g.brandColor ?? null }])),
     uploads: [],
     removed: [],
     set: (change) => {
@@ -568,6 +568,8 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
         const p = mock.plans[id];
         return p ? [{ membership_id: id, ...p }] : [];
       });
+      // The Exercises tab reads only the day lists (select=days:body->days).
+      if (select.includes('days:body->days')) return json(route, 200, rows.map((r) => ({ days: (r.body as { days?: unknown } | null)?.days ?? null })));
       return json(route, 200, rows);
     }
     if (path === '/rest/v1/rpc/save_plan') {
@@ -589,17 +591,22 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
     const isManager = (gymId: string) => gyms.some((g) => g.id === gymId);
     if (path === '/rest/v1/exercise_images' && method === 'GET') {
       const ov = /^ov\.\{(.*)\}$/.exec(url.searchParams.get('keywords') ?? '');
+      const cs = /^cs\.\{(.*)\}$/.exec(url.searchParams.get('keywords') ?? '');
       const inList = /^in\.\((.*)\)$/.exec(url.searchParams.get('public_id') ?? '');
       let rows = catalog;
       if (ov) {
         const words = (ov[1] ?? '').split(',').map((w) => w.replace(/^"|"$/g, ''));
         rows = rows.filter((r) => Array.isArray(r.keywords) && (r.keywords as string[]).some((k) => words.includes(k)));
       }
+      if (cs) {
+        const words = (cs[1] ?? '').split(',').map((w) => w.replace(/^"|"$/g, ''));
+        rows = rows.filter((r) => Array.isArray(r.keywords) && words.every((w) => (r.keywords as string[]).includes(w)));
+      }
       if (inList) {
         const ids = (inList[1] ?? '').split(',').map((w) => w.replace(/^"|"$/g, ''));
         rows = rows.filter((r) => ids.includes(String(r.public_id)));
       }
-      return json(route, 200, rows.map((r) => ({ public_id: r.public_id, exercise_key: r.exercise_key, frame: r.frame, title_en: r.title_en })));
+      return json(route, 200, rows.map((r) => ({ public_id: r.public_id, exercise_key: r.exercise_key, frame: r.frame, title_en: r.title_en, keywords: r.keywords })));
     }
     if (path === '/rest/v1/gym_exercise_images' && method === 'GET') {
       if (behaviour.mediaFails) return json(route, 500, { code: 'XX000', message: 'boom' });
@@ -684,8 +691,15 @@ export async function mockSupabase(page: Page, options: MockOptions = {}): Promi
       const id = wanted(url, 'id');
       const row = mock.gymRows[id];
       if (!row || !gyms.some((g) => g.id === id)) return json(route, 200, []);
-      if (Object.keys(record).some((k) => !['name', 'logo_path', 'history_after_end'].includes(k))) return error(route, 403, '42501', 'permission denied for table gyms');
+      if (Object.keys(record).some((k) => !['name', 'logo_path', 'history_after_end', 'brand_color'].includes(k))) return error(route, 403, '42501', 'permission denied for table gyms');
       if (typeof record.name === 'string' && (record.name.length < 1 || Array.from(record.name).length > 60 || record.name !== record.name.trim())) return error(route, 400, '23514', 'new row for relation "gyms" violates check constraint "gyms_name_check"');
+      // Migration 0021: '#rrggbb' in lower case, channels at least 40 apart, or null; owners only.
+      if ('brand_color' in record) {
+        if (gyms.find((g) => g.id === id)?.role !== 'owner') return json(route, 200, []);
+        const c = record.brand_color;
+        const rgb = typeof c === 'string' && /^#[0-9a-f]{6}$/.test(c) ? [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16)) : null;
+        if (c !== null && (!rgb || Math.max(...rgb) - Math.min(...rgb) < 40)) return error(route, 400, '23514', 'new row for relation "gyms" violates check constraint "gyms_brand_color_ok"');
+      }
       Object.assign(row, record);
       return json(route, 200, [{ id }]);
     }

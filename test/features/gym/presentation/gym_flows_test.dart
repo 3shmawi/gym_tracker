@@ -17,6 +17,7 @@ import 'package:gym_tracker/features/workout/presentation/next_workout_page.dart
 
 import '../../../helpers/gym_app.dart';
 import '../../../helpers/gym_fakes.dart';
+import '../../../helpers/home_menu.dart';
 import '../../../helpers/pump_app.dart';
 
 /// The member's journey through the gym screens, with fake repositories.
@@ -341,7 +342,12 @@ void main() {
     ) async {
       final signedOut = GymApp();
       await signedOut.pump(tester);
+      await openHomeMenu(tester);
       expect(find.byKey(const Key('home_workspace_button')), findsNothing);
+      // Training alone: joining a gym is one of the menu's rows.
+      expect(find.byKey(const Key('home_join_gym_button')), findsOneWidget);
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
 
       final signedIn = GymApp(session: anonymousSession);
       signedIn.local
@@ -349,6 +355,8 @@ void main() {
         ..workspace = const GymWorkspace('m1');
       signedIn.gyms.membershipsResult = Success(signedIn.local.memberships);
       await signedIn.pump(tester);
+      await openHomeMenu(tester);
+      expect(find.byKey(const Key('home_join_gym_button')), findsNothing);
       await tester.tap(find.byKey(const Key('home_workspace_button')));
       await tester.pumpAndSettle();
       expect(find.text(l10nEn.switchTitle), findsOneWidget);
@@ -357,6 +365,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(signedIn.local.workspace, const GymWorkspace('m2'));
 
+      await openHomeMenu(tester);
       await tester.tap(find.byKey(const Key('home_workspace_button')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('workspace_solo')));
