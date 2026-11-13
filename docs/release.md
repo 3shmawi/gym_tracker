@@ -324,6 +324,7 @@ are pinned by hand — bump them here and in the kit together:
 | Python packages for `scripts/make_invites` | `scripts/make_invites/requirements.txt` (hashes) | qrcode 8.2, pillow 13.0.0, reportlab 5.0.1, zxing-cpp 3.1.1, charset-normalizer 3.5.2 |
 | EGM plugin (`google/elephant-goldfish-model`) | `.claude/settings.json` (`ref`), design reviews | v0.1.1 |
 | `camera`, `google_mlkit_pose_detection` (native code, ML Kit models) | `pubspec.yaml` (exact), Move games; bump by hand, re-check app size, the merged Android manifest and OSV for the Android libraries (`docs/security.md` → Move games) | 0.12.2, 1.0.2 |
+| `flame`, `flame_audio` (brings `audioplayers` and its native code) | `pubspec.yaml` (exact), the Move games' Stack game and its sounds; bump by hand, then run the Move tests (the engine must still pause itself when idle) and check that the sounds still mix with music (`FlameMoveSounds.context`) | 1.38.2, 2.12.2 |
 
 ## One-time setup
 - Create the app in Play Console and App Store Connect (bundle id
@@ -476,3 +477,39 @@ in "Before the flag goes on" of that page must be done (sign-up by email, the
 `{{ .Token }}` templates, SMTP, CAPTCHA). Migration 0022 deploys on merge and
 is safe before the app versions that use it.
 
+
+## Move games flags (`move_games`, `move_games_debug`)
+Move games (docs/features/move_games.md) ship dark: every screen, the Today
+card and the menu row are behind the PostHog flag **`move_games`** (off).
+The pose check for testers is behind **`move_games_debug`**, and a prod build
+never shows it whatever the flag says.
+
+**Turn on for staging** (PostHog → Feature flags → New, for each of the two
+keys): release condition `app = gym_tracker` **and** `environment = staging`,
+100 %. Nothing in prod changes. Testers then see the Move card on Today and
+*Pose check (testing)* in Settings → About.
+
+**Before `move_games` goes on in prod** (in this order):
+1. The website with the updated **privacy policy and terms** (2026-11-13:
+   Move games, Google ML Kit, training safely) is live at
+   `https://azmm.pages.dev/privacy.html`. It deploys with the merge; the app
+   then asks every member to agree again (`ConsentStore.current`).
+2. **Store forms** updated as in `store/privacy_forms.md` → "Move games and
+   Google ML Kit": App Store Connect → App Privacy (add *Other Diagnostic
+   Data*, add *Analytics* to *Performance Data*, ML Kit as a source of
+   *Device ID*); Play Console → Data safety (no new type; check that
+   *Diagnostics* and *Device or other IDs* are still declared). Submit them
+   with the next release, before the flag.
+3. **Speed measured** on the cheapest Android at hand and a mid-range one
+   with the pose check (`docs/performance.md` → Move games → frames per
+   second). Below 8 frames/s a phone gets the manual counter.
+4. **Real recordings** (decision 9 of the spec) replayed by the tests.
+5. **iOS:** until the ML Kit model bundles are set up on a Mac
+   (`MlKitPoseSource.iosModelInstalled`), iOS members get "Camera games don't
+   work on this phone" and the manual counter. Either set iOS up first, or
+   add the release condition `$os = Android` to the prod rollout.
+6. Roll out in steps (for example 10 % → 50 % → 100 %) and watch
+   `move_unsupported` (`too_slow`, `model_failed`) and Sentry.
+
+Turning it off again hides everything at once; saved rounds stay in history
+as ordinary workouts.

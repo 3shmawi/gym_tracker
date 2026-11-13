@@ -555,6 +555,17 @@ Spec: `docs/designs/move_games.md` §11. Checked in the built release APK
   setting is one boolean in shared preferences (`move.sound_on`; any odd
   stored value means on, tested).
 
+### Move games: privacy policy and store forms (PR 4)
+- `website/privacy.html` (2026-11-13) says what Move games do with the
+  camera and names Google ML Kit and the data it sends Google;
+  `test/security/store_pages_test.dart` checks the key sentences in both
+  languages, the new allowed link host (`developers.google.com`, a plain
+  link) and that `ConsentStore.current` equals the policy date (members agree
+  again).
+- `store/privacy_forms.md` lists ML Kit's metrics in the inventory and in
+  both store forms. Camera images and body positions are "never leaves the
+  phone".
+
 ## If a key leaks (log, chat, commit)
 1. **Revoke or rotate it first**, then clean up. Logs can be copied in the
    minutes they are public.

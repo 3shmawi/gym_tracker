@@ -33,8 +33,55 @@ Definitions used (read 2026-11-04):
 | Crash reports + performance traces (device model, OS, app version; `sendDefaultPii = false`, no user set) | errors | Sentry | Sentry retention | no |
 | Picture search words (exercise/muscle names) | solo member searches pictures | Supabase | not stored by us (request logs only) | no |
 | IP address (download) | pictures (Cloudinary), video title/thumbnail and player (YouTube) | Cloudinary, Google | not kept by us | no |
-| Camera image | scanning a QR code | **never leaves the phone** | — | — |
+| ML Kit usage metrics: device model and OS, ML accelerators, app package and version, a **per-installation id** (not a device id), latency, API configuration (image format and size), input/output size, event types, error codes | a Move game's camera round (pose detection); the QR scanner on Android (barcode scanning) | Google (ML Kit), as the app's SDK; not shared with third parties | Google's retention | no (no account or person id goes with it) |
+| Camera image | scanning a QR code, a Move game's camera round | **never leaves the phone** (analysed frame by frame in memory, then dropped) | — | — |
+| Body positions (landmarks) worked out from the camera | a Move game's camera round | **never leave the phone** (not stored, not in analytics, logs or crash reports) | — | — |
+| Reps of a Move round | the member taps *Save to my training* | the phone; then like any workout (a gym's upload, backup if on) | like any workout | like any workout |
 | Rest notification content | rest timer | **never leaves the phone** | — | — |
+
+## Move games and Google ML Kit (added 2026-11-13)
+Move games count reps with the front camera and Google ML Kit pose detection
+(`google_mlkit_pose_detection`, bundled model). The QR scanner already used
+ML Kit barcode scanning on Android (`mobile_scanner`; Apple's Vision on iOS),
+so ML Kit's metrics were already sent before Move games; this update
+declares them for both.
+
+Sources read 2026-11-13:
+- ML Kit "Prepare for Google Play's data disclosure requirements"
+  (developers.google.com/ml-kit/android-data-disclosure, last modified
+  2025-05-14): for **bundled** features ML Kit collects device information,
+  application information, **per-installation identifiers that are not
+  intended to uniquely identify a user or physical device**, performance
+  metrics, API configuration, feature input/output size, feature version,
+  event type and error codes, "used for diagnostics and usage analytics",
+  encrypted in transit, **not transferred to third parties**. (Only *thin*
+  features send a device identifier; pose detection and the scanner's
+  model are bundled.)
+- ML Kit "Prepare for Apple's App Store data disclosure requirements"
+  (developers.google.com/ml-kit/ios-data-disclosure): the same list for all
+  iOS features, with per-installation identifiers.
+- Apple "App privacy details" (developer.apple.com/app-store/app-privacy-details/):
+  *Device ID* is "the device's advertising identifier, or other
+  device-level ID"; *Performance Data* is "launch time, hang rate, or energy
+  use"; *Other Diagnostic Data* is "any other data collected for the purposes
+  of measuring technical diagnostics related to the app".
+
+What changes in the forms:
+- **Google Play:** no new data type. *App info and performance →
+  Diagnostics* and *Device or other IDs* are already declared (collected,
+  not shared, purpose Analytics); ML Kit is one more source. *Photos and
+  videos* stay **not collected**: the camera image is processed only on the
+  device, which Google's form doesn't count as collection.
+- **Apple:** add **Diagnostics → Other Diagnostic Data** (not linked,
+  Analytics) for ML Kit's event types, API configuration and error codes;
+  add **Analytics** as a purpose of **Performance Data** (ML Kit's latency).
+  ML Kit's per-installation id is not a device-level id by Apple's
+  definition; it is still listed under the **Device ID** row we already
+  declare (not linked, Analytics), which is the safer reading. Camera and
+  body data: nothing to declare (not collected).
+- **iOS today:** the ML Kit model bundles are not set up on iOS yet, so the
+  iOS app never calls ML Kit; the answers above are given now so they are
+  right when it does.
 
 ## Captain dashboard (web, managers only)
 The captain dashboard (`dashboard/`, https://azmm-dash.pages.dev) is a website
@@ -73,11 +120,14 @@ processing on our behalf).
 | Device or other IDs → **Device or other IDs** | yes | no | no | required | Analytics, Fraud prevention, security, and compliance |
 
 Notes for the form:
-- "Device or other IDs" covers the PostHog anonymous id (analytics) and the
-  install id (sign-in, security). Both are random ids made by the app, not
-  hardware ids.
+- "Device or other IDs" covers the PostHog anonymous id (analytics), the
+  install id (sign-in, security) and ML Kit's per-installation id
+  (diagnostics). All are random ids, not hardware ids.
+- "Diagnostics" covers Sentry's performance traces and ML Kit's usage
+  metrics (Move games, the QR scanner on Android).
 - Not declared, because the app doesn't collect them: location, contacts,
-  photos/videos (the camera image never leaves the phone), audio, files,
+  photos/videos (the camera image never leaves the phone: QR scanner and
+  Move games), audio (the microphone is never used), files,
   messages, financial info, web history, installed apps.
 - **Owner's decision (recorded 2026-11-03, unchanged):** IP addresses seen by
   Cloudinary and YouTube while serving a download are not declared. We don't
@@ -112,11 +162,12 @@ Notes for the form:
 
 | Type | Purposes |
 |---|---|
-| Identifiers → **Device ID** (PostHog anonymous id) | Analytics |
+| Identifiers → **Device ID** (PostHog anonymous id; ML Kit's per-installation id) | Analytics |
 | Usage Data → **Product Interaction** | Analytics |
 | Search History → **Search History** (picture search words) | App Functionality |
 | Diagnostics → **Crash Data** | App Functionality |
-| Diagnostics → **Performance Data** | App Functionality |
+| Diagnostics → **Performance Data** (Sentry; ML Kit latency) | App Functionality, Analytics |
+| Diagnostics → **Other Diagnostic Data** (ML Kit event types, API configuration, error codes) | Analytics |
 | Other Data → **Other Data Types** (hashed network address of failed join attempts; Turnstile bot check) | App Functionality (fraud and abuse prevention) |
 
 - **Privacy Policy URL:** `https://azmm.pages.dev/privacy.html`

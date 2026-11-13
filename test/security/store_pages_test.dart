@@ -19,13 +19,12 @@ void main() {
   }
 
   test('every page carries its last change date, in both languages', () {
-    // The privacy policy last changed 2026-11-04 (solo picture search, the
-    // rest sound on screen); it must equal ConsentStore.current, so a change
-    // asks members to agree again. The terms: 2026-11-03 (YouTube's Terms of
-    // Service, YouTube Developer Policies III.A).
+    // The privacy policy last changed 2026-11-13 (Move games: the camera and
+    // Google ML Kit); it must equal ConsentStore.current, so a change asks
+    // members to agree again. The terms: 2026-11-13 (training safely).
     for (final (name, date) in [
-      ('privacy.html', '2026-11-04'),
-      ('terms.html', '2026-11-03'),
+      ('privacy.html', '2026-11-13'),
+      ('terms.html', '2026-11-13'),
     ]) {
       expect(RegExp(date).allMatches(page(name)).length, 2, reason: name);
     }
@@ -112,6 +111,47 @@ void main() {
       }
     });
 
+    test('Move games: the camera stays on the phone, ML Kit is named', () {
+      // docs/designs/move_games.md §11; store/privacy_forms.md.
+      final en = section(html, 'en');
+      for (final phrase in [
+        'Move games (camera)',
+        'front camera to count your reps',
+        'never recorded, saved or sent',
+        'neither are the body positions',
+        'Only the number of reps you choose to save is kept',
+        'after you tap "Start camera"',
+        'count by hand',
+        'the microphone is never used',
+        'Google ML Kit',
+        'a random identifier for this installation',
+        'never sends the image',
+        'the QR scanner uses ML Kit',
+        'https://developers.google.com/ml-kit/terms',
+        'never images, body positions',
+      ]) {
+        expect(en, contains(phrase), reason: phrase);
+      }
+      final ar = section(html, 'ar');
+      for (final phrase in [
+        'ألعاب الحركة (الكاميرا)',
+        'لعدّ تكراراتك',
+        'لا تُسجَّل ولا تُحفظ ولا تُرسل أبداً',
+        'وكذلك أوضاع الجسم',
+        'لا يُحفظ إلا عدد التكرارات',
+        '«شغّل الكاميرا»',
+        'العدّ يدوياً',
+        'لا يُستخدم الميكروفون',
+        'Google ML Kit',
+        'معرّفاً عشوائياً لهذا التثبيت',
+        'لا يرسل أبداً الصورة',
+        'ماسح رمز QR',
+        'https://developers.google.com/ml-kit/terms',
+      ]) {
+        expect(ar, contains(phrase), reason: phrase);
+      }
+    });
+
     test('the two languages list the same number of items', () {
       for (final tag in ['<h2>', '<li>']) {
         expect(
@@ -141,6 +181,19 @@ void main() {
       expect(section(html, 'ar'), contains('حسابات الجيم'));
       expect(section(html, 'ar'), contains('7 أيام'));
       expect(section(html, 'ar'), contains('18 عاماً'));
+    });
+
+    test('both languages say how to train safely', () {
+      final en = section(html, 'en');
+      expect(en, contains('Training safely'));
+      expect(en, contains('not medical advice'));
+      expect(en, contains('stop if anything hurts'));
+      expect(en, contains('Move games'));
+      final ar = section(html, 'ar');
+      expect(ar, contains('التمرين بأمان'));
+      expect(ar, contains('ليس نصيحة طبية'));
+      expect(ar, contains('توقّف إذا شعرت بأي ألم'));
+      expect(ar, contains('ألعاب الحركة'));
     });
   });
 
@@ -187,6 +240,8 @@ void main() {
           // Plain links that YouTube's Developer Policies require.
           'https://policies.google.com',
           'https://www.youtube.com',
+          // A plain link to the ML Kit terms (Move games, the QR scanner).
+          'https://developers.google.com',
         }),
         isEmpty,
         reason: name,

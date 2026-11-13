@@ -757,6 +757,24 @@ PR 3 (2026-11-12):
 - "Slow down" and "go lower" are notices above the tower for 2.5 s; they
   take the place of a form hint while shown (one message at a time).
 
+PR 4 (2026-11-13):
+- The privacy text is the §11 text, with the Arabic in the page's formal
+  Arabic, and adds: the microphone is never used (the game's sounds are
+  made on the phone), what ML Kit's data is used for (diagnostics, not
+  shared with third parties, per Google), a link to the ML Kit terms, and
+  that Move analytics are ranges only. The Camera bullet under "Gym
+  accounts" stays and points to the new section.
+- **Apple Device ID (the open question in §11):** Apple defines *Device ID*
+  as a device-level id; ML Kit's per-installation id isn't one. It is listed
+  under the *Device ID* row we already declare anyway (not linked,
+  Analytics), the safer reading. Apple also gets *Other Diagnostic Data*
+  and *Analytics* on *Performance Data*. Google Play needs no new type.
+- The **terms** got "Training safely" (not in the spec): not medical
+  advice, stop if anything hurts, phone stable and space clear, counts can
+  be wrong.
+- "Flag on for staging" is a PostHog setting, not code: the steps and the
+  checklist before prod are in `docs/release.md` → "Move games flags".
+
 ## Official docs checked (2026-11-12)
 - pub.dev API: `flame` 1.38.2 (2026-08-27, Flutter ≥ 3.41; 1.38.0 had
   breaking input-event changes only), `camera` 0.12.2 (2026-10-27, Flutter
@@ -798,6 +816,13 @@ PR 3 (2026-11-12):
   cache: `GameLoop`/`GameRenderBox` (a paused game still paints its last
   frame), `AudioContextConfig` (`respectSilence` would ask for audio focus
   on Android) and `audioplayers_android`'s manifest (no permissions).
+- **For PR 4 (2026-11-13):** ML Kit Android data disclosure (last modified
+  2025-05-14: bundled features send per-installation ids, not device ids;
+  not transferred to third parties), ML Kit iOS data disclosure, Apple App
+  privacy details (definitions of Device ID, Performance Data, Other
+  Diagnostic Data), the ML Kit terms page (link checked). `mobile_scanner`
+  7.5.0's Gradle file: bundled ML Kit barcode model unless
+  `useUnbundled` is set (it isn't).
 - **Not re-read in this session, to read before the PR that uses them:**
   Apple's `NSCameraUsageDescription` page (the page didn't load its text;
   App Review 5.1.1(ii) on purpose strings), the `camera` plugin's image

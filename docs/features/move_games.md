@@ -42,8 +42,22 @@ camera leaves the phone; only the reps the member chooses to save are kept.
   tones, with a mute button in the round's bar (remembered).
 - Not in the manual counter (a tap counter would reward tapping).
 
-Next: PR 4 (privacy page, store forms, flag on for staging), then iOS
-model set-up.
+**PR 4 (store side, nothing new in the app's screens):**
+- The **privacy policy** has a "Move games (camera)" section (English and
+  Arabic): the camera image and body positions never leave the phone, only
+  saved reps are kept, the microphone is never used, and **Google ML Kit**
+  sends Google technical usage data (named, with what it is). The QR
+  scanner's use of ML Kit on Android is disclosed in the same place. Dated
+  2026-11-13, so every member is asked to agree again.
+- The **terms** have "Training safely" (not medical advice, stop if
+  anything hurts, a stable phone and a clear space for Move games).
+- **Store forms** (`store/privacy_forms.md`): ML Kit added to the
+  inventory and to both forms, with the sources.
+- **Rollout** steps for both flags in `docs/release.md` → "Move games
+  flags": staging first, and what must be done before prod.
+
+Next: turn the flags on for staging (PostHog), measure phones, iOS model
+set-up, real recordings.
 
 ## User flows
 **Camera round:** Today → *Move* card (or menu → *Move · rep games*) →
@@ -273,6 +287,10 @@ buckets (`MoveAnalytics`). The pose check sends none.
   the camera goes off before the listeners are dropped.
 - Only ML Kit's **base** model ships; the accurate one is excluded in
   Gradle (R8 is told its classes are missing on purpose).
+- **Privacy (PR 4):** the Arabic privacy text is in the same formal Arabic
+  as the rest of the page, not the Egyptian draft in the spec. The QR
+  scanner on Android already sent ML Kit metrics (bundled barcode model in
+  `mobile_scanner`); the new section discloses both.
 - **Sounds** are ours: plain tones made by `scripts/move_sounds.py`
   (no samples), released as **CC0 1.0**; the script makes the same files
   every time. Decision 6 of the spec.

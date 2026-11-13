@@ -30,7 +30,7 @@
   <article class="doc">
     <div data-lang="en">
       <h1>Privacy Policy</h1>
-      <p class="updated">Last updated: 2026-11-04</p>
+      <p class="updated">Last updated: 2026-11-13</p>
       <p>This policy explains what information <strong>Azm</strong> ("the app"), published by Mohager, collects, why, and the choices you have.</p>
       <h2>Information we collect</h2>
       <ul>
@@ -47,6 +47,7 @@
         <li><strong>Sentry</strong> — crash reports and performance diagnostics (device model, OS version, app version, error details).</li>
         <li><strong>Cloudinary</strong> — serves the exercise pictures your gym chose.</li>
         <li><strong>YouTube (Google)</strong> — plays the exercises' how-to videos.</li>
+        <li><strong>Google ML Kit</strong> — finds body positions in Move games and, on Android, reads the gym's QR code. It runs on your phone; see Move games below for the technical data it sends Google.</li>
       </ul>
       <p><strong>YouTube videos.</strong> The app uses YouTube API Services. When you open an exercise that has a video, the app asks YouTube for the video's title and channel and loads its thumbnail; this sends your device's IP address to Google, before you press play. When you press play, the video plays in YouTube's own player (in its privacy-enhanced mode), and YouTube processes the viewing under Google's rules. We send YouTube no account, name or other personal information, and we receive nothing about you from it. The title and thumbnail are kept on your phone so the card shows offline. See the <a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google Privacy Policy</a> and the <a href="https://www.youtube.com/t/terms" rel="noopener noreferrer">YouTube Terms of Service</a>.</p>
       <p>Pictures you choose yourself. When you train on your own (no gym), you can pick an exercise's pictures from the same library. To find them, the words you type in the picture search (an exercise or muscle name) are sent to our backend (Supabase) and matched against the library; we don't keep them with your account or use them for anything else. The pictures you choose are kept only on your phone.</p>
@@ -68,7 +69,7 @@
         <li><strong>What your gym sees.</strong> The gym's owner and captains see the display name they gave you, your role and permissions, and the workouts you log <em>in that gym</em> while you are an active member. They can change your plan. They cannot see workouts you logged on your own or in another gym.</li>
         <li><strong>Progress your captain sees.</strong> From the workouts you log in a gym, the gym's owner and captains also see what is worked out from them: how many workouts you did each week, how long they took, how many sets you did against your plan, which planned exercises you skipped, your personal records and the weight you lifted over time, and your level and streak. It is calculated from the same workouts, is shown only for as long as you are an active member, and is never calculated from workouts you log on your own. The app tells you this when you join.</li>
         <li><strong>Sign-in without email.</strong> A trainee account has no password, email or phone number. It is identified by a random account id and a random install id kept on your phone (not a device identifier). You can add an email in the app to make it easier to recover your account.</li>
-        <li><strong>Camera.</strong> The camera is used on your phone only, to read the gym's QR code. Images are not recorded, stored or sent. You can type the code instead.</li>
+        <li><strong>Camera.</strong> The camera is used on your phone only, to read the gym's QR code. Images are not recorded, stored or sent. You can type the code instead. Move games also use the camera: see below.</li>
         <li><strong>Invite codes.</strong> A code is stored only as a one-way hash, works once, and expires after 7 days.</li>
         <li><strong>Failed attempts.</strong> To stop code guessing we keep failed join attempts with a hashed network address for 30 days, then delete them.</li>
         <li><strong>Adding your solo history.</strong> You choose whether to copy the workouts and plan already on your phone to your account. If you do, they are not visible to any gym.</li>
@@ -78,6 +79,10 @@
       <p>Gym owners and captains can also sign in to the captain dashboard, a web page at a separate address from this site. To sign in they give their <strong>email address</strong>. It is used only to send a one-time sign-in code and to keep them signed in. It is not shown to trainees. The sign-in is stored in the browser they use, and "sign out" removes it from that browser. The dashboard has no analytics and sets no advertising or tracking cookies. It uses Supabase (sign-in and the email with the code) and Cloudflare (hosting, and Turnstile, which may check that a sign-in request comes from a person, as it does when joining a gym). Data about trainees that managers see there is the same data described under Gym accounts above.</p>
       <h2>Notifications</h2>
       <p>The rest timer tells you when a rest is over: with a sound when the app is on screen, and with a notification while your phone is locked. Both are made on your device only: its content (the exercise and set number) is never sent anywhere, and no push token is created. The app asks for permission at your first rest, not at launch; on Android 14 and later it may also ask you to turn on "Alarms &amp; reminders" so it rings on time. You can turn notifications off at any time in your phone's settings.</p>
+      <h2>Move games (camera)</h2>
+      <p>Move games use your phone's front camera to count your reps. The camera image is analysed on your phone, frame by frame, and thrown away at once: it is never recorded, saved or sent, and neither are the body positions worked out from it. Only the number of reps you choose to save is kept, like any set you log. The camera is used only while a Move game is open, after you tap "Start camera", and you can always count by hand instead. The game's sounds are made on your phone; the microphone is never used.</p>
+      <p>The body-position detection is <strong>Google ML Kit</strong>, which runs on your phone. ML Kit sends Google technical usage data: device model and operating system, app version, a random identifier for this installation (not a device identifier), speed, settings such as the image size, event types and error codes. It never sends the image or what it found in it. Google uses this data for diagnostics and usage analytics and does not share it with third parties. On Android, the QR scanner uses ML Kit in the same way. See the <a href="https://developers.google.com/ml-kit/terms" rel="noopener noreferrer">ML Kit terms</a> and the <a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google Privacy Policy</a>.</p>
+      <p>Analytics for Move games record only counts in ranges (for example "6 to 10 reps"), never images, body positions or anything that identifies you.</p>
       <h2>Retention and deletion</h2>
       <p>We keep personal data only as long as your account is active or as needed to provide the app. You can delete your account and its data at any time, in the app (Profile → Delete account) or by request — see <a href="delete-account.html">Delete your account</a>.</p>
       <h2>Children</h2>
@@ -91,7 +96,7 @@
     </div>
     <div data-lang="ar">
       <h1>سياسة الخصوصية</h1>
-      <p class="updated">آخر تحديث: 2026-11-04</p>
+      <p class="updated">آخر تحديث: 2026-11-13</p>
       <p>توضح هذه السياسة المعلومات التي يجمعها تطبيق <strong>Azm</strong> ("التطبيق") الذي تنشره Mohager، وسبب جمعها، والخيارات المتاحة لك.</p>
       <h2>المعلومات التي نجمعها</h2>
       <ul>
@@ -108,6 +113,7 @@
         <li><strong>Sentry</strong> — تقارير الأعطال وأداء التطبيق (نوع الجهاز، إصدار النظام، إصدار التطبيق، تفاصيل الخطأ).</li>
         <li><strong>Cloudinary</strong> — تقديم صور التمارين التي اختارها الجيم الخاص بك.</li>
         <li><strong>YouTube (Google)</strong> — تشغيل فيديوهات شرح التمارين.</li>
+        <li><strong>Google ML Kit</strong> — التعرّف على وضع الجسم في ألعاب الحركة، وقراءة رمز QR الخاص بالجيم على أندرويد. يعمل على هاتفك؛ راجع «ألعاب الحركة» أدناه لمعرفة البيانات التقنية التي يرسلها إلى Google.</li>
       </ul>
       <p><strong>فيديوهات YouTube.</strong> يستخدم التطبيق خدمات YouTube API. عند فتح تمرين له فيديو، يطلب التطبيق من YouTube عنوان الفيديو واسم القناة ويحمّل الصورة المصغّرة، وهذا يُرسل عنوان IP الخاص بجهازك إلى Google قبل أن تضغط تشغيل. عند الضغط على تشغيل يعمل الفيديو داخل مشغّل YouTube نفسه (في وضع الخصوصية المحسّن)، وتعالج YouTube المشاهدة وفق قواعد Google. لا نرسل إلى YouTube أي حساب أو اسم أو معلومات شخصية أخرى، ولا نتلقى منها أي شيء عنك. يُحفظ العنوان والصورة المصغّرة على هاتفك ليظهر الفيديو بدون إنترنت. راجع <a href="https://policies.google.com/privacy" rel="noopener noreferrer">سياسة خصوصية Google</a> و<a href="https://www.youtube.com/t/terms" rel="noopener noreferrer">شروط خدمة YouTube</a>.</p>
       <p>الصور التي تختارها بنفسك. عندما تتمرن وحدك (بدون جيم)، يمكنك اختيار صور التمرين من المكتبة نفسها. للعثور عليها، تُرسل الكلمات التي تكتبها في البحث عن الصور (اسم تمرين أو عضلة) إلى خادمنا (Supabase) لمطابقتها مع المكتبة؛ ولا نحفظها مع حسابك ولا نستخدمها لأي غرض آخر. تُحفظ الصور التي تختارها على هاتفك فقط.</p>
@@ -129,7 +135,7 @@
         <li><strong>ما الذي يراه جيمك.</strong> يرى مالك الجيم والكباتن الاسم الذي أعطوه لك، ودورك وصلاحياتك، والتمارين التي تسجلها <em>داخل ذلك الجيم</em> طالما أنت عضو نشط فيه. ويمكنهم تعديل خطتك. ولا يرون التمارين التي سجلتها وحدك أو في جيم آخر.</li>
         <li><strong>تقدّمك الذي يراه الكابتن.</strong> من التمارين التي تسجلها داخل الجيم، يرى مالك الجيم والكباتن أيضاً ما يُحسب منها: عدد تمارينك كل أسبوع، ومدتها، وعدد المجموعات التي أنجزتها مقارنةً بخطتك، والتمارين المخططة التي تخطيتها، وأرقامك القياسية والأوزان التي رفعتها عبر الوقت، ومستواك وسلسلة أسابيعك. يُحسب من نفس التمارين، ويظهر طالما أنت عضو نشط فقط، ولا يُحسب أبداً من تمارين سجلتها وحدك. ويخبرك التطبيق بذلك عند انضمامك.</li>
         <li><strong>الدخول بدون بريد إلكتروني.</strong> حساب المتدرّب ليس له كلمة مرور ولا بريد ولا رقم هاتف. يُعرَّف برقم حساب عشوائي ورقم تثبيت عشوائي محفوظ على هاتفك (ليس معرّفاً للجهاز). يمكنك إضافة بريد إلكتروني من التطبيق ليسهل استرجاع حسابك.</li>
-        <li><strong>الكاميرا.</strong> تُستخدم الكاميرا على هاتفك فقط لقراءة رمز QR الخاص بالجيم. لا تُسجَّل الصور ولا تُحفظ ولا تُرسل. يمكنك كتابة الكود بدلاً من ذلك.</li>
+        <li><strong>الكاميرا.</strong> تُستخدم الكاميرا على هاتفك فقط لقراءة رمز QR الخاص بالجيم. لا تُسجَّل الصور ولا تُحفظ ولا تُرسل. يمكنك كتابة الكود بدلاً من ذلك. تستخدم ألعاب الحركة الكاميرا أيضاً: انظر أدناه.</li>
         <li><strong>أكواد الدعوة.</strong> يُخزَّن الكود على شكل بصمة (hash) أحادية الاتجاه فقط، ويعمل مرة واحدة، وتنتهي صلاحيته بعد 7 أيام.</li>
         <li><strong>المحاولات الفاشلة.</strong> لمنع تخمين الأكواد نحتفظ بمحاولات الانضمام الفاشلة مع بصمة (hash) لعنوان الشبكة لمدة 30 يوماً ثم نحذفها.</li>
         <li><strong>إضافة تاريخك الفردي.</strong> أنت تختار هل تُنسخ التمارين والخطة الموجودة على هاتفك إلى حسابك. وإن فعلت فلا يراها أي جيم.</li>
@@ -139,6 +145,10 @@
       <p>يمكن لمالكي الجيمات والكباتن أيضاً تسجيل الدخول إلى لوحة الكابتن، وهي صفحة ويب بعنوان منفصل عن هذا الموقع. للدخول يقدّمون <strong>بريدهم الإلكتروني</strong>. يُستخدم فقط لإرسال كود دخول يعمل مرة واحدة ولإبقائهم مسجّلين الدخول. ولا يظهر للمتدرّبين. يُحفظ الدخول في المتصفح الذي يستخدمونه، و«تسجيل الخروج» يزيله من ذلك المتصفح. لا توجد في اللوحة تحليلات ولا ملفات تعريف ارتباط للإعلانات أو التتبع. تستخدم اللوحة Supabase (الدخول والبريد الذي يحمل الكود) وCloudflare (الاستضافة، وTurnstile الذي قد يتحقق من أن طلب الدخول صادر من شخص، كما يحدث عند الانضمام إلى جيم). وبيانات المتدرّبين التي يراها المديرون هناك هي نفسها الموضحة في «حسابات الجيم» أعلاه.</p>
       <h2>الإشعارات</h2>
       <p>ينبهك مؤقت الراحة عند انتهاء الراحة: بصوت والتطبيق مفتوح أمامك، وبإشعار وهاتفك مقفول. يحدث الاثنان على جهازك فقط: محتواه (اسم التمرين ورقم المجموعة) لا يُرسل إلى أي مكان، ولا يُنشأ أي رمز للإشعارات عن بُعد. يطلب التطبيق الإذن عند أول راحة لك، وليس عند فتحه؛ وعلى أندرويد 14 وما بعده قد يطلب منك أيضاً تفعيل «المنبّهات والتذكيرات» ليرنّ في الوقت المحدد. يمكنك إيقاف الإشعارات في أي وقت من إعدادات هاتفك.</p>
+      <h2>ألعاب الحركة (الكاميرا)</h2>
+      <p>تستخدم ألعاب الحركة الكاميرا الأمامية في هاتفك لعدّ تكراراتك. تُحلَّل صورة الكاميرا على هاتفك صورةً بصورة وتُحذف في الحال: لا تُسجَّل ولا تُحفظ ولا تُرسل أبداً، وكذلك أوضاع الجسم المستنتجة منها. لا يُحفظ إلا عدد التكرارات الذي تختار حفظه، مثل أي مجموعة تسجّلها. لا تعمل الكاميرا إلا أثناء فتح لعبة حركة وبعد أن تضغط «شغّل الكاميرا»، ويمكنك دائماً العدّ يدوياً بدلاً منها. أصوات اللعبة تُشغَّل على هاتفك؛ ولا يُستخدم الميكروفون أبداً.</p>
+      <p>يتم التعرّف على وضع الجسم بواسطة <strong>Google ML Kit</strong> الذي يعمل على هاتفك. يرسل ML Kit إلى Google بيانات استخدام تقنية: طراز الجهاز ونظام التشغيل، وإصدار التطبيق، ومعرّفاً عشوائياً لهذا التثبيت (وليس معرّفاً للجهاز)، والسرعة، والإعدادات مثل حجم الصورة، وأنواع الأحداث ورموز الأخطاء. ولا يرسل أبداً الصورة أو ما وجده فيها. تستخدم Google هذه البيانات للتشخيص وتحليلات الاستخدام ولا تشاركها مع أطراف ثالثة. على أندرويد، يستخدم ماسح رمز QR خدمة ML Kit بالطريقة نفسها. راجع <a href="https://developers.google.com/ml-kit/terms" rel="noopener noreferrer">شروط ML Kit</a> و<a href="https://policies.google.com/privacy" rel="noopener noreferrer">سياسة خصوصية Google</a>.</p>
+      <p>لا تسجّل تحليلات ألعاب الحركة إلا أعداداً ضمن نطاقات (مثل «من 6 إلى 10 تكرارات»)، ولا تسجّل أبداً صوراً أو أوضاع الجسم أو أي شيء يحدد هويتك.</p>
       <h2>مدة الاحتفاظ والحذف</h2>
       <p>نحتفظ بالبيانات الشخصية طالما كان حسابك نشطاً أو بالقدر اللازم لتقديم التطبيق. يمكنك حذف حسابك وبياناته في أي وقت، من التطبيق (حسابي ← حذف الحساب) أو بطلب — راجع <a href="delete-account.html">حذف الحساب</a>.</p>
       <h2>الأطفال</h2>

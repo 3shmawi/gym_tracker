@@ -22,7 +22,7 @@ abstract interface class ConsentStore {
   Future<void> accept(String version);
 
   /// The policies' "Last updated" date; agreeing to an older one asks again.
-  static const current = '2026-11-04';
+  static const current = '2026-11-13';
 }
 
 /// On the phone (shared preferences).
