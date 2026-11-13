@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "about": "Real push-up sets for Move games, as pose recordings (joints and times only, never images). Made with tool/pose_record/record.py from the owner's own videos; the videos are never committed. Each entry is the count a person counted on the video.",
+  "recordings": []
+}

@@ -775,6 +775,17 @@ PR 4 (2026-11-13):
 - "Flag on for staging" is a PostHog setting, not code: the steps and the
   checklist before prod are in `docs/release.md` → "Move games flags".
 
+Recordings (2026-11-13):
+- Recordings are made on the owner's computer with MediaPipe Pose
+  Landmarker *lite* (`tool/pose_record/record.py`), not by the app: same
+  BlazePose model family and landmark numbering as ML Kit's base model,
+  sampled at 15 frames/s like the app. A later check on a phone (the pose
+  check) can confirm the counts match ML Kit's.
+- `test/fixtures/move/push_ups/manifest.json` lists each set with the
+  count a person counted; `recordings_test.dart` replays them through the
+  real detector. Until the owner's videos arrive the list is empty and that
+  test is skipped (the synthetic sets still run).
+
 ## Official docs checked (2026-11-12)
 - pub.dev API: `flame` 1.38.2 (2026-08-27, Flutter ≥ 3.41; 1.38.0 had
   breaking input-event changes only), `camera` 0.12.2 (2026-10-27, Flutter
@@ -823,6 +834,12 @@ PR 4 (2026-11-13):
   Diagnostic Data), the ML Kit terms page (link checked). `mobile_scanner`
   7.5.0's Gradle file: bundled ML Kit barcode model unless
   `useUnbundled` is set (it isn't).
+- **For the recordings tool (2026-11-13):** PyPI `mediapipe` 1.2.3 (Apache
+  2.0, latest; OSV: none), its Pose Landmarker Python API (`VIDEO` running
+  mode, `detect_for_video` with millisecond timestamps, `pose_landmarks`
+  with `visibility`), the model files on storage.googleapis.com
+  (`pose_landmarker_lite/float16/1` = `latest`, SHA-256 pinned), OpenCV 5's
+  `CAP_PROP_ORIENTATION_AUTO` (phone videos' rotation tag).
 - **Not re-read in this session, to read before the PR that uses them:**
   Apple's `NSCameraUsageDescription` page (the page didn't load its text;
   App Review 5.1.1(ii) on purpose strings), the `camera` plugin's image
