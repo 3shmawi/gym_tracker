@@ -566,6 +566,16 @@ Spec: `docs/designs/move_games.md` §11. Checked in the built release APK
   both store forms. Camera images and body positions are "never leaves the
   phone".
 
+### Move games: the spoken count (PR 5)
+- `flutter_tts` 4.2.5 (pinned, OSV clean 2026-11-13). Android: no
+  permission, one `<queries>` intent for `TTS_SERVICE` (package visibility
+  for the speech engine), checked by `platform_config_test.dart`.
+- Only offline voices: `pickVoice` refuses voices with
+  `network_required = 1` or `notInstalled`, so the spoken text never leaves
+  the phone. The text is only ever a number from 0 to 999.
+- Android: `speak` without `focus`, so no audio focus is taken. iOS: the
+  ambient audio category, like the game's tones.
+
 ## If a key leaks (log, chat, commit)
 1. **Revoke or rotate it first**, then clean up. Logs can be copied in the
    minutes they are public.

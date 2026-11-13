@@ -8,6 +8,7 @@ import 'package:gym_tracker/core/camera/camera_preview_source.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/core/screen_awake/screen_awake.dart';
 import 'package:gym_tracker/features/move/domain/detectors/rep_detector.dart';
+import 'package:gym_tracker/features/move/domain/entities/move_sound_mode.dart';
 import 'package:gym_tracker/features/move/domain/entities/pose_frame.dart';
 import 'package:gym_tracker/features/move/domain/entities/rep_event.dart';
 import 'package:gym_tracker/features/move/domain/entities/rep_state.dart';
@@ -15,6 +16,7 @@ import 'package:gym_tracker/features/move/domain/entities/round.dart';
 import 'package:gym_tracker/features/move/domain/games/game_rules.dart';
 import 'package:gym_tracker/features/move/domain/move_exercises.dart';
 import 'package:gym_tracker/features/move/domain/repositories/move_sounds.dart';
+import 'package:gym_tracker/features/move/domain/repositories/move_voice.dart';
 import 'package:gym_tracker/features/move/domain/repositories/pose_source.dart';
 import 'package:gym_tracker/features/move/domain/usecases/placement.dart';
 import 'package:gym_tracker/features/move/presentation/move_check_controller.dart';
@@ -51,7 +53,8 @@ class CameraRoundState {
     this.cameraOn = false,
     this.outcome,
     this.game,
-    this.soundOn = true,
+    this.sound = MoveSoundMode.fallback,
+    this.voiceReady = false,
   });
 
   final CameraStage stage;
@@ -74,8 +77,14 @@ class CameraRoundState {
   /// The game the reps build (null until the controller starts it).
   final GameState? game;
 
-  /// The game's sounds are on (the member can mute them).
-  final bool soundOn;
+  /// The sound the member chose (the button cycles it).
+  final MoveSoundMode sound;
+
+  /// The phone has a voice for the app's language (else tones play).
+  final bool voiceReady;
+
+  /// What actually plays now.
+  MoveSoundMode get playing => sound.effective(voiceAvailable: voiceReady);
 
   CameraRoundState copyWith({
     CameraStage? stage,
@@ -89,7 +98,8 @@ class CameraRoundState {
     bool? cameraOn,
     RoundOutcome? outcome,
     GameState? game,
-    bool? soundOn,
+    MoveSoundMode? sound,
+    bool? voiceReady,
   }) => CameraRoundState(
     stage: stage ?? this.stage,
     trouble: trouble ?? this.trouble,
@@ -102,7 +112,8 @@ class CameraRoundState {
     cameraOn: cameraOn ?? this.cameraOn,
     outcome: outcome ?? this.outcome,
     game: game ?? this.game,
-    soundOn: soundOn ?? this.soundOn,
+    sound: sound ?? this.sound,
+    voiceReady: voiceReady ?? this.voiceReady,
   );
 }
 
@@ -149,15 +160,20 @@ class CameraRoundController extends Notifier<CameraRoundState>
   late ScreenAwake _awake;
   late GameRules<GameState> _rules;
   late MoveSounds _sounds;
+  late MoveVoice _voice;
+  String _language = 'en';
+  bool _voiceAsked = false;
 
   @override
   CameraRoundState build() {
     _awake = ref.read(screenAwakeProvider);
     _rules = MoveExercises.gameFor(launch.exercise);
     final sounds = _sounds = ref.read(moveSoundsFactoryProvider)();
+    final voice = _voice = ref.read(moveVoiceFactoryProvider)();
     ref.onDispose(() {
       unawaited(_release());
       unawaited(sounds.dispose());
+      unawaited(voice.dispose());
     });
     return CameraRoundState(
       round: RoundState(
@@ -169,30 +185,51 @@ class CameraRoundController extends Notifier<CameraRoundState>
     );
   }
 
-  /// Mutes or unmutes the game (kept for the next rounds).
-  Future<void> toggleSound() async {
-    final on = !state.soundOn;
-    state = state.copyWith(soundOn: on);
-    if (on) unawaited(_sounds.load());
-    await ref.read(moveLocalRepositoryProvider).setSoundOn(on: on);
+  /// The sound button: count out loud → tones → off (kept for the next
+  /// rounds).
+  Future<void> cycleSound() async {
+    // From what plays (the button shows that), not from what was chosen:
+    // without a voice, "voice" plays tones and the next tap must turn off.
+    final next = state.playing.next(voiceAvailable: state.voiceReady);
+    state = state.copyWith(sound: next);
+    _readySounds();
+    await ref.read(moveLocalRepositoryProvider).setSoundMode(next);
+  }
+
+  /// Loads the tones when they may play (also the voice's fallback).
+  void _readySounds() {
+    if (state.playing == MoveSoundMode.tones) unawaited(_sounds.load());
+  }
+
+  /// Asks once whether the phone can speak [_language].
+  Future<void> _prepareVoice() async {
+    if (_voiceAsked) return;
+    _voiceAsked = true;
+    final ready = await _voice.prepare(_language);
+    if (!ref.mounted) return;
+    state = state.copyWith(voiceReady: ready);
+    _readySounds();
   }
 
   /// Starts (or restarts) the camera. The screen calls it once it opens:
-  /// only the app can open that screen, after the member's tap.
-  Future<void> start() async {
+  /// only the app can open that screen, after the member's tap. [language]
+  /// is the app's ("ar", "en"), for the spoken count.
+  Future<void> start({String? language}) async {
+    if (language != null) _language = language;
     if (_source != null || state.round.phase == RoundPhase.finished) return;
     final local = ref.read(moveLocalRepositoryProvider);
     final allowedBefore = switch (await local.cameraAllowedBefore()) {
       Success(:final value) => value,
       Failed() => false,
     };
-    final soundOn = switch (await local.soundOn()) {
+    final sound = switch (await local.soundMode()) {
       Success(:final value) => value,
-      Failed() => true,
+      Failed() => MoveSoundMode.fallback,
     };
     if (!ref.mounted || _source != null) return;
-    state = state.copyWith(soundOn: soundOn);
-    if (soundOn) unawaited(_sounds.load());
+    state = state.copyWith(sound: sound);
+    _readySounds();
+    if (sound != MoveSoundMode.off) unawaited(_prepareVoice());
     final source = ref.read(poseSourceFactoryProvider)();
     _source = source;
     _detector ??= MoveExercises.detectorFor(launch.exercise);
@@ -270,7 +307,7 @@ class CameraRoundController extends Notifier<CameraRoundState>
             stage: CameraStage.live,
             round: next.round.startCountdown(now),
           );
-          reportStarted(next.round);
+          reportStarted(next.round, sound: state.playing);
         }
       case CameraStage.live:
         var round = next.round;
@@ -281,7 +318,7 @@ class CameraRoundController extends Notifier<CameraRoundState>
           if (round.phase == RoundPhase.running) {
             final before = game.last?.seq;
             game = _rules.onEvent(game, e, now);
-            if (game.last?.seq != before) _sound(game.last);
+            if (game.last?.seq != before) _sound(game.last, round.reps + 1);
           }
           round = round.onEvent(e, now);
           // Back in the picture after a body-lost pause: 3-2-1 again.
@@ -299,10 +336,17 @@ class CameraRoundController extends Notifier<CameraRoundState>
     _afterRound();
   }
 
-  void _sound(GameMoment? moment) {
-    if (moment == null || !state.soundOn) return;
-    if (moment.kind != GameMomentKind.rep) return;
-    moment.milestone ? _sounds.milestone() : _sounds.rep();
+  /// A new block: [count] out loud, or a tone (another every fifth).
+  void _sound(GameMoment? moment, int count) {
+    if (moment == null || moment.kind != GameMomentKind.rep) return;
+    switch (state.playing) {
+      case MoveSoundMode.voice:
+        _voice.count(count);
+      case MoveSoundMode.tones:
+        moment.milestone ? _sounds.milestone() : _sounds.rep();
+      case MoveSoundMode.off:
+        break;
+    }
   }
 
   /// Called a few times a second by the screen: the clock, the end of a

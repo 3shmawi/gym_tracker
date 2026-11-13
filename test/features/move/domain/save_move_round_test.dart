@@ -3,6 +3,7 @@ import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/move/data/repositories/prefs_move_local_repository.dart';
 import 'package:gym_tracker/features/move/domain/entities/move_exercise.dart';
+import 'package:gym_tracker/features/move/domain/entities/move_sound_mode.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
 import 'package:gym_tracker/features/move/domain/usecases/save_move_round.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
@@ -142,14 +143,31 @@ void main() {
       expect((await local.cameraAllowedBefore() as Success).value, isTrue);
     });
 
-    test('sound is on until muted; odd stored values mean on', () async {
-      expect((await local.soundOn() as Success).value, isTrue);
-      await local.setSoundOn(on: false);
-      expect((await local.soundOn() as Success).value, isFalse);
-      await local.setSoundOn(on: true);
-      expect((await local.soundOn() as Success).value, isTrue);
+    test('the sound mode: count out loud by default, then as chosen', () async {
+      Future<MoveSoundMode> read(PrefsMoveLocalRepository r) async =>
+          (await r.soundMode() as Success<MoveSoundMode>).value;
+      expect(await read(local), MoveSoundMode.voice);
+      for (final mode in MoveSoundMode.values) {
+        await local.setSoundMode(mode);
+        expect(await read(local), mode);
+      }
+    });
 
-      for (final odd in <Object>['off', 0, 'false']) {
+    test('a round muted before the spoken count stays muted', () async {
+      SharedPreferences.setMockInitialValues({
+        PrefsMoveLocalRepository.legacySoundKey: false,
+      });
+      final old = PrefsMoveLocalRepository(
+        await SharedPreferences.getInstance(),
+      );
+      expect(
+        (await old.soundMode() as Success<MoveSoundMode>).value,
+        MoveSoundMode.off,
+      );
+    });
+
+    test('odd stored values fall back to the default', () async {
+      for (final odd in <Object>['loud', 0, true, '', 'VOICE']) {
         SharedPreferences.setMockInitialValues({
           PrefsMoveLocalRepository.soundKey: odd,
         });
@@ -157,8 +175,8 @@ void main() {
           await SharedPreferences.getInstance(),
         );
         expect(
-          (await hostile.soundOn() as Success).value,
-          isTrue,
+          (await hostile.soundMode() as Success<MoveSoundMode>).value,
+          MoveSoundMode.voice,
           reason: '$odd',
         );
       }
