@@ -194,6 +194,8 @@ void main() {
           'cloudinary.com',
           // YouTube's Terms of Service (YouTube Developer Policies III.A).
           'www.youtube.com',
+          // The ML Kit terms (Move games and the QR scanner, privacy policy).
+          'developers.google.com',
         };
         for (final file in files('website', ext: {'.html', '.js', '.css'})) {
           for (final m in linkPattern.allMatches(file.readAsStringSync())) {
