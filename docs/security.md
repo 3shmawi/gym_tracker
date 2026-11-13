@@ -566,6 +566,18 @@ Spec: `docs/designs/move_games.md` §11. Checked in the built release APK
   both store forms. Camera images and body positions are "never leaves the
   phone".
 
+### Move games: recordings from real videos
+- `tool/pose_record/record.py` runs on the owner's computer: it reads a
+  video locally and writes only 13 joints, times and confidences
+  (`PoseRecording` format). Nothing is uploaded; the video is never copied.
+- Pinned: `mediapipe==1.2.3` (`tool/pose_record/requirements.txt`, OSV
+  clean 2026-11-13) and the model by URL and SHA-256 (a mismatch deletes
+  the file and stops).
+- Videos can't be committed by mistake: `.gitignore` refuses
+  `*.mp4 *.mov *.m4v *.avi *.webm *.mkv`, and `recordings_test.dart`
+  fails on any non-JSON file in `test/fixtures/move/` or any key other
+  than joints and times.
+
 ### Move games on iOS: the ML Kit model files (2026-11-13)
 - iOS gets ML Kit through `d-date/google-mlkit-swiftpm` 9.0.2, a
   third-party Swift package that repackages Google's binaries (pinned

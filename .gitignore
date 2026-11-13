@@ -78,3 +78,13 @@ azm-invites/
 invites-*.pdf
 supabase/functions/.env
 supabase/functions/**/.env
+
+# Move games: videos are turned into pose recordings on the owner's computer
+# (tool/pose_record/); the videos themselves never go in the repo.
+*.mp4
+*.mov
+*.m4v
+*.avi
+*.webm
+*.mkv
+tool/pose_record/.venv/

@@ -195,12 +195,43 @@ synthetic sets, to be tuned on recordings (below).
 `PoseRecording` stores **joints and times only, never an image**:
 `{"version": 1, "aspect": 0.75, "frames": [{"t": ms, "j": {"leftShoulder":
 [x, y, likelihood], …}}]}`. Decoding never throws (bad frames are skipped,
-30,000 frames at most). Recorded fixtures from the owner's own videos go
-in `test/fixtures/move/push_ups/` with the count each should give; the
-videos themselves are never committed. Until then the detector is tested on
+30,000 frames at most).
+
+**Real sets (decision 9).** Until there are some, the detector is tested on
 synthetic sets (`test/features/move/helpers/synthetic_pose.dart`: side
 left/right and front, 8–30 fps, body size ×0.4–×1.4, noise, dropped
 frames, gaps, half and rushed reps, sagging hips).
+
+1. **Film** with the phone on the floor, as in the app (front camera or
+   any camera, portrait, 1.5–2 m away, the whole body in the picture). One
+   short set per video, and count the reps yourself:
+   | File | Set |
+   |---|---|
+   | `side_left_10.json` | 10 steady push-ups, left side to the phone |
+   | `side_right_10.json` | 10 steady push-ups, right side to the phone |
+   | `front_10.json` | 10 push-ups, head towards the phone |
+   | `half_reps.json` | 5 full + 5 half push-ups, mixed |
+   | `too_fast.json` | 5 steady + 5 very fast push-ups |
+   | `walk_away.json` | 5 push-ups, stand up, walk out of the picture, come back, 5 more |
+2. **Turn each video into a recording** on your computer (the video never
+   leaves it; only joints and times are written):
+   `python3 -m venv .venv && .venv/bin/pip install -r tool/pose_record/requirements.txt`, then
+   `.venv/bin/python tool/pose_record/record.py set.mp4 --out test/fixtures/move/push_ups/side_left_10.json`.
+   The tool uses MediaPipe Pose Landmarker *lite* (pinned by URL and
+   SHA-256), the same BlazePose family as ML Kit's base model, sampled at
+   15 frames/s like the app.
+3. **List it** in `test/fixtures/move/push_ups/manifest.json`:
+   `{"file": "side_left_10.json", "view": "side_left", "reps": 10}`, and for
+   the special sets `"half_reps": 5` or `"too_fast": 5`; `"tolerance": 1`
+   only if a count is honestly ambiguous on the video.
+4. `flutter test test/features/move/recordings_test.dart` replays each one
+   through `PushUpDetector`. A wrong count is a tuning job: change
+   `RepTuning` / `PushUpTuning`, never the expected number.
+
+Videos never go in the repo (`.gitignore` refuses video files; the test
+fails on any non-JSON file under `test/fixtures/move/` and on any key other
+than joints and times). The tool's own tests
+(`tool/pose_record/test_record.py`) run inside `recordings_test.dart`.
 
 ## Rules
 - **Rounds:** `s30`, `s60` (default), `r10`, `r20`; no round lasts more
