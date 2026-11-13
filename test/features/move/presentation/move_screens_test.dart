@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/features/library/domain/entities/library_exercise.dart';
 import 'package:gym_tracker/features/move/domain/entities/move_exercise.dart';
+import 'package:gym_tracker/features/move/domain/entities/move_sound_mode.dart';
 import 'package:gym_tracker/features/move/domain/entities/pose_frame.dart';
 import 'package:gym_tracker/features/move/domain/entities/rep_event.dart';
 import 'package:gym_tracker/features/move/domain/entities/rep_state.dart';
@@ -140,7 +141,8 @@ CameraRoundState cam({
   RoundOutcome? done,
   PoseFrame? frame,
   GameState? game,
-  bool soundOn = true,
+  MoveSoundMode sound = MoveSoundMode.voice,
+  bool voiceReady = true,
 }) => CameraRoundState(
   stage: stage,
   round: r ?? round(RoundPhase.ready),
@@ -150,7 +152,8 @@ CameraRoundState cam({
   outcome: done,
   frame: frame,
   game: game ?? tower(r?.reps ?? 0),
-  soundOn: soundOn,
+  sound: sound,
+  voiceReady: voiceReady,
   rep: const RepState(phase: RepPhase.goingDown, depth: 0.6, reps: 7),
   cameraOn: true,
 );
@@ -356,7 +359,9 @@ void main() {
       expect(find.text(l10nEn.moveHintStraightBody), findsOneWidget);
     });
 
-    testWidgets('the sound button mutes and unmutes', (tester) async {
+    testWidgets('the sound button shows what plays and changes it', (
+      tester,
+    ) async {
       var taps = 0;
       await tester.pumpApp(
         camera(
@@ -364,16 +369,29 @@ void main() {
           onToggleSound: () => taps++,
         ),
       );
-      expect(find.byIcon(Icons.volume_up), findsOneWidget);
-      expect(find.byTooltip(l10nEn.moveSoundMute), findsOneWidget);
+      expect(find.byIcon(Icons.record_voice_over), findsOneWidget);
+      expect(find.byTooltip(l10nEn.moveSoundVoice), findsOneWidget);
       await tester.tap(find.byKey(const Key('move_round_sound')));
       expect(taps, 1);
 
-      await tester.pumpApp(
-        camera(cam(r: round(RoundPhase.running, reps: 2), soundOn: false)),
-      );
-      expect(find.byIcon(Icons.volume_off), findsOneWidget);
-      expect(find.byTooltip(l10nEn.moveSoundUnmute), findsOneWidget);
+      for (final (mode, ready, icon, tip) in [
+        (MoveSoundMode.tones, true, Icons.volume_up, l10nEn.moveSoundTones),
+        (MoveSoundMode.off, true, Icons.volume_off, l10nEn.moveSoundOff),
+        // No voice for the language on this phone: tones play, and say so.
+        (MoveSoundMode.voice, false, Icons.volume_up, l10nEn.moveSoundTones),
+      ]) {
+        await tester.pumpApp(
+          camera(
+            cam(
+              r: round(RoundPhase.running, reps: 2),
+              sound: mode,
+              voiceReady: ready,
+            ),
+          ),
+        );
+        expect(find.byIcon(icon), findsOneWidget, reason: '$mode');
+        expect(find.byTooltip(tip), findsOneWidget, reason: '$mode');
+      }
     });
 
     testWidgets('body lost: come back, the reps are kept', (tester) async {
@@ -524,7 +542,7 @@ void main() {
         r: round(RoundPhase.running, reps: 24),
         frame: frameAt(1200),
         game: tower(24),
-        soundOn: false,
+        sound: MoveSoundMode.off,
       ),
     ),
     'move_running_half_rep': () => camera(

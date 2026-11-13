@@ -775,6 +775,16 @@ PR 4 (2026-11-13):
 - "Flag on for staging" is a PostHog setting, not code: the steps and the
   checklist before prod are in `docs/release.md` → "Move games flags".
 
+PR 5, spoken count (2026-11-13):
+- The sound button cycles count out loud → tones → off (the spec had only
+  "spoken count later"). Counting out loud is the default; it replaces the
+  tones while on, and falls back to tones on a phone with no offline voice
+  for the language.
+- The digits are passed as they are ("7"); an Arabic voice is expected to
+  read them in Arabic («سبعة»), to be checked on a phone. Egyptian Arabic
+  first when installed, any Arabic voice else.
+- The privacy policy didn't change: it already says the game's sounds are
+  made on the phone, and only offline voices are used.
 iOS set-up (2026-11-13):
 - The ML Kit bundles are committed (5.6 MB, base model only), not
   downloaded at build time: every build path (CI, release, Codemagic, a
@@ -833,6 +843,12 @@ iOS set-up (2026-11-13):
   Diagnostic Data), the ML Kit terms page (link checked). `mobile_scanner`
   7.5.0's Gradle file: bundled ML Kit barcode model unless
   `useUnbundled` is set (it isn't).
+- **For PR 5 (2026-11-13):** pub.dev `flutter_tts` 4.2.5 (2026-01-05,
+  latest; OSV: no advisories); its README (Android `<queries>` for
+  `TTS_SERVICE`, iOS audio category), and its Android and iOS sources:
+  `speak(focus: false)` takes no audio focus, voices report
+  `network_required` and `features` (`notInstalled`), queue mode flush;
+  iOS uses the app's shared audio session.
 - **For the iOS set-up (2026-11-13):** `google_mlkit_pose_detection`
   1.0.2 README "Requirements → iOS" (iOS 15, Xcode 15.3, Swift 5.9, `-ObjC
   -all_load`, four bundles, inference needs a device), the plugin's iOS

@@ -200,7 +200,16 @@ class _CameraRoundPageState extends ConsumerState<CameraRoundPage>
   @override
   void initState() {
     super.initState();
-    unawaited(Future<void>.microtask(() => mounted ? _c.start() : null));
+    unawaited(
+      Future<void>.microtask(
+        () => mounted
+            ? _c.start(
+                // The spoken count follows the app's language.
+                language: Localizations.maybeLocaleOf(context)?.languageCode,
+              )
+            : null,
+      ),
+    );
     startTicking(() => _c.tick());
     _lifecycle = AppLifecycleListener(
       // The camera plugin leaves this to the app: release it at once.
@@ -236,7 +245,7 @@ class _CameraRoundPageState extends ConsumerState<CameraRoundPage>
       preview: state.cameraOn ? _c.preview() : null,
       onClose: () => _leave(context),
       onPause: _c.pause,
-      onToggleSound: () => unawaited(_c.toggleSound()),
+      onToggleSound: () => unawaited(_c.cycleSound()),
       onResume: () => unawaited(_c.resume()),
       onEnd: _c.end,
       onManual: _manual,

@@ -56,8 +56,20 @@ camera leaves the phone; only the reps the member chooses to save are kept.
 - **Rollout** steps for both flags in `docs/release.md` → "Move games
   flags": staging first, and what must be done before prod.
 
-Next: turn the flags on for staging (PostHog), measure phones, iOS model
-set-up, real recordings.
+**PR 5 (spoken count, decision 7 of the spec):**
+- The phone **says the count out loud** ("1, 2, 3…") in the app's
+  language (Arabic or English), so you hear it on the floor, 2 m away. It
+  replaces the tones while it speaks.
+- The round's sound button cycles **count out loud → tones → off**
+  (remembered; a round muted before keeps being muted).
+- Only a **voice on the phone** is used (`flutter_tts`): on Android a voice
+  that is installed and needs no network; iOS voices are on the device.
+  Only the number is spoken. With no such voice for the language, the
+  round plays tones and the button skips the voice.
+- Music keeps playing: Android takes no audio focus; iOS uses the same
+  ambient session as the tones (the silent switch mutes it).
+
+Next: measure phones (iPhone and Android), real recordings.
 
 ## User flows
 **Camera round:** Today → *Move* card (or menu → *Move · rep games*) →
@@ -221,8 +233,18 @@ frames, gaps, half and rushed reps, sagging hips).
   score); saved reps are reps only. A block is centred at depth ≥ 0.95,
   otherwise off centre by up to 12 % of its width, alternating sides (it
   never falls). Every 5th block is a milestone (the other sound, a glow).
-- **Sound** on by default; the mute button keeps the choice
-  (`move.sound_on`; anything but a stored `false` means on).
+- **Sound** (`MoveSoundMode`): `voice` (the default), `tones`, `off`,
+  stored as `move.sound_mode`; an old `move.sound_on = false` reads as
+  `off`, anything odd as the default. The button cycles from what actually
+  plays (voice → tones → off → voice; without a voice: tones → off →
+  tones). The voice is asked for once per round (`MoveVoice.prepare`), only
+  when the sound isn't off.
+- **Spoken count:** `FlutterTtsMoveVoice` (`data/datasources/`) picks a
+  voice with `pickVoice` (same language, `network_required` 0, not
+  `notInstalled`; `ar-EG` / `en-US` first), speaks only `0..999`, and a new
+  count cuts off one still being spoken. `Dependencies.moveVoice` is silent
+  until `init` (and in widget tests). Android 11+ needs the
+  `TTS_SERVICE` intent in the manifest's `<queries>` (no permission).
 - **Screen on** during the camera round (`azm/screen_awake`), off at the
   end, on pause by background and when the screen closes.
 
@@ -235,7 +257,7 @@ buckets (`MoveAnalytics`). The pose check sends none.
 | `move_opened` | the hub opens | `source`: `card`, `menu`, `link` |
 | `move_camera_answered` | the camera was asked for (first time, or refused) | `result`: `granted`, `denied` |
 | `move_unsupported` | the camera can't be used | `reason`: `no_camera`, `model_failed`, `too_slow` |
-| `move_game_started` | a round starts (after 3-2-1 or Start) | `exercise`, `game` (`stack` with the camera, `none` by hand), `mode` (`camera`/`manual`), `round` |
+| `move_game_started` | a round starts (after 3-2-1 or Start) | `exercise`, `game` (`stack` with the camera, `none` by hand), `mode` (`camera`/`manual`), `round`, `sound` (camera only: `voice`/`tones`/`off`, what actually plays) |
 | `move_game_finished` | a round ends | `exercise`, `game`, `mode`, `round`, `reps_bucket`, `duration_bucket`, `ended` (`completed`/`quit`), `fps_bucket` (camera only) |
 | `move_round_saved` | *Save to my training* | `exercise`, `mode` |
 
@@ -269,6 +291,14 @@ buckets (`MoveAnalytics`). The pose check sends none.
   the stored choice, sounds freed on close),
   `data/flame_move_sounds_test.dart` (no audio focus, ambient on iOS,
   small mono WAVs).
+- Spoken count: `domain/move_sound_mode_test.dart` (ids, cycling, the
+  fallback), `data/datasources/tts_move_voice_test.dart` (`pickVoice`:
+  Egyptian first, never a network or missing voice, iOS lists, garbage),
+  `save_move_round_test.dart` (the stored mode, the old mute, odd values),
+  `round_controllers_test.dart` → "spoken count" (every rep said in the
+  app's language, no tones meanwhile; the button's cycle; tones mode; the
+  voice asked for once; freed on close), `platform_config_test.dart` (the
+  manifest only queries the speech engine).
 - Screens: `presentation/move_screens_test.dart` (`screensUiTests` for 21
   states: hub, tip, why, placement, 3-2-1, running side and front, a tall
   tower muted, a half-rep notice, paused,

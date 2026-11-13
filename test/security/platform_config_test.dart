@@ -122,6 +122,25 @@ void main() {
       );
     });
 
+    test('Move games: the spoken count only looks for the TTS engine', () {
+      // flutter_tts: Android 11+ package visibility for the speech engine.
+      // An intent query, not a permission; nothing else is made visible.
+      final queries = RegExp(
+        '<queries>(.*?)</queries>',
+        dotAll: true,
+      ).firstMatch(manifest)!.group(1)!;
+      final actions = RegExp('android:name="([^"]+)"')
+          .allMatches(queries)
+          .map((m) => m.group(1))
+          .toSet();
+      expect(actions, {
+        'android.intent.action.PROCESS_TEXT',
+        'android.intent.action.TTS_SERVICE',
+      });
+      expect(manifest, isNot(contains('QUERY_ALL_PACKAGES')));
+      expect(granted, isNot(contains('RECORD_AUDIO')));
+    });
+
     test('only the launcher activity is exported', () {
       final exported = RegExp('android:exported="true"').allMatches(manifest);
       expect(exported.length, 1);
