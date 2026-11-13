@@ -522,6 +522,15 @@ Spec: `docs/designs/move_games.md` §11. Checked in the built release APK
   bundles it needs are **not** set up yet, and the iOS source refuses to
   run the model until they are (pinned by checksum when added).
 
+- **Release builds keep Room's constructors** (`android/app/proguard-rules.pro`):
+  ML Kit's WorkManager 2.7.0 opens its Room 2.2.5 database at launch with
+  `Class.newInstance()`; R8 full mode kept `WorkDatabase_Impl` but dropped
+  its constructor, and 0.48.0–0.51.x crashed on start before Sentry was up
+  ("Failed to create an instance of androidx.work.impl.WorkDatabase").
+  `platform_config_test.dart` checks the rule. A crash this early never
+  reaches Sentry: read it with `adb logcat -b crash -d` or Play Console's
+  pre-launch report.
+
 ### Move games screens (PR 2, behind `move_games`)
 - **A link never opens the camera:** `/move/<exercise>/play` needs a
   `MoveLaunch` object only the app creates after the member's tap on
