@@ -40,6 +40,8 @@ dependencies:
   http: ^1.6.0
   youtube_player_iframe: ^6.0.2
   sqflite: ^2.4.6
+  flame: 1.38.2
+  flame_audio: 2.12.2
 dev_dependencies:
   flutter_driver:
     sdk: flutter
@@ -59,6 +61,7 @@ flutter:
     - assets/fonts/Inter/LICENSE.txt
     - assets/fonts/Cairo/LICENSE.txt
     - assets/exercises/
+    - assets/audio/
   fonts:
     - family: Inter
       fonts:

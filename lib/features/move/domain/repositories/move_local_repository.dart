@@ -3,7 +3,8 @@ import 'package:gym_tracker/features/move/domain/entities/move_exercise.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
 
 /// Small things Move games keep on the phone: best scores, and whether the
-/// form tip was seen and the camera was allowed once. Nothing personal.
+/// form tip was seen, the camera was allowed once and the sound is on.
+/// Nothing personal.
 abstract interface class MoveLocalRepository {
   /// The most reps in one round of [kind], or null before the first one.
   Future<Result<int?>> best(MoveExerciseId exercise, RoundKind kind);
@@ -23,4 +24,8 @@ abstract interface class MoveLocalRepository {
   /// prompting).
   Future<Result<bool>> cameraAllowedBefore();
   Future<Result<void>> markCameraAllowed();
+
+  /// The game's sounds are on (the default) or muted by the member.
+  Future<Result<bool>> soundOn();
+  Future<Result<void>> setSoundOn({required bool on});
 }

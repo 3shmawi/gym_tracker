@@ -6,6 +6,8 @@ import 'package:gym_tracker/features/move/data/repositories/prefs_move_local_rep
 import 'package:gym_tracker/features/move/domain/entities/move_exercise.dart';
 import 'package:gym_tracker/features/move/domain/entities/pose_frame.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
+import 'package:gym_tracker/features/move/domain/games/stack_rules.dart';
+import 'package:gym_tracker/features/move/domain/repositories/move_sounds.dart';
 import 'package:gym_tracker/features/move/domain/repositories/pose_source.dart';
 import 'package:gym_tracker/features/move/presentation/camera_round_controller.dart';
 import 'package:gym_tracker/features/move/presentation/manual_round_controller.dart';
@@ -26,9 +28,35 @@ class FakeScreenAwake implements ScreenAwake {
   Future<void> keepOn({required bool on}) async => calls.add(on);
 }
 
+class FakeMoveSounds implements MoveSounds {
+  int loads = 0;
+  int reps = 0;
+  int milestones = 0;
+  bool disposed = false;
+
+  @override
+  Future<void> load() async => loads++;
+
+  @override
+  void rep() => reps++;
+
+  @override
+  void milestone() => milestones++;
+
+  @override
+  Future<void> dispose() async => disposed = true;
+}
+
 /// A test bed: a hand-moved clock, a fake camera, the real local history.
 class Bed {
-  new _(this.container, this.source, this.local, this.repo, this.awake);
+  new _(
+    this.container,
+    this.source,
+    this.local,
+    this.repo,
+    this.awake,
+    this.sounds,
+  );
 
   static Future<Bed> make({FakePoseSource? source}) async {
     SharedPreferences.setMockInitialValues({});
@@ -36,6 +64,7 @@ class Bed {
     final cam = source ?? FakePoseSource();
     final local = InMemoryMoveLocalRepository();
     final awake = FakeScreenAwake();
+    final sounds = FakeMoveSounds();
     late Bed bed;
     final c = ProviderContainer(
       overrides: [
@@ -44,11 +73,12 @@ class Bed {
         moveLocalRepositoryProvider.overrideWithValue(local),
         workoutRepositoryProvider.overrideWithValue(repo),
         screenAwakeProvider.overrideWithValue(awake),
+        moveSoundsFactoryProvider.overrideWithValue(() => sounds),
         workoutFinishedHookProvider.overrideWithValue(() async {}),
       ],
     );
     addTearDown(c.dispose);
-    return bed = Bed._(c, cam, local, repo, awake);
+    return bed = Bed._(c, cam, local, repo, awake, sounds);
   }
 
   final ProviderContainer container;
@@ -56,6 +86,7 @@ class Bed {
   final InMemoryMoveLocalRepository local;
   final LocalWorkoutRepository repo;
   final FakeScreenAwake awake;
+  final FakeMoveSounds sounds;
   DateTime now = DateTime(2026, 11, 12, 18);
 
   Future<List<WorkoutSession>> history() async =>
@@ -118,6 +149,14 @@ void main() {
       ]);
       expect(s().round.reps, 3);
 
+      // The reps built the game, one sound each.
+      final game = s().game! as StackState;
+      expect(game.floors, hasLength(3));
+      expect(game.score, s().round.score);
+      expect(bed.sounds.loads, 1);
+      expect(bed.sounds.reps, 3);
+      expect(bed.sounds.milestones, 0);
+
       // Time runs out.
       bed.now = bed.now.add(const Duration(seconds: 40));
       c.tick();
@@ -136,6 +175,59 @@ void main() {
       final saved = (await bed.history()).single;
       expect(saved.isMove, isTrue);
       expect(saved.sets.single.reps, 3);
+    });
+
+    test(
+      'muted: the game still grows, silently, and it is remembered',
+      () async {
+        await c.start();
+        await c.toggleSound();
+        expect(s().soundOn, isFalse);
+        expect(bed.local.sound, isFalse);
+
+        play(const SynthSet(lead: Duration(seconds: 6)).frames());
+        final reps = SynthSet.reps(5).frames();
+        const offset = Duration(seconds: 7);
+        play([
+          for (final f in reps)
+            PoseFrame(at: f.at + offset, joints: f.joints, aspect: f.aspect),
+        ]);
+        expect((s().game! as StackState).floors, hasLength(5));
+        expect(bed.sounds.reps + bed.sounds.milestones, 0);
+
+        await c.toggleSound();
+        expect(bed.local.sound, isTrue);
+      },
+    );
+
+    test('a saved "off" is read when the camera starts', () async {
+      bed.local.sound = false;
+      await c.start();
+      expect(s().soundOn, isFalse);
+      expect(bed.sounds.loads, 0);
+    });
+
+    test('the fifth block plays the other sound; closing frees them', () async {
+      await c.start();
+      play(const SynthSet(lead: Duration(seconds: 6)).frames());
+      final reps = SynthSet.reps(5).frames();
+      const offset = Duration(seconds: 7);
+      play([
+        for (final f in reps)
+          PoseFrame(at: f.at + offset, joints: f.joints, aspect: f.aspect),
+      ]);
+      expect(bed.sounds.reps, 4);
+      expect(bed.sounds.milestones, 1);
+      bed.container.dispose();
+      await pumpEventQueue();
+      expect(bed.sounds.disposed, isTrue);
+    });
+
+    test('nothing done before the round runs reaches the game', () async {
+      await c.start();
+      // Reps during placement (before 3-2-1 ends) build nothing.
+      play(SynthSet.reps(2).frames());
+      expect((s().game! as StackState).floors, isEmpty);
     });
 
     test('a refused camera: the denied screen, nothing left running', () async {

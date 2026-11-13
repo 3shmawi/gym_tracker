@@ -224,6 +224,13 @@ The accurate model is not shipped (Gradle exclusion); only
 `pose_landmark_detector_lite` and the person detector are in the assets.
 iOS: not measured yet (the model bundles are not set up on iOS).
 
+**The Stack game and sounds (PR 3, 2026-11-12):** arm64 release APK
+52.1 MB; the new Dart code is about 92 KB (`flame` 53 KB, `audioplayers` +
+its interface 34 KB, `ordered_set` 5 KB) and the two sounds 26 KB, plus
+`audioplayers`' small Android library. Well under 0.5 MB in all. The game
+engine pauses itself when nothing moves (no frames drawn while the member
+holds a plank); a block's fall is 350 ms of frames.
+
 ### Frames per second on phones (to measure)
 On a staging build with the `move_games_debug` flag: Settings → About →
 *Pose check (testing)* → *Start camera*, do 10 push-ups; note *Speed*.

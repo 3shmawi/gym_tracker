@@ -141,5 +141,27 @@ void main() {
       await local.markCameraAllowed();
       expect((await local.cameraAllowedBefore() as Success).value, isTrue);
     });
+
+    test('sound is on until muted; odd stored values mean on', () async {
+      expect((await local.soundOn() as Success).value, isTrue);
+      await local.setSoundOn(on: false);
+      expect((await local.soundOn() as Success).value, isFalse);
+      await local.setSoundOn(on: true);
+      expect((await local.soundOn() as Success).value, isTrue);
+
+      for (final odd in <Object>['off', 0, 'false']) {
+        SharedPreferences.setMockInitialValues({
+          PrefsMoveLocalRepository.soundKey: odd,
+        });
+        final hostile = PrefsMoveLocalRepository(
+          await SharedPreferences.getInstance(),
+        );
+        expect(
+          (await hostile.soundOn() as Success).value,
+          isTrue,
+          reason: '$odd',
+        );
+      }
+    });
   });
 }

@@ -176,4 +176,15 @@ void main() {
     expect(MoveAnalytics.fpsBucket(12), '8_15');
     expect(MoveAnalytics.fpsBucket(15), '15_plus');
   });
+
+  test('analytics name the game: Stack with the camera, none by hand', () {
+    expect(
+      MoveAnalytics.game(MoveExerciseId.pushUps, RoundMode.camera),
+      'stack',
+    );
+    expect(
+      MoveAnalytics.game(MoveExerciseId.pushUps, RoundMode.manual),
+      'none',
+    );
+  });
 }

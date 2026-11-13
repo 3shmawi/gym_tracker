@@ -736,6 +736,27 @@ PR 2 (2026-11-12):
 - The integration demo runs headless too (`move_e2e_test.dart`), with a
   recorded synthetic set; real recordings still wait for decision 9.
 
+PR 3 (2026-11-12):
+- **The HUD is plain Flutter widgets in a `Stack`** around the
+  `GameWidget`, not Flame overlays (Flame's docs allow either). The body
+  preview and the rep count moved to a row above the game, so the tower
+  never hides behind them; the depth bar is under it.
+- **The engine pauses itself** when nothing moves (`pauseEngine` after an
+  update with no animation, `resumeEngine` on a new state): no work while
+  the member holds a plank, and widget tests and goldens settle.
+- `GameRules` is `start()` + `onEvent(state, event, at)`, with no
+  `onTick`: Stack has no rule in time. `MoveExercises.gameFor` picks the
+  game per exercise; analytics name it (`game`: `stack` / `none`).
+- **Sounds:** our own tones (`scripts/move_sounds.py`, CC0), two short
+  WAVs (26 KB together) played from `flame_audio` pools. iOS uses the
+  **ambient** audio session and Android asks for **no audio focus**, so the
+  member's music keeps playing; Flame's default (`playback` +
+  `mixWithOthers`) would ignore the silent switch. A **mute button** is in
+  the round's bar (remembered); the spec had no mute, but a sound you
+  can't turn off in a gym is a reason to stop playing.
+- "Slow down" and "go lower" are notices above the tower for 2.5 s; they
+  take the place of a form hint while shown (one message at a time).
+
 ## Official docs checked (2026-11-12)
 - pub.dev API: `flame` 1.38.2 (2026-08-27, Flutter ≥ 3.41; 1.38.0 had
   breaking input-event changes only), `camera` 0.12.2 (2026-10-27, Flutter
@@ -763,10 +784,24 @@ PR 2 (2026-11-12):
 - Google Play Data safety help: data processed only on the device isn't
   collected; SDK transmissions count as the app's.
 - MediaPipe Flutter wrappers on pub.dev (section 9 table).
+- **For PR 3 (2026-11-12):** pub.dev API again: `flame` 1.38.2,
+  `flame_audio` 2.12.2 (2026-07-19), `audioplayers` 6.8.1 (2026-06-27,
+  Flutter ≥ 3.44), `flame_test` 2.3.1 (not used); still the latest. OSV:
+  no advisories for `flame` 1.38.2, `flame_audio` 2.12.2, `audioplayers`
+  6.8.1, `audioplayers_android` 5.3.0, `audioplayers_darwin` 6.5.0,
+  `audioplayers_linux` 4.3.0, `audioplayers_platform_interface` 7.2.0,
+  `audioplayers_web` 5.3.0, `audioplayers_windows` 4.4.1, `ordered_set`
+  8.0.1. Flame docs (docs.flame-engine.org/latest): *Overlays* (widgets
+  can sit over the game without the Overlays API), *The game class*
+  (`pauseEngine`/`resumeEngine`; transparent `backgroundColor()`),
+  *flame_audio → General audio / AudioPool*. Sources read in the pub
+  cache: `GameLoop`/`GameRenderBox` (a paused game still paints its last
+  frame), `AudioContextConfig` (`respectSilence` would ask for audio focus
+  on Android) and `audioplayers_android`'s manifest (no permissions).
 - **Not re-read in this session, to read before the PR that uses them:**
   Apple's `NSCameraUsageDescription` page (the page didn't load its text;
   App Review 5.1.1(ii) on purpose strings), the `camera` plugin's image
-  stream format docs, Flame's overlays docs for 1.38.
+  stream format docs.
 
 ## Decisions (approved 2026-11-12: concept A · Stack, and the recommended choice in each)
 1. **Game concept:** A · Stack, B · Summit or C · Charge.

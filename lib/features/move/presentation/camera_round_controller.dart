@@ -12,7 +12,9 @@ import 'package:gym_tracker/features/move/domain/entities/pose_frame.dart';
 import 'package:gym_tracker/features/move/domain/entities/rep_event.dart';
 import 'package:gym_tracker/features/move/domain/entities/rep_state.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
+import 'package:gym_tracker/features/move/domain/games/game_rules.dart';
 import 'package:gym_tracker/features/move/domain/move_exercises.dart';
+import 'package:gym_tracker/features/move/domain/repositories/move_sounds.dart';
 import 'package:gym_tracker/features/move/domain/repositories/pose_source.dart';
 import 'package:gym_tracker/features/move/domain/usecases/placement.dart';
 import 'package:gym_tracker/features/move/presentation/move_check_controller.dart';
@@ -48,6 +50,8 @@ class CameraRoundState {
     this.fps,
     this.cameraOn = false,
     this.outcome,
+    this.game,
+    this.soundOn = true,
   });
 
   final CameraStage stage;
@@ -67,6 +71,12 @@ class CameraRoundState {
   final bool cameraOn;
   final RoundOutcome? outcome;
 
+  /// The game the reps build (null until the controller starts it).
+  final GameState? game;
+
+  /// The game's sounds are on (the member can mute them).
+  final bool soundOn;
+
   CameraRoundState copyWith({
     CameraStage? stage,
     CameraTrouble? trouble,
@@ -78,6 +88,8 @@ class CameraRoundState {
     double? fps,
     bool? cameraOn,
     RoundOutcome? outcome,
+    GameState? game,
+    bool? soundOn,
   }) => CameraRoundState(
     stage: stage ?? this.stage,
     trouble: trouble ?? this.trouble,
@@ -89,6 +101,8 @@ class CameraRoundState {
     fps: fps ?? this.fps,
     cameraOn: cameraOn ?? this.cameraOn,
     outcome: outcome ?? this.outcome,
+    game: game ?? this.game,
+    soundOn: soundOn ?? this.soundOn,
   );
 }
 
@@ -133,18 +147,34 @@ class CameraRoundController extends Notifier<CameraRoundState>
 
   /// Read once: the release after the screen closes can't use `ref`.
   late ScreenAwake _awake;
+  late GameRules<GameState> _rules;
+  late MoveSounds _sounds;
 
   @override
   CameraRoundState build() {
     _awake = ref.read(screenAwakeProvider);
-    ref.onDispose(() => unawaited(_release()));
+    _rules = MoveExercises.gameFor(launch.exercise);
+    final sounds = _sounds = ref.read(moveSoundsFactoryProvider)();
+    ref.onDispose(() {
+      unawaited(_release());
+      unawaited(sounds.dispose());
+    });
     return CameraRoundState(
       round: RoundState(
         exercise: launch.exercise,
         kind: launch.kind,
         mode: RoundMode.camera,
       ),
+      game: _rules.start(),
     );
+  }
+
+  /// Mutes or unmutes the game (kept for the next rounds).
+  Future<void> toggleSound() async {
+    final on = !state.soundOn;
+    state = state.copyWith(soundOn: on);
+    if (on) unawaited(_sounds.load());
+    await ref.read(moveLocalRepositoryProvider).setSoundOn(on: on);
   }
 
   /// Starts (or restarts) the camera. The screen calls it once it opens:
@@ -156,7 +186,13 @@ class CameraRoundController extends Notifier<CameraRoundState>
       Success(:final value) => value,
       Failed() => false,
     };
+    final soundOn = switch (await local.soundOn()) {
+      Success(:final value) => value,
+      Failed() => true,
+    };
     if (!ref.mounted || _source != null) return;
+    state = state.copyWith(soundOn: soundOn);
+    if (soundOn) unawaited(_sounds.load());
     final source = ref.read(poseSourceFactoryProvider)();
     _source = source;
     _detector ??= MoveExercises.detectorFor(launch.exercise);
@@ -238,7 +274,15 @@ class CameraRoundController extends Notifier<CameraRoundState>
         }
       case CameraStage.live:
         var round = next.round;
+        var game = next.game ?? _rules.start();
         for (final e in update.events) {
+          // The game only sees what happens while the round runs (the last
+          // rep of a target round included).
+          if (round.phase == RoundPhase.running) {
+            final before = game.last?.seq;
+            game = _rules.onEvent(game, e, now);
+            if (game.last?.seq != before) _sound(game.last);
+          }
           round = round.onEvent(e, now);
           // Back in the picture after a body-lost pause: 3-2-1 again.
           if (e is BodyFound &&
@@ -247,12 +291,18 @@ class CameraRoundController extends Notifier<CameraRoundState>
             round = round.startCountdown(now);
           }
         }
-        next = next.copyWith(round: round);
+        next = next.copyWith(round: round, game: game);
       case CameraStage.starting || CameraStage.failed:
         break;
     }
     state = next;
     _afterRound();
+  }
+
+  void _sound(GameMoment? moment) {
+    if (moment == null || !state.soundOn) return;
+    if (moment.kind != GameMomentKind.rep) return;
+    moment.milestone ? _sounds.milestone() : _sounds.rep();
   }
 
   /// Called a few times a second by the screen: the clock, the end of a

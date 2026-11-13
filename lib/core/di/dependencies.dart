@@ -41,9 +41,11 @@ import 'package:gym_tracker/features/gym/domain/repositories/gym_repository.dart
 import 'package:gym_tracker/features/gym/domain/repositories/picture_catalog_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/session_outbox.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/solo_import_repository.dart';
+import 'package:gym_tracker/features/move/data/datasources/flame_move_sounds.dart';
 import 'package:gym_tracker/features/move/data/datasources/mlkit_pose_source.dart';
 import 'package:gym_tracker/features/move/data/repositories/prefs_move_local_repository.dart';
 import 'package:gym_tracker/features/move/domain/repositories/move_local_repository.dart';
+import 'package:gym_tracker/features/move/domain/repositories/move_sounds.dart';
 import 'package:gym_tracker/features/move/domain/repositories/pose_source.dart';
 import 'package:gym_tracker/features/settings/data/repositories/shared_prefs_settings_repository.dart';
 import 'package:gym_tracker/features/settings/domain/repositories/settings_repository.dart';
@@ -87,6 +89,10 @@ abstract final class Dependencies {
   /// Move games' best scores and flags on the phone.
   static MoveLocalRepository moveLocalRepository =
       InMemoryMoveLocalRepository();
+
+  /// Move games' sounds, made per round. Silent until [init] runs (and in
+  /// widget tests).
+  static MoveSounds Function() moveSounds = SilentMoveSounds.new;
 
   /// Keeps the screen on during a Move games round.
   static ScreenAwake screenAwake = const ChannelScreenAwake();
@@ -134,6 +140,7 @@ abstract final class Dependencies {
     consentStore = PrefsConsentStore(prefs);
     flagCache = PrefsFlagCache(prefs);
     moveLocalRepository = PrefsMoveLocalRepository(prefs);
+    moveSounds = FlameMoveSounds.new;
     // The phone's database; the preferences if it cannot be opened.
     await workoutDatabase?.close();
     final storage = await openWorkoutRepository(

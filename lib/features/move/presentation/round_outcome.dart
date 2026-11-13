@@ -50,6 +50,7 @@ mixin RoundEnding {
     unawaited(
       Analytics.capture('move_game_finished', {
         'exercise': result.exercise.id,
+        'game': MoveAnalytics.game(result.exercise, result.mode),
         'mode': result.mode.name,
         'round': result.kind.id,
         'reps_bucket': MoveAnalytics.repsBucket(result.reps),
@@ -86,6 +87,7 @@ mixin RoundEnding {
 void reportStarted(RoundState round) => unawaited(
   Analytics.capture('move_game_started', {
     'exercise': round.exercise.id,
+    'game': MoveAnalytics.game(round.exercise, round.mode),
     'mode': round.mode.name,
     'round': round.kind.id,
   }),

@@ -5,6 +5,7 @@ import 'package:gym_tracker/core/screen_awake/screen_awake.dart';
 import 'package:gym_tracker/features/move/domain/entities/move_exercise.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
 import 'package:gym_tracker/features/move/domain/repositories/move_local_repository.dart';
+import 'package:gym_tracker/features/move/domain/repositories/move_sounds.dart';
 import 'package:gym_tracker/features/move/domain/usecases/save_move_round.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
 import 'package:meta/meta.dart';
@@ -16,6 +17,11 @@ final moveGamesEnabledProvider = FutureProvider<bool>(
 
 final moveLocalRepositoryProvider = Provider<MoveLocalRepository>(
   (ref) => Dependencies.moveLocalRepository,
+);
+
+/// Makes the game's sounds for one round (silent in widget tests).
+final moveSoundsFactoryProvider = Provider<MoveSounds Function()>(
+  (ref) => Dependencies.moveSounds,
 );
 
 final screenAwakeProvider = Provider<ScreenAwake>(

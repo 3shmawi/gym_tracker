@@ -14,6 +14,7 @@ class PrefsMoveLocalRepository implements MoveLocalRepository {
       'move.best.${e.id}.${k.id}';
   static String tipKey(MoveExerciseId e) => 'move.tip_seen.${e.id}';
   static const cameraKey = 'move.camera_allowed';
+  static const soundKey = 'move.sound_on';
 
   /// A stored value outside 0..999 (a corrupt or edited file) is ignored.
   static int? _sane(Object? v) => v is int && v > 0 && v <= 999 ? v : null;
@@ -51,6 +52,15 @@ class PrefsMoveLocalRepository implements MoveLocalRepository {
   @override
   Future<Result<void>> markCameraAllowed() =>
       guard(() => _prefs.setBool(cameraKey, true), retries: 0);
+
+  /// Anything but a stored `false` means on.
+  @override
+  Future<Result<bool>> soundOn() =>
+      guard(() async => _prefs.get(soundKey) != false, retries: 0);
+
+  @override
+  Future<Result<void>> setSoundOn({required bool on}) =>
+      guard(() => _prefs.setBool(soundKey, on), retries: 0);
 }
 
 /// In memory: tests, and before `Dependencies.init`.
@@ -58,6 +68,7 @@ class InMemoryMoveLocalRepository implements MoveLocalRepository {
   final Map<String, int> bests = {};
   final Set<MoveExerciseId> tips = {};
   bool camera = false;
+  bool sound = true;
 
   @override
   Future<Result<int?>> best(MoveExerciseId exercise, RoundKind kind) async =>
@@ -94,6 +105,15 @@ class InMemoryMoveLocalRepository implements MoveLocalRepository {
   @override
   Future<Result<void>> markCameraAllowed() async {
     camera = true;
+    return const Success(null);
+  }
+
+  @override
+  Future<Result<bool>> soundOn() async => Success(sound);
+
+  @override
+  Future<Result<void>> setSoundOn({required bool on}) async {
+    sound = on;
     return const Success(null);
   }
 }
