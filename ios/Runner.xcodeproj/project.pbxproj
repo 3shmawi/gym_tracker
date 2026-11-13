@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A1B2C3D41F00000000E17E31 /* MLKitPoseDetectionFastResources.bundle in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D41F00000000E17E21 /* MLKitPoseDetectionFastResources.bundle */; };
+		A1B2C3D41F00000000E17E32 /* MLKitPoseDetectionCommonResources.bundle in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D41F00000000E17E22 /* MLKitPoseDetectionCommonResources.bundle */; };
+		A1B2C3D41F00000000E17E33 /* MLKitXenoResources.bundle in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D41F00000000E17E23 /* MLKitXenoResources.bundle */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		1E281B92FBCA4976B6A049FE /* Flutter/prodDebug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = C848D92D81D5793CADC8AFFE /* Flutter/prodDebug.xcconfig */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
@@ -49,6 +52,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A1B2C3D41F00000000E17E21 /* MLKitPoseDetectionFastResources.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = MLKitPoseDetectionFastResources.bundle; sourceTree = "<group>"; };
+		A1B2C3D41F00000000E17E22 /* MLKitPoseDetectionCommonResources.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = MLKitPoseDetectionCommonResources.bundle; sourceTree = "<group>"; };
+		A1B2C3D41F00000000E17E23 /* MLKitXenoResources.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = MLKitXenoResources.bundle; sourceTree = "<group>"; };
 		102B23D0960973ECEA65842D /* Flutter/prodProfile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; path = Flutter/prodProfile.xcconfig; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
@@ -89,6 +95,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A1B2C3D41F00000000E17E20 /* MLKit */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D41F00000000E17E21 /* MLKitPoseDetectionFastResources.bundle */,
+				A1B2C3D41F00000000E17E22 /* MLKitPoseDetectionCommonResources.bundle */,
+				A1B2C3D41F00000000E17E23 /* MLKitXenoResources.bundle */,
+			);
+			path = MLKit;
+			sourceTree = "<group>";
+		};
 		331C8082294A63A400263BE5 /* RunnerTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -143,6 +159,7 @@
 				97C147021CF9000F007C117D /* Info.plist */,
 				A1B2C3D41F00000000E17E13 /* InfoPlist.strings */,
 				A1B2C3D41F00000000E17E01 /* Runner.entitlements */,
+				A1B2C3D41F00000000E17E20 /* MLKit */,
 				1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */,
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
@@ -254,6 +271,9 @@
 				A1B2C3D41F00000000E17E14 /* InfoPlist.strings in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
+				A1B2C3D41F00000000E17E31 /* MLKitPoseDetectionFastResources.bundle in Resources */,
+				A1B2C3D41F00000000E17E32 /* MLKitPoseDetectionCommonResources.bundle in Resources */,
+				A1B2C3D41F00000000E17E33 /* MLKitXenoResources.bundle in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 				DD46ECA0AFFC6E7F632D8A16 /* Flutter/stagingDebug.xcconfig in Resources */,
 				D58417133CB94952A673F2D9 /* Flutter/stagingProfile.xcconfig in Resources */,
