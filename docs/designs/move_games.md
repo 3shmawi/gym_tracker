@@ -775,6 +775,16 @@ PR 4 (2026-11-13):
 - "Flag on for staging" is a PostHog setting, not code: the steps and the
   checklist before prod are in `docs/release.md` → "Move games flags".
 
+iOS set-up (2026-11-13):
+- The ML Kit bundles are committed (5.6 MB, base model only), not
+  downloaded at build time: every build path (CI, release, Codemagic, a
+  Mac) gets the same files with no network and no workflow change. They
+  come from Google's archives, and their checksums are pinned.
+- On the iOS Simulator the source reports "model unavailable" (the model
+  needs the device's GPU), so the simulator offers the manual counter.
+- Still to do on a real iPhone: the pose check, frames per second, and the
+  IPA size (decision 2).
+
 ## Official docs checked (2026-11-12)
 - pub.dev API: `flame` 1.38.2 (2026-08-27, Flutter ≥ 3.41; 1.38.0 had
   breaking input-event changes only), `camera` 0.12.2 (2026-10-27, Flutter
@@ -823,6 +833,15 @@ PR 4 (2026-11-13):
   Diagnostic Data), the ML Kit terms page (link checked). `mobile_scanner`
   7.5.0's Gradle file: bundled ML Kit barcode model unless
   `useUnbundled` is set (it isn't).
+- **For the iOS set-up (2026-11-13):** `google_mlkit_pose_detection`
+  1.0.2 README "Requirements → iOS" (iOS 15, Xcode 15.3, Swift 5.9, `-ObjC
+  -all_load`, four bundles, inference needs a device), the plugin's iOS
+  `Package.swift` (links both pose products; the model is picked at run
+  time), `google_mlkit_commons` 1.0.2 (iOS ignores the rotation metadata),
+  `camera_avfoundation` 0.11.1 (front frames rotated to the device
+  orientation and mirrored), `d-date/google-mlkit-swiftpm` 9.0.2 README and
+  `Package.swift`, the CocoaPods specs of `MLKitPoseDetection`,
+  `MLKitPoseDetectionCommon` and `MLKitXenoCommon` 1.0.0-beta16.
 - **Not re-read in this session, to read before the PR that uses them:**
   Apple's `NSCameraUsageDescription` page (the page didn't load its text;
   App Review 5.1.1(ii) on purpose strings), the `camera` plugin's image

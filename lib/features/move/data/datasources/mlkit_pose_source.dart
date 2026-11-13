@@ -69,15 +69,21 @@ class MlKitPoseSource implements PoseSource, CameraPreviewSource {
     await change;
   }
 
-  /// On iOS, ML Kit needs its model files copied into the app and two
-  /// linker flags (the plugin's README); that set-up is not in the iOS
-  /// project yet, and running the model without it can crash. Until it is,
-  /// iOS reports the model as unavailable instead of calling it.
-  static const iosModelInstalled = false;
+  /// On iOS, ML Kit needs its model files in the app
+  /// (`ios/Runner/MLKit/`, checked by `scripts/ios_mlkit_bundles.sh`) and two
+  /// linker flags (`ios/Flutter/MLKit.xcconfig`); both are in the project.
+  static const iosModelInstalled = true;
+
+  /// The iOS Simulator can't run the pose model (it needs the device's GPU,
+  /// the plugin's README): report it as unavailable instead of calling it.
+  /// The simulator sets this variable for the apps it runs.
+  static bool get onIosSimulator =>
+      Platform.isIOS &&
+      Platform.environment.containsKey('SIMULATOR_DEVICE_NAME');
 
   Future<void> _start() async {
     _set(const PoseSourceStatus(PoseSourceState.starting));
-    if (Platform.isIOS && !iosModelInstalled) {
+    if (Platform.isIOS && (!iosModelInstalled || onIosSimulator)) {
       return _fail(PoseProblem.modelFailed);
     }
     try {

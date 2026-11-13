@@ -566,6 +566,24 @@ Spec: `docs/designs/move_games.md` §11. Checked in the built release APK
   both store forms. Camera images and body positions are "never leaves the
   phone".
 
+### Move games on iOS: the ML Kit model files (2026-11-13)
+- iOS gets ML Kit through `d-date/google-mlkit-swiftpm` 9.0.2, a
+  third-party Swift package that repackages Google's binaries (pinned
+  `exact` by the plugin, checksums in its `Package.swift`).
+- The model **bundles** can't come through the package, so they are
+  committed in `ios/Runner/MLKit/`. They were taken from **Google's own
+  CocoaPods archives** on dl.google.com (`MLKitPoseDetection`,
+  `MLKitPoseDetectionCommon`, `MLKitXenoCommon` 1.0.0-beta16, the versions
+  the package wraps) and are byte for byte the same as the package's
+  release bundles (compared 2026-11-13). They are data only (TFLite models
+  and MediaPipe graphs), no code.
+- `scripts/ios_mlkit_bundles.sh` and `platform_config_test.dart` pin every
+  file's SHA-256 and fail on any extra file; the accurate model is not
+  shipped.
+- `-ObjC -all_load` (`ios/Flutter/MLKit.xcconfig`) loads every member of the
+  static libraries linked into the app; a duplicate-symbol clash would fail
+  the build (CI's iOS job), not run silently.
+
 ## If a key leaks (log, chat, commit)
 1. **Revoke or rotate it first**, then clean up. Logs can be copied in the
    minutes they are public.
