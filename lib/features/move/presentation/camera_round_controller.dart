@@ -379,6 +379,18 @@ class CameraRoundController extends Notifier<CameraRoundState>
     state = state.copyWith(round: state.round.startCountdown(_now));
   }
 
+  /// Back on screen. If the camera was released before the round started
+  /// (on the loader or at placement), start it again; a round that had
+  /// started stays paused until "Resume".
+  Future<void> foreground() async {
+    if (_source != null || state.cameraOn) return;
+    final waiting =
+        state.stage == CameraStage.starting ||
+        state.stage == CameraStage.placement;
+    if (!waiting || state.round.phase != RoundPhase.ready) return;
+    await start();
+  }
+
   /// The app left the foreground: pause, and release the camera at once.
   Future<void> background() async {
     state = state.copyWith(

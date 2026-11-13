@@ -206,7 +206,11 @@ void main() {
       expect(find.text('2'), findsOneWidget);
     });
 
-    testWidgets('leaving the app releases the camera', (tester) async {
+    testWidgets('a system dialog over the app keeps the camera', (
+      tester,
+    ) async {
+      // The camera permission dialog, the notification shade or a call
+      // banner make the app "inactive" for a moment; that is not leaving.
       final source = FakePoseSource();
       await tester.pumpApp(
         ProviderScope(
@@ -221,11 +225,34 @@ void main() {
       tester.binding
         ..handleAppLifecycleStateChanged(AppLifecycleState.resumed)
         ..handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pumpAndSettle();
+      expect(source.stops, 0);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    });
+
+    testWidgets('leaving the app releases the camera', (tester) async {
+      final source = FakePoseSource();
+      await tester.pumpApp(
+        ProviderScope(
+          overrides: [
+            poseSourceFactoryProvider.overrideWithValue(() => source),
+          ],
+          child: const MoveCheckPage(),
+        ),
+      );
+      await tester.tap(find.byKey(const Key('move_check_start')));
+      await tester.pump();
+      tester.binding
+        ..handleAppLifecycleStateChanged(AppLifecycleState.resumed)
+        ..handleAppLifecycleStateChanged(AppLifecycleState.inactive)
+        ..handleAppLifecycleStateChanged(AppLifecycleState.hidden);
       // The release awaits the subscriptions, then stops the source.
       await tester.pumpAndSettle();
       expect(source.stops, 1);
       expect(find.byKey(const Key('move_check_start')), findsOneWidget);
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      tester.binding
+        ..handleAppLifecycleStateChanged(AppLifecycleState.inactive)
+        ..handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     });
   });
 
