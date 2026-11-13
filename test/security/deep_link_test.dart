@@ -22,6 +22,8 @@ import 'package:gym_tracker/features/gym/presentation/joined_view.dart';
 import 'package:gym_tracker/features/gym/presentation/profile_view.dart';
 import 'package:gym_tracker/features/gym/presentation/scanner_view.dart';
 import 'package:gym_tracker/features/gym/presentation/welcome_view.dart';
+import 'package:gym_tracker/features/move/domain/repositories/pose_source.dart';
+import 'package:gym_tracker/features/move/presentation/move_check_page.dart';
 import 'package:gym_tracker/features/settings/data/repositories/shared_prefs_settings_repository.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_controller.dart';
 import 'package:gym_tracker/features/workout/data/repositories/local_workout_repository.dart';
@@ -747,6 +749,70 @@ void main() {
         AppRoutes.libraryExercise('x', dayId: '../y'),
         '/library/x?day=..%2Fy',
       );
+    });
+  });
+
+  group('/move/check (pose check, testers only)', () {
+    var made = 0;
+    late PoseSource Function() original;
+    setUp(() {
+      made = 0;
+      original = Dependencies.poseSource;
+      Dependencies.poseSource = () {
+        made++;
+        return original();
+      };
+    });
+    tearDown(() {
+      Dependencies.poseSource = original;
+      FeatureFlags.overrides.clear();
+    });
+
+    testWidgets('flag off: home, and the camera is never touched', (
+      tester,
+    ) async {
+      await pumpRouter(tester);
+      for (final path in [
+        '/move/check',
+        '/move/check?start=1',
+        '/move/check?camera=on&redirect=https://evil.example.com',
+      ]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.byType(NextWorkoutPage), findsOneWidget, reason: path);
+        expect(find.byType(MoveCheckPage), findsNothing, reason: path);
+      }
+      expect(made, 0);
+    });
+
+    testWidgets('a store (prod) build never opens it, even with the flag', (
+      tester,
+    ) async {
+      FeatureFlags.overrides[Flags.moveGamesDebug] = true;
+      await pumpRouter(tester);
+      appRouter.go(AppRoutes.moveCheck);
+      await tester.pumpAndSettle();
+      expect(find.byType(NextWorkoutPage), findsOneWidget);
+      expect(find.byType(MoveCheckPage), findsNothing);
+      expect(made, 0);
+    });
+
+    testWidgets('look-alike and extra paths are not found', (tester) async {
+      await pumpRouter(tester);
+      for (final path in [
+        '/move',
+        '/move/checkx',
+        '/move/check/start',
+        '/move/push_ups',
+        '/move/../settings/../move/check/x',
+      ]) {
+        appRouter.go(path);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: path);
+        expect(find.byType(MoveCheckPage), findsNothing, reason: path);
+      }
+      expect(made, 0);
     });
   });
 }

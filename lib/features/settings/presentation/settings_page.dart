@@ -9,6 +9,7 @@ import 'package:gym_tracker/core/legal/legal.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/features/backup/presentation/backup_card.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
+import 'package:gym_tracker/features/move/presentation/move_check_controller.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_controller.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_view.dart';
 
@@ -25,6 +26,7 @@ class SettingsPage extends ConsumerWidget {
     final controller = ref.read(settingsControllerProvider.notifier);
     final gymsOn = ref.watch(gymJoinEnabledProvider).value ?? false;
     final signedIn = ref.watch(accountSessionProvider).isSignedIn;
+    final moveCheck = ref.watch(moveCheckAllowedProvider).value ?? false;
     return SettingsView(
       onOpenLicenses: () => showLicensePage(context: context),
       onOpenPrivacy: () => unawaited(openLegalPage(LegalLinks.privacy)),
@@ -41,6 +43,9 @@ class SettingsPage extends ConsumerWidget {
           : null,
       onJoinGym: gymsOn && !signedIn
           ? () => unawaited(context.push<void>(AppRoutes.joinScan))
+          : null,
+      onOpenMoveCheck: moveCheck
+          ? () => unawaited(context.push<void>(AppRoutes.moveCheck))
           : null,
     );
   }

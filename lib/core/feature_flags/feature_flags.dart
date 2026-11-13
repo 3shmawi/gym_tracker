@@ -81,4 +81,10 @@ abstract final class Flags {
   /// Settings card and the "I already have an account" link. Off: nothing of
   /// it shows (docs/designs/never_lose_history.md §8).
   static const trainingBackup = 'training_backup';
+
+  /// The pose check (Settings → About): the camera counts push-ups and
+  /// shows the model's speed, to measure phones before Move games ship.
+  /// Never in prod builds, whatever the flag says
+  /// (docs/designs/move_games.md §9).
+  static const moveGamesDebug = 'move_games_debug';
 }

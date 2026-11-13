@@ -28,6 +28,10 @@ dependencies:
   flutter_local_notifications: ^22.3.3
   timezone: ^0.11.2
   mobile_scanner: 7.5.0
+  # Move games: the front camera's frames go to the on-device pose model
+  # (docs/designs/move_games.md §9). Pinned: native code and models.
+  camera: 0.12.2
+  google_mlkit_pose_detection: 1.0.2
   flutter_secure_storage: 11.2.0
   app_settings: 9.0.1
   crypto: ^3.0.8

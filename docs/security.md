@@ -479,6 +479,49 @@ Pages headers and Git integration. Feature doc:
   runs `npm audit --audit-level=low`. Vulnerable packages are fixed or
   upgraded (e.g. vitest 4.1.12, `minimatch` overridden to 11.0.3), not ignored.
 
+### Move games: camera and on-device pose model (PR 1, 2026-11-12)
+Spec: `docs/designs/move_games.md` §11. Checked in the built release APK
+(Android, `aapt2 dump`), not only in the source manifest.
+- **Frames never leave the phone.** `MlKitPoseSource` turns each camera
+  frame into 13 joints in memory and drops the image; joints are drawn once
+  and dropped. Nothing is written to disk, logged, sent to analytics or put
+  in Sentry breadcrumbs. Errors go to Sentry with no frame data.
+- **The camera starts only on a tap** ("Start camera"), never when a screen
+  or a link opens, and is released when the app leaves the foreground, on
+  Stop and when the screen closes (`deep_link_test.dart` → `/move/check`,
+  `move_check_view_test.dart`).
+- **Testers only for now:** `/move/check` needs a non-prod build **and**
+  the `move_games_debug` flag (`moveCheckAllowed()`); a prod build never
+  opens it, whatever the flag says.
+- **Permissions (merged manifest):** the camera plugin (CameraX) declares
+  `RECORD_AUDIO`, `WRITE_EXTERNAL_STORAGE` (≤ API 28, which also implies
+  `READ_EXTERNAL_STORAGE`) and a *required* `camera.any`; ML Kit brings
+  WorkManager (`androidx.work` 2.7.0) with `WAKE_LOCK`,
+  `RECEIVE_BOOT_COMPLETED` and `FOREGROUND_SERVICE`. The app removes the
+  microphone, both storage permissions and the boot permission
+  (`tools:node="remove"`) and makes `camera.any` optional
+  (`tools:replace`). `WAKE_LOCK` and `FOREGROUND_SERVICE` stay: WorkManager
+  may need them; neither needs a Play declaration (no foreground service
+  *type* permission). WorkManager adds two exported components, both
+  callable by the system only: `SystemJobService`
+  (`BIND_JOB_SERVICE`) and `DiagnosticsReceiver` (`DUMP`).
+  `platform_config_test.dart` pins the removals.
+- **ML Kit sends usage metrics to Google** (device model and OS, app
+  version, a per-install id, latency, image size and format, error codes;
+  never the image or the result; ML Kit terms, 2025-05-14). This already
+  happens today through the QR scanner (`mobile_scanner` uses ML Kit
+  barcode scanning and the same `datatransport` telemetry), and is **not
+  yet in the privacy policy or store forms**: to fix (spec §11 has the text).
+- **Supply chain:** `camera` 0.12.2 and `google_mlkit_pose_detection` 1.0.2
+  are pinned exactly; OSV (2026-11-12) has no advisory for them or for the
+  29 Android libraries they add (CameraX 1.6.2, ML Kit pose 18.0.0-beta5,
+  WorkManager 2.7.0, …). The CI OSV scan reads `pubspec.lock` only, not
+  Gradle: re-check the Android libraries when either package is bumped.
+  On iOS the plugin pulls ML Kit through a third-party SwiftPM mirror
+  (`d-date/google-mlkit-swiftpm` 9.0.2, pinned by the plugin); the model
+  bundles it needs are **not** set up yet, and the iOS source refuses to
+  run the model until they are (pinned by checksum when added).
+
 ## If a key leaks (log, chat, commit)
 1. **Revoke or rotate it first**, then clean up. Logs can be copied in the
    minutes they are public.

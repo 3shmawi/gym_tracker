@@ -73,6 +73,14 @@ flutter {
     source = "../.."
 }
 
+// Move games use ML Kit's base pose model only. The plugin also links the
+// accurate one (+13.3 MB, Google's figure), which is never used: left out
+// of the app (docs/designs/move_games.md §9). proguard-rules.pro tells R8
+// that its classes are missing on purpose.
+configurations.configureEach {
+    exclude(group = "com.google.mlkit", module = "pose-detection-accurate")
+}
+
 dependencies {
     // Same version as flutter_local_notifications 22.3.3 uses.
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")

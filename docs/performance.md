@@ -203,3 +203,34 @@ TestFlight / Play internal builds made after 2026-11-04 (above), or
 `./scripts/perf.sh` on a phone plugged into a computer (with
 `git checkout origin/main -- lib` and `--name before` for the old code).
 Add the numbers here with the phone model, OS version and build mode.
+
+## Move games (pose model)
+Spec: `docs/designs/move_games.md` §9. Budget: the camera at ≈ 640×480, at
+most 15 frames/s sent to the model (frames arriving while it is busy are
+dropped); the detector works from 8 frames/s.
+
+### App size (measured)
+Release APK, prod flavor, built on Linux 2026-11-12 (`flutter build apk
+--release --target-platform android-arm64 --analyze-size`), `main` at
+4ed3cba vs this branch:
+
+| | before | after | growth |
+|---|---:|---:|---:|
+| Universal APK | 45.7 MB | 80.8 MB | +35.1 MB (ML Kit's native library for 3 CPU types) |
+| What an arm64 phone installs (from the App Bundle) | | | **+17.7 MB** (native library 10.3, models 5.8, code ≈ 1.6) |
+| What a 32-bit Android phone installs | | | +13.8 MB |
+
+The accurate model is not shipped (Gradle exclusion); only
+`pose_landmark_detector_lite` and the person detector are in the assets.
+iOS: not measured yet (the model bundles are not set up on iOS).
+
+### Frames per second on phones (to measure)
+On a staging build with the `move_games_debug` flag: Settings → About →
+*Pose check (testing)* → *Start camera*, do 10 push-ups; note *Speed*.
+Measure the cheapest Android at hand (target class: Helio G36 / Unisoc
+T606, 3–4 GB) and a mid-range one. Below 8 frames/s the games will offer
+the manual counter instead.
+
+| Phone | Android | Build | Speed (frames/s) | Counted right? |
+|---|---|---|---:|---|
+| _to fill_ | | staging | | |
