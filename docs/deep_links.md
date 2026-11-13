@@ -15,7 +15,11 @@ also a deep link.
 | `/library?day=<dayId>` | The exercise library, picking an exercise for that plan day (no day or an unknown day: "This day isn't in your plan"; a gym that keeps exercises to the captain: no picker) |
 | `/library/<exerciseId>[?day=<dayId>]` | One library exercise: picture and steps (unknown ids: "isn't in the library"); with a valid day it offers *Add*, otherwise it only reads |
 | `/settings` | Settings |
-| `/move/check` | The pose check, **testers only**: a non-prod build with the `move_games_debug` flag; otherwise home. Opening it never starts the camera (a tap does). `/move` and `/move/<exercise>` come with Move games (PR 2) |
+| `/move/check` | The pose check, **testers only**: a non-prod build with the `move_games_debug` flag; otherwise home. Opening it never starts the camera (a tap does). Comes before `/move/<exercise>`, so "check" is never an exercise |
+| `/move[?from=card\|menu]` | Move games hub, behind the `move_games` flag (off: home). `from` is for analytics only; anything else is "link" |
+| `/move/<exercise>[?round=<id>]` | The form tip and "why the camera"; never starts the camera. An unknown exercise → `/move`; an unknown round → 60 s |
+| `/move/<exercise>/play` | The camera round. **Only the app opens it** (it needs a `MoveLaunch` object a link can't carry): from a link it redirects to `/move/<exercise>`. Extra segments: not found |
+| `/move/<exercise>/count[?round=<id>]` | The manual counter (no camera): safe from a link; waits for *Start* |
 | `/welcome` | "How do you want to start?" (join a gym / train alone). Behind the `gym_join` flag |
 | `/join/scan` | The QR scanner. Reads nothing from its address. Behind the flag |
 | `/join/joined` | "Welcome to <gym>" right after a code was accepted; opened any other way it goes home. Behind the flag |

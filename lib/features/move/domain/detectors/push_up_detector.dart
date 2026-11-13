@@ -100,11 +100,14 @@ class PushUpDetector implements RepDetector {
   @override
   MoveExerciseId get exercise => MoveExerciseId.pushUps;
 
+  Set<FormHintKind> _issues = const {};
+
   RepState get _state => RepState(
     phase: _cycle.phase,
     depth: _cycle.depth,
     reps: _cycle.reps,
     view: _view,
+    issues: _issues,
   );
 
   @override
@@ -134,6 +137,7 @@ class PushUpDetector implements RepDetector {
     _viewCheckedAt = null;
     _frontHeights.clear();
     _lastAt = null;
+    _issues = const {};
     for (final g in [_straightBody, _moveBack, _moveCloser, _moreLight]) {
       g.reset();
     }
@@ -278,7 +282,9 @@ class PushUpDetector implements RepDetector {
   List<RepEvent> _hints(PoseFrame f) {
     final at = f.at;
     final hints = <RepEvent>[];
+    final issues = <FormHintKind>{};
     void hint(HintGate gate, FormHintKind kind, {required bool when}) {
+      if (when) issues.add(kind);
       if (gate.update(condition: when, at: at)) hints.add(FormHint(kind));
     }
 
@@ -320,6 +326,7 @@ class PushUpDetector implements RepDetector {
       FormHintKind.straightBody,
       when: _view == PoseView.side && _bodyBent(f),
     );
+    _issues = issues;
     return hints;
   }
 

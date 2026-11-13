@@ -21,14 +21,15 @@ describe('the library copy', () => {
   it('has every exercise of the app (no entry missed by the parser)', () => {
     const ids = [...catalogDart.matchAll(/^\s+id: '([a-z][a-z0-9_]*)',$/gm)].map((m) => m[1]);
     expect(LIBRARY.map((e) => e.id)).toEqual(ids);
-    expect(LIBRARY.length).toBe(36);
+    expect(LIBRARY.length).toBe(37);
   });
 
   it('knows every library video', () => {
     const withVideo = [...videosDart.matchAll(/'([a-z][a-z0-9_]*)':\s*YouTubeVideoRef\(/g)].map((m) => m[1]).sort();
     expect(LIBRARY.filter((e) => e.libraryVideo).map((e) => e.id).sort()).toEqual(withVideo);
-    // The 13 exercises added for days 4 and 5 have no library video yet.
-    expect(LIBRARY.filter((e) => !e.libraryVideo)).toHaveLength(13);
+    // The 13 exercises added for days 4 and 5, and Push-ups (Move games),
+    // have no library video yet.
+    expect(LIBRARY.filter((e) => !e.libraryVideo)).toHaveLength(14);
   });
 
   it('has unique ids the database accepts, and both names', () => {

@@ -10,13 +10,19 @@ import 'package:gym_tracker/features/workout/domain/entities/workout_session.dar
 class GetExerciseHistory {
   const new();
 
-  /// One exercise's history, or null when [exerciseId] isn't in the plan.
+  /// One exercise's history, or null when [exerciseId] isn't in the plan
+  /// (nor one of [extra] with history).
   ExerciseHistory? call(
     WorkoutPlan plan,
     List<WorkoutSession> history,
-    String exerciseId,
-  ) {
-    final exercise = _exercises(plan).where((e) => e.id == exerciseId);
+    String exerciseId, {
+    List<Exercise> extra = const [],
+  }) {
+    final exercise = _exercises(
+      plan,
+      history,
+      extra,
+    ).where((e) => e.id == exerciseId);
     if (exercise.isEmpty) return null;
     final oldestFirst = _entries(history, exerciseId);
     return ExerciseHistory(
@@ -30,20 +36,32 @@ class GetExerciseHistory {
     );
   }
 
-  /// Every exercise of the plan once, in plan order.
+  /// Every exercise of the plan once, in plan order, then each of [extra]
+  /// that is not in the plan but has history (push-ups from Move games).
   List<ExerciseProgress> overview(
     WorkoutPlan plan,
-    List<WorkoutSession> history,
-  ) => [
-    for (final e in _exercises(plan)) _progress(e, _entries(history, e.id)),
+    List<WorkoutSession> history, {
+    List<Exercise> extra = const [],
+  }) => [
+    for (final e in _exercises(plan, history, extra))
+      _progress(e, _entries(history, e.id)),
   ];
 
-  static List<Exercise> _exercises(WorkoutPlan plan) {
+  static List<Exercise> _exercises(
+    WorkoutPlan plan,
+    List<WorkoutSession> history,
+    List<Exercise> extra,
+  ) {
     final seen = <String>{};
     return [
       for (final day in plan.days)
         for (final e in day.exercises)
           if (seen.add(e.id)) e,
+      for (final e in extra)
+        if (!seen.contains(e.id) &&
+            history.any((s) => s.setsFor(e.id).any((set) => set.reps > 0)) &&
+            seen.add(e.id))
+          e,
     ];
   }
 

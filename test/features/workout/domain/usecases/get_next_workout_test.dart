@@ -143,4 +143,38 @@ void main() {
       expect(next.trainedToday, isFalse);
     });
   });
+
+  group('Move games rounds are not plan days', () {
+    WorkoutSession round(DateTime at) => WorkoutSession(
+      dayId: WorkoutSession.moveDayId,
+      finishedAt: at,
+      sets: const [LoggedSet(exerciseId: 'push_ups', weight: 0, reps: 20)],
+    );
+
+    test('a round after day 2 does not reset the plan to day 1', () {
+      final next = get(plan, [
+        session(1, DateTime(2026, 11, 2, 19)),
+        round(DateTime(2026, 11, 3, 8)),
+      ], now: DateTime(2026, 11, 3, 18));
+      expect(next.dayIndex, 2);
+    });
+
+    test("a round today doesn't mean today's workout is done", () {
+      final next = get(plan, [
+        session(0, DateTime(2026, 11, 2, 19)),
+        round(DateTime(2026, 11, 3, 8)),
+      ], now: DateTime(2026, 11, 3, 18));
+      expect(next.trainedToday, isFalse);
+      expect(next.waitingSince, isNull);
+    });
+
+    test('only rounds: still day 1, nothing waiting', () {
+      final next = get(plan, [
+        round(DateTime(2026, 11, 1, 8)),
+        round(DateTime(2026, 11, 2, 8)),
+      ], now: DateTime(2026, 11, 5, 18));
+      expect(next.dayIndex, 0);
+      expect(next.waitingSince, isNull);
+    });
+  });
 }

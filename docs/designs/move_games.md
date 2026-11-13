@@ -722,6 +722,20 @@ PR 1 (2026-11-12):
   not a separate debug flag screen elsewhere; recorded fixtures wait for
   the owner's videos (decision 9), synthetic sets cover every case meanwhile.
 
+PR 2 (2026-11-12):
+- **Two rounds are two sessions**, not one session with two sets: since
+  #90 a session's id is a hash of its content and the phone's database
+  never edits a workout, so "merge within 30 min" (§8) would mean
+  deleting history. Each round is its own `move` session.
+- The Move card sits **under the level card** on Today (below the fold on
+  a phone); the menu row is the quick way in.
+- Placement checks follow the detector's live `issues` (added to
+  `RepState`), not its throttled hints.
+- Until the game (PR 3), the running screen shows the time, a big rep
+  count, the depth bar and the body in the corner.
+- The integration demo runs headless too (`move_e2e_test.dart`), with a
+  recorded synthetic set; real recordings still wait for decision 9.
+
 ## Official docs checked (2026-11-12)
 - pub.dev API: `flame` 1.38.2 (2026-08-27, Flutter ≥ 3.41; 1.38.0 had
   breaking input-event changes only), `camera` 0.12.2 (2026-10-27, Flutter

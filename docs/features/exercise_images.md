@@ -14,7 +14,8 @@ placeholder (hatched tile with a dumbbell), at the same size.
   pictures' attributions are listed there.
 
 ## Coverage (checked 2026-11-10)
-All 36 exercises have a picture (13 added 2026-11-10 for the new days 4 and 5,
+All 37 exercises have a picture (Push-ups added 2026-11-12 for Move games,
+Everkinetic `0077-tension`, licence re-read that day; 13 added 2026-11-10 for the new days 4 and 5,
 all Everkinetic, licence re-read that day). **7 are substitutes**: no free drawing of the
 exercise itself exists, so the picture shows a similar exercise for the same
 muscle (`substitute: true` and a `substituteNote` in the manifest):

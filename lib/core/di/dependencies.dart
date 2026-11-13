@@ -9,6 +9,7 @@ import 'package:gym_tracker/core/legal/legal.dart';
 import 'package:gym_tracker/core/media/video_info.dart';
 import 'package:gym_tracker/core/monitoring/monitoring.dart';
 import 'package:gym_tracker/core/notifications/local_notifications.dart';
+import 'package:gym_tracker/core/screen_awake/screen_awake.dart';
 import 'package:gym_tracker/features/backup/data/in_memory_backup.dart';
 import 'package:gym_tracker/features/backup/data/prefs_backup_settings.dart';
 import 'package:gym_tracker/features/backup/data/sqlite_backup_queue.dart';
@@ -41,6 +42,8 @@ import 'package:gym_tracker/features/gym/domain/repositories/picture_catalog_rep
 import 'package:gym_tracker/features/gym/domain/repositories/session_outbox.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/solo_import_repository.dart';
 import 'package:gym_tracker/features/move/data/datasources/mlkit_pose_source.dart';
+import 'package:gym_tracker/features/move/data/repositories/prefs_move_local_repository.dart';
+import 'package:gym_tracker/features/move/domain/repositories/move_local_repository.dart';
 import 'package:gym_tracker/features/move/domain/repositories/pose_source.dart';
 import 'package:gym_tracker/features/settings/data/repositories/shared_prefs_settings_repository.dart';
 import 'package:gym_tracker/features/settings/domain/repositories/settings_repository.dart';
@@ -80,6 +83,13 @@ abstract final class Dependencies {
   /// Move games: a new pose source (front camera + on-device model) per
   /// screen. Tests and the simulator demo replay recorded frames instead.
   static PoseSource Function() poseSource = MlKitPoseSource.new;
+
+  /// Move games' best scores and flags on the phone.
+  static MoveLocalRepository moveLocalRepository =
+      InMemoryMoveLocalRepository();
+
+  /// Keeps the screen on during a Move games round.
+  static ScreenAwake screenAwake = const ChannelScreenAwake();
 
   /// Gym accounts. Until [init] runs, in widget tests and without Supabase
   /// values in the env file, joining fails with "offline" and nobody is
@@ -123,6 +133,7 @@ abstract final class Dependencies {
     settingsRepository = SharedPrefsSettingsRepository(prefs);
     consentStore = PrefsConsentStore(prefs);
     flagCache = PrefsFlagCache(prefs);
+    moveLocalRepository = PrefsMoveLocalRepository(prefs);
     // The phone's database; the preferences if it cannot be opened.
     await workoutDatabase?.close();
     final storage = await openWorkoutRepository(

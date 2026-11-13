@@ -22,10 +22,44 @@ camera leaves the phone; only the reps the member chooses to save are kept.
   sees, the frames per second and what the detector decides. It is how
   phones are measured before the games ship.
 
-Next: PR 2 (catalog "Push-ups", hub, setup flow, manual counter, saving to
-history), PR 3 (the Stack game), PR 4 (privacy, store forms, staging).
+**PR 2 (behind `move_games`, off in prod):**
+- The **Move** entry: a card on Today (under the level, hidden during a
+  workout) and a row in the home menu.
+- The hub, the form tip, "why the camera", the camera round (placement
+  with live checks, 3-2-1, the round, pause, body lost, results) and the
+  **manual counter** (the same rounds, no camera).
+- **Saving** a round to training history as a set of the new library
+  exercise **Push-ups**; the history fixes below.
+- The captain's dashboard names a Move round and knows Push-ups.
+
+Next: PR 3 (the Stack game in the running screen, sounds), PR 4 (privacy
+page, store forms, flag on for staging), then iOS model set-up.
 
 ## User flows
+**Camera round:** Today → *Move* card (or menu → *Move · rep games*) →
+pick a round (30 s, 60 s, 10 reps, 20 reps) → *Play with the camera* →
+the form tip (first time only) → "why the camera" (until the camera was
+allowed once) → *Start camera* (the system asks the first time) →
+placement: put the phone on the floor at your side, the checks turn green
+(body in view, view found, light, plank held a second) → 3-2-1 by itself →
+the round (time, reps, depth, the body in the corner, one hint at a time)
+→ results (reps, steady reps, half reps, time, new best) → *Save to my
+training* (never automatic) → *See progress*.
+
+**Manual counter:** the hub (or any camera dead end) → *Count by hand* →
+*Start* → 3-2-1 → tap the big target after each rep, *Remove one* for a
+mistake → results → save, the same way.
+
+**Paused:** the pause button, the body out of the picture for 1.5 s, or the
+app leaving the front (the camera is released at once). Back in the
+picture after a body-lost pause, 3-2-1 starts again by itself; otherwise
+*Resume (3, 2, 1)*. *Switch to counting by hand* or *End round* keep the
+reps done.
+
+**Can't use the camera:** refused → *Open settings* or *Count by hand*;
+no front camera, model can't run, or slower than 8 frames/s after 4 s →
+"Camera games don't work on this phone" → *Count by hand*.
+
 **Pose check (testers):** Settings → About → *Pose check (testing)* →
 *Start camera* (the system asks for the camera the first time) → put the
 phone on the floor at your side, 1.5–2 m away → do push-ups. The screen
@@ -99,16 +133,42 @@ synthetic sets (`test/features/move/helpers/synthetic_pose.dart`: side
 left/right and front, 8–30 fps, body size ×0.4–×1.4, noise, dropped
 frames, gaps, half and rushed reps, sagging hips).
 
+## Rules
+- **Rounds:** `s30`, `s60` (default), `r10`, `r20`; no round lasts more
+  than 2 minutes. A rep counts only while running; 3-2-1 before every
+  start and resume. Steady rep = ≥ 1.4 s top to top (shown, not saved).
+- **Saving:** its own session, `day_id` `move`, one set of `push_ups`,
+  weight 0, reps clamped to 0..999 (like a logged set); a round with 0
+  reps can't be saved; the chosen day is kept. Every round is its own
+  session (sessions are immutable, see Decisions).
+- **History:** Move sessions never move the plan on and never mark today
+  as trained; for the level they count as one workout on a day with at
+  least 20 reps in all (`GetLevel.moveRepsForLevel`); push-ups from rounds
+  show in Progress even when push-ups is not in the plan; in a gym they
+  upload like any workout, and the dashboard names them.
+- **Best score** per exercise and round kind, on the phone (`move.best.*`
+  in shared preferences, 1..999 only).
+- **Screen on** during the camera round (`azm/screen_awake`), off at the
+  end, on pause by background and when the screen closes.
+
 ## Analytics events
-None yet: the pose check is for testers and sends no events. The game's
-events (`move_opened`, `move_camera_answered`, `move_unsupported`,
-`move_game_started`, `move_game_finished`, `move_round_saved`) come with
-PR 2 and 3 (spec §11). No images, landmarks or personal data, ever.
+No images, landmarks or personal data, ever; counts and durations are
+buckets (`MoveAnalytics`). The pose check sends none.
+
+| Event | When | Properties |
+|---|---|---|
+| `move_opened` | the hub opens | `source`: `card`, `menu`, `link` |
+| `move_camera_answered` | the camera was asked for (first time, or refused) | `result`: `granted`, `denied` |
+| `move_unsupported` | the camera can't be used | `reason`: `no_camera`, `model_failed`, `too_slow` |
+| `move_game_started` | a round starts (after 3-2-1 or Start) | `exercise`, `mode` (`camera`/`manual`), `round` |
+| `move_game_finished` | a round ends | `exercise`, `mode`, `round`, `reps_bucket`, `duration_bucket`, `ended` (`completed`/`quit`), `fps_bucket` (camera only) |
+| `move_round_saved` | *Save to my training* | `exercise`, `mode` |
 
 ## Feature flags
 - `move_games_debug`: the pose check. **Never in prod builds**, whatever
   the flag says (`moveCheckAllowed()`).
-- `move_games`: the games (PR 2+).
+- `move_games`: the Move card, the menu row and every `/move` screen;
+  off, `/move` links open home.
 
 ## Tests
 - Unit: `test/features/move/domain/detectors/` (`RepCycle`,
@@ -123,11 +183,37 @@ PR 2 and 3 (spec §11). No images, landmarks or personal data, ever.
   never reaches the page in prod or with the flag off, never makes a
   camera source), `platform_config_test.dart` (removed library
   permissions, optional camera, the accurate model left out).
-- Integration: comes with the game (PR 3), as the demo below.
+- Rounds and saving: `test/features/move/domain/round_test.dart`,
+  `save_move_round_test.dart`, `placement_test.dart`,
+  `presentation/round_controllers_test.dart` (placement → round → results
+  → saved; refused; too slow; background; body lost; 0 reps; saving once).
+- Screens: `presentation/move_screens_test.dart` (`screensUiTests` for 19
+  states: hub, tip, why, placement, 3-2-1, running side and front, paused,
+  body lost, results, saved, refused, too slow, manual ready / running /
+  paused / results).
+- History: `get_next_workout_test`, `get_level_test`,
+  `get_exercise_history_test` (Move groups).
+- Security: `deep_link_test.dart` → `/move (Move games)`: a link to
+  `/move/push_ups/play` lands on the tip, never the camera; hostile
+  exercises and rounds; flag off → home.
+- Demo: `integration_test/flows/move_flow.dart`, run on the simulator
+  (`app_test.dart`) and headless (`test/features/move/move_e2e_test.dart`):
+  a recorded synthetic set, ten push-ups counted by the real detector,
+  saved, shown in history.
 
 ## Decisions & edge cases
 - Approved spec: [`docs/designs/move_games.md`](../designs/move_games.md)
   (Stack game; the recommended choice in each decision).
+- **Two rounds are two sessions**, not merged: a session's id is a hash of
+  its content and the phone's database never edits a workout (spec §8
+  said "merged within 30 min"; not possible without editing history).
+- A link can open the hub, the tip, "why the camera" and the manual
+  counter; only the app can open the camera round (`MoveLaunch`).
+- Placement uses the detector's live `issues`, not its hints: a hint is
+  given once in a while, so a check driven by hints turned green while
+  the feet were still out of the picture.
+- With a screen reader on, *Count by hand* comes first on the hub; the
+  big target is one button that says the count.
 - The camera is released when the app leaves the foreground (the camera
   plugin leaves lifecycle to the app), on Stop and when the screen closes;
   the camera goes off before the listeners are dropped.
@@ -139,9 +225,17 @@ PR 2 and 3 (spec §11). No images, landmarks or personal data, ever.
   pre-release) carry the native library for three CPU types: +35 MB.
 
 ## Demo & post
-<!-- Filled when the game is done (PR 3). -->
-**Hook (first 2 seconds):**
-**Scenario:**
-**Caption (English):**
-**Caption (Egyptian Arabic):**
-**Hashtags:** #flutter #buildinpublic
+<!-- The video is recorded on demand (the `demo` label); this is PR 2's
+     version (the counter, before the Stack game). -->
+**Hook (first 2 seconds):** a phone on the floor counting push-ups out
+loud on screen: "7… 8… 9… 10".
+**Scenario:** home → Move → 10 reps → the form tip → why the camera →
+the checks turn green → 3-2-1 → ten push-ups → results → Save → push-ups
+in the exercise's history.
+**Caption (English):** Your phone counts your push-ups now. The camera
+watches on the phone only (nothing recorded, nothing sent), half reps
+don't count, and the round goes straight into your training log.
+**Caption (Egyptian Arabic):** موبايلك بقى بيعدّ عدّات الضغط. الكاميرا
+بتتابعك على الموبايل بس (مفيش تسجيل ولا حاجة بتتبعت)، نص العدّة مبتتحسبش،
+والجولة بتتحفظ على طول في تمرينك.
+**Hashtags:** #flutter #buildinpublic #fitness #pushups #عزم

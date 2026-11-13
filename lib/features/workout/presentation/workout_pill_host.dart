@@ -65,8 +65,9 @@ class CurrentPathController extends Notifier<String> {
 /// Screens without the pill: the workout itself (the member is already in
 /// it), the home screen (its own button starts or continues the workout),
 /// the plan editor (its action buttons sit in the same bottom corner, and
-/// the pill covered "Add exercise") and the screens before the app
-/// (welcome, joining a gym).
+/// the pill covered "Add exercise"), the screens before the app
+/// (welcome, joining a gym) and Move games (it would cover the game; the
+/// workout keeps its draft and rest timer).
 bool workoutPillHiddenOn(String path) =>
     path == AppRoutes.workout ||
     path == AppRoutes.home ||
@@ -74,7 +75,9 @@ bool workoutPillHiddenOn(String path) =>
     path.startsWith('${AppRoutes.plan}/') ||
     path == AppRoutes.welcome ||
     path == AppRoutes.join ||
-    path.startsWith('${AppRoutes.join}/');
+    path.startsWith('${AppRoutes.join}/') ||
+    path == AppRoutes.move ||
+    path.startsWith('${AppRoutes.move}/');
 
 /// What the pill shows now, from the workout in progress (if any) and the
 /// waiting day; null: nothing to start (no plan, or an empty day).

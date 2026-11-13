@@ -87,4 +87,9 @@ abstract final class Flags {
   /// Never in prod builds, whatever the flag says
   /// (docs/designs/move_games.md §9).
   static const moveGamesDebug = 'move_games_debug';
+
+  /// Move games: the Move card on Today, the menu row and every `/move`
+  /// screen (docs/designs/move_games.md). Off: none of it shows and the
+  /// links open the home screen.
+  static const moveGames = 'move_games';
 }

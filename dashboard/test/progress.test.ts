@@ -1,8 +1,10 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { describe, expect, it } from 'vitest';
 import { parsePath } from '../src/app/router';
-import { byExercise, fillWeeks, perWeek, ProgressRepository, toPoint, toSummary, toWeek, toWorkout, type Summary } from '../src/progress/progress';
+import { byExercise, fillWeeks, MOVE_DAY_ID, perWeek, ProgressRepository, toPoint, toSummary, toWeek, toWorkout, type Summary } from '../src/progress/progress';
 import { dateLabel, gymWeek, num, startOfWeek, weekLabel, weekOfStart } from '../src/progress/weeks';
 
 const M = 'a0000000-0000-4000-8000-000000000001';
@@ -152,5 +154,12 @@ describe('ProgressRepository', () => {
   it('routes: the settings page needs a UUID gym id', () => {
     expect(parsePath(`/g/${GYM}/settings`)).toEqual({ name: 'settings', gymId: GYM });
     expect(parsePath('/g/x/settings').name).toBe('not_found');
+  });
+});
+
+describe('Move games rounds', () => {
+  it('use the same day id as the app', () => {
+    const dart = readFileSync(resolve(process.cwd(), '../lib/features/workout/domain/entities/workout_session.dart'), 'utf8');
+    expect(dart).toContain(`static const moveDayId = '${MOVE_DAY_ID}';`);
   });
 });

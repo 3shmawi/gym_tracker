@@ -37,6 +37,7 @@ class NextWorkoutView extends StatelessWidget {
     this.onBuildPlan,
     this.onEditDay,
     this.onJoinGym,
+    this.onOpenMove,
     this.covers = const {},
     super.key,
   });
@@ -88,6 +89,10 @@ class NextWorkoutView extends StatelessWidget {
   /// "Join your gym": for people training alone (no gym account yet).
   final VoidCallback? onJoinGym;
 
+  /// Move games: the card under the level (not during a workout) and a
+  /// menu row; `fromCard` says which, for analytics. Null: flag off.
+  final void Function({required bool fromCard})? onOpenMove;
+
   List<HomeMenuEntry> _menuEntries(
     AppLocalizations l10n,
     BuildContext context,
@@ -119,6 +124,13 @@ class NextWorkoutView extends StatelessWidget {
         icon: Icons.show_chart,
         label: l10n.progressTitle,
         onTap: onOpenProgress!,
+      ),
+    if (onOpenMove != null)
+      HomeMenuEntry(
+        key: const Key('home_move_button'),
+        icon: Icons.sports_gymnastics,
+        label: l10n.homeMenuMove,
+        onTap: () => onOpenMove!(fromCard: false),
       ),
     HomeMenuEntry(
       key: const Key('home_settings_button'),
@@ -154,6 +166,9 @@ class NextWorkoutView extends StatelessWidget {
           onChooseDay: onChooseDay,
           onOpenExercise: onOpenExercise,
           onEditDay: onEditDay,
+          onOpenMove: inProgress || onOpenMove == null
+              ? null
+              : () => onOpenMove!(fromCard: true),
           covers: covers,
         ),
         AsyncData() => EmptyView(
@@ -204,10 +219,14 @@ class _Workout extends StatelessWidget {
     this.now = DateTime.now,
     this.onOpenExercise,
     this.onEditDay,
+    this.onOpenMove,
     this.covers = const {},
   });
 
   final NextWorkout next;
+
+  /// The Move card (null: flag off, or a workout in progress).
+  final VoidCallback? onOpenMove;
   final Map<String, ImageProvider> covers;
   final ValueChanged<String>? onEditDay;
   final ValueChanged<String>? onOpenExercise;
@@ -408,6 +427,10 @@ class _Workout extends StatelessWidget {
                 ),
               SizedBox(height: AppDimens.md),
               LevelCard(progress: next.level),
+              if (onOpenMove != null) ...[
+                SizedBox(height: AppDimens.md),
+                _MoveCard(onTap: onOpenMove!),
+              ],
             ],
           ),
         ),
@@ -524,6 +547,80 @@ class _HomeRestLineState extends State<HomeRestLine> {
       style: AppTextStyles.label.copyWith(
         color: palette.textPrimary,
         fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    );
+  }
+}
+
+/// "Move · Push-up game" under the level (design board 1.1).
+class _MoveCard extends StatelessWidget {
+  const new({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final palette = context.palette;
+    return Semantics(
+      button: true,
+      label: '${l10n.todayMoveTitle}. ${l10n.todayMoveBody}',
+      excludeSemantics: true,
+      child: AppCard(
+        child: InkWell(
+          key: const Key('home_move_card'),
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: AppDimens.minTouchTarget,
+            ),
+            child: Row(
+              spacing: AppDimens.sm2,
+              children: [
+                Container(
+                  width: AppDimens.scaled(52),
+                  height: AppDimens.scaled(52),
+                  decoration: BoxDecoration(
+                    color: palette.brandTint,
+                    borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                  ),
+                  child: Icon(
+                    Icons.sports_gymnastics,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.todayMoveLabel,
+                        style: AppTextStyles.caption.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        l10n.todayMoveTitle,
+                        style: AppTextStyles.title.copyWith(
+                          color: palette.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        l10n.todayMoveBody,
+                        style: AppTextStyles.caption.copyWith(
+                          color: palette.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: palette.textSecondary),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

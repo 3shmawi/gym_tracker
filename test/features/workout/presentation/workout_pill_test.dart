@@ -144,6 +144,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(top(), '/');
 
+    // Move games: the pill would cover the game.
+    expect(workoutPillHiddenOn('/move'), isTrue);
+    expect(workoutPillHiddenOn('/move/push_ups/play'), isTrue);
+    expect(workoutPillHiddenOn('/movement'), isFalse);
+
     unawaited(router.push<void>('/settings'));
     await tester.pumpAndSettle();
     expect(top(), '/settings');

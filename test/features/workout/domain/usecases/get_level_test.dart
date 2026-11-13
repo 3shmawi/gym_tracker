@@ -177,4 +177,46 @@ void main() {
     expect(Level.fromName("pro'; DROP TABLE x;--"), Level.beginner);
     expect(Level.fromName('PRO'), Level.beginner);
   });
+
+  group('Move games rounds (docs/designs/move_games.md §8)', () {
+    WorkoutSession round(int week, int day, int reps, {int hour = 0}) =>
+        WorkoutSession(
+          dayId: WorkoutSession.moveDayId,
+          finishedAt: _week0.add(Duration(days: week * 7 + day, hours: hour)),
+          sets: [LoggedSet(exerciseId: 'push_ups', weight: 0, reps: reps)],
+        );
+
+    test('a day of rounds with 20+ reps counts as one workout', () {
+      // Two plan workouts + one Move day = an active week.
+      final history = [
+        ..._week(0, 2),
+        round(0, 3, 12),
+        round(0, 3, 8, hour: 1),
+      ];
+      expect(getLevel(history, now: _endOf(0)).streakWeeks, 1);
+    });
+
+    test('many rounds on one day still count once', () {
+      final history = [
+        ..._week(0, 1),
+        for (var h = 0; h < 5; h++) round(0, 3, 30, hour: h),
+      ];
+      expect(getLevel(history, now: _endOf(0)).streakWeeks, 0);
+    });
+
+    test('under 20 reps in a day does not count', () {
+      final history = [..._week(0, 2), round(0, 3, 19)];
+      expect(getLevel(history, now: _endOf(0)).streakWeeks, 0);
+    });
+
+    test('three days of rounds alone can make an active week', () {
+      final history = [round(0, 1, 20), round(0, 2, 25), round(0, 4, 30)];
+      expect(getLevel(history, now: _endOf(0)).streakWeeks, 1);
+    });
+
+    test('negative reps from a broken set never add up', () {
+      final history = [..._week(0, 2), round(0, 3, -50), round(0, 3, 15)];
+      expect(getLevel(history, now: _endOf(0)).streakWeeks, 0);
+    });
+  });
 }

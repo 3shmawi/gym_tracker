@@ -75,4 +75,29 @@ abstract final class AppRoutes {
   /// The pose check for testers (not in prod builds; `move_games_debug`
   /// flag). Opening it never starts the camera: that needs a tap.
   static const moveCheck = '/move/check';
+
+  /// Move games: the hub (the exercises, your best, round length).
+  static const move = '/move';
+
+  /// One exercise: the form tip and the "why the camera" screen. Opening
+  /// it never starts the camera. [round] is a `RoundKind` id.
+  static String moveSetup(String exercise, {String? round}) {
+    final path = '$move/${Uri.encodeComponent(exercise)}';
+    return round == null
+        ? path
+        : '$path?round=${Uri.encodeQueryComponent(round)}';
+  }
+
+  /// The camera round. Only opens with a `MoveLaunch` from the app (a link
+  /// cannot carry one): otherwise it redirects to [moveSetup].
+  static String movePlay(String exercise) =>
+      '$move/${Uri.encodeComponent(exercise)}/play';
+
+  /// The manual counter (no camera), safe from a link.
+  static String moveCount(String exercise, {String? round}) {
+    final path = '$move/${Uri.encodeComponent(exercise)}/count';
+    return round == null
+        ? path
+        : '$path?round=${Uri.encodeQueryComponent(round)}';
+  }
 }

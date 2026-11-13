@@ -30,6 +30,7 @@ class RepState {
     this.depth = 0,
     this.reps = 0,
     this.view,
+    this.issues = const {},
   });
 
   final RepPhase phase;
@@ -43,16 +44,23 @@ class RepState {
   /// Null until the detector knows.
   final PoseView? view;
 
+  /// The problems seen in this frame (too far, out of the picture, too
+  /// dark…), unlike [FormHint]s, which are given once in a while. The
+  /// placement guide keeps a check red while its problem lasts.
+  final Set<FormHintKind> issues;
+
   RepState copyWith({
     RepPhase? phase,
     double? depth,
     int? reps,
     PoseView? Function()? view,
+    Set<FormHintKind>? issues,
   }) => RepState(
     phase: phase ?? this.phase,
     depth: depth ?? this.depth,
     reps: reps ?? this.reps,
     view: view == null ? this.view : view(),
+    issues: issues ?? this.issues,
   );
 
   @override
@@ -61,10 +69,13 @@ class RepState {
       other.phase == phase &&
       other.depth == depth &&
       other.reps == reps &&
-      other.view == view;
+      other.view == view &&
+      other.issues.length == issues.length &&
+      other.issues.containsAll(issues);
 
   @override
-  int get hashCode => Object.hash(phase, depth, reps, view);
+  int get hashCode =>
+      Object.hash(phase, depth, reps, view, Object.hashAllUnordered(issues));
 
   @override
   String toString() => 'RepState(${phase.name}, $depth, $reps, ${view?.name})';

@@ -16,6 +16,9 @@ import 'package:gym_tracker/features/workout/domain/entities/workout_session.dar
 /// - **Comeback:** climbing back to a level reached before takes half the
 ///   weeks, rounded up (2 for intermediate, 4 for pro).
 ///
+/// - **Move games** rounds count as one workout on a day with at least
+///   [moveRepsForLevel] reps, never more than one a day.
+///
 /// `best` is the highest level reached before (stored), so a comeback stays
 /// fast even after old history is trimmed.
 class GetLevel {
@@ -26,6 +29,13 @@ class GetLevel {
   });
 
   final int workoutsPerWeek;
+
+  /// Move games rounds count as one workout on a day with at least this many
+  /// reps in all (docs/designs/move_games.md §8, decision 4).
+  static const moveRepsForLevel = 20;
+
+  static int _addReps(int sum, LoggedSet set) =>
+      sum + (set.reps > 0 ? set.reps : 0);
 
   /// Active weeks in a row from beginner to intermediate.
   final int intermediateWeeks;
@@ -49,8 +59,22 @@ class GetLevel {
     Level best = Level.beginner,
   }) {
     final perWeek = <int, int>{};
+    final moveReps = <DateTime, int>{};
     for (final s in history) {
-      final week = _week(s.finishedAt.toLocal());
+      final local = s.finishedAt.toLocal();
+      if (s.isMove) {
+        final day = DateTime(local.year, local.month, local.day);
+        moveReps[day] = (moveReps[day] ?? 0) + s.sets.fold(0, _addReps);
+        continue;
+      }
+      final week = _week(local);
+      perWeek[week] = (perWeek[week] ?? 0) + 1;
+    }
+    // Move games rounds: one workout at most per day, and only with enough
+    // reps that day, so a few one-minute rounds can't make an active week.
+    for (final MapEntry(key: day, value: reps) in moveReps.entries) {
+      if (reps < moveRepsForLevel) continue;
+      final week = _week(day);
       perWeek[week] = (perWeek[week] ?? 0) + 1;
     }
     bool active(int week) => (perWeek[week] ?? 0) >= workoutsPerWeek;

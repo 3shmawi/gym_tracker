@@ -18,8 +18,12 @@ import 'package:gym_tracker/features/gym/presentation/scanner_page.dart';
 import 'package:gym_tracker/features/gym/presentation/welcome_page.dart';
 import 'package:gym_tracker/features/library/presentation/exercise_guide_page.dart';
 import 'package:gym_tracker/features/library/presentation/library_page.dart';
+import 'package:gym_tracker/features/move/domain/entities/move_exercise.dart';
+import 'package:gym_tracker/features/move/domain/entities/round.dart';
 import 'package:gym_tracker/features/move/presentation/move_check_controller.dart';
 import 'package:gym_tracker/features/move/presentation/move_check_page.dart';
+import 'package:gym_tracker/features/move/presentation/move_pages.dart';
+import 'package:gym_tracker/features/move/presentation/move_providers.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_page.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_page.dart';
 import 'package:gym_tracker/features/workout/presentation/exercise_history_page.dart';
@@ -75,6 +79,24 @@ Future<String?> _homeGate(BuildContext context, GoRouterState state) async {
   } on Object {
     return null;
   }
+}
+
+/// Move games are behind the `move_games` flag: off, every /move link opens
+/// the home screen.
+Future<String?> _moveGate(BuildContext context, GoRouterState state) async =>
+    await FeatureFlags.isEnabled(Flags.moveGames) ? null : AppRoutes.home;
+
+/// An exercise Move games know; anything else (a crafted link) goes to the
+/// hub.
+Future<String?> _moveExerciseGate(
+  BuildContext context,
+  GoRouterState state,
+) async {
+  final gate = await _moveGate(context, state);
+  if (gate != null) return gate;
+  return MoveExerciseId.fromId(state.pathParameters['exercise']) == null
+      ? AppRoutes.move
+      : null;
 }
 
 /// The app's router. Deep links are handled by go_router automatically.
@@ -229,6 +251,58 @@ final appRouter = GoRouter(
       redirect: (context, state) async =>
           await moveCheckAllowed() ? null : AppRoutes.home,
       builder: (context, state) => const MoveCheckPage(),
+    ),
+    // Move games (behind `move_games`). After /move/check, so "check" is
+    // never read as an exercise. A link can open the hub, the tip and the
+    // manual counter; never the camera (docs/deep_links.md).
+    GoRoute(
+      path: AppRoutes.move,
+      name: 'move',
+      redirect: _moveGate,
+      builder: (context, state) => MoveHubPage(
+        source: MoveSource.fromQuery(state.uri.queryParameters['from']),
+      ),
+      routes: [
+        GoRoute(
+          path: ':exercise',
+          name: 'move_setup',
+          redirect: _moveExerciseGate,
+          builder: (context, state) => MoveSetupPage(
+            exercise: MoveExerciseId.fromId(state.pathParameters['exercise'])!,
+            kind: RoundKind.fromId(state.uri.queryParameters['round']),
+          ),
+          routes: [
+            GoRoute(
+              path: 'play',
+              name: 'move_play',
+              redirect: (context, state) async {
+                final gate = await _moveExerciseGate(context, state);
+                if (gate != null) return gate;
+                final exercise = state.pathParameters['exercise']!;
+                // Only the app passes a launch: a link never opens the
+                // camera, it lands on the tip / "why the camera" screen.
+                return switch (state.extra) {
+                  MoveLaunch(exercise: final e) when e.id == exercise => null,
+                  _ => AppRoutes.moveSetup(exercise),
+                };
+              },
+              builder: (context, state) =>
+                  CameraRoundPage(launch: state.extra! as MoveLaunch),
+            ),
+            GoRoute(
+              path: 'count',
+              name: 'move_count',
+              redirect: _moveExerciseGate,
+              builder: (context, state) => ManualCounterPage(
+                launch: MoveLaunch(
+                  MoveExerciseId.fromId(state.pathParameters['exercise'])!,
+                  RoundKind.fromId(state.uri.queryParameters['round']),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     ),
   ],
   errorBuilder: (context, state) => const NotFoundPage(),

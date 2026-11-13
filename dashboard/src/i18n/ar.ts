@@ -622,6 +622,7 @@ export const ar: Record<MessageKey, string> = {
   'prog.colSetsFull': 'المجموعات اتعملت / اتسجّلت / المخطط',
   'prog.colSkipped': 'اتساب',
   'prog.minutes': '{count} دقيقة',
+  'prog.dayMove': 'حركة · جولة ضغط (بالكاميرا)',
   'prog.dayGone': 'يوم مبقاش في الخطة',
   'prog.records': 'أرقام جديدة: {count}',
   'prog.noneSkipped': 'ولا حاجة',

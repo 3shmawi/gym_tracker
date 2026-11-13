@@ -16,6 +16,9 @@ import 'package:gym_tracker/features/workout/domain/usecases/suggest_weight.dart
 /// deleted, the plan starts again from day 1 (a plan edit pins the waiting
 /// day first, see `KeepNextWorkout`).
 ///
+/// Move games rounds (`WorkoutSession.isMove`) are left out: they are not
+/// plan days.
+///
 /// The member can pick the next day themselves (`chosenDay`, e.g. joining
 /// mid-plan); that wins until the next finished workout. Unknown ids are
 /// ignored. A day pinned by an edit ([ChosenDay.byEdit]) keeps the
@@ -38,7 +41,9 @@ class GetNextWorkout {
     }
     final sorted = [...history]
       ..sort((a, b) => a.finishedAt.compareTo(b.finishedAt));
-    final last = sorted.isEmpty ? null : sorted.last;
+    // A Move games round is not a plan day: it never moves the plan on, and
+    // a round today doesn't mean today's workout is done.
+    final last = sorted.where((s) => !s.isMove).lastOrNull;
     final chosenIndex = plan.indexOfDay(chosenDay?.dayId);
     final chosen = chosenIndex < 0 ? null : chosenIndex;
     final lastIndex = plan.indexOfDay(last?.dayId);

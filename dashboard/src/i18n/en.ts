@@ -621,6 +621,7 @@ export const en = {
   'prog.colSetsFull': 'Sets done / logged / planned',
   'prog.colSkipped': 'Skipped',
   'prog.minutes': '{count} min',
+  'prog.dayMove': 'Move · push-up round (camera)',
   'prog.dayGone': 'A day no longer in the plan',
   'prog.records': 'New records: {count}',
   'prog.noneSkipped': 'None',

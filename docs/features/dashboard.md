@@ -629,6 +629,8 @@ screens follow the Design System and D0–D4.
   first plan's day is "Day 1 / اليوم 1".
 - **Names:** exercises and days from the member's plan (D3), else the library
   (D2), else "An exercise no longer in the plan" / "A day no longer in the plan".
+  A Move games round (`day_id` `move`) shows as "Move · push-up round
+  (camera)" (`MOVE_DAY_ID`, kept in step with the app by `progress.test.ts`).
 - **Limits shown, not hidden:** a null duration or planned count is "—", not 0;
   "planned sets are approximate" (compared with today's plan); "level counts
   gym workouts only"; "only workouts logged in this gym".

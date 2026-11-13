@@ -845,5 +845,30 @@ abstract final class ExerciseCatalog {
         ),
       ],
     ),
+    // Also counted by the camera in Move games (docs/designs/move_games.md
+    // §8): rounds are saved as sets of this exercise. Reps only, no weight.
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'push_ups',
+        name: LocalizedName(ar: 'ضغط', en: 'Push-ups'),
+        unit: ExerciseUnit.reps,
+      ),
+      muscle: MuscleGroup.chest,
+      equipment: [Equipment.bodyweight],
+      steps: [
+        LocalizedName(
+          ar: 'إيدك تحت كتفك بالظبط، وجسمك كله على خط واحد من راسك لكعبك.',
+          en: 'Hands right under your shoulders, your body in one straight line from head to heels.',
+        ),
+        LocalizedName(
+          ar: 'انزل براحة لحد ما صدرك يقرّب من الأرض، والكوع لورا شوية.',
+          en: 'Lower slowly until your chest is close to the floor, elbows slightly back.',
+        ),
+        LocalizedName(
+          ar: 'اطلع لفوق لحد ما دراعاتك تتفرد. البطء أحسن من السرعة.',
+          en: 'Push back up until your arms are straight. Slow is better than fast.',
+        ),
+      ],
+    ),
   ];
 }
