@@ -178,12 +178,29 @@ synthetic sets, to be tuned on recordings (below).
 
 ## Platforms and devices
 - **Android 8+ (API 26, the app's minimum):** the live source works.
-- **iOS:** the code and package are in, but `MlKitPoseSource` reports
-  "model unavailable" on iOS (`iosModelInstalled = false`): ML Kit needs its
-  model bundles copied into the Runner target and `-ObjC -all_load`
-  linker flags (the plugin's README), which must be set up and tested on a
-  Mac. Until then the pose check shows "The pose model can't run on this
-  phone yet." ML Kit inference never runs on the iOS Simulator.
+- **iOS 15+ (set up 2026-11-13):** ML Kit through Swift Package Manager
+  (`d-date/google-mlkit-swiftpm` 9.0.2, pulled in by the plugin). Two things
+  the package can't do by itself are in the project:
+  - the **model bundles** in `ios/Runner/MLKit/` (base model only: Fast,
+    Common, Xeno; 5.6 MB), copied into the app by the Runner target's *Copy
+    Bundle Resources*. They are **Google's own files** (dl.google.com,
+    `MLKitPoseDetection` 1.0.0-beta16), byte for byte the same as the
+    third-party release bundles; `scripts/ios_mlkit_bundles.sh` checks them
+    against pinned SHA-256 sums (`--fetch` gets them again from Google);
+  - the linker flags `-ObjC -all_load` (`ios/Flutter/MLKit.xcconfig`,
+    included by every build configuration).
+  `test/security/platform_config_test.dart` checks the files, the pins, the
+  Copy Bundle Resources entries and the flags.
+- **The iOS Simulator can't run the model** (it needs the device's GPU): on
+  the simulator the source reports "model unavailable" without calling ML
+  Kit (`MlKitPoseSource.onIosSimulator`), so the pose check and rounds offer
+  the manual counter there. Real counting needs an iPhone.
+- **To check on a real iPhone** (staging build, `move_games_debug` on): the
+  pose check finds the body, the dots line up with the camera picture (iOS
+  sends the front camera's frames upright and mirrored, like the preview),
+  the speed is ≥ 8 frames/s, and push-ups count. Do the same on Android: its
+  frames are not mirrored, so the dots over the preview may be flipped there
+  (counting isn't affected: the detector works for either side).
 - Speed: measured with the pose check (`docs/performance.md` → Move games).
 
 ## Recordings (test fixtures)
