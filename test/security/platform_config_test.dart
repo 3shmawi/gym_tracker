@@ -141,6 +141,19 @@ void main() {
       expect(granted, isNot(contains('RECORD_AUDIO')));
     });
 
+    test('release builds keep the Room constructors WorkManager needs', () {
+      // WorkManager (from ML Kit) opens its Room database at launch through
+      // Class.newInstance(); without this rule R8 full mode removed the
+      // constructor and the app crashed on start (0.48.0-0.51.x).
+      final rules = File('android/app/proguard-rules.pro').readAsStringSync();
+      expect(
+        rules.replaceAll(RegExp(r'\s+'), ' '),
+        contains(
+          '-keep class * extends androidx.room.RoomDatabase { <init>(); }',
+        ),
+      );
+    });
+
     test('only the launcher activity is exported', () {
       final exported = RegExp('android:exported="true"').allMatches(manifest);
       expect(exported.length, 1);
