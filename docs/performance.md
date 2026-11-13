@@ -222,7 +222,11 @@ Release APK, prod flavor, built on Linux 2026-11-12 (`flutter build apk
 
 The accurate model is not shipped (Gradle exclusion); only
 `pose_landmark_detector_lite` and the person detector are in the assets.
-iOS: not measured yet (the model bundles are not set up on iOS).
+iOS (2026-11-13): the model files add **5.6 MB** (`ios/Runner/MLKit/`, base
+model only); ML Kit's frameworks come on top and are not measured yet (they
+need a signed device build: `flutter build ipa --analyze-size` on a Mac or
+the release job's IPA). Decision 2 of the spec: above +25 MB in all, the
+owner decides again.
 
 **The Stack game and sounds (PR 3, 2026-11-12):** arm64 release APK
 52.1 MB; the new Dart code is about 92 KB (`flame` 53 KB, `audioplayers` +

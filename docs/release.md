@@ -324,6 +324,7 @@ are pinned by hand — bump them here and in the kit together:
 | Python packages for `scripts/make_invites` | `scripts/make_invites/requirements.txt` (hashes) | qrcode 8.2, pillow 13.0.0, reportlab 5.0.1, zxing-cpp 3.1.1, charset-normalizer 3.5.2 |
 | EGM plugin (`google/elephant-goldfish-model`) | `.claude/settings.json` (`ref`), design reviews | v0.1.1 |
 | `camera`, `google_mlkit_pose_detection` (native code, ML Kit models) | `pubspec.yaml` (exact), Move games; bump by hand, re-check app size, the merged Android manifest and OSV for the Android libraries (`docs/security.md` → Move games) | 0.12.2, 1.0.2 |
+| ML Kit iOS model bundles (`ios/Runner/MLKit/`, Google's `MLKitPoseDetection` 1.0.0-beta16 files) | `scripts/ios_mlkit_bundles.sh` (pinned SHA-256); bump with `google_mlkit_pose_detection` when its `google-mlkit-swiftpm` version changes: update `VERSION`, the archive paths (podspecs on cdn.cocoapods.org) and the pins in the script and `platform_config_test.dart`, then `--fetch` | 1.0.0-beta16 |
 | `flame`, `flame_audio` (brings `audioplayers` and its native code) | `pubspec.yaml` (exact), the Move games' Stack game and its sounds; bump by hand, then run the Move tests (the engine must still pause itself when idle) and check that the sounds still mix with music (`FlameMoveSounds.context`) | 1.38.2, 2.12.2 |
 
 ## One-time setup
@@ -504,10 +505,11 @@ keys): release condition `app = gym_tracker` **and** `environment = staging`,
    with the pose check (`docs/performance.md` → Move games → frames per
    second). Below 8 frames/s a phone gets the manual counter.
 4. **Real recordings** (decision 9 of the spec) replayed by the tests.
-5. **iOS:** until the ML Kit model bundles are set up on a Mac
-   (`MlKitPoseSource.iosModelInstalled`), iOS members get "Camera games don't
-   work on this phone" and the manual counter. Either set iOS up first, or
-   add the release condition `$os = Android` to the prod rollout.
+5. **iOS:** the model is in the app (2026-11-13), but it has only been built
+   in CI, never run on an iPhone. Check it with the pose check on a real
+   iPhone (`docs/features/move_games.md` → Platforms) and measure the IPA
+   growth (`docs/performance.md`); until then add the release condition
+   `$os = Android` to the prod rollout.
 6. Roll out in steps (for example 10 % → 50 % → 100 %) and watch
    `move_unsupported` (`too_slow`, `model_failed`) and Sentry.
 

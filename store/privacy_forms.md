@@ -79,9 +79,9 @@ What changes in the forms:
   definition; it is still listed under the **Device ID** row we already
   declare (not linked, Analytics), which is the safer reading. Camera and
   body data: nothing to declare (not collected).
-- **iOS today:** the ML Kit model bundles are not set up on iOS yet, so the
-  iOS app never calls ML Kit; the answers above are given now so they are
-  right when it does.
+- **iOS:** since 2026-11-13 the iOS app has the model and calls ML Kit in
+  Move games on a real iPhone (never on the simulator); the answers above
+  cover it. The iOS QR scanner still uses Apple's Vision, not ML Kit.
 
 ## Captain dashboard (web, managers only)
 The captain dashboard (`dashboard/`, https://azmm-dash.pages.dev) is a website

@@ -1,0 +1,7 @@
+// Google ML Kit (Move games' pose detection, google_mlkit_pose_detection)
+// ships static archives that register classes and models through
+// Objective-C categories and static initialisers; without these flags the
+// linker drops them ("unrecognized selector", a model that won't load).
+// The plugin's README, "Requirements → iOS", checked 2026-11-13.
+// Included by every build configuration's xcconfig.
+OTHER_LDFLAGS = $(inherited) -ObjC -all_load

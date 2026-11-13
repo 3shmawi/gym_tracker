@@ -272,5 +272,95 @@ void main() {
     test('PostHog starts from Dart only, not by itself', () {
       expect(has('com.posthog.posthog.AUTO_INIT', '<false/>'), isTrue);
     });
+
+    group('Move games: the ML Kit pose model', () {
+      // Google's own files (dl.google.com, MLKitPoseDetection 1.0.0-beta16),
+      // the same bytes as google-mlkit-swiftpm 9.0.2's release bundles.
+      // scripts/ios_mlkit_bundles.sh fetches and checks them; update both.
+      const pins = {
+        'MLKitPoseDetectionCommonResources.bundle/pose_non_tracking_graph.binarypb':
+            '5258fc9ed2e1598b9739534e2393e012928f441de901451e85e9329b5d763012',
+        'MLKitPoseDetectionCommonResources.bundle/pose_tracking_graph.binarypb':
+            'e28fe1c1a0b8e1a014e4c4135499a70c50a0f248d834fb21ea0c0339e9e5d8b5',
+        'MLKitPoseDetectionFastResources.bundle/pose_landmark_detector_fast.tflite':
+            '774adb54eb742c8a7f8fe39b19d0d1ae42cd776015bbdf3e57bde14c5fd8b773',
+        'MLKitPoseDetectionFastResources.bundle/pose_person_detector_fast.tflite':
+            'a63c614bef30d35947f13be361820b1e4e3bec9cfeebf4d11216a18373108e85',
+        'MLKitXenoResources.bundle/yuv_to_rgb_graph.binarypb':
+            '943fec320f003427c2181f0712168b00f5b04108672906033013e452d2b1c73e',
+      };
+      final dir = Directory('ios/Runner/MLKit');
+      final project = File('ios/Runner.xcodeproj/project.pbxproj')
+          .readAsStringSync();
+
+      test('exactly the pinned model files ship, byte for byte', () async {
+        final files = dir
+            .listSync(recursive: true)
+            .whereType<File>()
+            .map((f) => f.path.substring(dir.path.length + 1))
+            .toSet();
+        expect(files, pins.keys.toSet());
+        for (final MapEntry(:key, :value) in pins.entries) {
+          final result = await Process.run('sha256sum', ['${dir.path}/$key']);
+          if (result.exitCode != 0) {
+            // macOS: no sha256sum.
+            final mac = await Process.run('shasum', [
+              '-a',
+              '256',
+              '${dir.path}/$key',
+            ]);
+            expect(mac.stdout.toString(), startsWith(value), reason: key);
+          } else {
+            expect(result.stdout.toString(), startsWith(value), reason: key);
+          }
+        }
+      });
+
+      test(
+        "the accurate model isn't shipped (base model only, as Android)",
+        () {
+          expect(project, isNot(contains('Accurate')));
+          expect(
+            Directory(
+              'ios/Runner/MLKit/MLKitPoseDetectionAccurateResources.bundle',
+            ).existsSync(),
+            isFalse,
+          );
+        },
+      );
+
+      test('the three bundles are copied into the app', () {
+        final resources = RegExp(
+          r'97C146EC1CF9000F007C117D /\* Resources \*/ = \{[^}]*\}',
+        ).firstMatch(project)!.group(0)!;
+        for (final b in [
+          'MLKitPoseDetectionFastResources',
+          'MLKitPoseDetectionCommonResources',
+          'MLKitXenoResources',
+        ]) {
+          expect(resources, contains('$b.bundle in Resources'), reason: b);
+          expect(project, contains('path = $b.bundle;'), reason: b);
+        }
+      });
+
+      test('every build configuration links ML Kit with -ObjC -all_load', () {
+        expect(
+          File('ios/Flutter/MLKit.xcconfig').readAsStringSync(),
+          contains(r'OTHER_LDFLAGS = $(inherited) -ObjC -all_load'),
+        );
+        final configs = RegExp(
+          r'baseConfigurationReference = [0-9A-F]+ /\* ([^*]+) \*/',
+        ).allMatches(project).map((m) => m.group(1)!.trim()).toSet();
+        expect(configs, isNotEmpty);
+        for (final name in configs) {
+          final file = File('ios/Flutter/${name.replaceFirst('Flutter/', '')}');
+          expect(
+            file.readAsStringSync(),
+            contains('#include "MLKit.xcconfig"'),
+            reason: name,
+          );
+        }
+      });
+    });
   });
 }
