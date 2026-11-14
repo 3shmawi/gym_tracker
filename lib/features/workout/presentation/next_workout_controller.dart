@@ -105,15 +105,18 @@ class NextWorkoutController extends AsyncNotifier<NextWorkout?> {
     await future.catchError((_) => null);
   }
 
-  /// Saves the ready 5-day plan and shows its first workout.
-  Future<void> useTemplate() async {
+  /// Saves the ready plan [template] and shows its first workout.
+  Future<void> useTemplate([
+    PlanTemplateId template = PlanTemplateId.split5,
+  ]) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      _unwrap(await _repo.savePlan(PlanTemplates.fiveDaySplit));
+      _unwrap(await _repo.savePlan(template.plan));
       unawaited(
         Analytics.capture('plan_created', {
           'source': 'template',
-          'days': PlanTemplates.fiveDaySplit.days.length,
+          'template': template.id,
+          'days': template.plan.days.length,
         }),
       );
       return await build();
