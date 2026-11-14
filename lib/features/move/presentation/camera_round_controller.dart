@@ -16,6 +16,7 @@ import 'package:gym_tracker/features/move/domain/entities/round.dart';
 import 'package:gym_tracker/features/move/domain/games/game_rules.dart';
 import 'package:gym_tracker/features/move/domain/move_analytics.dart';
 import 'package:gym_tracker/features/move/domain/move_exercises.dart';
+import 'package:gym_tracker/features/move/domain/repositories/move_local_repository.dart';
 import 'package:gym_tracker/features/move/domain/repositories/move_sounds.dart';
 import 'package:gym_tracker/features/move/domain/repositories/move_voice.dart';
 import 'package:gym_tracker/features/move/domain/repositories/pose_source.dart';
@@ -56,6 +57,7 @@ class CameraRoundState {
     this.game,
     this.sound = MoveSoundMode.fallback,
     this.voiceReady = false,
+    this.zoom,
   });
 
   final CameraStage stage;
@@ -70,6 +72,15 @@ class CameraRoundState {
   /// The latest hint to show (one at a time).
   final FormHintKind? hint;
   final double? fps;
+
+  /// The front camera's zoom, when the phone lets it change (null: no
+  /// control is shown).
+  final CameraZoom? zoom;
+
+  /// Zoom changes only while getting in position: during the round a
+  /// change would change how deep a rep looks.
+  bool get canZoom =>
+      zoom?.adjustable == true && cameraOn && stage == CameraStage.placement;
 
   /// The camera and model are running.
   final bool cameraOn;
@@ -101,6 +112,7 @@ class CameraRoundState {
     GameState? game,
     MoveSoundMode? sound,
     bool? voiceReady,
+    CameraZoom? Function()? zoom,
   }) => CameraRoundState(
     stage: stage ?? this.stage,
     trouble: trouble ?? this.trouble,
@@ -115,6 +127,7 @@ class CameraRoundState {
     game: game ?? this.game,
     sound: sound ?? this.sound,
     voiceReady: voiceReady ?? this.voiceReady,
+    zoom: zoom == null ? this.zoom : zoom(),
   );
 }
 
@@ -278,11 +291,51 @@ class CameraRoundController extends Notifier<CameraRoundState>
       );
     }
     unawaited(_awake.keepOn(on: true));
+    final zoom = await _restoreZoom(source, local);
+    if (!ref.mounted || _source != source) return;
     state = state.copyWith(
+      zoom: () => zoom,
       cameraOn: true,
       stage: state.stage == CameraStage.live
           ? CameraStage.live
           : CameraStage.placement,
+    );
+  }
+
+  /// The widest the camera goes, or the level the member chose last time.
+  static Future<CameraZoom?> _restoreZoom(
+    PoseSource source,
+    MoveLocalRepository local,
+  ) async {
+    if (source is! ZoomablePoseSource) return null;
+    final saved = switch (await local.cameraZoom()) {
+      Success(:final value) => value,
+      Failed() => null,
+    };
+    if (saved == null) return source.zoom;
+    return await source.setZoom(saved);
+  }
+
+  /// One step wider (−) or closer (+), remembered on this phone. The
+  /// placement checks start again: the body's size in the picture changed.
+  Future<void> zoomOut() => _zoomBy(-CameraZoom.step);
+  Future<void> zoomIn() => _zoomBy(CameraZoom.step);
+
+  Future<void> _zoomBy(double delta) async {
+    final source = _source;
+    final zoom = state.zoom;
+    if (!state.canZoom || source is! ZoomablePoseSource || zoom == null) {
+      return;
+    }
+    final next = await source.setZoom(zoom.level + delta);
+    if (!ref.mounted || next == null || next == zoom) return;
+    _placement.reset();
+    state = state.copyWith(zoom: () => next);
+    unawaited(ref.read(moveLocalRepositoryProvider).setCameraZoom(next.level));
+    unawaited(
+      Analytics.capture('move_zoom_changed', {
+        'direction': delta < 0 ? 'wider' : 'closer',
+      }),
     );
   }
 

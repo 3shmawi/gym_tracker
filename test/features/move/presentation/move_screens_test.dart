@@ -10,6 +10,7 @@ import 'package:gym_tracker/features/move/domain/entities/rep_state.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
 import 'package:gym_tracker/features/move/domain/games/game_rules.dart';
 import 'package:gym_tracker/features/move/domain/games/stack_rules.dart';
+import 'package:gym_tracker/features/move/domain/repositories/pose_source.dart';
 import 'package:gym_tracker/features/move/domain/usecases/placement.dart';
 import 'package:gym_tracker/features/move/presentation/camera_round_controller.dart';
 import 'package:gym_tracker/features/move/presentation/camera_round_view.dart';
@@ -114,23 +115,29 @@ StackState tower(
   };
 }
 
-CameraRoundView camera(CameraRoundState state, {VoidCallback? onToggleSound}) =>
-    CameraRoundView(
-      state: state,
-      onToggleSound: onToggleSound ?? () {},
-      now: now,
-      exerciseName: 'Push-ups',
-      onClose: () {},
-      onPause: () {},
-      onResume: () {},
-      onEnd: () {},
-      onManual: () {},
-      onSave: () {},
-      onPlayAgain: () {},
-      onDone: () {},
-      onOpenSettings: () {},
-      onOpenProgress: () {},
-    );
+CameraRoundView camera(
+  CameraRoundState state, {
+  VoidCallback? onToggleSound,
+  VoidCallback? onZoomOut,
+  VoidCallback? onZoomIn,
+}) => CameraRoundView(
+  state: state,
+  onToggleSound: onToggleSound ?? () {},
+  onZoomOut: onZoomOut ?? () {},
+  onZoomIn: onZoomIn ?? () {},
+  now: now,
+  exerciseName: 'Push-ups',
+  onClose: () {},
+  onPause: () {},
+  onResume: () {},
+  onEnd: () {},
+  onManual: () {},
+  onSave: () {},
+  onPlayAgain: () {},
+  onDone: () {},
+  onOpenSettings: () {},
+  onOpenProgress: () {},
+);
 
 CameraRoundState cam({
   CameraStage stage = CameraStage.live,
@@ -143,7 +150,9 @@ CameraRoundState cam({
   GameState? game,
   MoveSoundMode sound = MoveSoundMode.voice,
   bool voiceReady = true,
+  CameraZoom? zoom,
 }) => CameraRoundState(
+  zoom: zoom,
   stage: stage,
   round: r ?? round(RoundPhase.ready),
   checks: checks,
@@ -257,6 +266,51 @@ void main() {
       expect(find.text(l10nEn.moveHintMoveBack), findsOneWidget);
       expect(find.text(l10nEn.movePlacementView), findsOneWidget);
       expect(find.byIcon(Icons.check_circle), findsOneWidget);
+    });
+
+    testWidgets("placement: − and + move the zoom; none when it can't", (
+      tester,
+    ) async {
+      final taps = <String>[];
+      const zoom = CameraZoom(min: 0.6, max: 8, level: 1);
+      await tester.pumpApp(
+        camera(
+          cam(stage: CameraStage.placement, zoom: zoom),
+          onZoomOut: () => taps.add('wider'),
+          onZoomIn: () => taps.add('closer'),
+        ),
+      );
+      expect(find.text('1.0×'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('move_zoom_wider')));
+      await tester.tap(find.byKey(const Key('move_zoom_closer')));
+      expect(taps, ['wider', 'closer']);
+      expect(
+        find.bySemanticsLabel(l10nEn.moveZoomLabel('1.0×')),
+        findsOneWidget,
+      );
+
+      // At the widest, − does nothing (and looks it).
+      taps.clear();
+      await tester.pumpApp(
+        camera(
+          cam(stage: CameraStage.placement, zoom: zoom.at(0.6)),
+          onZoomOut: () => taps.add('wider'),
+        ),
+      );
+      await tester.tap(find.byKey(const Key('move_zoom_wider')));
+      expect(taps, isEmpty);
+
+      // A phone with no range, or the round running: no control.
+      for (final state in [
+        cam(
+          stage: CameraStage.placement,
+          zoom: const CameraZoom(min: 1, max: 1, level: 1),
+        ),
+        cam(r: round(RoundPhase.running), zoom: zoom),
+      ]) {
+        await tester.pumpApp(camera(state));
+        expect(find.byKey(const Key('move_zoom_wider')), findsNothing);
+      }
     });
 
     testWidgets('running: time and reps, a pause button', (tester) async {
@@ -520,6 +574,13 @@ void main() {
       onManual: () {},
     ),
     'move_placement_empty': () => camera(cam(stage: CameraStage.placement)),
+    'move_placement_zoom': () => camera(
+      cam(
+        stage: CameraStage.placement,
+        zoom: const CameraZoom(min: 0.6, max: 8, level: 0.6),
+        frame: frameAt(500),
+      ),
+    ),
     'move_placement_checks': () => camera(
       cam(
         stage: CameraStage.placement,
