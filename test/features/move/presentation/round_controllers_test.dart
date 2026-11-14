@@ -335,16 +335,66 @@ void main() {
       expect(bed.local.camera, isFalse);
     });
 
-    test('a phone too slow for the model offers counting by hand', () async {
+    /// Placement, then 3-2-1 and into the round (the body is in place).
+    Future<void> intoRound() async {
       await c.start();
-      bed.source.setStatus(
-        const PoseSourceStatus(PoseSourceState.running, fps: 5),
-      );
-      bed.now = bed.now.add(const Duration(seconds: 5));
-      c.tick();
+      play(const SynthSet(lead: Duration(seconds: 6)).frames());
+      expect(s().round.phase, RoundPhase.running);
+    }
+
+    void slow(double fps, Duration over) {
+      bed.source.setStatus(PoseSourceStatus(PoseSourceState.running, fps: fps));
+      final end = bed.now.add(over);
+      while (bed.now.isBefore(end)) {
+        bed.now = bed.now.add(const Duration(milliseconds: 250));
+        c.tick();
+      }
+    }
+
+    test('a phone too slow during the round offers counting by hand', () async {
+      await intoRound();
+      slow(5, const Duration(seconds: 9));
       await pumpEventQueue();
       expect(s().stage, CameraStage.failed);
       expect(s().trouble, CameraTrouble.tooSlow);
+    });
+
+    test('never "too slow" during placement: it keeps guiding', () async {
+      // Sitting, not yet in position: the model is slow while it looks for
+      // a person (the owner's OPPO went to "doesn't work" here).
+      await c.start();
+      expect(s().stage, CameraStage.placement);
+      slow(3, const Duration(seconds: 30));
+      await pumpEventQueue();
+      expect(s().stage, CameraStage.placement);
+      expect(s().trouble, isNull);
+    });
+
+    test('one slow moment is not a slow phone', () async {
+      await intoRound();
+      slow(5, const Duration(seconds: 4));
+      slow(14, const Duration(seconds: 1));
+      slow(5, const Duration(seconds: 4));
+      await pumpEventQueue();
+      expect(s().stage, CameraStage.live, reason: 'never 5 s slow in a row');
+    });
+
+    test('the warm-up right after 3-2-1 starts is not judged', () async {
+      await intoRound();
+      // Slow for 2.5 s only, then normal: never judged too slow.
+      slow(4, const Duration(milliseconds: 2500));
+      slow(15, const Duration(seconds: 10));
+      await pumpEventQueue();
+      expect(s().stage, CameraStage.live);
+    });
+
+    test('a pause stops the judging (body out of the picture)', () async {
+      await intoRound();
+      c.pause();
+      slow(2, const Duration(seconds: 20));
+      await pumpEventQueue();
+      expect(s().stage, CameraStage.live);
+      expect(s().trouble, isNull);
     });
 
     test(

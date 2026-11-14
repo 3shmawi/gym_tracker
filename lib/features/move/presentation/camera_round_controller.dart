@@ -14,6 +14,7 @@ import 'package:gym_tracker/features/move/domain/entities/rep_event.dart';
 import 'package:gym_tracker/features/move/domain/entities/rep_state.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
 import 'package:gym_tracker/features/move/domain/games/game_rules.dart';
+import 'package:gym_tracker/features/move/domain/move_analytics.dart';
 import 'package:gym_tracker/features/move/domain/move_exercises.dart';
 import 'package:gym_tracker/features/move/domain/repositories/move_sounds.dart';
 import 'package:gym_tracker/features/move/domain/repositories/move_voice.dart';
@@ -138,8 +139,14 @@ class CameraRoundController extends Notifier<CameraRoundState>
   /// Below this the detector can't follow a rep: offer the manual counter.
   static const minFps = 8.0;
 
-  /// The speed is judged after the camera has run this long.
-  static const speedCheckAfter = Duration(seconds: 4);
+  /// The speed is not judged until the model has been answering this long:
+  /// its first frames are slow on every phone (loading, warm-up, and on a
+  /// first run ML Kit's own speed test in another process).
+  static const warmUp = Duration(seconds: 3);
+
+  /// Too slow only when it stays below [minFps] this long in a row: one
+  /// slow reading is not a slow phone.
+  static const slowFor = Duration(seconds: 5);
 
   PoseSource? _source;
   RepDetector? _detector;
@@ -151,7 +158,11 @@ class CameraRoundController extends Notifier<CameraRoundState>
   // Cancelled in _release too.
   // ignore: cancel_subscriptions
   StreamSubscription<PoseSourceStatus>? _status;
-  DateTime? _cameraSince;
+
+  /// When the speed started being judged (the round under way, the body in
+  /// place), and since when it has been too slow without a break.
+  DateTime? _judgedSince;
+  DateTime? _slowSince;
   bool _finishing = false;
 
   DateTime get _now => ref.read(moveClockProvider)();
@@ -262,7 +273,6 @@ class CameraRoundController extends Notifier<CameraRoundState>
         Analytics.capture('move_camera_answered', {'result': 'granted'}),
       );
     }
-    _cameraSince = _now;
     unawaited(_awake.keepOn(on: true));
     state = state.copyWith(
       cameraOn: true,
@@ -354,18 +364,41 @@ class CameraRoundController extends Notifier<CameraRoundState>
   void tick() {
     final now = _now;
     state = state.copyWith(round: state.round.tick(now));
-    final since = _cameraSince;
-    final fps = state.fps;
-    if (state.cameraOn &&
-        since != null &&
-        now.difference(since) >= speedCheckAfter &&
-        fps != null &&
-        fps < minFps &&
-        state.round.phase != RoundPhase.finished) {
+    if (_tooSlow(now)) {
       unawaited(_fail(CameraTrouble.tooSlow));
       return;
     }
     _afterRound();
+  }
+
+  /// Below [minFps] for [slowFor] in a row, judged only during 3-2-1 and
+  /// the round, after [warmUp].
+  ///
+  /// Not during placement or a pause: with nobody in position (sitting,
+  /// walking to the phone, out of the picture) ML Kit runs its person
+  /// detector on every frame and is much slower than while it tracks a
+  /// body, so a fine phone looked "too slow" before the member was even
+  /// down (owner's OPPO, 2026-11-14). Placement keeps guiding instead.
+  bool _tooSlow(DateTime now) {
+    final phase = state.round.phase;
+    final judging =
+        state.cameraOn &&
+        state.stage == CameraStage.live &&
+        (phase == RoundPhase.countdown || phase == RoundPhase.running);
+    if (!judging) {
+      _judgedSince = null;
+      _slowSince = null;
+      return false;
+    }
+    final since = _judgedSince ??= now;
+    final fps = state.fps;
+    if (fps == null || fps >= minFps) {
+      _slowSince = null;
+      return false;
+    }
+    final slowSince = _slowSince ??= now;
+    return now.difference(since) >= warmUp &&
+        now.difference(slowSince) >= slowFor;
   }
 
   void pause() =>
@@ -443,6 +476,10 @@ class CameraRoundController extends Notifier<CameraRoundState>
             CameraTrouble.modelFailed => 'model_failed',
             CameraTrouble.noCamera || CameraTrouble.denied => 'no_camera',
           },
+          // How slow, in a range: tells a nearly-fast-enough phone from a
+          // hopeless one.
+          if (trouble == CameraTrouble.tooSlow)
+            'fps_band': ?MoveAnalytics.fpsBand(state.fps),
         }),
       );
     }
@@ -461,7 +498,8 @@ class CameraRoundController extends Notifier<CameraRoundState>
     _source = null;
     _frames = null;
     _status = null;
-    _cameraSince = null;
+    _judgedSince = null;
+    _slowSince = null;
     if (source == null) return;
     await source.stop();
     // Not awaited: the source is already stopped, and a cancel can take a
