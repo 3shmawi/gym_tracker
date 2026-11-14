@@ -59,6 +59,11 @@ void main() {
     await pumpApp(tester);
     await tester.tap(find.byKey(const Key('use_template_button')));
     await tester.pumpAndSettle();
+    // The ready plans; these flows use the 5-day split.
+    await tester.ensureVisible(find.byKey(const Key('template_split_5')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('template_split_5')));
+    await tester.pumpAndSettle();
     expect(find.text('Day 1 of 5'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('change_day_button')));
@@ -121,6 +126,11 @@ void main() {
   ) async {
     await pumpApp(tester);
     await tester.tap(find.byKey(const Key('use_template_button')));
+    await tester.pumpAndSettle();
+    // The ready plans; these flows use the 5-day split.
+    await tester.ensureVisible(find.byKey(const Key('template_split_5')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('template_split_5')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('change_day_button')));
     await tester.pumpAndSettle();

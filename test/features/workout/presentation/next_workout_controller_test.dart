@@ -94,6 +94,30 @@ void main() {
     expect((await repo.loadPlan() as Success).value, isNotNull);
   });
 
+  test('each ready plan saves itself and shows its day 1', () async {
+    for (final (template, first, days) in [
+      (PlanTemplateId.fullBody3, 'Full Body A', 3),
+      (PlanTemplateId.upperLower4, 'Upper 1', 4),
+      (PlanTemplateId.split5, 'Chest & Back', 5),
+    ]) {
+      SharedPreferences.setMockInitialValues({});
+      final fresh = LocalWorkoutRepository(
+        await SharedPreferences.getInstance(),
+      );
+      final c = container(fresh);
+      await c.read(nextWorkoutControllerProvider.future);
+      await c
+          .read(nextWorkoutControllerProvider.notifier)
+          .useTemplate(template);
+      final next = c.read(nextWorkoutControllerProvider).value!;
+      expect(next.dayIndex, 0, reason: template.id);
+      expect(next.day.name.en, first, reason: template.id);
+      final saved = (await fresh.loadPlan() as Success<WorkoutPlan?>).value!;
+      expect(saved.days, hasLength(days), reason: template.id);
+      c.dispose();
+    }
+  });
+
   test('a failure becomes an error with the AppFailure', () async {
     final c = container(_FlakyRepo(repo));
     await expectLater(
