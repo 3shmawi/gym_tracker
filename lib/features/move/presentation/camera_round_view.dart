@@ -10,6 +10,7 @@ import 'package:gym_tracker/features/move/domain/entities/pose_frame.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
 import 'package:gym_tracker/features/move/domain/games/game_rules.dart';
 import 'package:gym_tracker/features/move/domain/games/stack_rules.dart';
+import 'package:gym_tracker/features/move/domain/repositories/pose_source.dart';
 import 'package:gym_tracker/features/move/presentation/camera_round_controller.dart';
 import 'package:gym_tracker/features/move/presentation/game/stack_game_view.dart';
 import 'package:gym_tracker/features/move/presentation/move_words.dart';
@@ -38,6 +39,8 @@ class CameraRoundView extends StatelessWidget {
     this.onOpenSettings,
     this.onOpenProgress,
     this.onToggleSound,
+    this.onZoomOut,
+    this.onZoomIn,
     super.key,
   });
 
@@ -61,6 +64,11 @@ class CameraRoundView extends StatelessWidget {
 
   /// Mutes or unmutes the game; no button without it.
   final VoidCallback? onToggleSound;
+
+  /// The camera one step wider / closer, while getting in position; no
+  /// zoom control without them.
+  final VoidCallback? onZoomOut;
+  final VoidCallback? onZoomIn;
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +136,12 @@ class CameraRoundView extends StatelessWidget {
       padBottom: false,
       body: switch (state.stage) {
         CameraStage.starting => const LoadingView(),
-        CameraStage.placement => _Placement(state: state, preview: preview),
+        CameraStage.placement => _Placement(
+          state: state,
+          preview: preview,
+          onZoomOut: onZoomOut,
+          onZoomIn: onZoomIn,
+        ),
         CameraStage.live => switch (round.phase) {
           RoundPhase.countdown => _Camera(
             state: state,
@@ -186,7 +199,9 @@ class _Camera extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            ?preview,
+            // Centred at its own shape: the whole picture, not stretched,
+            // under the joints drawn at the same shape.
+            if (preview case final p?) Center(child: p),
             ExcludeSemantics(
               child: _Pose(frame: state.frame, drawBody: preview == null),
             ),
@@ -223,10 +238,12 @@ class _Pose extends StatelessWidget {
 }
 
 class _Placement extends StatelessWidget {
-  const new({required this.state, this.preview});
+  const new({required this.state, this.preview, this.onZoomOut, this.onZoomIn});
 
   final CameraRoundState state;
   final Widget? preview;
+  final VoidCallback? onZoomOut;
+  final VoidCallback? onZoomIn;
 
   @override
   Widget build(BuildContext context) {
@@ -241,12 +258,28 @@ class _Placement extends StatelessWidget {
           child: _Camera(
             state: state,
             preview: preview,
-            overlay: hint == null
-                ? null
-                : Align(
+            overlay: Stack(
+              children: [
+                if (hint != null)
+                  Align(
                     alignment: AlignmentDirectional.topCenter,
                     child: HintChip(text: hintLabel(l10n, hint)),
                   ),
+                if (state.zoom case final zoom?
+                    when state.canZoom && onZoomOut != null && onZoomIn != null)
+                  Align(
+                    alignment: AlignmentDirectional.bottomEnd,
+                    child: Padding(
+                      padding: EdgeInsetsDirectional.all(AppDimens.sm),
+                      child: _ZoomControl(
+                        zoom: zoom,
+                        onWider: onZoomOut!,
+                        onCloser: onZoomIn!,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
         Flexible(
@@ -288,6 +321,75 @@ class _Placement extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// − and + for the camera's zoom, with the level between them.
+class _ZoomControl extends StatelessWidget {
+  const new({
+    required this.zoom,
+    required this.onWider,
+    required this.onCloser,
+  });
+
+  final CameraZoom zoom;
+  final VoidCallback onWider;
+  final VoidCallback onCloser;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final level = l10n.moveZoomLevel(zoom.level.toStringAsFixed(1));
+    return Semantics(
+      container: true,
+      label: l10n.moveZoomLabel(level),
+      child: DecoratedBox(
+        // A surface under the buttons and the level, so they read over any
+        // camera picture.
+        decoration: BoxDecoration(
+          color: context.palette.surfaceSolid,
+          borderRadius: BorderRadius.circular(AppDimens.scaled(32)),
+        ),
+        child: Padding(
+          padding: EdgeInsetsDirectional.all(AppDimens.xs),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: AppDimens.xs,
+            children: [
+              Opacity(
+                opacity: zoom.atWidest ? 0.4 : 1,
+                child: AppIconButton(
+                  key: const Key('move_zoom_wider'),
+                  icon: Icons.zoom_out,
+                  tooltip: l10n.moveZoomWider,
+                  onPressed: zoom.atWidest ? () {} : onWider,
+                ),
+              ),
+              ExcludeSemantics(
+                child: Text(
+                  level,
+                  key: const Key('move_zoom_level'),
+                  textDirection: TextDirection.ltr,
+                  style: AppTextStyles.body.copyWith(
+                    color: context.palette.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Opacity(
+                opacity: zoom.atClosest ? 0.4 : 1,
+                child: AppIconButton(
+                  key: const Key('move_zoom_closer'),
+                  icon: Icons.zoom_in,
+                  tooltip: l10n.moveZoomCloser,
+                  onPressed: zoom.atClosest ? () {} : onCloser,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

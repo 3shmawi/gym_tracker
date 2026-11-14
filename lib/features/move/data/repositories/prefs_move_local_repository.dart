@@ -16,6 +16,11 @@ class PrefsMoveLocalRepository implements MoveLocalRepository {
   static String tipKey(MoveExerciseId e) => 'move.tip_seen.${e.id}';
   static const cameraKey = 'move.camera_allowed';
   static const soundKey = 'move.sound_mode';
+  static const zoomKey = 'move.camera_zoom';
+
+  /// A stored zoom outside 0.1…10 (a corrupt or edited file) is ignored.
+  static double? _saneZoom(Object? v) =>
+      v is double && v.isFinite && v >= 0.1 && v <= 10 ? v : null;
 
   /// Before the spoken count: a bool, false when muted.
   static const legacySoundKey = 'move.sound_on';
@@ -70,6 +75,16 @@ class PrefsMoveLocalRepository implements MoveLocalRepository {
   @override
   Future<Result<void>> setSoundMode(MoveSoundMode mode) =>
       guard(() => _prefs.setString(soundKey, mode.id), retries: 0);
+
+  @override
+  Future<Result<double?>> cameraZoom() =>
+      guard(() async => _saneZoom(_prefs.get(zoomKey)), retries: 0);
+
+  @override
+  Future<Result<void>> setCameraZoom(double level) => guard(() async {
+    if (_saneZoom(level) == null) throw const FormatException('zoom');
+    await _prefs.setDouble(zoomKey, level);
+  }, retries: 0);
 }
 
 /// In memory: tests, and before `Dependencies.init`.
@@ -78,6 +93,7 @@ class InMemoryMoveLocalRepository implements MoveLocalRepository {
   final Set<MoveExerciseId> tips = {};
   bool camera = false;
   MoveSoundMode sound = MoveSoundMode.fallback;
+  double? zoom;
 
   @override
   Future<Result<int?>> best(MoveExerciseId exercise, RoundKind kind) async =>
@@ -123,6 +139,15 @@ class InMemoryMoveLocalRepository implements MoveLocalRepository {
   @override
   Future<Result<void>> setSoundMode(MoveSoundMode mode) async {
     sound = mode;
+    return const Success(null);
+  }
+
+  @override
+  Future<Result<double?>> cameraZoom() async => Success(zoom);
+
+  @override
+  Future<Result<void>> setCameraZoom(double level) async {
+    zoom = level;
     return const Success(null);
   }
 }

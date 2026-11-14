@@ -653,5 +653,9 @@
   "todayMoveBody": "دقيقة · الكاميرا بتعدّ عدّاتك",
   "signOutNotBackedUp": "جزء من تمرينك لسه متحفظش في النسخة الاحتياطية. هيفضل على الموبايل ده.",
   "signOutRemove": "اخرج وامسح تمريني من الموبايل ده",
-  "backupSwapPlan": "استخدم خطتي التانية بدل دي"
+  "backupSwapPlan": "استخدم خطتي التانية بدل دي",
+  "moveZoomWider": "بعّد الكاميرا: تشوف جسمك أكتر",
+  "moveZoomCloser": "قرّب الكاميرا",
+  "moveZoomLevel": "{level}×",
+  "moveZoomLabel": "زووم الكاميرا {level}"
 }

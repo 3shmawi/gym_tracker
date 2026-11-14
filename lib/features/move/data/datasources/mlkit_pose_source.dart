@@ -17,7 +17,7 @@ import 'package:gym_tracker/features/move/domain/repositories/pose_source.dart';
 /// no image or joint leaves this class except as a [PoseFrame] to the
 /// detector, and nothing is written anywhere (docs/designs/move_games.md
 /// §11).
-class MlKitPoseSource implements PoseSource, CameraPreviewSource {
+class MlKitPoseSource implements ZoomablePoseSource, CameraPreviewSource {
   new({this.maxFps = 15});
 
   /// Frames sent to the model per second at most; the rest are dropped.
@@ -103,6 +103,10 @@ class MlKitPoseSource implements PoseSource, CameraPreviewSource {
       );
       _camera = camera;
       await camera.initialize();
+      // The widest the front camera goes: the more of the body it sees from
+      // the floor, the better (camera plugin: getMin/MaxZoomLevel,
+      // setZoomLevel). A phone that can't say keeps its own default.
+      _zoom = await _readZoom(camera);
       // The defaults: the base model (the accurate one is not shipped, §9)
       // in stream mode (tracks one person, lower latency).
       _model = PoseDetector(options: PoseDetectorOptions());
@@ -249,7 +253,40 @@ class MlKitPoseSource implements PoseSource, CameraPreviewSource {
     if (!keepStatus) _set(PoseSourceStatus.idle);
   }
 
+  CameraZoom? _zoom;
+
+  @override
+  CameraZoom? get zoom => _zoom;
+
+  static Future<CameraZoom?> _readZoom(CameraController camera) async {
+    try {
+      final min = await camera.getMinZoomLevel();
+      final max = await camera.getMaxZoomLevel();
+      if (!min.isFinite || !max.isFinite || min <= 0 || max < min) return null;
+      await camera.setZoomLevel(min);
+      return CameraZoom(min: min, max: max, level: min);
+    } on Object {
+      return null;
+    }
+  }
+
+  @override
+  Future<CameraZoom?> setZoom(double level) async {
+    final camera = _camera;
+    final zoom = _zoom;
+    if (camera == null || zoom == null) return zoom;
+    final next = zoom.at(level);
+    try {
+      await camera.setZoomLevel(next.level);
+      if (identical(camera, _camera)) _zoom = next;
+    } on CameraException {
+      // The phone refused that level: stay where it was.
+    }
+    return _zoom;
+  }
+
   Future<void> _release() async {
+    _zoom = null;
     final camera = _camera;
     final model = _model;
     _camera = null;
