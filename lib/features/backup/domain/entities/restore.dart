@@ -18,9 +18,18 @@ class RestoreCursor {
     final at = text.indexOf('|');
     if (at <= 0 || at == text.length - 1) return null;
     final time = text.substring(0, at);
-    if (DateTime.tryParse(time) == null) return null;
-    return RestoreCursor(time, text.substring(at + 1));
+    final id = text.substring(at + 1);
+    // Both go into the server's filter: a time and a row id, or nothing (a
+    // changed or corrupt stored value starts from the beginning; rows
+    // already on the phone are ignored).
+    if (DateTime.tryParse(time) == null || time.contains(',')) return null;
+    if (!_id.hasMatch(id)) return null;
+    return RestoreCursor(time, id);
   }
+
+  /// A row id (a UUID on the server): letters, digits, `-` and `_` only,
+  /// so it can never change the filter it goes into.
+  static final _id = RegExp(r'^[A-Za-z0-9_-]{1,64}$');
 
   /// The saved text that means "everything was taken".
   static const done = 'done';

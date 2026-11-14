@@ -658,6 +658,72 @@ void main() {
     await beat(tester, 2500);
   });
 
+  testWidgets('a new phone: the recovery code brings the gym workouts back', (
+    tester,
+  ) async {
+    FeatureFlags.overrides[Flags.gymJoin] = true;
+    FeatureFlags.overrides[Flags.gymHistoryRestore] = true;
+    addTearDown(FeatureFlags.overrides.clear);
+    await freshInstall(tester);
+    await app.main();
+    useFakeRestAlarm();
+    final camera = FakeCamera();
+    scannerCameraOverride = camera.builder;
+    addTearDown(() => scannerCameraOverride = null);
+    Dependencies.gymRepository = FakeGymRepository(
+      redeemResult: Success(joinedGym()),
+      memberships: Success([member()]),
+    );
+    final account = FakeAccountRepository();
+    Dependencies.accountRepository = account;
+    // The server still has the three workouts logged on the old phone.
+    final server = FakeServer();
+    for (var i = 1; i <= 3; i++) {
+      final w = WorkoutSession(
+        dayId: PlanTemplates.fiveDaySplit.days.first.id,
+        finishedAt: DateTime.now().toUtc().subtract(Duration(days: 9 - i * 2)),
+        sets: [
+          LoggedSet(
+            exerciseId:
+                PlanTemplates.fiveDaySplit.days.first.exercises.first.id,
+            weight: 40.0 + i * 2.5,
+            reps: 10,
+          ),
+        ],
+      );
+      server.sessions[w.clientId] = w;
+    }
+    Dependencies.backupRemote = server.phone();
+    await tester.pumpAndSettle();
+    await beat(tester, 1200);
+
+    // A fresh install: the welcome screen, then the captain's recovery QR.
+    await tester.tap(find.byKey(const Key('welcome_join')));
+    await tester.pumpAndSettle();
+    await beat(tester, 1500);
+    camera.scan('https://azmm.pages.dev/join/K7M2QX');
+    await tester.pumpAndSettle();
+    account.emit(anonymousSession);
+    await tester.pumpAndSettle();
+    expect(find.text('Welcome to Iron House'), findsOneWidget);
+    await beat(tester, 2000);
+
+    // Start training: the old workouts come back by themselves.
+    await tester.tap(find.byKey(const Key('joined_start')));
+    for (
+      var i = 0;
+      i < 40 && find.text('Your 3 workouts are back').evaluate().isEmpty;
+      i++
+    ) {
+      await tester.pump(const Duration(milliseconds: 250));
+    }
+    expect(find.text('Your 3 workouts are back'), findsOneWidget);
+    expect(find.byType(NextWorkoutPage), findsOneWidget);
+    final history = await Dependencies.workoutRepository.loadHistory();
+    expect((history as Success<List<WorkoutSession>>).value, hasLength(3));
+    await beat(tester, 3000);
+  });
+
   testWidgets('in a gym: the captain changes the plan and the app says so', (
     tester,
   ) async {

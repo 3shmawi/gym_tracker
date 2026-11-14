@@ -21,6 +21,7 @@ import 'package:gym_tracker/features/gym/data/repositories/in_memory_gym_local_r
 import 'package:gym_tracker/features/gym/data/repositories/in_memory_gym_media.dart';
 import 'package:gym_tracker/features/gym/data/repositories/in_memory_plan_sync.dart';
 import 'package:gym_tracker/features/gym/data/repositories/in_memory_solo_import.dart';
+import 'package:gym_tracker/features/gym/data/repositories/prefs_gym_history_cursor.dart';
 import 'package:gym_tracker/features/gym/data/repositories/prefs_gym_local_repository.dart';
 import 'package:gym_tracker/features/gym/data/repositories/prefs_gym_media_store.dart';
 import 'package:gym_tracker/features/gym/data/repositories/prefs_gym_plan_store.dart';
@@ -41,6 +42,7 @@ import 'package:gym_tracker/features/gym/domain/repositories/gym_repository.dart
 import 'package:gym_tracker/features/gym/domain/repositories/picture_catalog_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/session_outbox.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/solo_import_repository.dart';
+import 'package:gym_tracker/features/gym/domain/usecases/restore_gym_history.dart';
 import 'package:gym_tracker/features/move/data/datasources/flame_move_sounds.dart';
 import 'package:gym_tracker/features/move/data/datasources/mlkit_pose_source.dart';
 import 'package:gym_tracker/features/move/data/datasources/tts_move_voice.dart';
@@ -128,6 +130,10 @@ abstract final class Dependencies {
       const UnconfiguredGymMediaRepository();
   static GymMediaStore gymMediaStore = InMemoryGymMediaStore();
 
+  /// Where the gym history restore stands on this phone
+  /// (docs/designs/gym_history_restore.md).
+  static GymHistoryCursorStore gymHistoryCursor = InMemoryGymHistoryCursor();
+
   /// The shared picture library, searched by solo members.
   static PictureCatalogRepository pictureCatalog =
       const UnconfiguredPictureCatalogRepository();
@@ -169,6 +175,7 @@ abstract final class Dependencies {
     soloImportStore = PrefsSoloImportStore(prefs);
     gymPlanStore = PrefsGymPlanStore(prefs);
     gymMediaStore = PrefsGymMediaStore(prefs);
+    gymHistoryCursor = PrefsGymHistoryCursor(prefs);
     videoInfoStore = VideoInfoStore(prefs);
     sessionOutbox = PrefsSessionOutbox(prefs);
     if (Backend.isConfigured && Backend.isReady) {

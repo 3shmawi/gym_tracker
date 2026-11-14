@@ -2,6 +2,7 @@ import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/gym/domain/entities/membership.dart';
 import 'package:gym_tracker/features/gym/domain/entities/workspace.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/gym_local_repository.dart';
+import 'package:gym_tracker/features/gym/domain/usecases/restore_gym_history.dart';
 
 /// Keeps gym state in memory only: the default until `Dependencies.init`
 /// runs, and a fake for tests.
@@ -10,11 +11,15 @@ class InMemoryGymLocalRepository implements GymLocalRepository {
     this.workspace = const SoloWorkspace(),
     List<Membership> memberships = const [],
     this.onboardingDone = false,
+    this.historyCursor,
   }) : memberships = [...memberships];
 
   Workspace workspace;
   List<Membership> memberships;
   bool onboardingDone;
+
+  /// Cleared with the rest, like the phone's store.
+  final GymHistoryCursorStore? historyCursor;
 
   @override
   Future<Result<Workspace>> loadWorkspace() async => Success(workspace);
@@ -48,6 +53,7 @@ class InMemoryGymLocalRepository implements GymLocalRepository {
   Future<Result<void>> clear() async {
     workspace = const SoloWorkspace();
     memberships = [];
+    await historyCursor?.clear();
     return const Success(null);
   }
 }

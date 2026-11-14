@@ -4,6 +4,7 @@ import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/backup/domain/entities/restore.dart';
 import 'package:gym_tracker/features/backup/domain/repositories/backup_repositories.dart';
 import 'package:gym_tracker/features/backup/domain/usecases/fingerprints.dart';
+import 'package:gym_tracker/features/backup/domain/usecases/restore_sessions.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/repositories/restore_sink.dart';
 import 'package:gym_tracker/features/workout/domain/repositories/workout_repository.dart';
@@ -50,25 +51,19 @@ class RunRestore {
     var added = 0;
     var skipped = 0;
 
-    // 1. Workouts.
-    if (settings.restoreCursor != RestoreCursor.done) {
-      var cursor = RestoreCursor.parse(settings.restoreCursor);
-      while (true) {
-        final page = await remote.fetchSessions(after: cursor, limit: pageSize);
-        switch (page) {
-          case Failed(:final failure):
-            return Failed(failure);
-          case Success(:final value):
-            added += await sink.addBackedUp(value.sessions);
-            skipped += value.skipped;
-            onProgress?.call(added);
-            cursor = value.next;
-            await settings.setRestoreCursor(
-              cursor?.toString() ?? RestoreCursor.done,
-            );
-        }
-        if (cursor == null) break;
-      }
+    // 1. Workouts (the shared page loop, with the backup's position).
+    final sessions = await RestoreSessions(
+      remote: remote,
+      sink: sink,
+      cursor: _SettingsCursor(settings),
+      pageSize: pageSize,
+    )(onProgress: onProgress);
+    switch (sessions) {
+      case Failed(:final failure):
+        return Failed(failure);
+      case Success(:final value):
+        added = value.added;
+        skipped = value.skipped;
     }
 
     // 2. The plan.
@@ -166,4 +161,17 @@ class RunRestore {
     }
     await settings.setPlanConflict(value: false);
   }
+}
+
+/// The backup's position, as the shared page loop reads it.
+class _SettingsCursor implements RestoreCursorStore {
+  const new(this._settings);
+
+  final BackupSettings _settings;
+
+  @override
+  String? read() => _settings.restoreCursor;
+
+  @override
+  Future<void> write(String? value) => _settings.setRestoreCursor(value);
 }

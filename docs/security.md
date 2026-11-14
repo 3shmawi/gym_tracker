@@ -615,6 +615,21 @@ Spec: `docs/designs/move_games.md` §11. Checked in the built release APK
   static libraries linked into the app; a duplicate-symbol clash would fail
   the build (CI's iOS job), not run silently.
 
+### Restoring workouts asks by person (2026-11-14)
+`workout_sessions` has two read policies, own rows and "staff read their
+gym's sessions", and Postgres combines them with OR. Any download of "my
+workouts" therefore names the person: `SupabaseBackupRemote.fetchSessions`
+filters on `person_id`, read from `people` (own row only). It asks for
+nothing when there is no person yet. Without the filter, a captain's
+restore brought their trainees' workouts into the captain's history
+(3shmawi/gym_tracker#113). The backup restore and the gym history restore
+(`docs/designs/gym_history_restore.md`) both use it.
+- **The saved position** goes into the server's filter, so it is checked:
+  an ISO time with no comma, and an id of letters, digits, `-` and `_`.
+  Anything else starts from the beginning.
+- **Tests:** `restore_rows_test.dart` (the request carries the person) and
+  `restore_gym_history_test.dart` (hostile stored positions).
+
 ## If a key leaks (log, chat, commit)
 1. **Revoke or rotate it first**, then clean up. Logs can be copied in the
    minutes they are public.

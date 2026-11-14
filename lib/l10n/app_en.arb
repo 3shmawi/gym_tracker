@@ -1505,5 +1505,10 @@
   "todayMoveBody": "1 min · the camera counts your reps",
   "signOutNotBackedUp": "Some of your training is not backed up yet. It stays on this phone.",
   "signOutRemove": "Sign out and remove my training from this phone",
-  "backupSwapPlan": "Use my other plan instead"
+  "backupSwapPlan": "Use my other plan instead",
+  "gymHistoryRestored": "{count, plural, =1{Your workout is back} other{Your {count} workouts are back}}",
+  "@gymHistoryRestored": {
+    "description": "Toast after the member's workouts came back from the server (after a recovery code).",
+    "placeholders": {"count": {"type": "int"}}
+  }
 }
