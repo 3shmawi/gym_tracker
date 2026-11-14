@@ -135,7 +135,18 @@ class SupabaseBackupRemote implements BackupRemote {
     int limit = maxPage,
   }) => guard(() async {
     final size = limit.clamp(1, maxPage);
-    final rows = await (readSessions ?? _readSessions)(after, size + 1);
+    // Only this person's rows. RLS also lets a gym's owner and captains read
+    // their members' workouts ("staff read their gym's sessions", 0009), and
+    // policies add up: without this filter a captain's restore brought the
+    // trainees' workouts into the captain's own history.
+    final person = _person ??= await (readPerson ?? _readPerson)();
+    if (person == null) {
+      return const RestorePage(sessions: []);
+    }
+    final rows =
+        await (readSessions ??
+            (after, limit) =>
+                _readSessions(person, after, limit))(after, size + 1);
     // One more than asked says there is a next page.
     final more = rows.length > size;
     final page = more ? rows.sublist(0, size) : rows;
@@ -186,6 +197,7 @@ class SupabaseBackupRemote implements BackupRemote {
   }, retries: retries);
 
   Future<List<Map<String, Object?>>> _readSessions(
+    String person,
     RestoreCursor? after,
     int limit,
   ) async {
@@ -193,7 +205,8 @@ class SupabaseBackupRemote implements BackupRemote {
         .from('workout_sessions')
         .select(
           'id, gym_id, membership_id, day_id, finished_at, started_at, sets',
-        );
+        )
+        .eq('person_id', person);
     if (after != null) {
       // finished_at after the cursor, or the same time with a bigger id.
       query = query.or(

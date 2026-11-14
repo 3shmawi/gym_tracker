@@ -6,6 +6,8 @@ import 'package:gym_tracker/features/backup/data/supabase_backup_remote.dart';
 import 'package:gym_tracker/features/backup/domain/entities/restore.dart';
 import 'package:gym_tracker/features/workout/data/datasources/plan_templates.dart';
 import 'package:gym_tracker/features/workout/domain/entities/level.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final _now = DateTime.utc(2026, 11, 12, 10);
@@ -165,6 +167,7 @@ void main() {
       SupabaseClient('https://abcdefghijklmnopqrst.supabase.co', 'k'),
       retries: 0,
       now: () => _now,
+      readPerson: () async => 'c0000000-0000-4000-8000-000000000001',
       readSessions: (after, limit) async {
         asked?.add((after, limit));
         return rows;
@@ -200,6 +203,53 @@ void main() {
         expect((last as Success<RestorePage>).value.next, isNull);
       },
     );
+
+    test("only this person's workouts are asked for (not the gym's)", () async {
+      // A captain's RLS also returns their trainees' rows: the request must
+      // name the person, or those rows land in the captain's history.
+      final urls = <Uri>[];
+      final client = SupabaseClient(
+        'https://abcdefghijklmnopqrst.supabase.co',
+        'k',
+        httpClient: MockClient((request) async {
+          urls.add(request.url);
+          return http.Response(
+            '[]',
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }),
+      );
+      final r = SupabaseBackupRemote(
+        client,
+        retries: 0,
+        readPerson: () async => 'c0000000-0000-4000-8000-000000000001',
+      );
+      await r.fetchSessions();
+      final sessions = urls.where((u) => u.path.endsWith('/workout_sessions'));
+      expect(sessions, hasLength(1));
+      expect(
+        sessions.single.queryParameters['person_id'],
+        'eq.c0000000-0000-4000-8000-000000000001',
+      );
+    });
+
+    test('no person yet: nothing to restore, nothing asked', () async {
+      var asked = 0;
+      final r = SupabaseBackupRemote(
+        SupabaseClient('https://abcdefghijklmnopqrst.supabase.co', 'k'),
+        retries: 0,
+        readPerson: () async => null,
+        readSessions: (_, _) async {
+          asked++;
+          return const [];
+        },
+      );
+      final page = (await r.fetchSessions()) as Success<RestorePage>;
+      expect(page.value.sessions, isEmpty);
+      expect(page.value.next, isNull);
+      expect(asked, 0);
+    });
 
     test('the page size never goes past 200', () async {
       final asked = <(RestoreCursor?, int)>[];
@@ -242,6 +292,7 @@ void main() {
         final r = SupabaseBackupRemote(
           SupabaseClient('https://abcdefghijklmnopqrst.supabase.co', 'k'),
           retries: 0,
+          readPerson: () async => 'c0000000-0000-4000-8000-000000000001',
           readSessions: (_, _) async => throw AuthRetryableFetchException(),
         );
         expect(
