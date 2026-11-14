@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_brand.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_logos.dart';
 import 'package:gym_tracker/features/gym/presentation/join_controller.dart';
 import 'package:gym_tracker/features/gym/presentation/joined_view.dart';
 import 'package:gym_tracker/features/gym/presentation/solo_import_controller.dart';
@@ -46,6 +48,10 @@ class _JoinedPageState extends ConsumerState<JoinedPage> {
     });
     return JoinedView(
       joined: state.joined,
+      logo: ref.watch(gymLogoImagesProvider)[state.joined.gym.id],
+      color: ref.watch(gymBrandColoursEnabledProvider)
+          ? gymTileColor(state.joined.gym.brandColor)
+          : null,
       onStart: () {
         ref.read(joinControllerProvider.notifier).reset();
         context.go(AppRoutes.home);

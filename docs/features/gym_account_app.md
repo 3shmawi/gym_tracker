@@ -69,8 +69,13 @@ Deviations from the board, on purpose:
 - No captain's name on *Joined* or in the switcher: a trainee cannot read
   anyone else's membership row (RLS), and `redeem_invite` does not return it.
   Showing it needs a backend addition (a `captain_name` on the gym answer).
-- Gym logos are not downloaded yet: every gym shows its initials tile, like the
-  board's mock-ups.
+- **Gym logos** (behind `gym_logos`, spec
+  [`../designs/gym_logo.md`](../designs/gym_logo.md)): the logo the owner
+  uploads in the dashboard replaces the letters on the gym's tile in the
+  profile, the workspace switcher and *Joined*. The letters stay underneath:
+  they show while the logo loads, when there is none, and if it can't be
+  shown (the owner's fallback). Ended gyms keep their letters. See "Gym logos"
+  below.
 
 ## Architecture (layered)
 | Layer | What | Where |
@@ -154,6 +159,45 @@ empty. Failures: no answer in 20 s → `TimeoutFailure`, retryable widget error 
 `NetworkFailure`, refusal → `UnknownFailure`; the join then shows its normal
 "couldn't join" / offline sheet.
 
+## Gym logos
+- **Following changes.** The memberships (name, colour, logo) are now asked
+  for again on resume and when the network returns (`GymSyncHost._run` →
+  `GymController.refresh`, then the logo sync), not only on a cold start.
+  Refreshes that come together share one request.
+- **Knowing a logo changed.** `gyms.logo_updated_at` (migration 0023) is set
+  by the database on every write of `logo_path`, so a logo replaced at the
+  same path has a new version. `Gym.logoPath` / `logoVersion` are **not** in
+  `Gym ==`, so a new logo never restarts the workout, the plan or the
+  pictures.
+- **Download.** `SyncGymLogos` (domain) runs after each refresh, one gym at a
+  time: logos of active memberships only, at most 10.
+  - `SupabaseGymLogoRepository` downloads from the private `gym-logos` bucket
+    with the member's session, using the version as a cache nonce.
+  - `GymLogoCheck` reads the size from the PNG/JPEG header **before any
+    decode**, and refuses: empty, over 512 KB, not PNG/JPEG, broken, animated,
+    or smaller than 16 or larger than 2048 px a side.
+- **On the phone.** `FileGymLogoStore` writes
+  `<support dir>/gym_logos/<gym id>-<version>.img`, with an index in
+  `gym.logos`.
+  - The order is temp file, rename, index, then deleting the old file.
+  - The version is in the file name, so Flutter's image cache never shows an
+    old logo.
+  - It is cleared with the rest of the gym state (sign-out, a session ended,
+    the account deleted).
+- **Showing it.**
+  - Pages pass `gymLogoImagesProvider` (gym id → image) to their views.
+  - `AppLogoTile(image:)` decodes at the tile's size only (`ResizeImage`) and
+    fades the logo in over 200 ms (none with Reduce Motion).
+  - It draws a thin `keyFill` edge, so a white logo still reads as a tile.
+- **The letters take the gym's colour** (behind `gym_brand_colours`, the
+  owner's ask on 2026-11-14). When the owner chose a colour, the letters
+  tile is filled with it through `BrandColors.fromSeed`, the rule the
+  theme uses. The letters are white or dark, whichever keeps 4.5:1. With
+  no colour it is the design's blue or amber gradient, as before. Pages
+  pass `gymTileColorsProvider` (active gyms only) to the views.
+- **Flag `gym_logos`** (off): with it off nothing downloads, and the tiles
+  show letters even if a logo is kept.
+
 ## Analytics (no personal data)
 | Event | Properties |
 |---|---|
@@ -164,6 +208,9 @@ empty. Failures: no answer in 20 s → `TimeoutFailure`, retryable widget error 
 | `account_signed_out`, `account_deleted` | — |
 | `solo_import_started`, `solo_import_done` | — |
 | `solo_import_failed` | `reason` (same words as `gym_join_failed`) |
+
+Gym logos send no events; the logo's path or gym id is never in an event
+or an error report (a refused logo reports only the reason).
 
 Never a code, a name, an id or an email (`gym_account_app_test.dart` checks the
 event names and property keys). Sign out and delete call `Analytics.reset()`.
@@ -232,7 +279,7 @@ the Keychain and `app_settings` need a real phone.
   screen); today the email makes the account permanent and recoverable on the
   server, but the app has no sign-in screen for it.
 - A visible Turnstile fallback (the widget runs invisibly; see `docs/release.md`).
-- Showing an ended gym's readable history; the captain's name; logo images.
+- Showing an ended gym's readable history; the captain's name.
 
 ## Demo & post
 Hook: "Scan your gym's QR. You're in."

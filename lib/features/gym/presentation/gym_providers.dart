@@ -74,9 +74,15 @@ class GymController extends AsyncNotifier<GymSnapshot> {
     return cached;
   }
 
+  Future<AppFailure?>? _refreshing;
+
   /// Asks the server; offline keeps what the phone has. Returns the failure
-  /// so a screen can say "couldn't refresh".
-  Future<AppFailure?> refresh() async {
+  /// so a screen can say "couldn't refresh". A call while one runs gets that
+  /// one's answer (start, resume and back online can come together).
+  Future<AppFailure?> refresh() =>
+      _refreshing ??= _refresh().whenComplete(() => _refreshing = null);
+
+  Future<AppFailure?> _refresh() async {
     final result = await RefreshMemberships(
       ref.read(gymRepositoryProvider),
       _local,

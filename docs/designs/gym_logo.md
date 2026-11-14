@@ -281,6 +281,34 @@ see it on the welcome screen and in the workspace switcher.
      `docs/release.md` (the flag), and `docs/README.md` if a new doc is
      added.
 
+## As built: where it differs from this spec
+
+- **Header check in pure Dart, not `ImageDescriptor`.** `GymLogoCheck` reads
+  the width and height from the PNG IHDR or the JPEG frame header itself.
+  It's the same "measure before decoding" rule, but the engine isn't
+  involved at all, and the tests run without it. It also refuses an
+  animated PNG (an `acTL` chunk before the image data).
+- **Views take the logos as data.** `gymLogoImagesProvider` (gym id →
+  image) is passed by each page to its view (`logos:`, `logo:`), because a
+  `*_view.dart` only takes data and callbacks. There is no per-tile provider.
+- **The first download after a join.** The join already invalidates the
+  gym state; the refresh that follows brings `logo_updated_at` and starts
+  the sync, through a listener on the logo refs in `GymSyncHost`. The join
+  answer's version (in `redeem_payload`) is parsed, but not needed for that.
+- **Added on the owner's ask (2026-11-14): the letters take the gym's
+  colour.** When the owner chose one, `AppLogoTile(brandColor:)` fills the
+  letters tile with `BrandColors.fromSeed(...).brand`, and the letters are
+  `onBrand` (contrast guaranteed). It is behind `gym_brand_colours`.
+  Without a colour, the blue or amber gradient stays.
+- **The tile's edge** uses `palette.keyFill`; the palette has no
+  `separator`.
+- **Privacy page not changed.** The policy's date is the consent version
+  (`ConsentStore.current`), so any edit asks every member to agree again.
+  The logo isn't personal data, and it comes from our own backend, which
+  the policy already names ("Supabase — hosts the app's data and
+  accounts"). Left for the owner to decide: add a line and bump the
+  consent, or leave it.
+
 ## Official docs checked (2026-11-14)
 
 - pub.dev: `supabase_flutter` 2.18.3 and `storage_client` 2.8.1 are the

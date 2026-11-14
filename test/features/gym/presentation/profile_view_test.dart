@@ -10,6 +10,7 @@ import 'package:gym_tracker/features/gym/domain/usecases/refresh_memberships.dar
 import 'package:gym_tracker/features/gym/presentation/profile_view.dart';
 
 import '../../../helpers/gym_fakes.dart';
+import '../../../helpers/gym_logo_fakes.dart';
 import '../../../helpers/pump_app.dart';
 import '../../../helpers/ui_check.dart';
 import '../../workout/presentation/plan_samples.dart' show SheetHost;
@@ -30,7 +31,9 @@ ProfileView view({
   VoidCallback? onDelete,
   VoidCallback? onRetry,
   Future<AppFailure?> Function(String)? onAddEmail,
+  Map<String, ImageProvider> logos = const {},
 }) => ProfileView(
+  logos: logos,
   session: session,
   state: state ?? AsyncData(twoGymSnapshot),
   onSwitch: onSwitch ?? () {},
@@ -296,6 +299,7 @@ void main() {
     'profile_anonymous': () => view(onAddEmail: (_) async => null),
     'profile_with_email': () => view(session: emailSession),
     'profile_no_gym': () => view(state: const AsyncData(GymSnapshot())),
+    'profile_with_logo': () => view(logos: {'g-m2': testLogoImage}),
     'profile_error': () =>
         view(state: const AsyncError(NetworkFailure(), StackTrace.empty)),
     'profile_add_email_sheet': () => SheetHost(
