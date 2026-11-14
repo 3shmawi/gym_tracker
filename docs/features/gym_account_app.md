@@ -183,6 +183,10 @@ behind the flag `gym_history_restore`.
     (they never reached the server): open the app online once before
     deleting it;
   - with a **join** code on a new phone, which makes a new person.
+- **Gym workouts are never offered as solo history.** `FindSoloData` skips
+  workouts that have a membership, so after a restore *Add my solo history
+  to my account* doesn't offer the gym workouts that just came back from
+  the server.
 - **Signing out** (and a session ending, or deleting the account) clears the
   position, so the next person starts fresh. Today's rule is unchanged:
   signing out keeps the workouts on the phone.

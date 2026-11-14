@@ -172,6 +172,27 @@ void main() {
       workouts,
     );
 
+    test('gym workouts are not offered as solo history', () async {
+      final solo = session(at: DateTime.utc(2026));
+      final gym = session(at: DateTime.utc(2026, 1, 2));
+      await seed([
+        solo,
+        WorkoutSession(
+          dayId: gym.dayId,
+          finishedAt: gym.finishedAt,
+          sets: gym.sets,
+          membershipId: 'e0000000-0000-4000-8000-000000000001',
+        ),
+      ]);
+      final found = await FindSoloData(workouts, now: () => now)();
+      final value = (found as Success<SoloImportCandidates>).value;
+      expect(value.sessions, hasLength(1));
+      expect(
+        value.sessions.single.finishedAt,
+        solo.finishedAt.toUtc().toIso8601String(),
+      );
+    });
+
     test('copies in chunks of 50, plan first, and marks done', () async {
       await seed([
         for (var i = 0; i < 120; i++)

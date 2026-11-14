@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
 import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
@@ -12,6 +13,7 @@ import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/brand_color_rule.dart';
 import 'package:gym_tracker/core/theme/brand_colors.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
 import 'package:gym_tracker/features/gym/presentation/join_page.dart';
 import 'package:gym_tracker/features/gym/presentation/joined_view.dart';
 import 'package:gym_tracker/features/gym/presentation/scanner_camera.dart';
@@ -755,6 +757,8 @@ void main() {
     final server = FakeServer();
     for (var i = 1; i <= 3; i++) {
       final w = WorkoutSession(
+        // Logged in the gym on the old phone.
+        membershipId: member().id,
         dayId: PlanTemplates.fiveDaySplit.days.first.id,
         finishedAt: DateTime.now().toUtc().subtract(Duration(days: 9 - i * 2)),
         sets: [
@@ -783,19 +787,26 @@ void main() {
     expect(find.text('Welcome to Iron House'), findsOneWidget);
     await beat(tester, 2000);
 
-    // Start training: the old workouts come back by themselves.
+    // Start training: the old workouts come back by themselves (the
+    // restore may finish on Welcome or on home, so wait on what it did,
+    // not on when the toast is on screen).
     await tester.tap(find.byKey(const Key('joined_start')));
-    for (
-      var i = 0;
-      i < 40 && find.text('Your 3 workouts are back').evaluate().isEmpty;
-      i++
-    ) {
+    await tester.pumpAndSettle();
+    expect(find.byType(NextWorkoutPage), findsOneWidget);
+    Future<int> onPhone() async =>
+        switch (await Dependencies.workoutRepository.loadHistory()) {
+          Success(:final value) => value.length,
+          Failed() => -1,
+        };
+    for (var i = 0; i < 40 && await onPhone() < 3; i++) {
       await tester.pump(const Duration(milliseconds: 250));
     }
-    expect(find.text('Your 3 workouts are back'), findsOneWidget);
-    expect(find.byType(NextWorkoutPage), findsOneWidget);
-    final history = await Dependencies.workoutRepository.loadHistory();
-    expect((history as Success<List<WorkoutSession>>).value, hasLength(3));
+    expect(await onPhone(), 3);
+    final shown = ProviderScope.containerOf(
+      tester.element(find.byType(NextWorkoutPage)),
+    ).read(historyRestoredToastProvider);
+    expect(shown.count, 3, reason: 'the toast said 3');
+    expect(shown.seq, 1, reason: 'once');
     await beat(tester, 3000);
   });
 
