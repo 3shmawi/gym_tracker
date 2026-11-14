@@ -112,6 +112,27 @@ void main() {
       expect(s.countdownEnds, isNull);
     });
 
+    test('body lost during 3-2-1 pauses it; nothing runs without them', () {
+      var s = fresh(RoundKind.s30)
+          .startCountdown(t0)
+          .onEvent(const BodyLost(), at(1500));
+      expect(s.phase, RoundPhase.paused);
+      expect(s.pauseReason, PauseReason.bodyLost);
+      expect(s.countdownEnds, isNull);
+      expect(s.tick(at(9000)).phase, RoundPhase.paused, reason: 'no clock');
+      expect(s.startedAt, isNull);
+      s = s.startCountdown(at(9000)).tick(at(12000));
+      expect(s.phase, RoundPhase.running);
+      expect(s.clock(at(12000)), const Duration(seconds: 30));
+    });
+
+    test('reps and hints during 3-2-1 still do nothing', () {
+      final s = fresh(RoundKind.s30).startCountdown(t0);
+      for (final e in [rep, const HalfRep(depth: 0.6), const BodyFound()]) {
+        expect(s.onEvent(e, at(1000)), same(s));
+      }
+    });
+
     test('manual −1 never goes below zero', () {
       var s = running(RoundKind.s60, mode: RoundMode.manual).removeRep();
       expect(s.reps, 0);
