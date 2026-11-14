@@ -29,6 +29,17 @@ abstract final class MoveAnalytics {
     _ => '15_plus',
   };
 
+  /// Finer than [fpsBucket] for the "too slow" case; null when unknown.
+  static String? fpsBand(double? fps) => switch (fps) {
+    null => null,
+    final f when f.isNaN => null,
+    < 2 => '0_2',
+    < 4 => '2_4',
+    < 6 => '4_6',
+    < 8 => '6_8',
+    _ => '8_plus',
+  };
+
   /// The game played: the exercise's game with the camera, `none` when
   /// counting by hand (no game is shown).
   static String game(MoveExerciseId exercise, RoundMode mode) => switch (mode) {
