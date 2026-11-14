@@ -10,6 +10,8 @@ import 'package:gym_tracker/core/widgets/state_views.dart';
 import 'package:gym_tracker/features/backup/domain/entities/backup_status.dart';
 import 'package:gym_tracker/features/backup/presentation/backup_sync.dart';
 import 'package:gym_tracker/features/gym/domain/entities/solo_import.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_brand.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_logos.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
 import 'package:gym_tracker/features/gym/presentation/profile_view.dart';
 import 'package:gym_tracker/features/gym/presentation/solo_import_controller.dart';
@@ -32,6 +34,8 @@ class ProfilePage extends ConsumerWidget {
     return ProfileView(
       session: ref.watch(accountSessionProvider),
       state: ref.watch(gymControllerProvider),
+      logos: ref.watch(gymLogoImagesProvider),
+      colors: ref.watch(gymTileColorsProvider),
       onRetry: () => ref.invalidate(gymControllerProvider),
       onSwitch: () => unawaited(openWorkspaceSwitcher(context, ref)),
       onDelete: () => unawaited(context.push<void>(AppRoutes.deleteAccount)),

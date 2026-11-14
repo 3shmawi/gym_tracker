@@ -52,6 +52,24 @@ final activeBrandColorProvider = Provider<Color?>((ref) {
   return rgb == null ? null : BrandColors.toColor(rgb);
 });
 
+/// Each gym's colour for its letters tile, by gym id: active memberships
+/// whose owner chose one, with the flag on. Pages pass it to their views.
+final gymTileColorsProvider = Provider<Map<String, Color>>((ref) {
+  if (!ref.watch(gymBrandColoursEnabledProvider)) return const {};
+  final memberships =
+      ref.watch(gymControllerProvider).value?.memberships ?? const [];
+  return {
+    for (final m in memberships)
+      if (m.isActive) m.gym.id: ?gymTileColor(m.gym.brandColor),
+  };
+});
+
+/// A stored colour (`#rrggbb`) as a tile colour, or null.
+Color? gymTileColor(String? hex) {
+  final rgb = BrandColorRule.parse(hex);
+  return rgb == null ? null : BrandColors.toColor(rgb);
+}
+
 /// Puts the active gym's colour on everything below it (the navigator: every
 /// screen, sheet and dialog). Above it (the update gate, the consent gate)
 /// stays Azm's. With no gym colour it hands down the app's own theme

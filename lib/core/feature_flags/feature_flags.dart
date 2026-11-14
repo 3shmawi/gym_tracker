@@ -92,4 +92,9 @@ abstract final class Flags {
   /// screen (docs/designs/move_games.md). Off: none of it shows and the
   /// links open the home screen.
   static const moveGames = 'move_games';
+
+  /// A gym's members see its logo on the gym's tiles (profile, switcher,
+  /// welcome). Off: no logo is downloaded and the tiles show the gym's
+  /// letters (docs/designs/gym_logo.md §7).
+  static const gymLogos = 'gym_logos';
 }

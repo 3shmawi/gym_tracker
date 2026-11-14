@@ -11,9 +11,22 @@ import 'package:gym_tracker/l10n/l10n.dart';
 /// "Welcome to {gym}" (design board 3, last phone): the gym's logo, what the
 /// member may change in their plan, and one line about privacy. Pure UI.
 class JoinedView extends StatelessWidget {
-  const new({required this.joined, required this.onStart, super.key});
+  const new({
+    required this.joined,
+    required this.onStart,
+    this.logo,
+    this.color,
+    super.key,
+  });
+
+  /// The gym's own colour for its letters, if the owner chose one.
+  final Color? color;
 
   final JoinedGym joined;
+
+  /// The gym's logo once it is on the phone (it downloads right after the
+  /// join); the letters until then.
+  final ImageProvider? logo;
   final VoidCallback onStart;
 
   @override
@@ -36,7 +49,12 @@ class JoinedView extends StatelessWidget {
               children: [
                 SizedBox(height: AppDimens.lg),
                 Center(
-                  child: AppLogoTile(initials: joined.gym.initials, size: 96),
+                  child: AppLogoTile(
+                    initials: joined.gym.initials,
+                    size: 96,
+                    image: logo,
+                    brandColor: color,
+                  ),
                 ),
                 SizedBox(height: AppDimens.sm2),
                 Center(child: _JoinedBadge(label: l10n.joinedBadge)),
