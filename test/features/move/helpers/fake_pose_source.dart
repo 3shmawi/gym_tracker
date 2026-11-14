@@ -9,6 +9,10 @@ class FakePoseSource implements PoseSource {
   new({this.startsAs = const PoseSourceStatus(PoseSourceState.running)});
 
   PoseSourceStatus startsAs;
+
+  /// When set, [start] waits for it: like the camera waiting for the
+  /// member to answer the permission dialog.
+  Completer<void>? gate;
   int starts = 0;
   int stops = 0;
 
@@ -35,6 +39,7 @@ class FakePoseSource implements PoseSource {
   @override
   Future<void> start() async {
     starts++;
+    await gate?.future;
     setStatus(startsAs);
   }
 

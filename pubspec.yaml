@@ -42,6 +42,7 @@ dependencies:
   sqflite: ^2.4.6
   flame: 1.38.2
   flame_audio: 2.12.2
+  flutter_tts: 4.2.5
 dev_dependencies:
   flutter_driver:
     sdk: flutter

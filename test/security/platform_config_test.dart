@@ -122,6 +122,38 @@ void main() {
       );
     });
 
+    test('Move games: the spoken count only looks for the TTS engine', () {
+      // flutter_tts: Android 11+ package visibility for the speech engine.
+      // An intent query, not a permission; nothing else is made visible.
+      final queries = RegExp(
+        '<queries>(.*?)</queries>',
+        dotAll: true,
+      ).firstMatch(manifest)!.group(1)!;
+      final actions = RegExp('android:name="([^"]+)"')
+          .allMatches(queries)
+          .map((m) => m.group(1))
+          .toSet();
+      expect(actions, {
+        'android.intent.action.PROCESS_TEXT',
+        'android.intent.action.TTS_SERVICE',
+      });
+      expect(manifest, isNot(contains('QUERY_ALL_PACKAGES')));
+      expect(granted, isNot(contains('RECORD_AUDIO')));
+    });
+
+    test('release builds keep the Room constructors WorkManager needs', () {
+      // WorkManager (from ML Kit) opens its Room database at launch through
+      // Class.newInstance(); without this rule R8 full mode removed the
+      // constructor and the app crashed on start (0.48.0-0.51.x).
+      final rules = File('android/app/proguard-rules.pro').readAsStringSync();
+      expect(
+        rules.replaceAll(RegExp(r'\s+'), ' '),
+        contains(
+          '-keep class * extends androidx.room.RoomDatabase { <init>(); }',
+        ),
+      );
+    });
+
     test('only the launcher activity is exported', () {
       final exported = RegExp('android:exported="true"').allMatches(manifest);
       expect(exported.length, 1);

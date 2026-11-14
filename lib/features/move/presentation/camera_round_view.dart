@@ -5,6 +5,7 @@ import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
+import 'package:gym_tracker/features/move/domain/entities/move_sound_mode.dart';
 import 'package:gym_tracker/features/move/domain/entities/pose_frame.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
 import 'package:gym_tracker/features/move/domain/games/game_rules.dart';
@@ -104,8 +105,16 @@ class CameraRoundView extends StatelessWidget {
             when state.stage != CameraStage.starting)
           AppIconButton(
             key: const Key('move_round_sound'),
-            icon: state.soundOn ? Icons.volume_up : Icons.volume_off,
-            tooltip: state.soundOn ? l10n.moveSoundMute : l10n.moveSoundUnmute,
+            icon: switch (state.playing) {
+              MoveSoundMode.voice => Icons.record_voice_over,
+              MoveSoundMode.tones => Icons.volume_up,
+              MoveSoundMode.off => Icons.volume_off,
+            },
+            tooltip: switch (state.playing) {
+              MoveSoundMode.voice => l10n.moveSoundVoice,
+              MoveSoundMode.tones => l10n.moveSoundTones,
+              MoveSoundMode.off => l10n.moveSoundOff,
+            },
             onPressed: toggle,
           ),
         if (running)

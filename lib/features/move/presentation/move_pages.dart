@@ -12,6 +12,7 @@ import 'package:gym_tracker/features/library/data/exercise_catalog.dart';
 import 'package:gym_tracker/features/library/domain/entities/library_exercise.dart';
 import 'package:gym_tracker/features/move/domain/entities/move_exercise.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
+import 'package:gym_tracker/features/move/presentation/app_lifecycle.dart';
 import 'package:gym_tracker/features/move/presentation/camera_round_controller.dart';
 import 'package:gym_tracker/features/move/presentation/camera_round_view.dart';
 import 'package:gym_tracker/features/move/presentation/manual_counter_view.dart';
@@ -200,13 +201,27 @@ class _CameraRoundPageState extends ConsumerState<CameraRoundPage>
   @override
   void initState() {
     super.initState();
-    unawaited(Future<void>.microtask(() => mounted ? _c.start() : null));
+    unawaited(
+      Future<void>.microtask(
+        () => mounted
+            ? _c.start(
+                // The spoken count follows the app's language.
+                language: Localizations.maybeLocaleOf(context)?.languageCode,
+              )
+            : null,
+      ),
+    );
     startTicking(() => _c.tick());
     _lifecycle = AppLifecycleListener(
-      // The camera plugin leaves this to the app: release it at once.
+      // The camera plugin leaves this to the app: release it as soon as the
+      // app is off screen, and start it again on return if the round has
+      // not started yet (a running round waits for "Resume").
       onStateChange: (state) {
-        if (state != AppLifecycleState.resumed && mounted) {
+        if (!mounted) return;
+        if (offScreen(state)) {
           unawaited(_c.background());
+        } else if (state == AppLifecycleState.resumed) {
+          unawaited(_c.foreground());
         }
       },
     );
@@ -236,7 +251,7 @@ class _CameraRoundPageState extends ConsumerState<CameraRoundPage>
       preview: state.cameraOn ? _c.preview() : null,
       onClose: () => _leave(context),
       onPause: _c.pause,
-      onToggleSound: () => unawaited(_c.toggleSound()),
+      onToggleSound: () => unawaited(_c.cycleSound()),
       onResume: () => unawaited(_c.resume()),
       onEnd: _c.end,
       onManual: _manual,
@@ -279,7 +294,7 @@ class _ManualCounterPageState extends ConsumerState<ManualCounterPage>
     startTicking(() => _c.tick());
     _lifecycle = AppLifecycleListener(
       onStateChange: (state) {
-        if (state != AppLifecycleState.resumed && mounted) _c.background();
+        if (offScreen(state) && mounted) _c.background();
       },
     );
   }

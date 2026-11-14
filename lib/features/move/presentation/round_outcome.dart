@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/network/result.dart';
+import 'package:gym_tracker/features/move/domain/entities/move_sound_mode.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
 import 'package:gym_tracker/features/move/domain/move_analytics.dart';
 import 'package:gym_tracker/features/move/presentation/move_providers.dart';
@@ -84,11 +85,13 @@ mixin RoundEnding {
   }
 }
 
-void reportStarted(RoundState round) => unawaited(
+/// [sound] is what a camera round plays (`voice` / `tones` / `off`).
+void reportStarted(RoundState round, {MoveSoundMode? sound}) => unawaited(
   Analytics.capture('move_game_started', {
     'exercise': round.exercise.id,
     'game': MoveAnalytics.game(round.exercise, round.mode),
     'mode': round.mode.name,
     'round': round.kind.id,
+    'sound': ?sound?.id,
   }),
 );

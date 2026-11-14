@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gym_tracker/features/move/presentation/app_lifecycle.dart';
 import 'package:gym_tracker/features/move/presentation/move_check_controller.dart';
 import 'package:gym_tracker/features/move/presentation/move_check_view.dart';
 
@@ -24,9 +25,10 @@ class _MoveCheckPageState extends ConsumerState<MoveCheckPage> {
     super.initState();
     _lifecycle = AppLifecycleListener(
       // The camera plugin leaves this to the app: release it as soon as the
-      // app is not in front (a call, the app switcher, the lock screen).
+      // app is off screen (the app switcher, another app, the lock screen),
+      // not behind the camera permission dialog.
       onStateChange: (state) {
-        if (state != AppLifecycleState.resumed) _stop();
+        if (offScreen(state)) _stop();
       },
     );
   }

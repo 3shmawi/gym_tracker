@@ -522,6 +522,15 @@ Spec: `docs/designs/move_games.md` §11. Checked in the built release APK
   bundles it needs are **not** set up yet, and the iOS source refuses to
   run the model until they are (pinned by checksum when added).
 
+- **Release builds keep Room's constructors** (`android/app/proguard-rules.pro`):
+  ML Kit's WorkManager 2.7.0 opens its Room 2.2.5 database at launch with
+  `Class.newInstance()`; R8 full mode kept `WorkDatabase_Impl` but dropped
+  its constructor, and 0.48.0–0.51.x crashed on start before Sentry was up
+  ("Failed to create an instance of androidx.work.impl.WorkDatabase").
+  `platform_config_test.dart` checks the rule. A crash this early never
+  reaches Sentry: read it with `adb logcat -b crash -d` or Play Console's
+  pre-launch report.
+
 ### Move games screens (PR 2, behind `move_games`)
 - **A link never opens the camera:** `/move/<exercise>/play` needs a
   `MoveLaunch` object only the app creates after the member's tap on
@@ -577,6 +586,16 @@ Spec: `docs/designs/move_games.md` §11. Checked in the built release APK
   `*.mp4 *.mov *.m4v *.avi *.webm *.mkv`, and `recordings_test.dart`
   fails on any non-JSON file in `test/fixtures/move/` or any key other
   than joints and times.
+
+### Move games: the spoken count (PR 5)
+- `flutter_tts` 4.2.5 (pinned, OSV clean 2026-11-13). Android: no
+  permission, one `<queries>` intent for `TTS_SERVICE` (package visibility
+  for the speech engine), checked by `platform_config_test.dart`.
+- Only offline voices: `pickVoice` refuses voices with
+  `network_required = 1` or `notInstalled`, so the spoken text never leaves
+  the phone. The text is only ever a number from 0 to 999.
+- Android: `speak` without `focus`, so no audio focus is taken. iOS: the
+  ambient audio category, like the game's tones.
 
 ### Move games on iOS: the ML Kit model files (2026-11-13)
 - iOS gets ML Kit through `d-date/google-mlkit-swiftpm` 9.0.2, a
