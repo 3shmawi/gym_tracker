@@ -12,6 +12,7 @@ import 'package:gym_tracker/features/move/presentation/move_providers.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_view.dart';
+import 'package:gym_tracker/features/workout/presentation/widgets/plan_template_sheet.dart';
 
 class NextWorkoutPage extends ConsumerWidget {
   const new({super.key});
@@ -31,7 +32,11 @@ class NextWorkoutPage extends ConsumerWidget {
         state: next,
         covers: ref.watch(exerciseCoversProvider),
         onRetry: () => unawaited(controller.retry()),
-        onUseTemplate: () => unawaited(controller.useTemplate()),
+        // Three ready plans to choose from (full body, upper/lower, 5 days).
+        onUseTemplate: () async {
+          final picked = await showPlanTemplateSheet(context);
+          if (picked != null) await controller.useTemplate(picked);
+        },
         onOpenSettings: () => unawaited(context.push<void>(AppRoutes.settings)),
         // Only people with a gym account choose where they train.
         onOpenWorkspace: signedIn

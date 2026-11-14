@@ -100,8 +100,16 @@
     }
   },
   "todayRestOver": "Rest is over. Next set!",
-  "todayNoPlan": "No plan yet. Start with a ready 5-day plan and change it later.",
-  "todayUseTemplate": "Start with the 5-day plan",
+  "todayNoPlan": "No plan yet. Pick a ready plan and change it later.",
+  "todayUseTemplate": "Pick a ready plan",
+  "planTemplatesTitle": "Pick a plan",
+  "planTemplatesBody": "You can change any day or exercise later.",
+  "planTemplateFullBody": "Full body · 3 days",
+  "planTemplateFullBodyBody": "New to the gym or short on time: the whole body every session, 3 days a week.",
+  "planTemplateUpperLower": "Upper / lower · 4 days",
+  "planTemplateUpperLowerBody": "Upper body one day, legs the next, each twice a week.",
+  "planTemplateSplit5": "5-day split · 5 days",
+  "planTemplateSplit5Body": "Chest & back, shoulders & arms, legs, then chest & back and shoulders & arms again with other exercises.",
   "exerciseLast": "Last: {sets}",
   "@exerciseLast": {
     "placeholders": {
