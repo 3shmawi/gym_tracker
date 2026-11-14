@@ -93,7 +93,9 @@ picture after a body-lost pause, 3-2-1 starts again by itself; otherwise
 reps done.
 
 **Can't use the camera:** refused → *Open settings* or *Count by hand*;
-no front camera, model can't run, or slower than 8 frames/s after 4 s →
+no front camera, model can't run, or slower than 8 frames/s for 5 s in
+a row **during 3-2-1 or the round** (never during placement; the first 3 s
+are not judged) →
 "Camera games don't work on this phone" → *Count by hand*.
 
 **Pose check (testers):** Settings → About → *Pose check (testing)* →
@@ -256,7 +258,7 @@ buckets (`MoveAnalytics`). The pose check sends none.
 |---|---|---|
 | `move_opened` | the hub opens | `source`: `card`, `menu`, `link` |
 | `move_camera_answered` | the camera was asked for (first time, or refused) | `result`: `granted`, `denied` |
-| `move_unsupported` | the camera can't be used | `reason`: `no_camera`, `model_failed`, `too_slow` |
+| `move_unsupported` | the camera can't be used | `reason`: `no_camera`, `model_failed`, `too_slow`; `fps_band` (`0_2`/`2_4`/`4_6`/`6_8`) with `too_slow` |
 | `move_game_started` | a round starts (after 3-2-1 or Start) | `exercise`, `game` (`stack` with the camera, `none` by hand), `mode` (`camera`/`manual`), `round`, `sound` (camera only: `voice`/`tones`/`off`, what actually plays) |
 | `move_game_finished` | a round ends | `exercise`, `game`, `mode`, `round`, `reps_bucket`, `duration_bucket`, `ended` (`completed`/`quit`), `fps_bucket` (camera only) |
 | `move_round_saved` | *Save to my training* | `exercise`, `mode` |
@@ -342,6 +344,15 @@ buckets (`MoveAnalytics`). The pose check sends none.
   itself; a round that had started waits for *Resume*.
 - Only ML Kit's **base** model ships; the accurate one is excluded in
   Gradle (R8 is told its classes are missing on purpose).
+- **The speed check (fixed 2026-11-14):** judged only during 3-2-1 and the
+  running round, after 3 s, and only after 5 s in a row below 8 frames/s.
+  With nobody in position (sitting, walking to the phone, out of the
+  picture) ML Kit runs its person detector on every frame and is much
+  slower than while it tracks a body; judging from the camera start (4 s,
+  one reading) sent the owner's OPPO (CPH2565) to "doesn't work on this
+  phone" before they were even down. Placement now keeps guiding however
+  slow it is. `move_unsupported` sends `fps_band` (`0_2` … `6_8`) for
+  `too_slow`.
 - **Privacy (PR 4):** the Arabic privacy text is in the same formal Arabic
   as the rest of the page, not the Egyptian draft in the spec. The QR
   scanner on Android already sent ML Kit metrics (bundled barcode model in
