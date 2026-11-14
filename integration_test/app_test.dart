@@ -86,6 +86,11 @@ void main() {
     expect(find.byType(NextWorkoutPage), findsOneWidget);
     await tester.tap(find.byKey(const Key('use_template_button')));
     await tester.pumpAndSettle();
+    // The ready plans; these flows use the 5-day split.
+    await tester.ensureVisible(find.byKey(const Key('template_split_5')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('template_split_5')));
+    await tester.pumpAndSettle();
     await beat(tester, 1500);
 
     // Day 1 of 5, Chest & Back, all seven exercises, first time for each.
@@ -126,6 +131,11 @@ void main() {
     await beat(tester);
 
     await tester.tap(find.byKey(const Key('use_template_button')));
+    await tester.pumpAndSettle();
+    // The ready plans; these flows use the 5-day split.
+    await tester.ensureVisible(find.byKey(const Key('template_split_5')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('template_split_5')));
     await tester.pumpAndSettle();
     await beat(tester);
 
@@ -267,6 +277,11 @@ void main() {
     await beat(tester);
 
     await tester.tap(find.byKey(const Key('use_template_button')));
+    await tester.pumpAndSettle();
+    // The ready plans; these flows use the 5-day split.
+    await tester.ensureVisible(find.byKey(const Key('template_split_5')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('template_split_5')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('change_day_button')).hitTestable());
     await tester.pumpAndSettle();
@@ -436,6 +451,11 @@ void main() {
     expect(find.byType(NextWorkoutPage), findsOneWidget);
     await tester.tap(find.byKey(const Key('use_template_button')));
     await tester.pumpAndSettle();
+    // The ready plans; these flows use the 5-day split.
+    await tester.ensureVisible(find.byKey(const Key('template_split_5')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('template_split_5')));
+    await tester.pumpAndSettle();
     expect(find.byType(ExercisePreviewRow), findsWidgets);
     await beat(tester, 2000);
   });
@@ -459,6 +479,11 @@ void main() {
 
     // A plan and one finished workout waiting on the phone.
     await tester.tap(find.byKey(const Key('use_template_button')));
+    await tester.pumpAndSettle();
+    // The ready plans; these flows use the 5-day split.
+    await tester.ensureVisible(find.byKey(const Key('template_split_5')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('template_split_5')));
     await tester.pumpAndSettle();
     final workout = WorkoutSession(
       dayId: legacyDayId(0),
@@ -791,6 +816,11 @@ void main() {
 
     await tester.tap(find.byKey(const Key('use_template_button')));
     await tester.pumpAndSettle();
+    // The ready plans; these flows use the 5-day split.
+    await tester.ensureVisible(find.byKey(const Key('template_split_5')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('template_split_5')));
+    await tester.pumpAndSettle();
     await beat(tester);
 
     await moveFlow(tester);
@@ -807,6 +837,11 @@ void main() {
     await beat(tester);
 
     await tester.tap(find.byKey(const Key('use_template_button')));
+    await tester.pumpAndSettle();
+    // The ready plans; these flows use the 5-day split.
+    await tester.ensureVisible(find.byKey(const Key('template_split_5')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('template_split_5')));
     await tester.pumpAndSettle();
     await beat(tester, 1500);
 

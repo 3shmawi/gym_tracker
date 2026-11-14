@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 
-/// Ready-made plans a member can start from ("Start with a 5-day plan").
+/// Ready-made plans a member can start from ("Pick a ready plan"): full
+/// body 3 days, upper/lower 4 days, the 5-day split.
 abstract final class PlanTemplates {
   static const _chestBackName = LocalizedName(
     ar: 'بنش وضهر',
@@ -226,6 +227,314 @@ abstract final class PlanTemplates {
     ),
   ];
 
+  // ---- Full body, 3 days (2026-11-14) --------------------------------------
+  // The whole body every session: the plan for someone new to the gym or
+  // short on time. Every exercise is from the library (same id, names and
+  // defaults; test/features/workout/data/plan_templates_test.dart).
+
+  static const _fullBodyA = <Exercise>[
+    Exercise(
+      id: 'barbell_squat',
+      name: LocalizedName(ar: 'بار اسكوات حر', en: 'Barbell Back Squat'),
+      weightStep: 5,
+      restSeconds: 120,
+    ),
+    Exercise(
+      id: 'flat_db_press',
+      name: LocalizedName(ar: 'دفع دمبل مستوي', en: 'Flat Dumbbell Press'),
+    ),
+    Exercise(
+      id: 'wide_lat_pulldown',
+      name: LocalizedName(ar: 'سحب عالي واسع', en: 'Wide Lat Pulldown'),
+    ),
+    Exercise(
+      id: 'db_shoulder_press',
+      name: LocalizedName(
+        ar: 'دفع دمبل جانبي كتف',
+        en: 'Dumbbell Shoulder Press',
+      ),
+    ),
+    Exercise(
+      id: 'alternating_db_curl',
+      name: LocalizedName(
+        ar: 'تبادل دمبل باي',
+        en: 'Alternating Dumbbell Curl',
+      ),
+      supersetWithNext: true,
+    ),
+    Exercise(
+      id: 'rope_pushdown',
+      name: LocalizedName(ar: 'حبل خلفي تراي', en: 'Rope Pushdown'),
+    ),
+    Exercise(
+      id: 'abs',
+      name: LocalizedName(ar: 'بطن', en: 'Abs'),
+      targetReps: 15,
+      weightStep: 5,
+    ),
+  ];
+
+  static const _fullBodyB = <Exercise>[
+    Exercise(
+      id: 'leg_press',
+      name: LocalizedName(ar: 'دفع جهاز', en: 'Leg Press'),
+      weightStep: 5,
+    ),
+    Exercise(
+      id: 'incline_machine_press',
+      name: LocalizedName(ar: 'دفع جهاز عالي', en: 'Incline Machine Press'),
+    ),
+    Exercise(
+      id: 'close_grip_row',
+      name: LocalizedName(ar: 'سحب أرضي ضيق', en: 'Close-Grip Seated Row'),
+    ),
+    Exercise(
+      id: 'db_lateral_raise',
+      name: LocalizedName(
+        ar: 'رفرفة دمبل جانبي كتف',
+        en: 'Dumbbell Lateral Raise',
+      ),
+      weightStep: 1,
+    ),
+    Exercise(
+      id: 'hammer_curl',
+      name: LocalizedName(ar: 'شاكوش دمبل باي', en: 'Hammer Curl'),
+      supersetWithNext: true,
+    ),
+    Exercise(
+      id: 'db_overhead_extension',
+      name: LocalizedName(
+        ar: 'دمبل زوجي تراي',
+        en: 'Two-Hand DB Overhead Extension',
+      ),
+    ),
+    Exercise(
+      id: 'machine_calf_raise',
+      name: LocalizedName(ar: 'سمانة جهاز', en: 'Machine Calf Raise'),
+      weightStep: 5,
+    ),
+  ];
+
+  static const _fullBodyC = <Exercise>[
+    Exercise(
+      id: 'db_lunge',
+      name: LocalizedName(ar: 'طعن دمبل', en: 'Dumbbell Lunge'),
+    ),
+    Exercise(
+      id: 'flat_machine_press',
+      name: LocalizedName(ar: 'دفع جهاز مستوي', en: 'Flat Machine Chest Press'),
+    ),
+    Exercise(
+      id: 'lat_pulldown_machine',
+      name: LocalizedName(ar: 'ظرافة', en: 'Lat Pulldown Machine'),
+    ),
+    Exercise(
+      id: 'machine_shoulder_press',
+      name: LocalizedName(
+        ar: 'دفع جهاز أمامي كتف',
+        en: 'Machine Shoulder Press',
+      ),
+    ),
+    Exercise(
+      id: 'leg_curl',
+      name: LocalizedName(ar: 'جهاز خلفية', en: 'Leg Curl'),
+    ),
+    Exercise(
+      id: 'face_pull',
+      name: LocalizedName(ar: 'حبل على الوش', en: 'Face Pull'),
+    ),
+    Exercise(
+      id: 'abs',
+      name: LocalizedName(ar: 'بطن', en: 'Abs'),
+      targetReps: 15,
+      weightStep: 5,
+    ),
+  ];
+
+  /// Full body, 3 days a week (A · B · C).
+  static const fullBody3 = WorkoutPlan(
+    days: [
+      WorkoutDay(
+        id: 'fb-a',
+        name: LocalizedName(ar: 'جسم كامل أ', en: 'Full Body A'),
+        exercises: _fullBodyA,
+      ),
+      WorkoutDay(
+        id: 'fb-b',
+        name: LocalizedName(ar: 'جسم كامل ب', en: 'Full Body B'),
+        exercises: _fullBodyB,
+      ),
+      WorkoutDay(
+        id: 'fb-c',
+        name: LocalizedName(ar: 'جسم كامل ج', en: 'Full Body C'),
+        exercises: _fullBodyC,
+      ),
+    ],
+  );
+
+  // ---- Upper / lower, 4 days (2026-11-14) -----------------------------------
+
+  static const _upper1 = <Exercise>[
+    Exercise(
+      id: 'flat_db_press',
+      name: LocalizedName(ar: 'دفع دمبل مستوي', en: 'Flat Dumbbell Press'),
+    ),
+    Exercise(
+      id: 'wide_lat_pulldown',
+      name: LocalizedName(ar: 'سحب عالي واسع', en: 'Wide Lat Pulldown'),
+    ),
+    Exercise(
+      id: 'db_shoulder_press',
+      name: LocalizedName(
+        ar: 'دفع دمبل جانبي كتف',
+        en: 'Dumbbell Shoulder Press',
+      ),
+    ),
+    Exercise(
+      id: 'close_grip_row',
+      name: LocalizedName(ar: 'سحب أرضي ضيق', en: 'Close-Grip Seated Row'),
+    ),
+    Exercise(
+      id: 'alternating_db_curl',
+      name: LocalizedName(
+        ar: 'تبادل دمبل باي',
+        en: 'Alternating Dumbbell Curl',
+      ),
+      supersetWithNext: true,
+    ),
+    Exercise(
+      id: 'rope_pushdown',
+      name: LocalizedName(ar: 'حبل خلفي تراي', en: 'Rope Pushdown'),
+    ),
+  ];
+
+  static const _lower1 = <Exercise>[
+    Exercise(
+      id: 'barbell_squat',
+      name: LocalizedName(ar: 'بار اسكوات حر', en: 'Barbell Back Squat'),
+      weightStep: 5,
+      restSeconds: 120,
+    ),
+    Exercise(
+      id: 'leg_curl',
+      name: LocalizedName(ar: 'جهاز خلفية', en: 'Leg Curl'),
+    ),
+    Exercise(
+      id: 'leg_extension',
+      name: LocalizedName(ar: 'جهاز أمامية', en: 'Leg Extension'),
+    ),
+    Exercise(
+      id: 'machine_calf_raise',
+      name: LocalizedName(ar: 'سمانة جهاز', en: 'Machine Calf Raise'),
+      weightStep: 5,
+    ),
+    Exercise(
+      id: 'abs',
+      name: LocalizedName(ar: 'بطن', en: 'Abs'),
+      targetReps: 15,
+      weightStep: 5,
+    ),
+  ];
+
+  static const _upper2 = <Exercise>[
+    Exercise(
+      id: 'incline_barbell_press',
+      name: LocalizedName(ar: 'بار عالي', en: 'Incline Barbell Press'),
+    ),
+    Exercise(
+      id: 'wide_t_bar_row',
+      name: LocalizedName(ar: 'طرمبة واسع', en: 'Wide-Grip T-Bar Row'),
+    ),
+    Exercise(
+      id: 'machine_shoulder_press',
+      name: LocalizedName(
+        ar: 'دفع جهاز أمامي كتف',
+        en: 'Machine Shoulder Press',
+      ),
+    ),
+    Exercise(
+      id: 'lat_pulldown_machine',
+      name: LocalizedName(ar: 'ظرافة', en: 'Lat Pulldown Machine'),
+    ),
+    Exercise(
+      id: 'db_lateral_raise',
+      name: LocalizedName(
+        ar: 'رفرفة دمبل جانبي كتف',
+        en: 'Dumbbell Lateral Raise',
+      ),
+      weightStep: 1,
+    ),
+    Exercise(
+      id: 'hammer_curl',
+      name: LocalizedName(ar: 'شاكوش دمبل باي', en: 'Hammer Curl'),
+      supersetWithNext: true,
+    ),
+    Exercise(
+      id: 'db_overhead_extension',
+      name: LocalizedName(
+        ar: 'دمبل زوجي تراي',
+        en: 'Two-Hand DB Overhead Extension',
+      ),
+    ),
+  ];
+
+  static const _lower2 = <Exercise>[
+    Exercise(
+      id: 'leg_press',
+      name: LocalizedName(ar: 'دفع جهاز', en: 'Leg Press'),
+      weightStep: 5,
+    ),
+    Exercise(
+      id: 'db_lunge',
+      name: LocalizedName(ar: 'طعن دمبل', en: 'Dumbbell Lunge'),
+    ),
+    Exercise(
+      id: 'leg_curl',
+      name: LocalizedName(ar: 'جهاز خلفية', en: 'Leg Curl'),
+    ),
+    Exercise(
+      id: 'leg_extension',
+      name: LocalizedName(ar: 'جهاز أمامية', en: 'Leg Extension'),
+    ),
+    Exercise(
+      id: 'machine_calf_raise',
+      name: LocalizedName(ar: 'سمانة جهاز', en: 'Machine Calf Raise'),
+      weightStep: 5,
+    ),
+    Exercise(
+      id: 'abs',
+      name: LocalizedName(ar: 'بطن', en: 'Abs'),
+      targetReps: 15,
+      weightStep: 5,
+    ),
+  ];
+
+  /// Upper / lower, 4 days a week (upper · lower · upper · lower).
+  static const upperLower4 = WorkoutPlan(
+    days: [
+      WorkoutDay(
+        id: 'ul-1',
+        name: LocalizedName(ar: 'علوي 1', en: 'Upper 1'),
+        exercises: _upper1,
+      ),
+      WorkoutDay(
+        id: 'ul-2',
+        name: LocalizedName(ar: 'سفلي 1', en: 'Lower 1'),
+        exercises: _lower1,
+      ),
+      WorkoutDay(
+        id: 'ul-3',
+        name: LocalizedName(ar: 'علوي 2', en: 'Upper 2'),
+        exercises: _upper2,
+      ),
+      WorkoutDay(
+        id: 'ul-4',
+        name: LocalizedName(ar: 'سفلي 2', en: 'Lower 2'),
+        exercises: _lower2,
+      ),
+    ],
+  );
+
   /// The 5-day split: بنش وضهر · كتف ودراع · رجل · بنش وضهر · كتف ودراع.
   /// Days 4 and 5 train the same muscles as days 1 and 2 with other
   /// exercises. Day ids are `day-1` … `day-5`, the ids plans saved before days
@@ -248,6 +557,14 @@ abstract final class PlanTemplates {
       ),
     ],
   );
+
+  /// Every ready plan, in the order the picker shows them (fewest days
+  /// first).
+  static const all = <PlanTemplateId, WorkoutPlan>{
+    PlanTemplateId.fullBody3: fullBody3,
+    PlanTemplateId.upperLower4: upperLower4,
+    PlanTemplateId.split5: fiveDaySplit,
+  };
 
   /// Until 2026-11-10 the template's days 4 and 5 were copies of days 1 and
   /// 2 (the same exercises twice a week). A saved plan whose day 4 and day 5
@@ -277,4 +594,18 @@ abstract final class PlanTemplates {
       ],
     );
   }
+}
+
+/// A ready plan's id: stored in analytics (`plan_created.template`), never
+/// reused.
+enum PlanTemplateId {
+  fullBody3('full_body_3'),
+  upperLower4('upper_lower_4'),
+  split5('split_5');
+
+  new(this.id);
+
+  final String id;
+
+  WorkoutPlan get plan => PlanTemplates.all[this]!;
 }
