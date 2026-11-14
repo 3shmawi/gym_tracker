@@ -190,8 +190,12 @@ class RoundState {
     }
   }
 
-  /// What the detector reported. Only reps while running count.
+  /// What the detector reported. Only reps while running count; leaving
+  /// the picture also stops 3-2-1, so the clock never starts without them.
   RoundState onEvent(RepEvent event, DateTime now) {
+    if (phase == RoundPhase.countdown && event is BodyLost) {
+      return pause(PauseReason.bodyLost, now);
+    }
     if (phase != RoundPhase.running) return this;
     return switch (event) {
       RepCounted(:final took) => _rep(now, steady: took >= steadyRep),
