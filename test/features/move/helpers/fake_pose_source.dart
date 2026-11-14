@@ -49,3 +49,38 @@ class FakePoseSource implements PoseSource {
     setStatus(PoseSourceStatus.idle);
   }
 }
+
+/// A fake camera that can zoom between [min] and [max]; starts at [min],
+/// like the real one.
+class FakeZoomablePoseSource extends FakePoseSource
+    implements ZoomablePoseSource {
+  new({this.min = 0.6, this.max = 8});
+
+  final double min;
+  final double max;
+  CameraZoom? _zoom;
+  final List<double> asked = [];
+
+  @override
+  CameraZoom? get zoom => _zoom;
+
+  @override
+  Future<void> start() async {
+    await super.start();
+    _zoom = CameraZoom(min: min, max: max, level: min);
+  }
+
+  @override
+  Future<void> stop() async {
+    _zoom = null;
+    await super.stop();
+  }
+
+  @override
+  Future<CameraZoom?> setZoom(double level) async {
+    asked.add(level);
+    final z = _zoom;
+    if (z == null) return null;
+    return _zoom = z.at(level);
+  }
+}

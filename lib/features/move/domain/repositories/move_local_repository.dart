@@ -30,4 +30,9 @@ abstract interface class MoveLocalRepository {
   /// off, as the member last chose.
   Future<Result<MoveSoundMode>> soundMode();
   Future<Result<void>> setSoundMode(MoveSoundMode mode);
+
+  /// The camera zoom the member last chose on this phone, or null (the
+  /// widest the front camera allows).
+  Future<Result<double?>> cameraZoom();
+  Future<Result<void>> setCameraZoom(double level);
 }

@@ -1510,5 +1510,13 @@
   "@gymHistoryRestored": {
     "description": "Toast after the member's workouts came back from the server (after a recovery code).",
     "placeholders": {"count": {"type": "int"}}
-  }
+  },
+  "moveZoomWider": "Zoom out: see more of you",
+  "@moveZoomWider": {"description": "Tooltip/label of the camera zoom-out button while getting in position for a Move game."},
+  "moveZoomCloser": "Zoom in",
+  "@moveZoomCloser": {"description": "Tooltip/label of the camera zoom-in button while getting in position for a Move game."},
+  "moveZoomLevel": "{level}×",
+  "@moveZoomLevel": {"description": "The camera zoom level, e.g. 0.6× or 1.0×.", "placeholders": {"level": {"type": "String"}}},
+  "moveZoomLabel": "Camera zoom {level}",
+  "@moveZoomLabel": {"description": "Screen reader label of the zoom control.", "placeholders": {"level": {"type": "String"}}}
 }
