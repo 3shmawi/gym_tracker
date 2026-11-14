@@ -775,6 +775,17 @@ PR 4 (2026-11-13):
 - "Flag on for staging" is a PostHog setting, not code: the steps and the
   checklist before prod are in `docs/release.md` → "Move games flags".
 
+Recordings (2026-11-13):
+- Recordings are made on the owner's computer with MediaPipe Pose
+  Landmarker *lite* (`tool/pose_record/record.py`), not by the app: same
+  BlazePose model family and landmark numbering as ML Kit's base model,
+  sampled at 15 frames/s like the app. A later check on a phone (the pose
+  check) can confirm the counts match ML Kit's.
+- `test/fixtures/move/push_ups/manifest.json` lists each set with the
+  count a person counted; `recordings_test.dart` replays them through the
+  real detector. Until the owner's videos arrive the list is empty and that
+  test is skipped (the synthetic sets still run).
+
 PR 5, spoken count (2026-11-13):
 - The sound button cycles count out loud → tones → off (the spec had only
   "spoken count later"). Counting out loud is the default; it replaces the
@@ -843,6 +854,12 @@ iOS set-up (2026-11-13):
   Diagnostic Data), the ML Kit terms page (link checked). `mobile_scanner`
   7.5.0's Gradle file: bundled ML Kit barcode model unless
   `useUnbundled` is set (it isn't).
+- **For the recordings tool (2026-11-13):** PyPI `mediapipe` 1.2.3 (Apache
+  2.0, latest; OSV: none), its Pose Landmarker Python API (`VIDEO` running
+  mode, `detect_for_video` with millisecond timestamps, `pose_landmarks`
+  with `visibility`), the model files on storage.googleapis.com
+  (`pose_landmarker_lite/float16/1` = `latest`, SHA-256 pinned), OpenCV 5's
+  `CAP_PROP_ORIENTATION_AUTO` (phone videos' rotation tag).
 - **For PR 5 (2026-11-13):** pub.dev `flutter_tts` 4.2.5 (2026-01-05,
   latest; OSV: no advisories); its README (Android `<queries>` for
   `TTS_SERVICE`, iOS audio category), and its Android and iOS sources:
