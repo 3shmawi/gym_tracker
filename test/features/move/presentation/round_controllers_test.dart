@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/network/result.dart';
@@ -268,6 +270,57 @@ void main() {
       // Reps during placement (before 3-2-1 ends) build nothing.
       play(SynthSet.reps(2).frames());
       expect((s().game! as StackState).floors, isEmpty);
+    });
+
+    test(
+      'released behind the permission dialog, it starts again on return',
+      () async {
+        // The first start waits on the permission dialog, and the camera
+        // is released meanwhile (the bug: an endless loader).
+        final gate = bed.source.gate = Completer<void>();
+        final first = c.start();
+        await pumpEventQueue();
+        await c.background();
+        gate.complete();
+        await first;
+        expect(s().stage, CameraStage.starting);
+        expect(s().cameraOn, isFalse);
+
+        // Back on screen: the camera starts again, placement shows.
+        bed.source.gate = null;
+        await c.foreground();
+        expect(s().stage, CameraStage.placement);
+        expect(s().cameraOn, isTrue);
+        expect(bed.source.starts, 2);
+      },
+    );
+
+    test('back from the background at placement: the camera again', () async {
+      await c.start();
+      expect(s().stage, CameraStage.placement);
+      await c.background();
+      expect(s().cameraOn, isFalse);
+      await c.foreground();
+      expect(s().cameraOn, isTrue);
+      expect(s().stage, CameraStage.placement);
+      expect(bed.source.starts, 2);
+    });
+
+    test('a round that started stays paused on return (Resume)', () async {
+      await c.start();
+      play(const SynthSet(lead: Duration(seconds: 6)).frames());
+      expect(s().round.phase, RoundPhase.running);
+      await c.background();
+      expect(s().round.phase, RoundPhase.paused);
+      await c.foreground();
+      expect(s().cameraOn, isFalse, reason: 'waits for Resume');
+      expect(bed.source.starts, 1);
+    });
+
+    test('foreground does nothing while the camera is on', () async {
+      await c.start();
+      await c.foreground();
+      expect(bed.source.starts, 1);
     });
 
     test('a refused camera: the denied screen, nothing left running', () async {

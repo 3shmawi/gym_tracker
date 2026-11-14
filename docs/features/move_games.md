@@ -329,9 +329,17 @@ buckets (`MoveAnalytics`). The pose check sends none.
   the feet were still out of the picture.
 - With a screen reader on, *Count by hand* comes first on the hub; the
   big target is one button that says the count.
-- The camera is released when the app leaves the foreground (the camera
+- The camera is released when the app is **off screen** (`hidden` /
+  `paused`: the app switcher, another app, the lock screen; the camera
   plugin leaves lifecycle to the app), on Stop and when the screen closes;
-  the camera goes off before the listeners are dropped.
+  the camera goes off before the listeners are dropped. **Not on
+  `inactive`**: Android and iOS also report it while the camera
+  permission dialog, the notification shade or a call banner covers the
+  app. Releasing then cut the camera off in its first start, behind the
+  permission dialog, and left the round on an endless loader (fixed
+  2026-11-13, `presentation/app_lifecycle.dart`). Back on screen before
+  the round started (loader or placement), the camera starts again by
+  itself; a round that had started waits for *Resume*.
 - Only ML Kit's **base** model ships; the accurate one is excluded in
   Gradle (R8 is told its classes are missing on purpose).
 - **Privacy (PR 4):** the Arabic privacy text is in the same formal Arabic
