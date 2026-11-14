@@ -137,6 +137,15 @@ After the code is accepted, the account's training is brought onto the phone
 fetchPlan / fetchState`, `RestoreRows` (what is trusted), `SqliteSessionStore`
 as the `RestoreSink`, the extra steps of `BackupSignInController` and view.
 
+**Only the person's own workouts come down.** RLS also lets a gym's owner
+and captains read their members' workouts ("staff read their gym's
+sessions", migration 0009), and select policies add up. So the restore
+asks for `person_id = <this person>` (read from `people`, own row only), or
+for nothing when the account has no person yet. Before this fix (found
+2026-11-14), a captain's restore brought their trainees' workouts into the
+captain's own history, level and weights. Test: `restore_rows_test.dart`
+checks the request itself.
+
 **What happens, in order**
 1. A new phone, or a phone with no training: the account's workouts come down
    **200 at a time**, oldest first (ordered by finish time and row id), with the
