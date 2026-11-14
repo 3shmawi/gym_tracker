@@ -80,6 +80,8 @@ class Membership {
       'name': gym.name,
       'history_after_end': gym.historyAfterEnd.name,
       'brand_color': gym.brandColor,
+      'logo_path': gym.logoPath,
+      'logo_updated_at': gym.logoVersion?.toUtc().toIso8601String(),
     },
     'role': role.name,
     'status': status.name,

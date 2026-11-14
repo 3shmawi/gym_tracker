@@ -17,6 +17,7 @@ import 'package:gym_tracker/features/gym/presentation/joined_view.dart';
 import 'package:gym_tracker/features/gym/presentation/scanner_camera.dart';
 import 'package:gym_tracker/features/gym/presentation/scanner_view.dart';
 import 'package:gym_tracker/features/gym/presentation/welcome_view.dart';
+import 'package:gym_tracker/features/gym/presentation/workspace_sheet.dart';
 import 'package:gym_tracker/features/library/presentation/exercise_guide_view.dart';
 import 'package:gym_tracker/features/library/presentation/widgets/exercise_thumb.dart';
 import 'package:gym_tracker/features/settings/presentation/settings_view.dart';
@@ -42,6 +43,7 @@ import '../test/features/backup/fakes.dart' show FakeServer;
 import '../test/helpers/fake_rest_alarm.dart';
 import '../test/helpers/gym_app.dart' show FakeCamera;
 import '../test/helpers/gym_fakes.dart';
+import '../test/helpers/gym_logo_fakes.dart';
 import '../test/helpers/plan_sync_fakes.dart';
 import 'flows/build_plan_flow.dart';
 import 'flows/gym_pictures_flow.dart';
@@ -630,6 +632,79 @@ void main() {
       ),
       isTrue,
     );
+    await beat(tester, 2500);
+  });
+
+  testWidgets("a gym with its own logo: join, and the gym's logo greets you", (
+    tester,
+  ) async {
+    // Iron House's owner uploaded a logo in the dashboard.
+    final version = DateTime.utc(2026, 11, 14, 12);
+    FeatureFlags.overrides[Flags.gymJoin] = true;
+    FeatureFlags.overrides[Flags.gymLogos] = true;
+    addTearDown(FeatureFlags.overrides.clear);
+    await freshInstall(tester);
+    await app.main();
+    useFakeRestAlarm();
+    final camera = FakeCamera();
+    scannerCameraOverride = camera.builder;
+    addTearDown(() => scannerCameraOverride = null);
+    Dependencies.gymRepository = FakeGymRepository(
+      redeemResult: Success(
+        joinedGym(
+          gymId: gymA,
+          logoPath: logoPathOf(gymA),
+          logoVersion: version,
+        ),
+      ),
+      memberships: Success([
+        member(gymId: gymA, logoPath: logoPathOf(gymA), logoVersion: version),
+      ]),
+    );
+    final bucket = FakeGymLogoRepository({logoPathOf(gymA): testLogoPng});
+    Dependencies.gymLogoRepository = bucket;
+    final account = FakeAccountRepository();
+    Dependencies.accountRepository = account;
+    await tester.pumpAndSettle();
+    await beat(tester, 1200);
+
+    Finder logoIn(Finder screen) =>
+        find.descendant(of: screen, matching: find.byType(Image));
+    Future<void> waitFor(Finder finder) async {
+      for (var i = 0; i < 20 && finder.evaluate().isEmpty; i++) {
+        await tester.pump(const Duration(milliseconds: 250));
+      }
+    }
+
+    await tester.tap(find.byKey(const Key('welcome_join')));
+    await tester.pumpAndSettle();
+    await beat(tester, 1500);
+
+    // Scan the gym's QR: "Welcome", the letters until the logo is in.
+    camera.scan('https://azmm.pages.dev/join/K7M2QX');
+    await tester.pumpAndSettle();
+    account.emit(anonymousSession);
+    await tester.pumpAndSettle();
+    expect(find.text('Welcome to Iron House'), findsOneWidget);
+    // The logo downloads right after joining, then fades in.
+    await waitFor(logoIn(find.byType(JoinedView)));
+    expect(logoIn(find.byType(JoinedView)), findsOneWidget);
+    expect(bucket.fetched, hasLength(1));
+    await beat(tester, 2500);
+
+    // Start training, then "Where are you training?": the logo there too,
+    // with no second download.
+    await tester.tap(find.byKey(const Key('joined_start')));
+    await tester.pumpAndSettle();
+    expect(find.byType(NextWorkoutPage), findsOneWidget);
+    await beat(tester, 1500);
+    await openHomeMenu(tester);
+    await beat(tester);
+    await tester.tap(find.byKey(const Key('home_workspace_button')));
+    await tester.pumpAndSettle();
+    await waitFor(logoIn(find.byType(WorkspaceSheet)));
+    expect(logoIn(find.byType(WorkspaceSheet)), findsOneWidget);
+    expect(bucket.fetched, hasLength(1));
     await beat(tester, 2500);
   });
 

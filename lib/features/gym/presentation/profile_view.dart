@@ -28,8 +28,17 @@ class ProfileView extends StatelessWidget {
     this.onAddEmail,
     this.onSoloImport,
     this.soloImported = false,
+    this.logos = const {},
+    this.colors = const {},
     super.key,
   });
+
+  /// Each gym's own colour for its letters, by gym id.
+  final Map<String, Color> colors;
+
+  /// Each gym's logo on the phone, by gym id (a gym not in it shows its
+  /// letters).
+  final Map<String, ImageProvider> logos;
 
   final AccountSession session;
   final AsyncValue<GymSnapshot> state;
@@ -67,6 +76,8 @@ class ProfileView extends StatelessWidget {
           onAddEmail: onAddEmail,
           onSoloImport: onSoloImport,
           soloImported: soloImported,
+          logos: logos,
+          colors: colors,
         ),
       },
     );
@@ -83,9 +94,14 @@ class _Content extends StatelessWidget {
     required this.onAddEmail,
     required this.onSoloImport,
     required this.soloImported,
+    required this.logos,
+    required this.colors,
   });
 
+  final Map<String, Color> colors;
+
   final AccountSession session;
+  final Map<String, ImageProvider> logos;
   final GymSnapshot snapshot;
   final VoidCallback? onSoloImport;
   final bool soloImported;
@@ -151,6 +167,8 @@ class _Content extends StatelessWidget {
                         leading: AppLogoTile(
                           initials: m.gym.initials,
                           colorIndex: i,
+                          image: logos[m.gym.id],
+                          brandColor: colors[m.gym.id],
                         ),
                         title: m.gym.name,
                         detail: roleLabel(l10n, m.role),

@@ -18,10 +18,14 @@ Future<void> showWorkspaceSheet(
   required GymSnapshot snapshot,
   required ValueChanged<Workspace> onPick,
   required VoidCallback onJoinAnother,
+  Map<String, ImageProvider> logos = const {},
+  Map<String, Color> colors = const {},
 }) => showAppSheet<void>(
   context: context,
   builder: (sheet) => WorkspaceSheet(
     snapshot: snapshot,
+    logos: logos,
+    colors: colors,
     onPick: (workspace) {
       Navigator.of(sheet).pop();
       onPick(workspace);
@@ -41,10 +45,20 @@ class WorkspaceSheet extends StatelessWidget {
     required this.snapshot,
     required this.onPick,
     required this.onJoinAnother,
+    this.logos = const {},
+    this.colors = const {},
     super.key,
   });
 
+  /// Each gym's own colour for its letters, by gym id.
+  final Map<String, Color> colors;
+
   final GymSnapshot snapshot;
+
+  /// Each gym's logo on the phone, by gym id (a gym not in it shows its
+  /// letters).
+  final Map<String, ImageProvider> logos;
+
   final ValueChanged<Workspace> onPick;
   final VoidCallback onJoinAnother;
 
@@ -93,7 +107,12 @@ class WorkspaceSheet extends StatelessWidget {
           for (final (i, m) in active.indexed)
             AppListRow(
               key: Key('workspace_${m.id}'),
-              leading: AppLogoTile(initials: m.gym.initials, colorIndex: i),
+              leading: AppLogoTile(
+                initials: m.gym.initials,
+                colorIndex: i,
+                image: logos[m.gym.id],
+                brandColor: colors[m.gym.id],
+              ),
               title: m.gym.name,
               detail: roleLabel(l10n, m.role),
               selected: m.id == currentId,

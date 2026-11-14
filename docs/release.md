@@ -480,6 +480,19 @@ in "Before the flag goes on" of that page must be done (sign-up by email, the
 is safe before the app versions that use it.
 
 
+## Gym logos flag (`gym_logos`)
+Gym logos in the app (docs/designs/gym_logo.md) ship dark: the PostHog flag
+**`gym_logos`** is off, and the tiles show letters.
+- **Order.** Migration 0023 (`logo_updated_at`) must be deployed (**Supabase
+  deploy** green) **before** the app PR merges: the app selects that column,
+  and an older database refuses the select. Old app versions are not
+  affected.
+- **Turn on for staging.** PostHog → Feature flags → New, key `gym_logos`,
+  condition `app = gym_tracker` **and** `environment = staging`, 100 %. Upload
+  a logo in the staging dashboard, then bring the app back to the front: the
+  tiles show it.
+- **Then prod:** the same condition with `environment = prod`.
+
 ## Move games flags (`move_games`, `move_games_debug`)
 Move games (docs/features/move_games.md) ship dark: every screen, the Today
 card and the menu row are behind the PostHog flag **`move_games`** (off).

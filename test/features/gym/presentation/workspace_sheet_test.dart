@@ -8,6 +8,7 @@ import 'package:gym_tracker/features/gym/domain/usecases/refresh_memberships.dar
 import 'package:gym_tracker/features/gym/presentation/workspace_sheet.dart';
 
 import '../../../helpers/gym_fakes.dart';
+import '../../../helpers/gym_logo_fakes.dart';
 import '../../../helpers/pump_app.dart';
 import '../../../helpers/ui_check.dart';
 import '../../workout/presentation/plan_samples.dart' show SheetHost;
@@ -40,11 +41,17 @@ final withEnded = GymSnapshot(
   ],
 );
 
-Widget host(GymSnapshot snapshot) => SheetHost(
+Widget host(
+  GymSnapshot snapshot, {
+  Map<String, ImageProvider> logos = const {},
+  Map<String, Color> colors = const {},
+}) => SheetHost(
   background: const SizedBox.expand(),
   open: (context) => showWorkspaceSheet(
     context,
     snapshot: snapshot,
+    logos: logos,
+    colors: colors,
     onPick: (_) {},
     onJoinAnother: () {},
   ),
@@ -157,6 +164,12 @@ void main() {
     'workspace_solo_active': () =>
         host(twoGyms(workspace: const SoloWorkspace())),
     'workspace_with_ended': () => host(withEnded),
+    'workspace_with_logo': () =>
+        host(twoGyms(), logos: {'g-m1': testLogoImage}),
+    'workspace_brand_colors': () => host(
+      twoGyms(),
+      colors: const {'g-m1': Color(0xFF1E3A8A), 'g-m2': Color(0xFFFACC15)},
+    ),
     'workspace_only_solo': () => host(const GymSnapshot()),
   });
 }

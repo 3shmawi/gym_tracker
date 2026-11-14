@@ -17,7 +17,9 @@ import 'package:gym_tracker/features/backup/data/supabase_backup_remote.dart';
 import 'package:gym_tracker/features/backup/domain/repositories/backup_repositories.dart';
 import 'package:gym_tracker/features/gym/data/datasources/secret_store.dart';
 import 'package:gym_tracker/features/gym/data/datasources/secure_install_id_store.dart';
+import 'package:gym_tracker/features/gym/data/repositories/file_gym_logo_store.dart';
 import 'package:gym_tracker/features/gym/data/repositories/in_memory_gym_local_repository.dart';
+import 'package:gym_tracker/features/gym/data/repositories/in_memory_gym_logos.dart';
 import 'package:gym_tracker/features/gym/data/repositories/in_memory_gym_media.dart';
 import 'package:gym_tracker/features/gym/data/repositories/in_memory_plan_sync.dart';
 import 'package:gym_tracker/features/gym/data/repositories/in_memory_solo_import.dart';
@@ -26,6 +28,7 @@ import 'package:gym_tracker/features/gym/data/repositories/prefs_gym_media_store
 import 'package:gym_tracker/features/gym/data/repositories/prefs_gym_plan_store.dart';
 import 'package:gym_tracker/features/gym/data/repositories/prefs_solo_import_store.dart';
 import 'package:gym_tracker/features/gym/data/repositories/supabase_account_repository.dart';
+import 'package:gym_tracker/features/gym/data/repositories/supabase_gym_logo_repository.dart';
 import 'package:gym_tracker/features/gym/data/repositories/supabase_gym_media_repository.dart';
 import 'package:gym_tracker/features/gym/data/repositories/supabase_gym_plan_repository.dart';
 import 'package:gym_tracker/features/gym/data/repositories/supabase_gym_repository.dart';
@@ -35,6 +38,7 @@ import 'package:gym_tracker/features/gym/data/repositories/supabase_solo_import_
 import 'package:gym_tracker/features/gym/data/repositories/unconfigured_gym_repositories.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/account_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/gym_local_repository.dart';
+import 'package:gym_tracker/features/gym/domain/repositories/gym_logo_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/gym_media_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/gym_plan_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/gym_repository.dart';
@@ -57,6 +61,7 @@ import 'package:gym_tracker/features/workout/data/services/notification_rest_ala
 import 'package:gym_tracker/features/workout/domain/repositories/restore_sink.dart';
 import 'package:gym_tracker/features/workout/domain/repositories/workout_repository.dart';
 import 'package:gym_tracker/features/workout/domain/services/rest_alarm.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Composition root: the only place that knows which implementation backs
@@ -128,6 +133,11 @@ abstract final class Dependencies {
       const UnconfiguredGymMediaRepository();
   static GymMediaStore gymMediaStore = InMemoryGymMediaStore();
 
+  /// The gyms' logos (server + the phone's copy; docs/designs/gym_logo.md).
+  static GymLogoRepository gymLogoRepository =
+      const UnconfiguredGymLogoRepository();
+  static GymLogoStore gymLogoStore = InMemoryGymLogoStore();
+
   /// The shared picture library, searched by solo members.
   static PictureCatalogRepository pictureCatalog =
       const UnconfiguredPictureCatalogRepository();
@@ -165,7 +175,8 @@ abstract final class Dependencies {
         : SqliteBackupQueue(db.database);
     restoreSink = db == null ? const EmptyRestoreSink() : db.sessions;
     restAlarm = NotificationRestAlarm(LocalNotifications(), prefs);
-    gymLocalRepository = PrefsGymLocalRepository(prefs);
+    gymLogoStore = FileGymLogoStore(prefs, getApplicationSupportDirectory);
+    gymLocalRepository = PrefsGymLocalRepository(prefs, logos: gymLogoStore);
     soloImportStore = PrefsSoloImportStore(prefs);
     gymPlanStore = PrefsGymPlanStore(prefs);
     gymMediaStore = PrefsGymMediaStore(prefs);
@@ -190,6 +201,7 @@ abstract final class Dependencies {
       sessionUploader = SupabaseSessionUploader(Backend.client);
       backupRemote = SupabaseBackupRemote(Backend.client);
       gymMediaRepository = SupabaseGymMediaRepository(Backend.client);
+      gymLogoRepository = SupabaseGymLogoRepository(Backend.client);
       pictureCatalog = SupabasePictureCatalogRepository(Backend.client);
     } else {
       gymRepository = const UnconfiguredGymRepository();
@@ -199,6 +211,7 @@ abstract final class Dependencies {
       sessionUploader = const UnconfiguredSessionUploader();
       backupRemote = const UnconfiguredBackupRemote();
       gymMediaRepository = const UnconfiguredGymMediaRepository();
+      gymLogoRepository = const UnconfiguredGymLogoRepository();
       pictureCatalog = const UnconfiguredPictureCatalogRepository();
     }
   }
