@@ -187,4 +187,14 @@ void main() {
       'none',
     );
   });
+
+  test('fps band for "too slow" (ranges only)', () {
+    expect(MoveAnalytics.fpsBand(null), isNull);
+    expect(MoveAnalytics.fpsBand(double.nan), isNull);
+    expect(MoveAnalytics.fpsBand(1.5), '0_2');
+    expect(MoveAnalytics.fpsBand(3), '2_4');
+    expect(MoveAnalytics.fpsBand(5.9), '4_6');
+    expect(MoveAnalytics.fpsBand(7.9), '6_8');
+    expect(MoveAnalytics.fpsBand(12), '8_plus');
+  });
 }
