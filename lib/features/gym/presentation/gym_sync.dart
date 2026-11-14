@@ -25,6 +25,7 @@ import 'package:gym_tracker/features/gym/domain/usecases/solo_pictures.dart';
 import 'package:gym_tracker/features/gym/domain/usecases/sync_gym_media.dart';
 import 'package:gym_tracker/features/gym/domain/usecases/sync_gym_plan.dart';
 import 'package:gym_tracker/features/gym/domain/usecases/upload_sessions.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_logos.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
 import 'package:gym_tracker/features/workout/domain/repositories/workout_repository.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
@@ -332,15 +333,37 @@ class _GymSyncHostState extends ConsumerState<GymSyncHost>
         .where((online) => online)
         .listen((_) => _run());
     WidgetsBinding.instance.addPostFrameCallback((_) => _run());
+    // A join, a refresh or the flag turning on that asks for other logos.
+    ref
+      ..listenManual(
+        gymControllerProvider.select((s) => gymLogoWants(s.value)),
+        (_, _) {
+          unawaited(ref.read(gymLogoSyncProvider).sync());
+        },
+      )
+      ..listenManual(gymLogosEnabledProvider, (_, on) {
+        if (on) unawaited(ref.read(gymLogoSyncProvider).sync());
+      });
   }
 
   void _run() {
     if (!mounted) return;
     final sync = ref.read(gymSyncProvider);
+    // The gyms' names, colours and logos follow on resume and when the
+    // network returns, not only on a cold start (gym_logo.md §2). A logo
+    // that failed before is tried again even when nothing changed.
+    unawaited(_refreshThenLogos());
     unawaited(sync.syncPlan());
     unawaited(sync.syncMedia());
     unawaited(sync.uploadPending());
     unawaited(ref.read(backupSyncProvider).run());
+  }
+
+  Future<void> _refreshThenLogos() async {
+    if (!mounted || !ref.read(accountSessionProvider).isSignedIn) return;
+    await ref.read(gymControllerProvider.notifier).refresh();
+    if (!mounted) return;
+    await ref.read(gymLogoSyncProvider).sync();
   }
 
   @override
