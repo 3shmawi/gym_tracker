@@ -25,6 +25,7 @@
 | Gym settings (`gyms` update) and logo writes are owner-only (`private.i_own`) | `supabase/migrations/0020_gym_settings_owner_only.sql`, `supabase/tests/gym_settings_owner_only.test.sql` |
 | Gym brand colour: `gyms.brand_color` (`#rrggbb`, lower case, not black / white / grey; null = Azm colours), owner writes, members read, and the join answer carries it | `supabase/migrations/0021_gym_brand_color.sql`, pgTAP `supabase/tests/gym_brand_color.test.sql` (62), spec [`../designs/gym_brand_colours.md`](../designs/gym_brand_colours.md) |
 | Backup of a member's own training: `ensure_person()`, `save_personal_plan()`, `personal_state` + `save_personal_state()`, `delete_my_backup()`, a 20,000-workout cap on every insert, `import_solo_data` cap 1000 → 20000 | `supabase/migrations/0022_personal_backup.sql`, pgTAP `supabase/tests/personal_state_rls.test.sql` (68), [`backup.md`](backup.md) |
+| Gym logo version: `gyms.logo_updated_at`, set only by the trigger `gyms_touch_logo` (`private.touch_gym_logo`) on every write that names `logo_path` (a logo replaced at the same path still gets a new version), null with no logo, back-filled for existing logos; members read it, nobody writes it; the join answer carries it | `supabase/migrations/0023_gym_logo_version.sql`, pgTAP `supabase/tests/gym_logo_version.test.sql` (24), spec [`../designs/gym_logo.md`](../designs/gym_logo.md) |
 | pgTAP, one file per table (+ redeem and storage) | `supabase/tests/*_rls.test.sql`, `redeem_invite.test.sql`, `gym_logos_storage.test.sql` |
 | Edge Function | `supabase/functions/redeem_invite/` (`index.ts` wiring, `handler.ts` HTTP layer, `validate.ts` input checks, Deno tests next to them) |
 | Invite tool | `scripts/make_invites/` (`run.sh`, `make_invites.py`, tests, hash-pinned `requirements.txt`) |
@@ -96,7 +97,7 @@ reuses the existing one) and activates the membership.
 
 | Status | Body | Meaning |
 |---|---|---|
-| 200 | `{ok:true, gym:{id,name,logo_path,history_after_end}, membership_id, role, permissions:{edit_targets,edit_plan,build_own_plan}}` | joined (the same phone retrying gets the same 200) |
+| 200 | `{ok:true, gym:{id,name,logo_path,logo_updated_at,history_after_end,brand_color}, membership_id, role, permissions:{edit_targets,edit_plan,build_own_plan}}` | joined (the same phone retrying gets the same 200) |
 | 400 | `invalid_request` | wrong types, extra fields, bad characters or length |
 | 401 | `unauthorized` | no valid session |
 | 404 | `not_found` | unknown code (or deleted gym, or a code that no longer fits its member) |

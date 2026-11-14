@@ -20,8 +20,18 @@ Status: slice 3 started (rest notification), plus levels.
    still shows the on-device plan until plan sync (delivery step 4).
 
 ## User flows
-1. First launch → "No plan yet" → **Start with the 5-day plan** → Day 1 (بنش وضهر),
-   or **Build your plan** → the plan editor with an empty plan (below).
+1. First launch → "No plan yet" → **Pick a ready plan** → a sheet with three
+   plans → Day 1 of the one picked, or **Build your plan** → the plan editor with
+   an empty plan (below). The ready plans (`PlanTemplates.all`, 2026-11-14):
+   - **Full body · 3 days** (`full_body_3`, days `fb-a`/`fb-b`/`fb-c`): the whole
+     body every session; suggested (highlighted) for someone new or short on time.
+   - **Upper / lower · 4 days** (`upper_lower_4`, days `ul-1`…`ul-4`).
+   - **5-day split** (`split_5`, days `day-1`…`day-5`): the original plan.
+   Every exercise is a library exercise with the library's names and targets, the
+   day ids never repeat across plans (each plan keeps its own history), and every
+   plan passes the server's plan rules (`plan_templates_test.dart`). Adding a plan
+   needs an app release; plans edited remotely (a public table, edited from the
+   dashboard) are a later, separate design.
 2. Open the app → next workout with suggestions → **Start workout** →
    `/workout`: the dock is prefilled (today's last set; else last time's second set,
    e.g. 15, 20, 25 → 20, or its only set; else 0 kg; target reps) → **Log** (one tap) → rest timer → next set.
@@ -432,7 +442,7 @@ plugin README.
 ## Analytics events
 | Event | When | Properties |
 |---|---|---|
-| `plan_created` | Member picks the template | `source: template`, `days` |
+| `plan_created` | Member picks a ready plan | `source: template`, `template` (`full_body_3` / `upper_lower_4` / `split_5`), `days` |
 | `next_day_chosen` | Member picks the next day | `day` (1-based) |
 | `workout_started` | A new workout starts | `day` (1-based) |
 | `workout_finished` | Finish confirmed | `day`, `sets`, `planned_sets`, `minutes`, `records` |
@@ -545,7 +555,8 @@ None. (`active_workout` was removed when the workout screen shipped.)
 **Hook (first 2 seconds):** Log a set in one tap, between breaths.
 **Scenario (what the integration test shows, with beat() pauses):**
 1. Fresh install: "No plan yet".
-2. Tap **Start with the 5-day plan** → Day 1 of 5, Chest & Back.
+2. Tap **Pick a ready plan** → the three plans → **5-day split** → Day 1 of 5,
+   Chest & Back.
 3. Scroll the seven exercises, each with its target and suggestion.
 4. Open settings.
 5. Second test: choose day 3 (legs), start, add 20 kg, log, rest, +15 s,

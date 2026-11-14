@@ -381,12 +381,12 @@ void main() {
       expect(chosen, isNull);
     });
 
-    testWidgets('no plan: offers the 5-day template', (tester) async {
+    testWidgets('no plan: offers the ready plans', (tester) async {
       var used = 0;
       await tester.pumpApp(
         view(const AsyncData(null), onUseTemplate: () => used++),
       );
-      await tester.tap(find.text('Start with the 5-day plan'));
+      await tester.tap(find.text(l10nEn.todayUseTemplate));
       expect(used, 1);
     });
 
