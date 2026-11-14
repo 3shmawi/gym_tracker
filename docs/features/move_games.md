@@ -77,7 +77,8 @@ pick a round (30 s, 60 s, 10 reps, 20 reps) → *Play with the camera* →
 the form tip (first time only) → "why the camera" (until the camera was
 allowed once) → *Start camera* (the system asks the first time) →
 placement: put the phone on the floor at your side, the checks turn green
-(body in view, view found, light, plank held a second) → 3-2-1 by itself →
+(body in view, view found, light, plank held a second); **zoom** − / + under
+the picture when the phone can zoom → 3-2-1 by itself →
 the round (time, reps, depth, the body in the corner, one hint at a time)
 → results (reps, steady reps, half reps, time, new best) → *Save to my
 training* (never automatic) → *See progress*.
@@ -295,6 +296,7 @@ buckets (`MoveAnalytics`). The pose check sends none.
 | `move_game_started` | a round starts (after 3-2-1 or Start) | `exercise`, `game` (`stack` with the camera, `none` by hand), `mode` (`camera`/`manual`), `round`, `sound` (camera only: `voice`/`tones`/`off`, what actually plays) |
 | `move_game_finished` | a round ends | `exercise`, `game`, `mode`, `round`, `reps_bucket`, `duration_bucket`, `ended` (`completed`/`quit`), `fps_bucket` (camera only) |
 | `move_round_saved` | *Save to my training* | `exercise`, `mode` |
+| `move_zoom_changed` | − or + at placement | `direction` (`wider`/`closer`) |
 
 ## Feature flags
 - `move_games_debug`: the pose check. **Never in prod builds**, whatever
@@ -409,6 +411,30 @@ buckets (`MoveAnalytics`). The pose check sends none.
   installed (ML Kit native library 10.3 MB, models 5.8 MB, code); the
   spec's 10 MB was Google's figure and too low. Universal APKs (the staging
   pre-release) carry the native library for three CPU types: +35 MB.
+
+## Camera zoom (2026-11-14, the owner's ask: "zoom out further")
+- **What happens.** The camera opens at the **widest** the front camera
+  allows (`getMinZoomLevel`, camera plugin 0.12.2). Many front cameras go no
+  wider than 1×; some go to 0.6×–0.8×, and those now use it by default.
+- **The control.** During placement only, − and + move it in 0.25× steps,
+  between the phone's minimum and at most 3× (more only crops). A level
+  outside the range is kept inside it.
+  - The choice is remembered on the phone (`move.camera_zoom`), and a
+    stored value outside 0.1–10 is ignored.
+  - Each change restarts the placement checks, because the body's size in
+    the picture changed.
+- **When it is hidden.** There is no control while the round runs, since a
+  change would change how deep a rep looks, and none when the phone reports
+  no range (1×–1×).
+- **The picture is no longer stretched.** The preview is centred at its own
+  shape, so the whole camera picture shows, lined up with the joints drawn
+  over it. Before, it filled the card, which stretched it.
+- **Code.** `CameraZoom` and `ZoomablePoseSource` (domain),
+  `MlKitPoseSource.setZoom`, `CameraRoundController.zoomIn/zoomOut`, and
+  `_ZoomControl` in `camera_round_view.dart`.
+- **Tests:** `camera_zoom_test.dart`, the "camera zoom" group in
+  `round_controllers_test.dart`, the view test, and the golden
+  `move_placement_zoom`.
 
 ## Demo & post
 <!-- The video is recorded on demand (the `demo` label). -->

@@ -317,6 +317,69 @@ void main() {
       expect(bed.source.starts, 1);
     });
 
+    group('camera zoom', () {
+      late FakeZoomablePoseSource zoomable;
+      setUp(() async {
+        zoomable = FakeZoomablePoseSource();
+        bed = await Bed.make(source: zoomable);
+        bed.container.listen(cameraRoundControllerProvider(launch), (_, _) {});
+        c = bed.container.read(cameraRoundControllerProvider(launch).notifier);
+      });
+
+      test('starts at the widest the phone allows', () async {
+        await c.start();
+        expect(s().zoom?.level, 0.6);
+        expect(s().canZoom, isTrue);
+        expect(zoomable.asked, isEmpty, reason: 'nothing saved yet');
+      });
+
+      test('− and + step it, inside the range, and it is remembered', () async {
+        await c.start();
+        await c.zoomIn();
+        await c.zoomIn();
+        expect(s().zoom?.level, closeTo(1.1, 1e-9));
+        expect(bed.local.zoom, closeTo(1.1, 1e-9));
+        for (var i = 0; i < 20; i++) {
+          await c.zoomIn();
+        }
+        expect(s().zoom?.level, CameraZoom.maxOffered, reason: 'capped');
+        for (var i = 0; i < 20; i++) {
+          await c.zoomOut();
+        }
+        expect(s().zoom?.level, 0.6, reason: 'never below the phone');
+      });
+
+      test('the saved level is used next time', () async {
+        bed.local.zoom = 1.5;
+        await c.start();
+        expect(s().zoom?.level, 1.5);
+      });
+
+      test('a saved level the phone cannot do is kept inside it', () async {
+        bed.local.zoom = 9;
+        await c.start();
+        expect(s().zoom?.level, CameraZoom.maxOffered);
+      });
+
+      test('no zoom once the round is live', () async {
+        await c.start();
+        play(const SynthSet(lead: Duration(seconds: 6)).frames());
+        expect(s().stage, CameraStage.live);
+        expect(s().canZoom, isFalse);
+        final before = s().zoom;
+        await c.zoomIn();
+        expect(s().zoom, before);
+      });
+    });
+
+    test('a camera without zoom: no control, nothing breaks', () async {
+      await c.start();
+      expect(s().zoom, isNull);
+      expect(s().canZoom, isFalse);
+      await c.zoomIn();
+      expect(s().zoom, isNull);
+    });
+
     // A new camera's clock starts at zero; the detector must start over
     // with it, or it drops every frame older than the last one it saw.
     test('after a background pause the reps count again', () async {
