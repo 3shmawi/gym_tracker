@@ -256,8 +256,12 @@ class CameraRoundController extends Notifier<CameraRoundState>
     if (sound != MoveSoundMode.off) unawaited(_prepareVoice());
     final source = ref.read(poseSourceFactoryProvider)();
     _source = source;
-    _detector ??= MoveExercises.detectorFor(launch.exercise);
+    // A new camera's frames start again from 0 s: a detector kept from the
+    // last one would drop them all as older than the last frame it saw.
+    // The round keeps its own count, so nothing done is lost.
+    _detector = MoveExercises.detectorFor(launch.exercise);
     _placement.reset();
+    state = state.copyWith(rep: const RepState());
     if (state.stage != CameraStage.live) {
       state = state.copyWith(stage: CameraStage.starting);
     }
@@ -462,7 +466,14 @@ class CameraRoundController extends Notifier<CameraRoundState>
     if (state.round.phase != RoundPhase.paused) return;
     if (_source == null) await start();
     if (!ref.mounted || state.stage == CameraStage.failed) return;
-    state = state.copyWith(round: state.round.startCountdown(_now));
+    final now = _now;
+    var round = state.round.startCountdown(now);
+    // Not in the picture (a new camera has seen nobody yet): wait for them;
+    // the detector's "found" starts 3-2-1.
+    if (state.rep.phase == RepPhase.notVisible) {
+      round = round.pause(PauseReason.bodyLost, now);
+    }
+    state = state.copyWith(round: round);
   }
 
   /// Back on screen. If the camera was released before the round started

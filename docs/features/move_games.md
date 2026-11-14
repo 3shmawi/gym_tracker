@@ -90,7 +90,9 @@ mistake → results → save, the same way.
 **Paused:** the pause button, the body out of the picture for 1.5 s, or the
 app leaving the front (the camera is released at once). Back in the
 picture after a body-lost pause, 3-2-1 starts again by itself; otherwise
-*Resume (3, 2, 1)*. *Switch to counting by hand* or *End round* keep the
+*Resume (3, 2, 1)*. Leaving the picture during 3-2-1 also pauses it (the
+clock never starts without the member), and after a background pause
+*Resume* waits until the new camera sees them, then counts down. *Switch to counting by hand* or *End round* keep the
 reps done.
 
 **Can't use the camera:** refused → *Open settings* or *Count by hand*;
@@ -375,6 +377,12 @@ buckets (`MoveAnalytics`). The pose check sends none.
   2026-11-13, `presentation/app_lifecycle.dart`). Back on screen before
   the round started (loader or placement), the camera starts again by
   itself; a round that had started waits for *Resume*.
+- **A new camera means a new detector.** Each camera start has its own
+  clock from 0 s, and the detector ignores frames older than the last one
+  it saw. Keeping the old detector after a background pause dropped every
+  frame for as long as the camera had been on before: no reps counted
+  and placement stuck after coming back (found 2026-11-14). The round
+  keeps its own count, so a fresh detector loses nothing.
 - Only ML Kit's **base** model ships; the accurate one is excluded in
   Gradle (R8 is told its classes are missing on purpose).
 - **The speed check (fixed 2026-11-14):** judged only during 3-2-1 and the

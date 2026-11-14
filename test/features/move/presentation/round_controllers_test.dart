@@ -380,6 +380,71 @@ void main() {
       expect(s().zoom, isNull);
     });
 
+    // A new camera's clock starts at zero; the detector must start over
+    // with it, or it drops every frame older than the last one it saw.
+    test('after a background pause the reps count again', () async {
+      await c.start();
+      // One timeline: the plank (placement, 3-2-1), then two reps.
+      play(
+        const SynthSet(
+          lead: Duration(seconds: 6),
+          reps: [RepSpec(), RepSpec()],
+        ).frames(),
+      );
+      expect(s().round.reps, 2);
+      await c.background();
+      await c.resume();
+      expect(bed.source.starts, 2);
+      // Nobody seen yet by the new camera: wait for them, no 3-2-1.
+      expect(s().round.phase, RoundPhase.paused);
+      expect(s().round.pauseReason, PauseReason.bodyLost);
+
+      // The new camera's frames start again from 0 s.
+      play(
+        const SynthSet(
+          lead: Duration(seconds: 5),
+          reps: [RepSpec(), RepSpec(), RepSpec()],
+        ).frames(),
+      );
+      expect(s().round.phase, RoundPhase.running);
+      expect(s().round.reps, 5);
+      expect((s().game! as StackState).floors, hasLength(5));
+    });
+
+    test(
+      'back at placement after a long wait: placement still works',
+      () async {
+        await c.start();
+        // A minute of frames with nobody in the picture.
+        play(
+          const SynthSet(
+            lead: Duration(seconds: 60),
+            gaps: [(Duration.zero, Duration(seconds: 61))],
+          ).frames(),
+        );
+        expect(s().stage, CameraStage.placement);
+        await c.background();
+        await c.foreground();
+        play(const SynthSet(lead: Duration(seconds: 6)).frames());
+        expect(s().stage, CameraStage.live);
+        expect(s().round.phase, RoundPhase.running);
+      },
+    );
+
+    test('leaving the picture during 3-2-1 waits for them', () async {
+      await c.start();
+      // Placement goes green, then they walk off before 3-2-1 ends.
+      play(
+        const SynthSet(
+          lead: Duration(seconds: 8),
+          gaps: [(Duration(seconds: 3), Duration(seconds: 9))],
+        ).frames(),
+      );
+      expect(s().round.phase, RoundPhase.paused);
+      expect(s().round.pauseReason, PauseReason.bodyLost);
+      expect(s().round.startedAt, isNull, reason: 'the clock never ran');
+    });
+
     test('foreground does nothing while the camera is on', () async {
       await c.start();
       await c.foreground();
@@ -473,6 +538,10 @@ void main() {
         expect(s().cameraOn, isFalse);
         await c.resume();
         expect(bed.source.starts, 2);
+        // The new camera has seen nobody yet: 3-2-1 waits for them.
+        expect(s().round.phase, RoundPhase.paused);
+        expect(s().round.pauseReason, PauseReason.bodyLost);
+        play(const SynthSet(lead: Duration(seconds: 2)).frames());
         expect(s().round.phase, RoundPhase.countdown);
       },
     );
