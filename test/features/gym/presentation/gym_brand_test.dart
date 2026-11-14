@@ -342,6 +342,34 @@ void main() {
     'gym_colour_navy_rest': () =>
         themed(navyColor, workout.view(AsyncData(workout.resting()))),
   });
+
+  group("the colour on the gyms' letter tiles", () {
+    test('active gyms with a valid colour, by gym id; nothing else', () async {
+      final c = await app(
+        snapshot([
+          inGym(yellow),
+          inGym(navy, id: 'm2', status: MembershipStatus.ended),
+          inGym('#808080', id: 'm3'),
+          inGym(null, id: 'm4'),
+        ]),
+      );
+      expect(c.read(gymTileColorsProvider), {'g-m1': yellowColor});
+    });
+
+    test('flag off: no gym colours on the tiles either', () async {
+      FeatureFlags.overrides[Flags.gymBrandColours] = false;
+      await Dependencies.flagCache.write(Flags.gymBrandColours, value: false);
+      final c = await app(snapshot([inGym(yellow)]));
+      expect(c.read(gymTileColorsProvider), isEmpty);
+    });
+
+    test('a stored value is parsed again', () {
+      expect(gymTileColor(yellow), yellowColor);
+      for (final bad in [null, '', '#FACC15', 'red', '#808080', '#facc15 ']) {
+        expect(gymTileColor(bad), isNull, reason: bad);
+      }
+    });
+  });
 }
 
 class _Probe extends StatelessWidget {

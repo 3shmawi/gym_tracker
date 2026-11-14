@@ -9,6 +9,7 @@ Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 - [Security](security.md) — what is tested and how
 - [Performance](performance.md) — scroll performance test, glass vs lite, numbers before/after
 - [Decisions](decisions/) — why the stack looks the way it does; [gym accounts](decisions/gym_accounts.md) (accepted; backend and app built, captain tools and dashboard not yet); [videos outside the app](decisions/video_outside_app.md) (accepted: no PiP or background play, pause on leaving)
+- [Promo video](brand/promo_video/README.md) — the motion-graphics video of all features for gym owners and captains (source + build script)
 - [Designs](designs/) — approved specs for big features, reviewed with EGM
   ([getting started](getting_started.md) → "Design reviews")
 
@@ -26,7 +27,7 @@ Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 - [How-to videos](features/exercise_videos.md) (YouTube: link parser and shared vectors, library videos, the card and the player, privacy)
 - [Captain web dashboard](features/dashboard.md) (`dashboard/`, own origin `azmm-dash.pages.dev`; D0: email-code sign-in, my gyms; D1: members, invite codes, QR cards, names from Excel; deploy, owner bootstrap)
 - [Trainee dashboard data](features/trainee_dashboard_data.md) (SQL views the captain's dashboard will read; privacy)
-- [Gym accounts — the app](features/gym_account_app.md) (first screen, scanner, join, switcher, profile, delete account, solo data import, workouts back after a recovery code; spec: [designs/gym_history_restore.md](designs/gym_history_restore.md))
+- [Gym accounts — the app](features/gym_account_app.md) (first screen, scanner, join, switcher, profile, delete account, solo data import, gym logos, workouts back after a recovery code; specs: [designs/gym_logo.md](designs/gym_logo.md), [designs/gym_history_restore.md](designs/gym_history_restore.md))
 - [Gym brand colours](features/gym_brand_colours.md) (a gym's members see the colour its owner chose; the contrast rule, the flag, how it reaches the phone)
 - [Backup and restore of your training](features/backup.md) (the whole history on the phone, backing up to your account, restoring on a new phone; built in five steps)
 - [Move games](features/move_games.md) (camera rep games: on-device push-up counting, the diagnostic screen; spec: [designs/move_games.md](designs/move_games.md))

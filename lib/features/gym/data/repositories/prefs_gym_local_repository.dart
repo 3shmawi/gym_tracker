@@ -5,14 +5,19 @@ import 'package:gym_tracker/features/gym/data/repositories/prefs_gym_history_cur
 import 'package:gym_tracker/features/gym/domain/entities/membership.dart';
 import 'package:gym_tracker/features/gym/domain/entities/workspace.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/gym_local_repository.dart';
+import 'package:gym_tracker/features/gym/domain/repositories/gym_logo_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// [GymLocalRepository] on the phone. Nothing here is secret: a workspace
 /// name, gym names and roles. The session lives in secure storage.
 class PrefsGymLocalRepository implements GymLocalRepository {
-  const new(this._prefs);
+  const new(this._prefs, {this.logos});
 
   final SharedPreferences _prefs;
+
+  /// The gyms' logos on the phone: cleared with the rest of the gym state
+  /// (sign-out, a session ended, the account deleted).
+  final GymLogoStore? logos;
 
   static const workspaceKey = 'gym.workspace';
   static const membershipsKey = 'gym.memberships';
@@ -82,5 +87,6 @@ class PrefsGymLocalRepository implements GymLocalRepository {
     for (final key in PrefsGymHistoryCursor.keys) {
       await _prefs.remove(key);
     }
+    await logos?.clear();
   }, retries: 0);
 }

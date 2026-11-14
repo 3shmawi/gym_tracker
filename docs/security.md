@@ -362,6 +362,31 @@ upload / replace / delete their gym logo"). pgTAP:
 anonymous session, an ended owner and another gym's owner write nothing; no
 write policy on `gyms` or `gym-logos` still uses `private.i_manage`).
 
+**Gym logos in the app** (migration 0023, `docs/designs/gym_logo.md`). A logo
+comes from a server row and a file someone uploaded, so nothing in either is
+trusted.
+- **The path.** It is kept only if it is exactly `<this gym's
+  id>/logo.png|jpg|jpeg`, so it can't point at another gym's folder or contain
+  `..`. It is checked again before the download URL is built.
+- **The bytes.** They are checked before any decode (`GymLogoCheck`):
+  - 1 B–512 KB;
+  - a PNG or JPEG signature;
+  - the width and height read from the header, 16–2048 px a side, so a small
+    file that claims a huge picture is refused;
+  - not an animated PNG.
+
+  The tile then decodes at its own size only (`ResizeImage`).
+- **The file name.** On the phone it is built only from a checked UUID and an
+  integer version. Files are deleted on sign-out, session end and account
+  deletion.
+- **Who can read and write.** Members download with their own session from
+  the private bucket (0008 policies). `logo_updated_at` is written only by a
+  trigger: it is not in the update grant.
+- **Tests:** `test/security/gym_logo_test.dart`,
+  `test/features/gym/domain/gym_logo_test.dart`,
+  `test/features/gym/data/gym_logo_data_test.dart`, pgTAP
+  `supabase/tests/gym_logo_version.test.sql`.
+
 **Gym brand colour** (migration 0021): `gyms.brand_color` holds one
 `#rrggbb` value or null. The table refuses anything else (`private.brand_color_ok`:
 the exact format in lower case, and channels at least 40 apart), so no markup,

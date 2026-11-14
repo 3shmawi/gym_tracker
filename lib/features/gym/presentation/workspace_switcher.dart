@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/features/gym/domain/usecases/refresh_memberships.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_brand.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_logos.dart';
 import 'package:gym_tracker/features/gym/presentation/gym_providers.dart';
 import 'package:gym_tracker/features/gym/presentation/workspace_sheet.dart';
 
@@ -20,6 +22,8 @@ Future<void> openWorkspaceSwitcher(BuildContext context, WidgetRef ref) async {
   await showWorkspaceSheet(
     context,
     snapshot: snapshot,
+    logos: ref.read(gymLogoImagesProvider),
+    colors: ref.read(gymTileColorsProvider),
     onPick: (workspace) => unawaited(controller.switchTo(workspace)),
     onJoinAnother: () => unawaited(context.push<void>(AppRoutes.joinScan)),
   );

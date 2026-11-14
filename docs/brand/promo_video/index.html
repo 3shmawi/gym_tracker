@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>Azm Promo</title>
+<style>
+@font-face{font-family:Cairo;src:url(fonts/cairo-arabic-400.woff2) format("woff2");font-weight:400}
+@font-face{font-family:Cairo;src:url(fonts/cairo-arabic-600.woff2) format("woff2");font-weight:600}
+@font-face{font-family:Cairo;src:url(fonts/cairo-arabic-700.woff2) format("woff2");font-weight:700}
+@font-face{font-family:Cairo;src:url(fonts/cairo-arabic-800.woff2) format("woff2");font-weight:800 900}
+@font-face{font-family:Inter;src:url(fonts/inter-latin-400.woff2) format("woff2");font-weight:400}
+@font-face{font-family:Inter;src:url(fonts/inter-latin-600.woff2) format("woff2");font-weight:600}
+@font-face{font-family:Inter;src:url(fonts/inter-latin-700.woff2) format("woff2");font-weight:700}
+@font-face{font-family:Inter;src:url(fonts/inter-latin-800.woff2) format("woff2");font-weight:800 900}
+@property --brand{syntax:'<color>';inherits:true;initial-value:#22C55E}
+@property --on-p{syntax:'<color>';inherits:true;initial-value:#04210F}
+:root{
+  --p:var(--brand); --g0:#07120C;
+  --glass:rgba(22,34,28,.62); --glass-hi:rgba(255,255,255,.10); --glass-edge:rgba(255,255,255,.14);
+  --solid:#141E19; --t1:#F2F7F3; --t2:#A9B8AF; --t3:#7C8B83;
+  --up:#4ADE80; --keep:#93C5FD; --down:#FBBF24; --new:#C4B5FD; --err:#F87171;
+  --chip:rgba(255,255,255,.07);
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#000}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;font-family:Cairo,Inter,sans-serif;color:var(--t1);
+  background:#07120C}
+.n,.lat{font-family:Inter,Cairo,sans-serif;direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+.bg{position:absolute;inset:0;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(120px);opacity:.75}
+.b1{width:1100px;height:900px;left:900px;top:-420px;background:#14532D}
+.b2{width:1000px;height:800px;left:-380px;top:520px;background:#0B3B24}
+.b3{width:520px;height:520px;left:700px;top:380px;background:#22C55E;opacity:.10}
+.grid{position:absolute;inset:-100px;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:80px 80px;mask-image:radial-gradient(70% 70% at 50% 50%,#000 20%,transparent 80%)}
+.vign{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 50%,transparent 55%,rgba(0,0,0,.55) 100%);pointer-events:none}
+.grain{position:absolute;inset:0;opacity:.06;mix-blend-mode:overlay;pointer-events:none}
+.scene{position:absolute;inset:0;visibility:hidden}
+.abs{position:absolute}
+.center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.green{color:var(--p)}
+.glow{text-shadow:0 0 60px rgba(34,197,94,.55)}
+
+/* captions */
+.cap{position:absolute;right:150px;width:820px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;gap:22px}
+.eyebrow{display:flex;align-items:center;gap:14px;font:800 26px Cairo,Inter;color:var(--p);letter-spacing:.02em}
+.eyebrow .num{font:800 22px Inter;color:#04210F;background:var(--p);border-radius:12px;padding:2px 12px;direction:ltr}
+.ttl{font:800 92px/1.12 Cairo,Inter;letter-spacing:-.01em}
+.ttl .ln{display:block;overflow:hidden;padding-bottom:8px}
+.ttl .ln>span{display:inline-block}
+.sub{font:600 34px/1.6 Cairo,Inter;color:var(--t2);max-width:800px}
+.chips{display:flex;flex-wrap:wrap;gap:14px;margin-top:6px}
+.chip{display:inline-flex;align-items:center;gap:10px;height:58px;padding:0 24px;border-radius:29px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);font:700 26px Cairo,Inter;color:var(--t1);backdrop-filter:blur(10px)}
+.chip i{font-style:normal;width:12px;height:12px;border-radius:6px;background:var(--p);flex:none}
+
+/* phone */
+.dev{position:absolute;width:418px;height:872px;padding:14px;border-radius:64px;background:linear-gradient(145deg,#2a332e,#0b0f0d 40%,#1a221e);box-shadow:0 0 0 2px rgba(255,255,255,.08),0 60px 120px -30px rgba(0,0,0,.85),0 0 120px -20px rgba(34,197,94,.25)}
+.ph{position:relative;width:390px;height:844px;border-radius:50px;overflow:hidden;font-family:Cairo,Inter;color:var(--t1);
+  background:radial-gradient(120% 60% at 85% 0%,color-mix(in srgb,var(--p) 34%,#07120C) 0%,transparent 55%),radial-gradient(90% 50% at 0% 100%,color-mix(in srgb,var(--p) 18%,#07120C) 0%,transparent 60%),#07120C}
+.ph{--p:var(--brand)}
+#s2big .w{display:inline-block}
+.island{position:absolute;top:11px;left:50%;margin-left:-62px;width:124px;height:36px;border-radius:18px;background:#000;z-index:50}
+.sbar{position:absolute;top:0;left:0;right:0;height:50px;direction:ltr;display:flex;align-items:center;justify-content:space-between;padding:6px 34px 0 38px;font:700 16px Inter;z-index:40;color:var(--t1)}
+.sbar .ic{display:flex;gap:6px;align-items:center}
+.sbar .bat{width:26px;height:12px;border-radius:4px;border:1.5px solid currentColor;position:relative;opacity:.9}
+.sbar .bat::after{content:"";position:absolute;inset:1.5px;right:5px;background:currentColor;border-radius:2px}
+.homeind{position:absolute;bottom:8px;left:50%;margin-left:-67px;width:134px;height:5px;border-radius:3px;background:rgba(255,255,255,.55);z-index:40}
+.scr{position:absolute;inset:0;padding:54px 16px 0}
+.gl{background:var(--glass);backdrop-filter:blur(24px) saturate(1.6);border:1px solid var(--glass-edge);box-shadow:inset 0 1px 0 var(--glass-hi),0 10px 30px -12px #0008}
+.card{border-radius:24px;padding:4px 14px}
+.row{display:flex;align-items:center;gap:10px}
+.ib{width:44px;height:44px;border-radius:22px;display:grid;place-items:center;flex:none;background:var(--chip);border:1px solid var(--glass-edge)}
+.ib svg{width:20px;height:20px}
+.badge{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:13px;font:700 12.5px Cairo,Inter;white-space:nowrap}
+.b-up{color:var(--up);background:color-mix(in srgb,var(--up) 16%,transparent)}
+.b-keep{color:var(--keep);background:color-mix(in srgb,var(--keep) 16%,transparent)}
+.b-down{color:var(--down);background:color-mix(in srgb,var(--down) 16%,transparent)}
+.b-new{color:var(--new);background:color-mix(in srgb,var(--new) 16%,transparent)}
+.cta{height:58px;border-radius:29px;background:var(--p);color:var(--on-p);font:800 18px Cairo,Inter;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 12px 30px -10px color-mix(in srgb,var(--p) 60%,transparent);position:relative}
+.cta.sec{background:var(--chip);color:var(--t1);box-shadow:none;border:1px solid var(--glass-edge);height:50px;font-size:15px}
+.ex{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--chip)}
+.ex:last-child{border-bottom:0}
+.thumb{width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.92);display:grid;place-items:center;flex:none;overflow:hidden}
+.thumb img{max-width:42px;max-height:42px}
+.ex .nm{font:700 15.5px Cairo,Inter;line-height:1.3}
+.ex .meta{font:500 12px Cairo,Inter;color:var(--t2)}
+.ex .grow{flex:1;min-width:0}
+.sc{height:34px;padding:0 10px;border-radius:11px;background:var(--chip);display:inline-flex;align-items:center;justify-content:center;gap:5px;font:700 13.5px Inter;direction:ltr;color:var(--t3);flex:1;position:relative}
+.sc .on{position:absolute;inset:0;border-radius:11px;background:color-mix(in srgb,var(--p) 26%,transparent);color:var(--t1);display:flex;align-items:center;justify-content:center;gap:5px;opacity:0}
+.sc .nw{position:absolute;inset:0;border-radius:11px;outline:2px solid var(--p);outline-offset:-2px;opacity:0}
+.step{display:grid;grid-template-columns:52px 1fr 52px;align-items:center;gap:8px;border-radius:20px;padding:6px;background:var(--chip)}
+.step b{width:52px;height:52px;border-radius:16px;background:var(--glass-hi);display:grid;place-items:center;font:700 26px Inter;color:var(--t1);position:relative}
+.step .v{text-align:center;display:flex;flex-direction:column;align-items:center;line-height:1}
+.step .v .big{font:800 30px Inter;height:32px;position:relative;width:100%;overflow:hidden}
+.step .v .big span{position:absolute;inset:0;display:flex;justify-content:center}
+.step .v .u{font:600 12px Cairo,Inter;color:var(--t2);margin-top:5px}
+.prog{display:flex;gap:5px}
+.prog i{flex:1;height:5px;border-radius:3px;background:var(--chip);position:relative;overflow:hidden}
+.prog i b{position:absolute;inset:0;background:var(--p);transform-origin:right;transform:scaleX(0)}
+.tap{position:absolute;left:50%;top:50%;width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:50%;border:3px solid rgba(255,255,255,.9);background:rgba(255,255,255,.25);opacity:0;pointer-events:none;z-index:30}
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi div{border-radius:18px;background:var(--chip);padding:12px 14px;display:flex;flex-direction:column;gap:0}
+.kpi .k{font:800 26px Inter;direction:ltr;text-align:right}
+.kpi .l{font:600 12.5px Cairo,Inter;color:var(--t2)}
+.lbl{font:800 12px Cairo,Inter;color:var(--t2);letter-spacing:.04em}
+
+/* browser */
+.brw{position:absolute;left:80px;top:130px;width:1230px;height:820px;border-radius:22px;overflow:hidden;background:#0B1310;border:1px solid rgba(255,255,255,.12);box-shadow:0 60px 140px -30px rgba(0,0,0,.9),0 0 160px -40px rgba(34,197,94,.25)}
+.brw .chrome{height:52px;background:#121B16;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:16px;padding:0 20px;direction:ltr}
+.dots{display:flex;gap:8px}.dots i{width:13px;height:13px;border-radius:7px;background:#3a463f}
+.url{flex:1;max-width:520px;margin:0 auto;height:32px;border-radius:16px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;gap:8px;font:600 15px Inter;color:var(--t2)}
+.url svg{width:14px;height:14px}
+.dash{position:absolute;top:52px;left:0;right:0;bottom:0;display:flex;direction:rtl;
+  background:radial-gradient(80% 60% at 100% 0%,rgba(20,83,45,.45),transparent 60%),#0A120E}
+.side{width:250px;flex:none;border-left:1px solid rgba(255,255,255,.07);padding:22px 16px;display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,.02)}
+.brand{display:flex;align-items:center;gap:10px;font:800 24px Cairo,Inter;margin-bottom:10px}
+.brand img{width:40px;height:40px;border-radius:11px}
+.gymsel{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);margin-bottom:14px;font:700 15px Inter}
+.logo{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font:800 14px Inter;color:#fff;background:linear-gradient(135deg,#2563EB,#1E3A8A);flex:none}
+.nav{height:46px;border-radius:12px;display:flex;align-items:center;gap:12px;padding:0 14px;font:700 17px Cairo,Inter;color:var(--t2);position:relative}
+.nav svg{width:20px;height:20px}
+.nav .act{position:absolute;inset:0;border-radius:12px;background:color-mix(in srgb,var(--p) 16%,transparent);opacity:0}
+.nav span,.nav svg{position:relative}
+.main{flex:1;position:relative;overflow:hidden}
+.pane{position:absolute;inset:0;padding:30px 36px}
+.h1{font:800 34px Cairo,Inter}
+.muted{color:var(--t2)}
+.btn{height:46px;border-radius:23px;padding:0 20px;display:inline-flex;align-items:center;gap:8px;font:800 16px Cairo,Inter;background:var(--p);color:var(--on-p);position:relative;white-space:nowrap}
+.btn.sec{background:rgba(255,255,255,.06);color:var(--t1);border:1px solid rgba(255,255,255,.12)}
+.tbl{border-radius:18px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);overflow:hidden}
+.tr{display:grid;grid-template-columns:2.2fr 1fr 1.3fr 1.3fr 1.6fr;align-items:center;height:62px;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.06);font:600 16px Cairo,Inter}
+.tr.h{height:46px;font:800 13px Cairo,Inter;color:var(--t3);background:rgba(255,255,255,.02)}
+.av{width:36px;height:36px;border-radius:18px;display:grid;place-items:center;font:800 14px Cairo,Inter;color:#04210F;flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:14px;font:700 13px Cairo,Inter}
+.p-ok{color:var(--up);background:rgba(74,222,128,.13)}
+.p-wait{color:var(--down);background:rgba(251,191,36,.13)}
+.p-plan{color:var(--t1);background:rgba(255,255,255,.07)}
+.cursor{position:absolute;width:34px;height:34px;z-index:60;left:0;top:0;pointer-events:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6))}
+.qr{border-radius:18px;background:#fff;color:#0C1610;padding:16px;display:flex;flex-direction:column;align-items:center;gap:6px;width:200px}
+.qr svg{width:150px;height:150px}
+.qr .c{font:800 22px Inter;letter-spacing:.12em}
+.qr .nm{font:700 15px Cairo,Inter;color:#46554C}
+.modal{position:absolute;inset:0;background:rgba(3,8,5,.6);display:flex;align-items:center;justify-content:center}
+.mbox{width:640px;border-radius:24px;background:#121B16;border:1px solid rgba(255,255,255,.12);padding:28px;display:flex;flex-direction:column;gap:16px;box-shadow:0 40px 80px -20px #000}
+.ta{height:150px;border-radius:14px;background:rgba(255,255,255,.04);border:1.5px solid var(--p);padding:12px 16px;font:600 19px/1.7 Cairo,Inter;white-space:pre}
+.toast{position:absolute;left:12px;right:12px;top:52px;border-radius:22px;padding:12px 14px;display:flex;gap:12px;align-items:center;z-index:45;background:rgba(30,40,35,.85);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.14)}
+.toast img{width:40px;height:40px;border-radius:10px}
+.toast b{font:800 15px Cairo,Inter;display:block}
+.toast span{font:600 13px Cairo,Inter;color:var(--t2)}
+.swatch{width:54px;height:54px;border-radius:27px;position:relative;flex:none}
+.swatch .ring{position:absolute;inset:-6px;border-radius:50%;border:3px solid #fff;opacity:0}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="bg">
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+    <div class="grid"></div>
+  </div>
+
+  <!-- ============ S1 INTRO ============ -->
+  <section class="scene" id="s1" data-in="0" data-out="8.2">
+    <div class="center" id="s1wrap">
+      <div id="s1logo" style="--d:2.6s">
+        <svg class="anim" width="560" height="425" viewBox="-4 4 112 85" id="logoAnim">
+          <defs>
+          <linearGradient id="glass" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.6"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.2"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.1"/></linearGradient>
+          <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.15"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.55"/></linearGradient>
+          <linearGradient id="greenGlass" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#86EFAC" stop-opacity="0.95"/><stop offset="0.55" stop-color="#22C55E" stop-opacity="0.85"/><stop offset="1" stop-color="#15803D" stop-opacity="0.9"/></linearGradient>
+          <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.35"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+          </defs>
+          <g class="f1all"><g class="f1load">
+          <rect x="13" y="36" width="33" height="3.4" rx="1.7" fill="url(#greenGlass)"/>
+          <rect x="11" y="31" width="4.5" height="13.5" rx="1.6" fill="url(#greenGlass)" stroke="url(#edge)" stroke-width="0.6"/>
+          <rect x="43.5" y="31" width="4.5" height="13.5" rx="1.6" fill="url(#greenGlass)" stroke="url(#edge)" stroke-width="0.6"/>
+          </g>
+          <g class="f1arms"><path d="M23.5 57 L19.5 38.5 M35.5 57 L39.5 38.5" fill="none" stroke="url(#glass)" stroke-width="4.2" stroke-linecap="round"/></g>
+          <circle cx="29.5" cy="47.5" r="5" fill="url(#glass)" stroke="url(#edge)" stroke-width="0.8"/>
+          <rect x="22.5" y="54.5" width="14" height="23.5" rx="7" fill="url(#glass)" stroke="url(#edge)" stroke-width="1"/>
+          </g>
+          <g class="mid">
+          <rect class="b2fade" x="53" y="40" width="14" height="38" rx="7" fill="url(#glass)" stroke="url(#edge)" stroke-width="1"/>
+          <g class="f2x"><g class="f2bar">
+          <rect x="45" y="20" width="30" height="4" rx="2" fill="url(#greenGlass)"/>
+          <rect x="42" y="12" width="6" height="20" rx="2" fill="url(#greenGlass)" stroke="url(#edge)" stroke-width="0.6"/>
+          <rect x="37" y="14.5" width="4.5" height="15" rx="2" fill="url(#greenGlass)" stroke="url(#edge)" stroke-width="0.6"/>
+          <rect x="72" y="12" width="6" height="20" rx="2" fill="url(#greenGlass)" stroke="url(#edge)" stroke-width="0.6"/>
+          <rect x="78.5" y="14.5" width="4.5" height="15" rx="2" fill="url(#greenGlass)" stroke="url(#edge)" stroke-width="0.6"/>
+          </g>
+          <path d="M55.4 65.5 L55 76.6 Q55 78.2 56.6 78.2 L58.4 78.2 Q59.3 78.2 59.3 77.1 L59.5 66.2 Z M64.6 65.5 L65 76.6 Q65 78.2 63.4 78.2 L61.6 78.2 Q60.7 78.2 60.7 77.1 L60.5 66.2 Z" fill="url(#glass)" stroke="url(#edge)" stroke-width="0.7"/>
+          <path d="M51 42 Q60 38.8 69 42 Q67.2 50 65.8 58 L65.8 64.5 Q65.8 67 63.3 67 L56.7 67 Q54.2 67 54.2 64.5 L54.2 58 Q52.8 50 51 42 Z" fill="url(#glass)" stroke="url(#edge)" stroke-width="0.9"/>
+          <path d="M56.6 37.8 L63.4 37.8 L68 41.6 Q60 39.4 52 41.6 Z" fill="url(#glass)" stroke="url(#edge)" stroke-width="0.6"/>
+          <path d="M54.6 46.6 Q57.4 49 60 47.8 Q62.6 49 65.4 46.6" fill="none" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="0.7" stroke-linecap="round"/>
+          <path d="M60 50.2 L60 60 M58 53.4 L62 53.4 M58.2 56.6 L61.8 56.6" fill="none" stroke="#FFFFFF" stroke-opacity="0.25" stroke-width="0.6" stroke-linecap="round"/>
+          <circle cx="60" cy="33.4" r="4.6" fill="url(#glass)" stroke="url(#edge)" stroke-width="0.8"/>
+          <g class="f2arms"><path d="M54.8 40.6 C53.4 36.6 49 36.4 48.4 38.6 C47 36.6 45.4 34 45.4 31.2 C45.4 29.6 46.2 28.6 47.2 28.2 L47.9 23.4 L51.6 23 C51.4 26 51 28.4 50.6 30.2 C52.6 31.8 53.6 34.4 53.2 37.2 L54.6 44.2 Z" fill="url(#glass)" stroke="url(#edge)" stroke-width="0.8" stroke-linejoin="round"/><path d="M53.6 39.6 Q51.2 37.8 49.2 39.2 M52.6 36.4 Q52 33.4 50.6 31.8" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="0.7" stroke-linecap="round"/><circle cx="49.7" cy="22.2" r="2.8" fill="url(#glass)" stroke="url(#edge)" stroke-width="0.6"/><path d="M 65.2 40.6 C 66.6 36.6 71 36.4 71.6 38.6 C 73 36.6 74.6 34 74.6 31.2 C 74.6 29.6 73.8 28.6 72.8 28.2 L 72.1 23.4 L 68.4 23 C 68.6 26 69 28.4 69.4 30.2 C 67.4 31.8 66.4 34.4 66.8 37.2 L 65.4 44.2 Z" fill="url(#glass)" stroke="url(#edge)" stroke-width="0.8" stroke-linejoin="round"/><path d="M 66.4 39.6 Q 68.8 37.8 70.8 39.2 M 67.4 36.4 Q 68 33.4 69.4 31.8" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="0.7" stroke-linecap="round"/><circle cx="70.3" cy="22.2" r="2.8" fill="url(#glass)" stroke="url(#edge)" stroke-width="0.6"/></g>
+          </g></g>
+          <g class="b3all"><g class="b3fade">
+          <rect x="72" y="22" width="14" height="56" rx="7" fill="url(#greenGlass)" stroke="url(#edge)" stroke-width="1"/>
+          <rect x="74" y="24" width="4.5" height="22" rx="2.25" fill="url(#shine)"/>
+          </g></g>
+          <g class="f3x"><g transform="translate(55 23.2) scale(0.8)"><g class="f3grow">
+          <path d="M24.6 54 L24 66.5 Q24 68.5 26 68.5 L28.4 68.5 Q29.4 68.5 29.4 67.2 L29.6 55 Z M35.4 54 L36 66.5 Q36 68.5 34 68.5 L31.6 68.5 Q30.6 68.5 30.6 67.2 L30.4 55 Z" fill="url(#glass)" stroke="url(#edge)" stroke-width="0.7"/>
+          <path d="M17.5 22 Q30 17.5 42.5 22 Q40.5 30 37.6 40 Q36.2 45 36.6 49 L37 54 Q37 56.5 34.5 56.5 L25.5 56.5 Q23 56.5 23 54 L23.4 49 Q23.8 45 22.4 40 Q19.5 30 17.5 22 Z" fill="url(#greenGlass)" stroke="url(#edge)" stroke-width="0.9"/>
+          <path d="M25.5 14.5 L34.5 14.5 L41.5 21.2 Q30 17.8 18.5 21.2 Z" fill="url(#glass)" stroke="url(#edge)" stroke-width="0.6"/>
+          <path d="M22.6 27.5 Q26.2 31 30 29.4 Q33.8 31 37.4 27.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="0.8" stroke-linecap="round"/>
+          <circle cx="30" cy="9" r="4.8" fill="url(#glass)" stroke="url(#edge)" stroke-width="0.8"/>
+          <g class="pumpL"><path d="M19.6 18.4 C18 14.4 13.6 14.6 12.8 18.2 C12.9 13.4 11 12.2 10.3 15.8 L10.6 12.2 L5.4 12.6 C4.2 17 3.2 21.5 3.6 24.6 C4 27.6 7.2 28.4 10.5 27.8 C14 27.4 17 27.2 19.4 26.4 Z" fill="url(#glass)" stroke="url(#edge)" stroke-width="0.8" stroke-linejoin="round"/><circle cx="8" cy="10.4" r="3.9" fill="url(#greenGlass)" stroke="url(#edge)" stroke-width="0.6"/></g>
+          <g class="pumpR"><path d="M 40.4 18.4 C 42 14.4 46.4 14.6 47.2 18.2 C 47.1 13.4 49 12.2 49.7 15.8 L 49.4 12.2 L 54.6 12.6 C 55.8 17 56.8 21.5 56.4 24.6 C 56 27.6 52.8 28.4 49.5 27.8 C 46 27.4 43 27.2 40.6 26.4 Z" fill="url(#glass)" stroke="url(#edge)" stroke-width="0.8" stroke-linejoin="round"/><circle cx="52" cy="10.4" r="3.9" fill="url(#greenGlass)" stroke="url(#edge)" stroke-width="0.6"/></g>
+          </g></g></g>
+        </svg>
+      </div>
+      <div id="s1word" style="display:flex;flex-direction:column;align-items:center;margin-top:-30px">
+        <div style="display:flex;align-items:baseline;gap:36px">
+          <span id="s1ar" style="font:800 150px/1.1 Cairo,Inter">عزم</span>
+          <span id="s1en" style="font:800 64px Inter;letter-spacing:.32em;color:var(--t2)">AZM</span>
+        </div>
+        <div id="s1tag" style="font:700 44px Cairo,Inter;color:var(--t2);margin-top:6px">تمرينك الجاي.. <span class="green">جاهز قبل ما توصل الجيم</span></div>
+      </div>
+    </div>
+    <div id="flash" class="abs" style="inset:0;background:radial-gradient(60% 60% at 50% 50%,rgba(134,239,172,.9),rgba(34,197,94,.4) 40%,transparent 75%);opacity:0"></div>
+  </section>
+
+  <!-- ============ S2 PROBLEM ============ -->
+  <section class="scene" id="s2" data-in="7.9" data-out="14.3">
+    <div id="notes"></div>
+    <div class="center" id="s2a">
+      <div id="s2l1" style="font:700 54px Cairo,Inter;color:var(--t2)">كل مرة في الجيم.. نفس السؤال</div>
+      <div id="s2big" style="font:800 170px/1.25 Cairo,Inter;margin-top:10px">
+        <span class="w">آخر</span> <span class="w">مرة</span> <span class="w">شِلت</span> <span class="w green glow">كام؟</span>
+      </div>
+    </div>
+    <div class="center" id="s2b">
+      <div id="s2c1" style="font:800 170px/1.2 Cairo,Inter"><span class="green glow">عزم</span> فاكر عنك.</div>
+      <div id="s2c2" style="font:700 50px Cairo,Inter;color:var(--t2);margin-top:10px">وبيقولك تشيل كام النهارده.</div>
+    </div>
+  </section>
+
+  <!-- ============ PHONE SECTION (S3..S8) ============ -->
+  <section class="scene" id="sp" data-in="13.8" data-out="62.4">
+    <div id="phoneRig" class="abs" style="scale:1.13;left:330px;top:104px;width:418px;height:872px;perspective:1800px">
+     <div id="phoneBob" style="width:100%;height:100%">
+      <div class="dev" id="phone" style="left:0;top:0">
+       <div class="ph" id="ph">
+        <div class="island"></div>
+        <div class="sbar"><span>9:41</span><span class="ic"><svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor"/><rect x="5" y="5" width="3" height="7" rx="1" fill="currentColor"/><rect x="10" y="2.5" width="3" height="9.5" rx="1" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg><span class="bat"></span></span></div>
+
+        <!-- Today -->
+        <div class="scr" id="scrToday">
+          <div class="row t-in" style="justify-content:space-between;height:52px">
+            <div class="row" style="gap:8px;padding:6px 6px 6px 12px;border-radius:24px;background:var(--chip);border:1px solid var(--glass-edge)"><div class="logo" style="width:30px;height:30px;font-size:12px">PG</div><span style="font:700 14px Inter">Power Gym</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></div>
+            <div class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3.3 14H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 9 4.6V4.5a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V10a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg></div>
+          </div>
+          <div class="t-in" style="margin-top:14px">
+            <div style="font:800 14px Cairo,Inter;color:var(--p)">اليوم <span class="n">2</span> من <span class="n">5</span></div>
+            <div style="font:800 32px/1.25 Cairo,Inter">صدر وتراي</div>
+            <div style="font:600 14px Cairo,Inter;color:var(--t2)">5 تمارين · حوالي 55 دقيقة</div>
+          </div>
+          <div class="gl card t-in" style="margin-top:14px" id="todayCard">
+            <div class="ex t-row"><div class="thumb"><img src="img/flat_db_press.png"></div><div class="grow"><div class="nm">دفع دمبل مستوي</div><div class="meta">آخر مرة <span class="n">20 × 10</span></div></div><span class="badge b-up hl">↑ زوّد <span class="n">22.5</span></span></div>
+            <div class="ex t-row"><div class="thumb"><img src="img/incline_barbell_press.png"></div><div class="grow"><div class="nm">بار عالي</div><div class="meta">آخر مرة <span class="n">40 × 8</span></div></div><span class="badge b-keep hl">→ ثبّت <span class="n">40</span></span></div>
+            <div class="ex t-row"><div class="thumb"><img src="img/pec_deck.png"></div><div class="grow"><div class="nm">فراشة</div><div class="meta">آخر مرة <span class="n">35 × 12</span></div></div><span class="badge b-up hl">↑ زوّد <span class="n">37.5</span></span></div>
+            <div class="ex t-row"><div class="thumb"><img src="img/rope_pushdown.png"></div><div class="grow"><div class="nm">حبل خلفي تراي</div><div class="meta">آخر مرة <span class="n">25 × 7</span></div></div><span class="badge b-down hl">↓ قلّل <span class="n">22.5</span></span></div>
+            <div class="ex t-row"><div class="thumb"><img src="img/push_ups.png"></div><div class="grow"><div class="nm">ضغط</div><div class="meta">تمرين جديد</div></div><span class="badge b-new hl">أول مرة</span></div>
+          </div>
+          <div class="cta t-in" id="startBtn" style="position:absolute;left:16px;right:16px;bottom:34px"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12-7.5z"/></svg>ابدأ التمرين<div class="tap"></div></div>
+        </div>
+
+        <!-- Workout -->
+        <div class="scr" id="scrWork">
+          <div class="row" style="justify-content:space-between;height:52px">
+            <div class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+            <div style="text-align:center;line-height:1.25"><div style="font:800 16px Cairo,Inter">صدر وتراي</div><div style="font:600 12px Cairo,Inter;color:var(--t2)">تمرين <span class="n">1</span> من <span class="n">5</span></div></div>
+            <div class="ib" id="flagBtn" style="position:relative"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M5 21V4h11l-2 4 2 4H5"/></svg><div class="tap"></div></div>
+          </div>
+          <div class="prog" style="margin-top:8px" id="wprog"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
+          <div class="gl" style="margin-top:12px;border-radius:24px;height:222px;display:grid;place-items:center;position:relative;overflow:hidden;background:rgba(255,255,255,.93)">
+            <img src="img/flat_db_press.png" style="height:200px">
+            <div style="position:absolute;bottom:10px;left:10px;height:32px;padding:0 12px;border-radius:16px;background:rgba(7,18,12,.85);color:#fff;display:flex;align-items:center;gap:6px;font:700 13px Cairo,Inter"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12-7.5z"/></svg>شوف الطريقة</div>
+          </div>
+          <div style="margin-top:12px" class="row"><div style="font:800 23px Cairo,Inter;flex:1">دفع دمبل مستوي</div><span class="badge b-up">↑ زوّد</span></div>
+          <div style="font:600 13px Cairo,Inter;color:var(--t2)">آخر مرة: <span class="n">20 × 10 · 20 × 10 · 20 × 9</span></div>
+          <div class="row" style="margin-top:10px;gap:8px" id="sets">
+            <div class="sc" id="sc1">1 · —<div class="nw"></div><div class="on">✓ 22.5 × 10</div></div>
+            <div class="sc" id="sc2">2 · —<div class="nw"></div><div class="on">✓ 22.5 × 10</div></div>
+            <div class="sc" id="sc3">3 · —<div class="nw"></div><div class="on">✓ 22.5 × 9</div></div>
+          </div>
+          <div class="gl" id="dock" style="position:absolute;left:0;right:0;bottom:0;height:268px;border-radius:30px 30px 0 0;padding:16px 16px 34px;display:flex;flex-direction:column;gap:10px">
+            <div class="row" style="gap:10px">
+              <div class="step" style="flex:1"><b>−</b><div class="v"><div class="big"><span id="wv1" class="n">20</span><span id="wv2" class="n">22.5</span></div><div class="u">كجم</div></div><b id="plusBtn">+<div class="tap"></div></b></div>
+            </div>
+            <div class="row" style="gap:10px">
+              <div class="step" style="flex:1"><b>−</b><div class="v"><div class="big"><span class="n">10</span></div><div class="u">عدة</div></div><b>+</b></div>
+            </div>
+            <div class="cta" id="logBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span id="logLbl" style="position:relative;display:inline-block;width:120px;height:28px"><span class="ll" style="position:absolute;inset:0;text-align:center">سجّل مجموعة <span class="n">1</span></span><span class="ll" style="position:absolute;inset:0;text-align:center">سجّل مجموعة <span class="n">2</span></span><span class="ll" style="position:absolute;inset:0;text-align:center">سجّل مجموعة <span class="n">3</span></span><span class="ll" style="position:absolute;inset:0;text-align:center">خلّص التمرين</span></span><div class="tap"></div></div>
+          </div>
+          <!-- rest sheet -->
+          <div class="gl" id="rest" style="position:absolute;left:0;right:0;bottom:0;height:420px;border-radius:30px 30px 0 0;padding:20px 16px 34px;display:flex;flex-direction:column;align-items:center;gap:14px;background:rgba(16,28,22,.92)">
+            <div style="width:40px;height:5px;border-radius:3px;background:var(--t3);opacity:.6"></div>
+            <div style="font:800 18px Cairo,Inter">راحة</div>
+            <div style="position:relative;width:200px;height:200px">
+              <svg width="200" height="200" viewBox="0 0 200 200" style="transform:rotate(-90deg) scaleY(-1)"><circle cx="100" cy="100" r="88" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12"/><circle id="restRing" cx="100" cy="100" r="88" fill="none" stroke="var(--p)" stroke-width="12" stroke-linecap="round" stroke-dasharray="552.9" stroke-dashoffset="0"/></svg>
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><div id="restT" class="n" style="font:800 56px Inter">1:30</div><div style="font:600 13px Cairo,Inter;color:var(--t2)">المجموعة <span class="n">2</span> بعدها</div></div>
+            </div>
+            <div class="row" style="gap:10px;width:100%"><div class="cta sec" style="flex:1"><span class="n">+15</span> ث</div><div class="cta sec" style="flex:1.4">تخطّى الراحة</div></div>
+          </div>
+          <div class="toast" id="notif"><img src="img/icon.png"><div style="flex:1"><b>الراحة خلصت</b><span>المجموعة الجاية!</span></div><span style="align-self:flex-start;font-size:12px">دلوقتي</span></div>
+        </div>
+
+        <!-- Summary -->
+        <div class="scr" id="scrSum" style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;flex-direction:column;align-items:center;margin-top:20px" class="u-in">
+            <div id="sumCheck" style="width:84px;height:84px;border-radius:42px;background:var(--p);display:grid;place-items:center;box-shadow:0 0 50px color-mix(in srgb,var(--p) 60%,transparent)"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#04210F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+            <div style="font:800 28px Cairo,Inter;margin-top:12px">خلّصت التمرين!</div>
+            <div style="font:600 14px Cairo,Inter;color:var(--t2)">صدر وتراي · <span class="n">52</span> دقيقة</div>
+          </div>
+          <div class="kpi u-in">
+            <div><span class="k" id="kVol">0</span><span class="l">الحجم (كجم)</span></div>
+            <div><span class="k">18</span><span class="l">مجموعات</span></div>
+            <div><span class="k" style="color:var(--up)">3</span><span class="l">أرقام جديدة</span></div>
+            <div><span class="k">52<small style="font-size:14px"> min</small></span><span class="l">الوقت</span></div>
+          </div>
+          <div class="gl card u-in" style="padding:2px 14px">
+            <div class="ex rec"><div style="font-size:22px">🏆</div><div class="grow"><div class="nm">دفع دمبل مستوي</div><div class="meta n" style="text-align:right">22.5 kg × 10</div></div><span class="badge b-up">رقم جديد</span></div>
+            <div class="ex rec"><div style="font-size:22px">🏆</div><div class="grow"><div class="nm">بار عالي</div><div class="meta n" style="text-align:right">42.5 kg × 8</div></div><span class="badge b-up">رقم جديد</span></div>
+            <div class="ex rec"><div style="font-size:22px">🏆</div><div class="grow"><div class="nm">فراشة</div><div class="meta n" style="text-align:right">37.5 kg × 12</div></div><span class="badge b-up">رقم جديد</span></div>
+          </div>
+          <div id="confetti" class="abs" style="inset:0;pointer-events:none"></div>
+        </div>
+
+        <!-- Library + exercise + video -->
+        <div class="scr" id="scrLib">
+          <div class="row" style="height:52px;gap:10px"><div class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></div><div style="font:800 20px Cairo,Inter">زوّد تمرين</div></div>
+          <div style="height:46px;border-radius:23px;background:var(--chip);border:1px solid var(--glass-edge);display:flex;align-items:center;gap:10px;padding:0 16px;font:600 15px Cairo,Inter;color:var(--t2);margin-top:6px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span id="libQ">دوّر على تمرين</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px" id="libGrid">
+            <div class="lt" id="ltPec"><div class="lim"><img src="img/pec_deck.png"></div><b>فراشة</b><div class="tap"></div></div>
+            <div class="lt"><div class="lim"><img src="img/barbell_squat.png"></div><b>بار اسكوات حر</b></div>
+            <div class="lt"><div class="lim"><img src="img/lat_pulldown_machine.png"></div><b>ظرافة</b></div>
+            <div class="lt"><div class="lim"><img src="img/db_shoulder_press.png"></div><b>كتف دمبل</b></div>
+            <div class="lt"><div class="lim"><img src="img/leg_press.png"></div><b>ليج برس</b></div>
+            <div class="lt"><div class="lim"><img src="img/hammer_curl.png"></div><b>هامر</b></div>
+          </div>
+          <style>.lt{border-radius:20px;background:var(--glass);border:1px solid var(--glass-edge);padding:8px;display:flex;flex-direction:column;gap:6px;position:relative}.lim{height:118px;border-radius:14px;background:rgba(255,255,255,.93);display:grid;place-items:center}.lim img{max-height:106px;max-width:140px}.lt b{font:700 14px Cairo,Inter;padding:0 4px}</style>
+        </div>
+        <div class="scr" id="scrEx">
+          <div class="row" style="height:52px;gap:10px"><div class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></div><div style="font:800 20px Cairo,Inter">فراشة</div></div>
+          <div style="margin-top:8px;border-radius:24px;height:250px;display:grid;place-items:center;position:relative;overflow:hidden;background:rgba(255,255,255,.93)">
+            <img src="img/pec_deck.png" style="height:220px">
+            <div style="position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:6px"><i style="width:18px;height:6px;border-radius:3px;background:#0C1610"></i><i style="width:6px;height:6px;border-radius:3px;background:#0C161055"></i><i style="width:6px;height:6px;border-radius:3px;background:#0C161055"></i></div>
+          </div>
+          <div style="font:800 14px Cairo,Inter;color:var(--p);margin-top:14px">شوف الطريقة</div>
+          <div class="gl" id="vidCard" style="margin-top:8px;border-radius:22px;padding:10px;display:flex;gap:12px;align-items:center;position:relative">
+            <div style="width:150px;height:86px;border-radius:14px;background:linear-gradient(135deg,#1f2a24,#0b100d);display:grid;place-items:center;position:relative;overflow:hidden;flex:none"><img src="img/pec_deck.png" style="height:80px;filter:invert(1);opacity:.5"><div style="position:absolute;width:44px;height:44px;border-radius:22px;background:rgba(255,255,255,.92);display:grid;place-items:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="#0C1610"><path d="M7 4.5v15l12-7.5z"/></svg></div></div>
+            <div style="flex:1"><div style="font:700 15px Inter;direction:ltr;text-align:right">Pec Deck — perfect form</div><div style="font:600 12px Inter;color:var(--t2);direction:ltr;text-align:right">Coach · YouTube</div></div>
+            <div class="tap"></div>
+          </div>
+          <div class="cta sec" style="margin-top:14px">زوّد للخطة</div>
+          <!-- player sheet -->
+          <div id="player" class="gl" style="position:absolute;left:0;right:0;bottom:0;height:430px;border-radius:30px 30px 0 0;padding:16px;display:flex;flex-direction:column;gap:12px;background:rgba(16,28,22,.95)">
+            <div class="row" style="justify-content:space-between"><b style="font:800 17px Cairo,Inter">فيديو الطريقة</b><div class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div></div>
+            <div id="pvid" style="height:200px;border-radius:12px;background:#000;position:relative;overflow:hidden;display:grid;place-items:center"><img class="pfig" src="img/pec_deck.png" style="height:180px;filter:invert(1);opacity:.85"><div style="position:absolute;left:10px;right:10px;bottom:8px;height:4px;border-radius:2px;background:rgba(255,255,255,.25)"><div id="pbar" style="height:100%;width:0;background:#f33;border-radius:2px"></div></div></div>
+            <div class="cta" id="keepW" style="height:50px;font-size:15px">كمّل وانت بتتمرن<div class="tap"></div></div>
+          </div>
+          <div id="mini" style="position:absolute;left:16px;top:660px;width:200px;height:112px;border-radius:16px;background:#000;overflow:hidden;box-shadow:0 20px 40px -10px #000;border:1px solid rgba(255,255,255,.2);display:grid;place-items:center"><img class="pfig" src="img/pec_deck.png" style="height:100px;filter:invert(1);opacity:.85"><div style="position:absolute;left:8px;right:8px;bottom:6px;height:3px;border-radius:2px;background:rgba(255,255,255,.25)"><div id="mbar" style="height:100%;width:30%;background:#f33;border-radius:2px"></div></div></div>
+        </div>
+
+        <!-- Move -->
+        <div class="scr" id="scrMove" style="padding:0;background:radial-gradient(80% 60% at 50% 45%,#2B3A33,#0B100D)">
+          <div class="row" style="position:absolute;top:56px;left:16px;right:16px;justify-content:space-between">
+            <div style="height:40px;padding:0 16px;border-radius:20px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;gap:8px;font:800 16px Cairo,Inter"><span style="width:10px;height:10px;border-radius:5px;background:#F87171"></span>البُرج · ضغط</div>
+            <div class="ib" style="background:rgba(0,0,0,.45)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 5v14M16 5v14"/></svg></div>
+          </div>
+          <div style="position:absolute;top:112px;left:0;right:0;text-align:center"><div id="repN" class="n" style="font:800 96px/1 Inter;text-shadow:0 0 30px rgba(34,197,94,.6)">0</div><div style="font:700 15px Cairo,Inter;color:var(--t2)">عدّة</div></div>
+          <!-- tower -->
+          <div id="tower" style="position:absolute;right:26px;bottom:300px;width:140px;height:330px"></div>
+          <div style="position:absolute;right:16px;bottom:292px;width:160px;height:8px;border-radius:4px;background:rgba(255,255,255,.25)"></div>
+          <!-- body -->
+          <div id="body" style="position:absolute;left:30px;right:30px;bottom:96px;height:200px;display:flex;justify-content:center;align-items:flex-end">
+            <div id="bodyIn" style="position:relative;transform-origin:85% 100%"><img src="img/push_ups.png" style="width:340px;filter:invert(1) brightness(.95);display:block">
+                          </div>
+          </div>
+          <div id="hint" style="position:absolute;left:22px;top:330px;"><div style="height:42px;padding:0 18px;border-radius:21px;background:rgba(251,191,36,.18);border:1px solid rgba(251,191,36,.5);color:#FBBF24;display:flex;align-items:center;font:800 16px Cairo,Inter;white-space:nowrap">انزل أكتر شوية</div></div>
+          <div style="position:absolute;left:16px;right:16px;bottom:30px;height:52px;border-radius:26px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;gap:8px;font:700 14px Cairo,Inter;color:var(--t2)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>مفيش تسجيل ولا صور</div>
+        </div>
+
+        <!-- Backup / settings -->
+        <div class="scr" id="scrBk">
+          <div class="row" style="height:52px"><div style="font:800 26px Cairo,Inter">الإعدادات</div></div>
+          <div class="gl" style="border-radius:24px;padding:16px;margin-top:10px;display:flex;flex-direction:column;gap:10px">
+            <div class="row"><div style="width:44px;height:44px;border-radius:14px;background:color-mix(in srgb,var(--p) 20%,transparent);display:grid;place-items:center;color:var(--p)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 18a4.5 4.5 0 0 1-.6-9A6 6 0 0 1 18 9.5a4 4 0 0 1-.5 8.5z"/><path d="M12 15V10m-2.5 2.5L12 10l2.5 2.5"/></svg></div><div style="flex:1"><div style="font:800 17px Cairo,Inter">النسخة الاحتياطية</div><div style="font:600 13px Cairo,Inter;color:var(--t2)" id="bkStat">آخر نسخة من دقيقة</div></div>
+              <div id="tgl" style="width:52px;height:32px;border-radius:16px;background:var(--p);position:relative"><div style="position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:13px;background:#fff"></div></div></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="badge b-up"><span class="n">124</span> تمرين</span><span class="badge b-keep">الخطة</span><span class="badge b-new">مستواك</span></div>
+          </div>
+          <div class="gl" style="border-radius:24px;padding:4px 16px;margin-top:12px">
+            <div class="ex"><div class="grow nm">اللغة</div><span class="meta">العربية · English</span></div>
+            <div class="ex"><div class="grow nm">الشكل</div><span class="meta">فاتح · غامق · تلقائي</span></div>
+            <div class="ex"><div class="grow nm">مؤقت الراحة</div><span class="meta">يرنّ لما الراحة تخلص</span></div>
+            <div class="ex"><div class="grow nm">حسابي</div><span class="meta">Power Gym</span></div>
+          </div>
+        </div>
+
+        <div class="homeind"></div>
+       </div>
+      </div>
+     </div>
+    </div>
+
+    <!-- captions for phone section -->
+    <div class="cap" id="c3">
+      <div class="eyebrow"><span class="num">01</span>التمرينة الجاية</div>
+      <div class="ttl"><span class="ln"><span>افتح التطبيق..</span></span><span class="ln"><span class="green">وتمرينك جاهز</span></span></div>
+      <div class="sub">كل تمرين معاه آخر وزن شِلته، والوزن اللي تشيله النهارده.</div>
+      <div class="chips">
+        <span class="chip" style="color:var(--up)">↑ زوّد</span>
+        <span class="chip" style="color:var(--keep)">→ ثبّت</span>
+        <span class="chip" style="color:var(--down)">↓ قلّل</span>
+        <span class="chip" style="color:var(--new)">أول مرة</span>
+      </div>
+    </div>
+    <div class="cap" id="c4">
+      <div class="eyebrow"><span class="num">02</span>التسجيل</div>
+      <div class="ttl"><span class="ln"><span>المجموعة بتتسجّل</span></span><span class="ln"><span class="green">بضغطة واحدة</span></span></div>
+      <div class="sub">الوزن والعدّات جاهزين قدامك. اضغط سجّل.. وكمّل تمرينك.</div>
+    </div>
+    <div class="cap" id="c4b">
+      <div class="eyebrow"><span class="num">03</span>مؤقت الراحة</div>
+      <div class="ttl"><span class="ln"><span>ارتاح..</span></span><span class="ln"><span class="green">وعزم يرنّلك</span></span></div>
+      <div class="sub">حتى والموبايل مقفول، هيقولك: الراحة خلصت.. المجموعة الجاية!</div>
+      <div class="chips"><span class="chip"><i></i>سوبر سيت</span><span class="chip"><i></i>تعديل أو مسح أي مجموعة</span><span class="chip"><i></i>بيتحفظ بعد كل ضغطة</span></div>
+    </div>
+    <div class="cap" id="c5">
+      <div class="eyebrow"><span class="num">04</span>الأرقام والمستوى</div>
+      <div class="ttl"><span class="ln"><span>أرقامك الجديدة..</span></span><span class="ln"><span class="green">ومستواك بيطلع</span></span></div>
+      <div class="lvls" style="display:flex;gap:22px;margin-top:10px">
+        <div class="lv" id="lv1t"><svg viewBox="0 0 60 70" width="150" height="175"><use href="#lv1"/></svg><b>مبتدئ</b></div>
+        <div class="lv" id="lv2t"><svg viewBox="0 0 60 70" width="150" height="175"><use href="#lv2"/></svg><b>متوسط</b></div>
+        <div class="lv" id="lv3t"><svg viewBox="0 0 60 70" width="150" height="175"><use href="#lv3"/></svg><b>محترف</b></div>
+      </div>
+      <style>.lv{position:relative;width:210px;padding:16px 0 18px;border-radius:28px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;align-items:center;gap:6px}.lv b{font:800 28px Cairo,Inter;color:var(--t2)}.lv .hi{position:absolute;inset:-2px;border-radius:30px;border:3px solid var(--p);box-shadow:0 0 40px rgba(34,197,94,.45);opacity:0}</style>
+    </div>
+    <div class="cap" id="c6">
+      <div class="eyebrow"><span class="num">05</span>مكتبة التمارين</div>
+      <div class="ttl"><span class="ln"><span>صورة وفيديو</span></span><span class="ln"><span class="green">لكل تمرين</span></span></div>
+      <div class="sub">يشوف الطريقة الصح وهو بيتمرن.. والكابتن بيختار صور وفيديوهات جيمه.</div>
+      <div class="chips"><span class="chip"><i></i>الفيديو يفضل شغال وانت بتتمرن</span></div>
+    </div>
+    <div class="cap" id="c7">
+      <div class="eyebrow"><span class="num">06</span>ألعاب الحركة <span class="pill p-wait" style="font-size:18px;height:34px">جديد</span></div>
+      <div class="ttl"><span class="ln"><span>الكاميرا بتعدّ..</span></span><span class="ln"><span class="green">وانت بتلعب</span></span></div>
+      <div class="sub">كل ضغطة صح بتبني دور في البُرج. العدّ كله على الموبايل، ومفيش تسجيل ولا صور.</div>
+    </div>
+    <div class="cap" id="c8">
+      <div class="eyebrow"><span class="num">07</span>نسخة احتياطية</div>
+      <div class="ttl"><span class="ln"><span>تاريخك محفوظ..</span></span><span class="ln"><span class="green">لو غيّرت موبايلك</span></span></div>
+      <div class="sub">كل تمارينه وخطته ومستواه بيرجعوا على الموبايل الجديد.</div>
+      <div id="bkFlow" style="display:flex;align-items:center;gap:26px;margin-top:10px;direction:ltr;justify-content:flex-end">
+        <div class="mini-ph" id="phNew"><div></div></div>
+        <div class="flow" id="fl2"><i></i><i></i><i></i></div>
+        <div id="cloud" style="width:130px;height:130px;border-radius:40px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.4);display:grid;place-items:center;color:#4ADE80"><svg width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 18a4.5 4.5 0 0 1-.6-9A6 6 0 0 1 18 9.5a4 4 0 0 1-.5 8.5z"/><path d="M9 13.5l2 2 4-4"/></svg></div>
+        <div class="flow" id="fl1"><i></i><i></i><i></i></div>
+        <div class="mini-ph" id="phOld"><div></div></div>
+      </div>
+      <style>.mini-ph{width:84px;height:150px;border-radius:20px;border:3px solid rgba(255,255,255,.7);padding:6px;background:rgba(255,255,255,.04)}.mini-ph div{width:100%;height:100%;border-radius:12px;background:linear-gradient(160deg,rgba(34,197,94,.55),rgba(11,59,36,.6))}.flow{display:flex;gap:10px}.flow i{width:14px;height:14px;border-radius:7px;background:#22C55E}</style>
+    </div>
+  </section>
+
+  <!-- ============ S9 CAPTAIN ============ -->
+  <section class="scene" id="s9" data-in="61.9" data-out="66.4">
+    <div class="center" id="s9w">
+      <div id="s9a" style="font:700 60px Cairo,Inter;color:var(--t2)">ودلوقتي..</div>
+      <div id="s9b" style="font:800 190px/1.2 Cairo,Inter">دورك <span class="green glow">يا كابتن</span></div>
+      <div id="s9c" style="font:700 44px Cairo,Inter;color:var(--t2);margin-top:6px">لوحة تحكم كاملة لجيمك — من أي كمبيوتر</div>
+    </div>
+  </section>
+
+  <!-- ============ DASHBOARD SECTION ============ -->
+  <section class="scene" id="sd" data-in="65.8" data-out="92.4">
+    <div class="brw" id="brw">
+      <div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>azmm-dash.pages.dev</div><div style="width:60px"></div></div>
+      <div class="dash">
+        <div class="side">
+          <div class="brand"><img src="img/icon.png">عزم</div>
+          <div class="gymsel"><div class="logo" id="gymLogo">PG</div>Power Gym</div>
+          <div class="nav" id="navM"><div class="act"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4-6"/></svg><span>الأعضاء</span></div>
+          <div class="nav" id="navT"><div class="act"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>القوالب</span></div>
+          <div class="nav" id="navE"><div class="act"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg><span>التمارين</span></div>
+          <div class="nav" id="navP"><div class="act"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19l5-6 4 3 7-9"/><path d="M15 7h5v5"/></svg><span>التقدّم</span></div>
+          <div class="nav" id="navS"><div class="act"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span>الإعدادات</span></div>
+          <div style="flex:1"></div>
+          <div class="row" style="gap:10px;font:700 15px Cairo,Inter;color:var(--t2)"><div class="av" style="background:#86EFAC">ك</div>كابتن حسام</div>
+        </div>
+        <div class="main" id="dmain">
+          <!-- members -->
+          <div class="pane" id="pM">
+            <div class="row" style="justify-content:space-between">
+              <div><div class="h1">الأعضاء</div><div class="muted" style="font:600 16px Cairo,Inter"><span class="n">48</span> شخص · <span class="n">3</span> أكواد مستنيين يتستخدموا</div></div>
+              <div class="row" style="gap:10px"><div class="btn sec">زوّد كابتن</div><div class="btn" id="addBtn">+ زوّد متدربين</div></div>
+            </div>
+            <div class="row" style="margin-top:18px;gap:12px;padding:12px 16px;border-radius:14px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);font:700 15px Cairo,Inter;color:#FBBF24">محتاجينك: <span class="n">2</span> أعضاء من غير خطة</div>
+            <div class="tbl" style="margin-top:16px">
+              <div class="tr h"><span>الاسم</span><span>الدور</span><span>الحالة</span><span>يقدر يغيّر</span><span>الخطة</span></div>
+              <div class="tr mr"><span class="row"><div class="av" style="background:#86EFAC">أ</div>أحمد سمير</span><span>متدرب</span><span><i class="pill p-ok">نشط</i></span><span>الأوزان</span><span><i class="pill p-plan">تضخيم 5 أيام</i></span></div>
+              <div class="tr mr"><span class="row"><div class="av" style="background:#93C5FD">م</div>محمد علي</span><span>متدرب</span><span><i class="pill p-ok">نشط</i></span><span>الخطة كلها</span><span><i class="pill p-plan">فول بادي 3 أيام</i></span></div>
+              <div class="tr mr"><span class="row"><div class="av" style="background:#C4B5FD">س</div>سارة حسن</span><span>متدربة</span><span><i class="pill p-ok">نشط</i></span><span>الأوزان</span><span><i class="pill p-plan">تضخيم 5 أيام</i></span></div>
+              <div class="tr mr"><span class="row"><div class="av" style="background:#FBBF24">ع</div>عمر خالد</span><span>كابتن</span><span><i class="pill p-ok">نشط</i></span><span>المتدربين وخططهم</span><span class="muted">—</span></div>
+              <div class="tr mr"><span class="row"><div class="av" style="background:#F9A8D4">ن</div>نور الدين</span><span>متدرب</span><span><i class="pill p-wait">الكود اتبعت</i></span><span>الأوزان</span><span class="muted">—</span></div>
+              <div class="tr mr" style="border-bottom:0"><span class="row"><div class="av" style="background:#86EFAC">ي</div>يوسف طارق</span><span>متدرب</span><span><i class="pill p-ok">نشط</i></span><span>خطته بنفسه</span><span><i class="pill p-plan">أعلى / أسفل</i></span></div>
+            </div>
+            <div class="modal" id="mod">
+              <div class="mbox" id="mbox">
+                <div class="h1" style="font-size:28px">زوّد متدربين</div>
+                <div class="muted" style="font:600 16px Cairo,Inter">اكتب اسم كل متدرب في سطر، أو الصقهم من Excel.</div>
+                <div class="ta" id="ta"><span id="taTxt"></span><span id="caret" style="display:inline-block;width:2px;height:26px;background:var(--p);vertical-align:middle"></span></div>
+                <div class="row" style="justify-content:space-between"><span class="pill p-plan">📄 من Excel</span><div class="btn" id="mkBtn">اعمل <span class="n">3</span> أكواد</div></div>
+              </div>
+              <div id="qrs" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:24px"></div>
+            </div>
+          </div>
+          <!-- templates -->
+          <div class="pane" id="pT">
+            <div class="row" style="justify-content:space-between">
+              <div><div class="muted" style="font:700 15px Cairo,Inter">قالب</div><div class="h1">تضخيم 5 أيام</div></div>
+              <div class="row" style="gap:10px"><span class="pill p-plan" style="height:36px;font-size:15px"><span class="n">12</span>&nbsp;متدرب ماشيين عليه</span></div>
+            </div>
+            <div class="row" style="gap:8px;margin-top:18px">
+              <span class="pill" style="background:var(--p);color:#04210F;height:38px;font-size:15px;padding:0 16px">اليوم 1 · صدر وتراي</span><span class="pill p-plan" style="height:38px;font-size:15px;padding:0 16px">اليوم 2 · ضهر وباي</span><span class="pill p-plan" style="height:38px;font-size:15px;padding:0 16px">اليوم 3 · رجل</span><span class="pill p-plan" style="height:38px;font-size:15px;padding:0 16px">اليوم 4 · كتف</span><span class="pill p-plan" style="height:38px;font-size:15px;padding:0 16px">اليوم 5 · ذراع</span>
+            </div>
+            <div class="tbl" style="margin-top:16px">
+              <div class="trx"><div class="thumb"><img src="img/flat_db_press.png"></div><b>دفع دمبل مستوي</b><span class="n">4 × 8–10</span><span class="muted">راحة <span class="n">90</span> ث</span></div>
+              <div class="trx" id="editRow"><div class="thumb"><img src="img/incline_barbell_press.png"></div><b>بار عالي</b><span style="position:relative;display:inline-block;width:110px;height:30px"><span class="n" id="tg1" style="position:absolute;inset:0">3 × 10</span><span class="n green" id="tg2" style="position:absolute;inset:0;font-weight:800">4 × 8</span></span><span class="muted">راحة <span class="n">120</span> ث</span><div class="hlrow"></div></div>
+              <div class="trx"><div class="thumb"><img src="img/pec_deck.png"></div><b>فراشة</b><span class="n">3 × 12</span><span class="muted">راحة <span class="n">60</span> ث</span></div>
+              <div class="trx"><div class="thumb"><img src="img/rope_pushdown.png"></div><b>حبل خلفي تراي</b><span class="n">3 × 12–15</span><span class="muted">سوبر سيت</span></div>
+              <div class="trx" style="border-bottom:0"><div class="thumb"><img src="img/push_ups.png"></div><b>ضغط</b><span class="n">3 × 15</span><span class="muted">سوبر سيت</span></div>
+            </div>
+            <style>.trx{display:grid;grid-template-columns:60px 2fr 1fr 1fr;align-items:center;gap:12px;height:66px;padding:0 16px;border-bottom:1px solid rgba(255,255,255,.06);font:700 17px Cairo,Inter;position:relative}.hlrow{position:absolute;inset:4px;border-radius:12px;border:2px solid var(--p);background:rgba(34,197,94,.08);opacity:0}</style>
+            <div style="margin-top:18px;display:flex;flex-direction:column;align-items:flex-start;gap:14px">
+              <div class="btn" id="applyBtn">طبّق التغيير على كل اللي ماشيين على القالب</div>
+              <div id="applied" class="row" style="gap:6px"></div>
+            </div>
+          </div>
+          <!-- progress -->
+          <div class="pane" id="pP">
+            <div class="row" style="gap:14px"><div class="av" style="background:#86EFAC;width:56px;height:56px;border-radius:28px;font-size:22px">أ</div><div><div class="h1">أحمد سمير</div><div class="muted" style="font:600 16px Cairo,Inter">متدرب · تضخيم 5 أيام · آخر تمرين النهارده</div></div></div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:20px" id="pk">
+              <div class="kp"><b class="n" id="pk1">0</b><span>تمرين الشهر ده</span></div>
+              <div class="kp"><b class="n" id="pk2">0%</b><span>التزام</span></div>
+              <div class="kp"><b class="n" id="pk3" style="color:#4ADE80">0</b><span>أرقام جديدة</span></div>
+              <div class="kp"><b class="n" id="pk4">0</b><span>الحجم (طن)</span></div>
+            </div>
+            <style>.kp{border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);padding:16px 18px;display:flex;flex-direction:column}.kp b{font:800 40px Inter;text-align:right}.kp span{font:700 15px Cairo,Inter;color:var(--t2)}</style>
+            <div style="margin-top:16px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);padding:18px 20px;height:380px;position:relative">
+              <div class="row" style="justify-content:space-between"><b style="font:800 19px Cairo,Inter">دفع دمبل مستوي — أعلى وزن</b><span class="pill p-ok"><span class="n">+10 kg</span> في <span class="n">8</span> أسابيع</span></div>
+              <svg id="chart" width="900" height="300" viewBox="0 0 900 300" style="position:absolute;left:20px;bottom:14px;direction:ltr">
+                <defs><linearGradient id="ar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22C55E" stop-opacity=".35"/><stop offset="1" stop-color="#22C55E" stop-opacity="0"/></linearGradient><clipPath id="clipA"><rect id="clipR" x="0" y="0" width="0" height="300"/></clipPath></defs>
+                <g stroke="rgba(255,255,255,.07)"><line x1="0" y1="60" x2="900" y2="60"/><line x1="0" y1="130" x2="900" y2="130"/><line x1="0" y1="200" x2="900" y2="200"/><line x1="0" y1="270" x2="900" y2="270"/></g>
+                <g font-family="Inter" font-size="14" fill="#7C8B83"><text x="0" y="54">26</text><text x="0" y="124">22</text><text x="0" y="194">18</text><text x="0" y="264">14</text></g>
+                <path id="area" clip-path="url(#clipA)" fill="url(#ar)" d=""/>
+                <path id="line" fill="none" stroke="#22C55E" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d=""/>
+                <g id="pts"></g>
+              </svg>
+            </div>
+          </div>
+          <!-- settings / brand colour -->
+          <div class="pane" id="pS">
+            <div class="h1">إعدادات الجيم</div>
+            <div class="row" style="gap:18px;margin-top:20px;align-items:stretch">
+              <div style="flex:1;display:flex;flex-direction:column;gap:14px">
+                <div class="kp" style="gap:6px"><span>اسم الجيم</span><b style="font:800 26px Inter;text-align:right">Power Gym</b></div>
+                <div class="kp" style="gap:12px"><span>لون الجيم</span>
+                  <div class="row" style="gap:16px;direction:ltr;justify-content:flex-end">
+                    <div class="swatch" id="sw5" style="background:#A855F7"><div class="ring"></div></div>
+                    <div class="swatch" id="sw4" style="background:#EF4444"><div class="ring"></div></div>
+                    <div class="swatch" id="sw3" style="background:#F59E0B"><div class="ring"></div></div>
+                    <div class="swatch" id="sw2" style="background:#2563EB"><div class="ring"></div></div>
+                    <div class="swatch" id="sw1" style="background:#22C55E"><div class="ring"></div></div>
+                  </div>
+                  <div class="row" style="gap:8px;font:700 16px Cairo,Inter;color:#4ADE80"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>مقروء في الفاتح والغامق</div>
+                </div>
+                <div class="kp" style="gap:6px"><span>بعد ما العضوية تخلص</span><b style="font:700 20px Cairo,Inter">المتدرب يقدر يشوف تاريخه</b></div>
+              </div>
+            </div>
+          </div>
+          <div class="cursor" id="cur"><svg viewBox="0 0 24 24" width="34" height="34"><path d="M4 2.5l15 9.2-6.6 1.4 3.6 7-2.6 1.3-3.6-7-4.8 4.6z" fill="#fff" stroke="#0C1610" stroke-width="1.2" stroke-linejoin="round"/></svg><div class="tap" style="left:6px;top:4px;width:44px;height:44px;margin:-22px 0 0 -22px"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- small companion phone -->
+    <div id="cphRig" class="abs" style="left:70px;top:440px;width:300px;height:626px">
+      <div class="dev" style="width:300px;height:626px;padding:10px;border-radius:46px">
+        <div class="ph" id="cph" style="width:280px;height:606px;border-radius:37px">
+          <div class="island" style="top:8px;width:90px;margin-left:-45px;height:26px"></div>
+          <!-- scan -->
+          <div class="scr" id="cScan" style="padding:0;background:radial-gradient(80% 60% at 50% 45%,#2B3A33,#0B100D)">
+            <div style="position:absolute;top:60px;left:0;right:0;text-align:center;font:800 17px Cairo,Inter">امسح كود الجيم</div>
+            <div style="position:absolute;left:50px;top:170px;width:180px;height:180px">
+              <div id="cqr" style="position:absolute;inset:16px;background:#fff;border-radius:8px;padding:8px"></div>
+              <svg width="180" height="180" style="position:absolute;inset:0" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"><path d="M4 34V10a6 6 0 0 1 6-6h24M146 4h24a6 6 0 0 1 6 6v24M176 146v24a6 6 0 0 1-6 6h-24M34 176H10a6 6 0 0 1-6-6v-24"/></svg>
+              <div id="scanLine" style="position:absolute;left:10px;right:10px;top:10px;height:3px;background:#22C55E;box-shadow:0 0 16px #22C55E"></div>
+            </div>
+            <div style="position:absolute;bottom:60px;left:20px;right:20px;text-align:center;font:600 13px Cairo,Inter;color:var(--t2)">وجّه الكاميرا ناحية رمز QR اللي إدهولك الكابتن</div>
+          </div>
+          <!-- joined -->
+          <div class="scr" id="cJoin" style="display:flex;flex-direction:column;align-items:center;padding-top:110px;gap:12px">
+            <div class="logo" style="width:90px;height:90px;border-radius:26px;font-size:32px">PG</div>
+            <span class="pill p-ok" style="margin-top:8px">✓ انضممت بنجاح</span>
+            <div style="font:800 24px Cairo,Inter;text-align:center">أهلًا بيك في<br><span class="lat" style="font-weight:800">Power Gym</span></div>
+            <div style="font:600 13px Cairo,Inter;color:var(--t2);text-align:center;padding:0 20px">الكابتن يقدر يظبطلك خطتك ويتابع تقدّمك</div>
+            <div class="cta" style="position:absolute;left:14px;right:14px;bottom:30px;height:50px;font-size:16px">يلا نتمرن</div>
+          </div>
+          <!-- today with toast (plans) -->
+          <div class="scr" id="cToday" style="padding:44px 12px 0">
+            <div style="font:800 12px Cairo,Inter;color:var(--p);margin-top:16px">اليوم <span class="n">1</span> من <span class="n">5</span></div>
+            <div style="font:800 24px/1.3 Cairo,Inter">صدر وتراي</div>
+            <div class="gl card" style="margin-top:10px;padding:2px 10px">
+              <div class="ex" style="padding:8px 0"><div class="thumb" style="width:38px;height:38px"><img src="img/flat_db_press.png" style="max-width:34px;max-height:34px"></div><div class="grow"><div class="nm" style="font-size:13px">دفع دمبل مستوي</div><div class="meta n" style="text-align:right">4 × 8–10</div></div></div>
+              <div class="ex" style="padding:8px 0"><div class="thumb" style="width:38px;height:38px"><img src="img/incline_barbell_press.png" style="max-width:34px;max-height:34px"></div><div class="grow"><div class="nm" style="font-size:13px">بار عالي</div><div class="meta n" style="text-align:right;color:var(--p);font-weight:800">4 × 8</div></div></div>
+              <div class="ex" style="padding:8px 0"><div class="thumb" style="width:38px;height:38px"><img src="img/pec_deck.png" style="max-width:34px;max-height:34px"></div><div class="grow"><div class="nm" style="font-size:13px">فراشة</div><div class="meta n" style="text-align:right">3 × 12</div></div></div>
+            </div>
+            <div class="cta" style="position:absolute;left:12px;right:12px;bottom:26px;height:50px;font-size:16px">ابدأ التمرين</div>
+            <div class="toast" id="cToast" style="top:42px;left:8px;right:8px;padding:10px"><img src="img/icon.png" style="width:34px;height:34px"><div><b style="font-size:14px">الكابتن حدّث خطتك</b><span style="font-size:12px">بار عالي بقى 4 × 8</span></div></div>
+          </div>
+          <div class="homeind" style="width:100px;margin-left:-50px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- captions dashboard -->
+    <div class="cap dcap" id="d1">
+      <div class="eyebrow"><span class="num">08</span>الأعضاء والأكواد</div>
+      <div class="ttl"><span class="ln"><span>ضيف متدربينك</span></span><span class="ln"><span class="green">في دقيقة</span></span></div>
+      <div class="sub">اكتب الأسامي، اطبع كروت QR.. والمتدرب يمسح وينضم على طول.</div>
+    </div>
+    <div class="cap dcap" id="d2">
+      <div class="eyebrow"><span class="num">09</span>الخطط والقوالب</div>
+      <div class="ttl"><span class="ln"><span>عدّل مرة..</span></span><span class="ln"><span class="green">يوصل للكل</span></span></div>
+      <div class="sub">خطة لكل متدرب أو قالب لمجموعة، والمتدرب يعرف فورًا.</div>
+    </div>
+    <div class="cap dcap" id="d3">
+      <div class="eyebrow"><span class="num">10</span>تقدّم المتدربين</div>
+      <div class="ttl"><span class="ln"><span>تابع كل متدرب</span></span><span class="ln"><span class="green">من غير ما تسأل</span></span></div>
+      <div class="sub">مين ملتزم، مين وقف، ومين كسر رقمه.</div>
+    </div>
+    <div class="cap dcap" id="d4">
+      <div class="eyebrow"><span class="num">11</span>هوية الجيم</div>
+      <div class="ttl"><span class="ln"><span>التطبيق</span></span><span class="ln"><span class="green">بلون جيمك</span></span></div>
+      <div class="sub">اختار لونك، وعزم يظبطه عشان يفضل مقروء دايمًا.</div>
+    </div>
+    <style>.dcap{right:70px;width:520px;gap:16px}.dcap .ttl{font-size:72px}.dcap .sub{font-size:28px}</style>
+  </section>
+
+  <!-- ============ S14 RECAP / OUTRO ============ -->
+  <section class="scene" id="s14" data-in="91.9" data-out="103">
+    <div id="recap" class="abs" style="inset:0"></div>
+    <div class="center" id="outro">
+      <img id="oLogo" src="img/icon_foreground.png" style="width:300px;height:300px;margin-bottom:-30px">
+      <div id="oWord" style="display:flex;align-items:baseline;gap:30px"><span style="font:800 140px/1.15 Cairo,Inter">عزم</span><span style="font:800 56px Inter;letter-spacing:.32em;color:var(--t2)">AZM</span></div>
+      <div id="oTag" style="font:800 58px Cairo,Inter;margin-top:4px">جيمك.. <span class="green glow">في جيب كل متدرب</span></div>
+      <div id="oSub" style="font:700 30px Cairo,Inter;color:var(--t2);margin-top:22px;display:flex;gap:18px;align-items:center">
+        <span class="chip" style="height:54px;font-size:24px">📱 التطبيق للمتدربين</span><span class="chip" style="height:54px;font-size:24px">💻 لوحة التحكم للكابتن</span>
+      </div>
+      <div id="oUrl" class="lat" style="font:700 28px Inter;color:var(--t2);margin-top:26px;letter-spacing:.04em">azmm.pages.dev · App Store · Google Play</div>
+    </div>
+    <div id="credit" class="abs lat" style="left:0;right:0;bottom:22px;text-align:center;font:500 14px Inter;color:#5f6e66">Exercise drawings: Everkinetic, CC BY-SA 4.0</div>
+  </section>
+
+  <!-- persistent corner mark -->
+  <div id="mark" class="abs" style="left:48px;top:40px;display:flex;align-items:center;gap:12px;opacity:0"><img src="img/icon.png" style="width:48px;height:48px;border-radius:13px"><span style="font:800 30px Cairo,Inter">عزم</span></div>
+
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="lg" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.6"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.2"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.1"/></linearGradient>
+      <linearGradient id="le" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.15"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.55"/></linearGradient>
+      <linearGradient id="lgg" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#86EFAC" stop-opacity="0.95"/><stop offset="0.55" stop-color="#22C55E" stop-opacity="0.85"/><stop offset="1" stop-color="#15803D" stop-opacity="0.9"/></linearGradient>
+      <symbol id="lv1" viewBox="0 0 60 70">
+        <rect x="12" y="20" width="36" height="3.4" rx="1.7" fill="url(#lgg)"/><rect x="10" y="15.5" width="4.5" height="12.5" rx="1.6" fill="url(#lgg)"/><rect x="45.5" y="15.5" width="4.5" height="12.5" rx="1.6" fill="url(#lgg)"/>
+        <path d="M24 42 L20 22.5 M36 42 L40 22.5" fill="none" stroke="url(#lg)" stroke-width="4.2" stroke-linecap="round"/>
+        <circle cx="30" cy="32.5" r="5" fill="url(#lg)" stroke="url(#le)" stroke-width="0.8"/><rect x="23" y="39.5" width="14" height="24" rx="7" fill="url(#lg)" stroke="url(#le)" stroke-width="1"/>
+      </symbol>
+      <symbol id="lv2" viewBox="0 0 60 70"><g transform="translate(-30 -10)">
+        <rect x="45" y="20" width="30" height="4" rx="2" fill="url(#lgg)"/><rect x="42" y="12" width="6" height="20" rx="2" fill="url(#lgg)" stroke="url(#le)" stroke-width="0.6"/><rect x="37" y="14.5" width="4.5" height="15" rx="2" fill="url(#lgg)" stroke="url(#le)" stroke-width="0.6"/><rect x="72" y="12" width="6" height="20" rx="2" fill="url(#lgg)" stroke="url(#le)" stroke-width="0.6"/><rect x="78.5" y="14.5" width="4.5" height="15" rx="2" fill="url(#lgg)" stroke="url(#le)" stroke-width="0.6"/>
+        <path d="M55.4 65.5 L55 76.6 Q55 78.2 56.6 78.2 L58.4 78.2 Q59.3 78.2 59.3 77.1 L59.5 66.2 Z M64.6 65.5 L65 76.6 Q65 78.2 63.4 78.2 L61.6 78.2 Q60.7 78.2 60.7 77.1 L60.5 66.2 Z" fill="url(#lg)" stroke="url(#le)" stroke-width="0.7"/>
+        <path d="M51 42 Q60 38.8 69 42 Q67.2 50 65.8 58 L65.8 64.5 Q65.8 67 63.3 67 L56.7 67 Q54.2 67 54.2 64.5 L54.2 58 Q52.8 50 51 42 Z" fill="url(#lg)" stroke="url(#le)" stroke-width="0.9"/>
+        <path d="M56.6 37.8 L63.4 37.8 L68 41.6 Q60 39.4 52 41.6 Z" fill="url(#lg)" stroke="url(#le)" stroke-width="0.6"/>
+        <circle cx="60" cy="33.4" r="4.6" fill="url(#lg)" stroke="url(#le)" stroke-width="0.8"/>
+        <path d="M54.8 40.6 C53.4 36.6 49 36.4 48.4 38.6 C47 36.6 45.4 34 45.4 31.2 C45.4 29.6 46.2 28.6 47.2 28.2 L47.9 23.4 L51.6 23 C51.4 26 51 28.4 50.6 30.2 C52.6 31.8 53.6 34.4 53.2 37.2 L54.6 44.2 Z" fill="url(#lg)" stroke="url(#le)" stroke-width="0.8" stroke-linejoin="round"/><circle cx="49.7" cy="22.2" r="2.8" fill="url(#lg)" stroke="url(#le)" stroke-width="0.6"/>
+        <path d="M 65.2 40.6 C 66.6 36.6 71 36.4 71.6 38.6 C 73 36.6 74.6 34 74.6 31.2 C 74.6 29.6 73.8 28.6 72.8 28.2 L 72.1 23.4 L 68.4 23 C 68.6 26 69 28.4 69.4 30.2 C 67.4 31.8 66.4 34.4 66.8 37.2 L 65.4 44.2 Z" fill="url(#lg)" stroke="url(#le)" stroke-width="0.8" stroke-linejoin="round"/><circle cx="70.3" cy="22.2" r="2.8" fill="url(#lg)" stroke="url(#le)" stroke-width="0.6"/>
+      </g></symbol>
+      <symbol id="lv3" viewBox="0 0 60 70">
+        <path d="M24.6 54 L24 66.5 Q24 68.5 26 68.5 L28.4 68.5 Q29.4 68.5 29.4 67.2 L29.6 55 Z M35.4 54 L36 66.5 Q36 68.5 34 68.5 L31.6 68.5 Q30.6 68.5 30.6 67.2 L30.4 55 Z" fill="url(#lg)" stroke="url(#le)" stroke-width="0.7"/>
+        <path d="M17.5 22 Q30 17.5 42.5 22 Q40.5 30 37.6 40 Q36.2 45 36.6 49 L37 54 Q37 56.5 34.5 56.5 L25.5 56.5 Q23 56.5 23 54 L23.4 49 Q23.8 45 22.4 40 Q19.5 30 17.5 22 Z" fill="url(#lgg)" stroke="url(#le)" stroke-width="0.9"/>
+        <path d="M25.5 14.5 L34.5 14.5 L41.5 21.2 Q30 17.8 18.5 21.2 Z" fill="url(#lg)" stroke="url(#le)" stroke-width="0.6"/>
+        <circle cx="30" cy="9" r="4.8" fill="url(#lg)" stroke="url(#le)" stroke-width="0.8"/>
+        <path d="M19.6 18.4 C18 14.4 13.6 14.6 12.8 18.2 C12.9 13.4 11 12.2 10.3 15.8 L10.6 12.2 L5.4 12.6 C4.2 17 3.2 21.5 3.6 24.6 C4 27.6 7.2 28.4 10.5 27.8 C14 27.4 17 27.2 19.4 26.4 Z" fill="url(#lg)" stroke="url(#le)" stroke-width="0.8" stroke-linejoin="round"/><circle cx="8" cy="10.4" r="3.9" fill="url(#lgg)" stroke="url(#le)" stroke-width="0.6"/>
+        <path d="M 40.4 18.4 C 42 14.4 46.4 14.6 47.2 18.2 C 47.1 13.4 49 12.2 49.7 15.8 L 49.4 12.2 L 54.6 12.6 C 55.8 17 56.8 21.5 56.4 24.6 C 56 27.6 52.8 28.4 49.5 27.8 C 46 27.4 43 27.2 40.6 26.4 Z" fill="url(#lg)" stroke="url(#le)" stroke-width="0.8" stroke-linejoin="round"/><circle cx="52" cy="10.4" r="3.9" fill="url(#lgg)" stroke="url(#le)" stroke-width="0.6"/>
+      </symbol>
+    </defs>
+  </svg>
+  <div class="vign"></div>
+  <svg class="grain" width="1920" height="1080"><filter id="nz"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(#nz)"/></svg>
+  <div id="fade" class="abs" style="inset:0;background:#000;opacity:1;pointer-events:none"></div>
+</div>
+<script src="timeline.js"></script>
+</body>
+</html>

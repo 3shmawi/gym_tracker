@@ -4,29 +4,47 @@ import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/theme/app_fonts.dart';
 import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/app_text_styles.dart';
+import 'package:gym_tracker/core/theme/brand_colors.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 
 /// Building blocks of the gym account screens (design boards 1–4, `extra.css`).
 /// Shared here so the UI style can change in `core/ui/` only.
 
-/// A gym's logo tile (design `.lg`): up to two letters on a blue or amber
-/// gradient. The server's logo image is not downloaded yet, so every gym
-/// shows its initials, like the design.
+/// A gym's logo tile (design `.lg`): the gym's logo when there is one,
+/// else up to two letters on the gym's own colour ([brandColor], when the
+/// owner chose one), or a blue or amber gradient. The letters are
+/// drawn under the logo, so they show while it loads and if it fails
+/// (docs/designs/gym_logo.md §6).
 class AppLogoTile extends StatelessWidget {
   const new({
     required this.initials,
     this.colorIndex = 0,
     this.size = 44,
+    this.image,
+    this.brandColor,
     super.key,
   }) : icon = null;
 
   /// The "solo" tile: an icon on a quiet chip (`.lg.s`).
   const new icon(this.icon, {this.size = 44, super.key})
     : initials = '',
-      colorIndex = 0;
+      colorIndex = 0,
+      image = null,
+      brandColor = null;
 
   final String initials;
   final IconData? icon;
+
+  /// The gym's logo, decoded at the tile's size (never larger).
+  final ImageProvider? image;
+
+  /// The colour the gym's owner chose (`gyms.brand_color`), already checked;
+  /// the letters' tile takes it through the same rule as the app's theme,
+  /// so the letters keep their contrast whatever it is.
+  final Color? brandColor;
+
+  /// How long the logo takes to fade in over the letters.
+  static const fadeIn = Duration(milliseconds: 200);
 
   /// Even: blue, odd: amber.
   final int colorIndex;
@@ -41,39 +59,88 @@ class AppLogoTile extends StatelessWidget {
     final radius = BorderRadius.circular(side * (size >= 90 ? 0.29 : 0.3));
     final solo = icon != null;
     final amber = colorIndex.isOdd;
-    return ExcludeSemantics(
-      child: SizedBox.square(
-        dimension: side,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: radius,
-            color: solo ? palette.fillSubtle : null,
-            gradient: solo
-                ? null
-                : LinearGradient(
-                    begin: AlignmentDirectional.topStart,
-                    end: AlignmentDirectional.bottomEnd,
-                    colors: amber
-                        ? const [AppColors.gymAmberStart, AppColors.gymAmberEnd]
-                        : const [AppColors.gymBlueStart, AppColors.gymBlueEnd],
-                  ),
-          ),
-          child: Center(
-            child: solo
-                ? Icon(icon, size: side * 0.5, color: palette.textPrimary)
-                : Text(
-                    initials,
-                    textDirection: TextDirection.ltr,
-                    style: TextStyle(
-                      fontFamily: AppFonts.latin,
-                      fontWeight: FontWeight.w800,
-                      fontSize: AppDimens.scaled(size >= 90 ? 34 : 17),
-                      color: Colors.white,
-                      height: 1,
-                    ),
-                  ),
-          ),
+    final seed = brandColor;
+    final brand = seed == null || solo
+        ? null
+        : BrandColors.fromSeed(seed, Theme.of(context).brightness);
+    final Widget letters = SizedBox.square(
+      dimension: side,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: radius,
+          color: solo ? palette.fillSubtle : brand?.brand,
+          gradient: solo || brand != null
+              ? null
+              : LinearGradient(
+                  begin: AlignmentDirectional.topStart,
+                  end: AlignmentDirectional.bottomEnd,
+                  colors: amber
+                      ? const [AppColors.gymAmberStart, AppColors.gymAmberEnd]
+                      : const [AppColors.gymBlueStart, AppColors.gymBlueEnd],
+                ),
         ),
+        child: Center(
+          child: solo
+              ? Icon(icon, size: side * 0.5, color: palette.textPrimary)
+              : Text(
+                  initials,
+                  textDirection: TextDirection.ltr,
+                  style: TextStyle(
+                    fontFamily: AppFonts.latin,
+                    fontWeight: FontWeight.w800,
+                    fontSize: AppDimens.scaled(size >= 90 ? 34 : 17),
+                    color: brand?.onBrand ?? Colors.white,
+                    height: 1,
+                  ),
+                ),
+        ),
+      ),
+    );
+    final logo = image;
+    if (logo == null) return ExcludeSemantics(child: letters);
+    final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1;
+    final px = (side * dpr).ceil();
+    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    return ExcludeSemantics(
+      child: Stack(
+        children: [
+          letters,
+          ClipRRect(
+            borderRadius: radius,
+            child: Image(
+              // Decoded at the tile's size only, whatever the file says.
+              image: ResizeImage(
+                logo,
+                width: px,
+                height: px,
+                policy: ResizeImagePolicy.fit,
+              ),
+              width: side,
+              height: side,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              frameBuilder: (context, child, frame, sync) => AnimatedOpacity(
+                opacity: frame == null ? 0 : 1,
+                duration: sync || still ? Duration.zero : fadeIn,
+                child: child,
+              ),
+              // The letters underneath stay: the owner's fallback.
+              errorBuilder: (_, _, _) => const SizedBox.shrink(),
+            ),
+          ),
+          // An edge, so a white logo still reads as a tile in light mode.
+          IgnorePointer(
+            child: SizedBox.square(
+              dimension: side,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: radius,
+                  border: Border.all(color: palette.keyFill),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
