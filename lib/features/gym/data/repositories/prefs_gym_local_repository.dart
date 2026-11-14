@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:gym_tracker/core/network/result.dart';
+import 'package:gym_tracker/features/gym/data/repositories/prefs_gym_history_cursor.dart';
 import 'package:gym_tracker/features/gym/domain/entities/membership.dart';
 import 'package:gym_tracker/features/gym/domain/entities/workspace.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/gym_local_repository.dart';
@@ -82,6 +83,10 @@ class PrefsGymLocalRepository implements GymLocalRepository {
   Future<Result<void>> clear() => guard(() async {
     await _prefs.remove(workspaceKey);
     await _prefs.remove(membershipsKey);
+    // The gym history restore's position: the next person starts fresh.
+    for (final key in PrefsGymHistoryCursor.keys) {
+      await _prefs.remove(key);
+    }
     await logos?.clear();
   }, retries: 0);
 }

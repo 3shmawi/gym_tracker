@@ -654,6 +654,7 @@
   "signOutNotBackedUp": "جزء من تمرينك لسه متحفظش في النسخة الاحتياطية. هيفضل على الموبايل ده.",
   "signOutRemove": "اخرج وامسح تمريني من الموبايل ده",
   "backupSwapPlan": "استخدم خطتي التانية بدل دي",
+  "gymHistoryRestored": "{count, plural, =1{رجع تمرينك} =2{رجعوا تمرينينك} few{رجعوا {count} تمارين ليك} other{رجع {count} تمرين ليك}}",
   "moveZoomWider": "بعّد الكاميرا: تشوف جسمك أكتر",
   "moveZoomCloser": "قرّب الكاميرا",
   "moveZoomLevel": "{level}×",

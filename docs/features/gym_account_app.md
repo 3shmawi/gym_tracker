@@ -159,6 +159,38 @@ empty. Failures: no answer in 20 s → `TimeoutFailure`, retryable widget error 
 `NetworkFailure`, refusal → `UnknownFailure`; the join then shows its normal
 "couldn't join" / offline sheet.
 
+## Getting your workouts back after a recovery code
+Spec: [`../designs/gym_history_restore.md`](../designs/gym_history_restore.md),
+behind the flag `gym_history_restore`.
+- **What comes back.** After the captain's **recovery code** (a new phone, or
+  the app deleted), the member's workouts on the server come back onto the
+  phone: their gym workouts, ended gyms' that kept history readable, and
+  solo workouts they once backed up. Only their own rows: the restore asks
+  by person, so a captain never gets a trainee's.
+- **When it runs.** From `GymSyncHost._run` (start, resume, back online, the
+  membership changing), 200 at a time, oldest first, through the backup's
+  page loop (`RestoreSessions`) with its own position
+  (`gym.history_restore`).
+  - It carries on after a closed app or a lost connection, and then looks
+    for newer rows once a day.
+  - It skips when signed out, with backup on (the backup restore does it),
+    with no phone database, or with the flag off.
+- **What the member sees.** One toast at the end, "Your 3 workouts are back"
+  (an ICU plural in English and Arabic), and none when nothing came back.
+  The home screen and progress read the history again as pages land.
+- **What can't come back:**
+  - workouts still in the phone's upload queue when the app was deleted
+    (they never reached the server): open the app online once before
+    deleting it;
+  - with a **join** code on a new phone, which makes a new person.
+- **Gym workouts are never offered as solo history.** `FindSoloData` skips
+  workouts that have a membership, so after a restore *Add my solo history
+  to my account* doesn't offer the gym workouts that just came back from
+  the server.
+- **Signing out** (and a session ending, or deleting the account) clears the
+  position, so the next person starts fresh. Today's rule is unchanged:
+  signing out keeps the workouts on the phone.
+
 ## Gym logos
 - **Following changes.** The memberships (name, colour, logo) are now asked
   for again on resume and when the network returns (`GymSyncHost._run` →
@@ -208,6 +240,7 @@ empty. Failures: no answer in 20 s → `TimeoutFailure`, retryable widget error 
 | `account_signed_out`, `account_deleted` | — |
 | `solo_import_started`, `solo_import_done` | — |
 | `solo_import_failed` | `reason` (same words as `gym_join_failed`) |
+| `gym_history_restored` | `added_bucket` (`1_10`/`11_50`/`51_200`/`200_plus`), `skipped` (bool); once per finished run that brought workouts back |
 
 Gym logos send no events; the logo's path or gym id is never in an event
 or an error report (a refused logo reports only the reason).

@@ -6,12 +6,14 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/config/env.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
+import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
 import 'package:gym_tracker/core/media/cloudinary_url.dart';
 import 'package:gym_tracker/core/media/media_cache.dart';
 import 'package:gym_tracker/core/network/connectivity.dart';
 import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/core/router/link_guard.dart';
 import 'package:gym_tracker/core/ui/app_toast.dart';
+import 'package:gym_tracker/features/backup/data/in_memory_backup.dart';
 import 'package:gym_tracker/features/backup/presentation/backup_sync.dart';
 import 'package:gym_tracker/features/gym/data/repositories/gym_workout_repository.dart';
 import 'package:gym_tracker/features/gym/domain/entities/gym_media.dart';
@@ -21,6 +23,7 @@ import 'package:gym_tracker/features/gym/domain/repositories/gym_media_repositor
 import 'package:gym_tracker/features/gym/domain/repositories/gym_plan_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/picture_catalog_repository.dart';
 import 'package:gym_tracker/features/gym/domain/repositories/session_outbox.dart';
+import 'package:gym_tracker/features/gym/domain/usecases/restore_gym_history.dart';
 import 'package:gym_tracker/features/gym/domain/usecases/solo_pictures.dart';
 import 'package:gym_tracker/features/gym/domain/usecases/sync_gym_media.dart';
 import 'package:gym_tracker/features/gym/domain/usecases/sync_gym_plan.dart';
@@ -166,6 +169,24 @@ final List<Override> gymProviderOverrides = [
   ),
 ];
 
+/// The gym history restore's position on this phone.
+final gymHistoryCursorProvider = Provider<GymHistoryCursorStore>(
+  (ref) => Dependencies.gymHistoryCursor,
+);
+
+/// How many workouts the last finished history restore brought back; the
+/// host shows the toast when it changes to a number above 0.
+final historyRestoredToastProvider =
+    NotifierProvider<_RestoredCount, ({int count, int seq})>(
+      _RestoredCount.new,
+    );
+
+class _RestoredCount extends Notifier<({int count, int seq})> {
+  @override
+  ({int count, int seq}) build() => (count: 0, seq: 0);
+  void show(int count) => state = (count: count, seq: state.seq + 1);
+}
+
 /// Counts "your captain updated your plan" moments; the host shows the toast.
 final planUpdatedToastProvider = NotifierProvider<_Counter, int>(_Counter.new);
 
@@ -199,6 +220,68 @@ class GymSync {
   );
 
   void dispose() => _retry?.cancel();
+
+  Future<void>? _restoring;
+
+  /// After a recovery code, brings the person's workouts back onto the
+  /// phone (docs/designs/gym_history_restore.md). Runs from every sync
+  /// trigger until finished, then looks for newer rows once a day. Never
+  /// throws; a call while one runs gets that run.
+  Future<void> restoreHistory() =>
+      _restoring ??= _restoreHistory().whenComplete(() => _restoring = null);
+
+  Future<void> _restoreHistory() async {
+    if (!_ref.read(accountSessionProvider).isSignedIn) return;
+    final sink = _ref.read(restoreSinkProvider);
+    // No phone database: nothing to restore into.
+    if (sink is EmptyRestoreSink) return;
+    // With backup on, the backup restore brings the same rows (and more).
+    if (_ref.read(backupSettingsProvider).enabled) return;
+    final bool on;
+    try {
+      on = await FeatureFlags.isEnabled(Flags.gymHistoryRestore);
+    } on Object {
+      return;
+    }
+    if (!on || !_ref.mounted) return;
+    final result = await RestoreGymHistory(
+      remote: _ref.read(backupRemoteProvider),
+      sink: sink,
+      store: _ref.read(gymHistoryCursorProvider),
+    )(onPage: _historyChanged);
+    if (!_ref.mounted) return;
+    switch (result) {
+      case null || Failed():
+        return;
+      case Success(:final value) when value.added > 0:
+        _historyChanged();
+        _ref.read(historyRestoredToastProvider.notifier).show(value.added);
+        unawaited(
+          Analytics.capture('gym_history_restored', {
+            'added_bucket': restoredBucket(value.added),
+            'skipped': value.skipped,
+          }),
+        );
+      case Success():
+        return;
+    }
+  }
+
+  /// The screens that show history read it again.
+  void _historyChanged() {
+    if (!_ref.mounted) return;
+    _ref
+      ..invalidate(nextWorkoutControllerProvider)
+      ..invalidate(progressOverviewProvider);
+  }
+
+  /// The number of workouts that came back, as a range (no exact count).
+  static String restoredBucket(int n) => switch (n) {
+    <= 10 => '1_10',
+    <= 50 => '11_50',
+    <= 200 => '51_200',
+    _ => '200_plus',
+  };
 
   /// Asks the server for the active gym's plan and applies it by the rules
   /// of the decision doc: the captain's plan replaces ours, the waiting
@@ -356,6 +439,7 @@ class _GymSyncHostState extends ConsumerState<GymSyncHost>
     unawaited(sync.syncPlan());
     unawaited(sync.syncMedia());
     unawaited(sync.uploadPending());
+    unawaited(sync.restoreHistory());
     unawaited(ref.read(backupSyncProvider).run());
   }
 
@@ -390,6 +474,13 @@ class _GymSyncHostState extends ConsumerState<GymSyncHost>
             ..invalidate(progressOverviewProvider);
         }
         if (next != null) _run();
+      })
+      ..listen(historyRestoredToastProvider, (previous, next) {
+        if (previous?.seq == next.seq || next.count <= 0) return;
+        AppToast.show(
+          context.l10n.gymHistoryRestored(next.count),
+          direction: Directionality.of(context),
+        );
       })
       ..listen(planUpdatedToastProvider, (previous, next) {
         if (previous == next) return;

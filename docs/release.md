@@ -493,6 +493,20 @@ Gym logos in the app (docs/designs/gym_logo.md) ship dark: the PostHog flag
   tiles show it.
 - **Then prod:** the same condition with `environment = prod`.
 
+## Gym history restore flag (`gym_history_restore`)
+After a recovery code, the member's workouts on the server come back onto
+the phone (docs/designs/gym_history_restore.md).
+- It is off by default.
+- It needs the fix in 3shmawi/gym_tracker#113 (the restore asks by person),
+  which ships with or before it.
+- No backend change.
+- **Turn on for staging:** PostHog → Feature flags → New, key
+  `gym_history_restore`, condition `app = gym_tracker` **and**
+  `environment = staging`, 100 %. Try it: log a workout in a gym, delete
+  the app, install it again, use a recovery code from the dashboard, then
+  check the toast and the history.
+- **Then prod:** the same condition with `environment = prod`.
+
 ## Move games flags (`move_games`, `move_games_debug`)
 Move games (docs/features/move_games.md) ship dark: every screen, the Today
 card and the menu row are behind the PostHog flag **`move_games`** (off).

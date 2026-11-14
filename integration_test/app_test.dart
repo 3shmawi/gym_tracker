@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
 import 'package:gym_tracker/core/feature_flags/feature_flags.dart';
@@ -12,6 +13,7 @@ import 'package:gym_tracker/core/theme/app_palette.dart';
 import 'package:gym_tracker/core/theme/brand_color_rule.dart';
 import 'package:gym_tracker/core/theme/brand_colors.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
+import 'package:gym_tracker/features/gym/presentation/gym_sync.dart';
 import 'package:gym_tracker/features/gym/presentation/join_page.dart';
 import 'package:gym_tracker/features/gym/presentation/joined_view.dart';
 import 'package:gym_tracker/features/gym/presentation/scanner_camera.dart';
@@ -731,6 +733,81 @@ void main() {
     expect(logoIn(find.byType(WorkspaceSheet)), findsOneWidget);
     expect(bucket.fetched, hasLength(1));
     await beat(tester, 2500);
+  });
+
+  testWidgets('a new phone: the recovery code brings the gym workouts back', (
+    tester,
+  ) async {
+    FeatureFlags.overrides[Flags.gymJoin] = true;
+    FeatureFlags.overrides[Flags.gymHistoryRestore] = true;
+    addTearDown(FeatureFlags.overrides.clear);
+    await freshInstall(tester);
+    await app.main();
+    useFakeRestAlarm();
+    final camera = FakeCamera();
+    scannerCameraOverride = camera.builder;
+    addTearDown(() => scannerCameraOverride = null);
+    Dependencies.gymRepository = FakeGymRepository(
+      redeemResult: Success(joinedGym()),
+      memberships: Success([member()]),
+    );
+    final account = FakeAccountRepository();
+    Dependencies.accountRepository = account;
+    // The server still has the three workouts logged on the old phone.
+    final server = FakeServer();
+    for (var i = 1; i <= 3; i++) {
+      final w = WorkoutSession(
+        // Logged in the gym on the old phone.
+        membershipId: member().id,
+        dayId: PlanTemplates.fiveDaySplit.days.first.id,
+        finishedAt: DateTime.now().toUtc().subtract(Duration(days: 9 - i * 2)),
+        sets: [
+          LoggedSet(
+            exerciseId:
+                PlanTemplates.fiveDaySplit.days.first.exercises.first.id,
+            weight: 40.0 + i * 2.5,
+            reps: 10,
+          ),
+        ],
+      );
+      server.sessions[w.clientId] = w;
+    }
+    Dependencies.backupRemote = server.phone();
+    await tester.pumpAndSettle();
+    await beat(tester, 1200);
+
+    // A fresh install: the welcome screen, then the captain's recovery QR.
+    await tester.tap(find.byKey(const Key('welcome_join')));
+    await tester.pumpAndSettle();
+    await beat(tester, 1500);
+    camera.scan('https://azmm.pages.dev/join/K7M2QX');
+    await tester.pumpAndSettle();
+    account.emit(anonymousSession);
+    await tester.pumpAndSettle();
+    expect(find.text('Welcome to Iron House'), findsOneWidget);
+    await beat(tester, 2000);
+
+    // Start training: the old workouts come back by themselves (the
+    // restore may finish on Welcome or on home, so wait on what it did,
+    // not on when the toast is on screen).
+    await tester.tap(find.byKey(const Key('joined_start')));
+    await tester.pumpAndSettle();
+    expect(find.byType(NextWorkoutPage), findsOneWidget);
+    Future<int> onPhone() async =>
+        switch (await Dependencies.workoutRepository.loadHistory()) {
+          Success(:final value) => value.length,
+          Failed() => -1,
+        };
+    for (var i = 0; i < 40 && await onPhone() < 3; i++) {
+      await tester.pump(const Duration(milliseconds: 250));
+    }
+    expect(await onPhone(), 3);
+    final shown = ProviderScope.containerOf(
+      tester.element(find.byType(NextWorkoutPage)),
+    ).read(historyRestoredToastProvider);
+    expect(shown.count, 3, reason: 'the toast said 3');
+    expect(shown.seq, 1, reason: 'once');
+    await beat(tester, 3000);
   });
 
   testWidgets('in a gym: the captain changes the plan and the app says so', (

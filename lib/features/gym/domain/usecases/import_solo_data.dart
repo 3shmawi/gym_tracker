@@ -47,6 +47,9 @@ class FindSoloData {
     final byId = <String, ImportSession>{};
     var skipped = 0;
     for (final s in sessions) {
+      // A gym workout is not solo history: it reached the server through
+      // the gym upload (or came back from it after a recovery code).
+      if (s.membershipId != null) continue;
       if (ImportSession.problemWith(s, now: _now()) != null) {
         skipped++;
         continue;

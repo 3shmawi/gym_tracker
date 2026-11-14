@@ -93,6 +93,11 @@ abstract final class Flags {
   /// links open the home screen.
   static const moveGames = 'move_games';
 
+  /// After a recovery code, the member's workouts on the server come back
+  /// onto the phone. Off: nothing is downloaded
+  /// (docs/designs/gym_history_restore.md §6).
+  static const gymHistoryRestore = 'gym_history_restore';
+
   /// A gym's members see its logo on the gym's tiles (profile, switcher,
   /// welcome). Off: no logo is downloaded and the tiles show the gym's
   /// letters (docs/designs/gym_logo.md §7).

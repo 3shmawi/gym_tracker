@@ -86,6 +86,8 @@ void main() {
       'solo_pictures_saved',
       // The gym's colour went on: light or dark, and whether it was adjusted.
       'gym_theme_applied',
+      // Workouts came back after a recovery code: a range, never the count.
+      'gym_history_restored',
     });
     // `via`: scan | link | code. `reason`: a word. `to`: solo | gym. Never a
     // code, a name, an id or an email. Sync: booleans and counts only.
@@ -100,6 +102,9 @@ void main() {
       // `mode`: light | dark. `adjusted`: a boolean. Never the colour.
       'mode',
       'adjusted',
+      // `added_bucket`: 1_10 | 11_50 | 51_200 | 200_plus. `skipped`: a bool.
+      'added_bucket',
+      'skipped',
     });
   });
 
