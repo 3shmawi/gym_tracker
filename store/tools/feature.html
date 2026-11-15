@@ -1,0 +1,26 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:Cairo;src:url(fonts/cairo-arabic-800.woff2);font-weight:800}
+@font-face{font-family:Cairo;src:url(fonts/cairo-arabic-700.woff2);font-weight:700}
+@font-face{font-family:Inter;src:url(fonts/inter-latin-800.woff2);font-weight:800}
+@font-face{font-family:Inter;src:url(fonts/inter-latin-700.woff2);font-weight:700}
+*{margin:0;box-sizing:border-box}
+#c{width:1024px;height:500px;position:relative;overflow:hidden;color:#F2F7F3;font-family:Inter,Cairo;
+ background:radial-gradient(70% 90% at 80% 10%,#16653A 0%,rgba(22,101,58,0) 70%),radial-gradient(60% 80% at 0% 100%,#0B3B24 0%,rgba(11,59,36,0) 70%),#0A1A12}
+#c[dir=rtl]{font-family:Cairo,Inter}
+.txt{position:absolute;top:0;bottom:0;width:470px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+.w{font-weight:800;font-size:92px;line-height:1}
+.w small{font:800 30px Inter;letter-spacing:.3em;color:#A9B8AF;margin-inline-start:16px}
+.tg{font-weight:800;font-size:40px;line-height:1.2}
+.tg b{color:#4ADE80}
+.s{font-weight:700;font-size:21px;color:#A9B8AF}
+.ph{position:absolute;width:210px;border-radius:34px;padding:8px;background:linear-gradient(145deg,#33403a,#0b0f0d 40%,#1d2621);box-shadow:0 30px 60px -10px #000,0 0 80px -20px rgba(34,197,94,.5)}
+.ph img{width:100%;display:block;border-radius:27px}
+</style></head><body><div id="c"></div><script>
+window.render=(o)=>{const c=document.getElementById('c');c.dir=o.dir;const rtl=o.dir==='rtl';
+const side=rtl?'right':'left', other=rtl?'left':'right';
+c.innerHTML=`<div class="txt" style="${side}:60px">
+<div class="w">${o.word}<small>AZM</small></div><div class="tg">${o.tag}</div><div class="s">${o.sub}</div></div>
+<div class="ph" style="${other}:250px;top:70px;transform:rotate(${rtl?6:-6}deg)"><img src="${o.a}"></div>
+<div class="ph" style="${other}:60px;top:40px;transform:rotate(${rtl?-4:4}deg)"><img src="${o.b}"></div>`;
+return Promise.all([...c.querySelectorAll('img')].map(i=>i.complete?1:new Promise(r=>i.onload=r)));};
+</script></body></html>

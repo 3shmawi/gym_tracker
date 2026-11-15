@@ -1,0 +1,59 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Cairo;src:url(fonts/cairo-arabic-700.woff2);font-weight:700}
+@font-face{font-family:Cairo;src:url(fonts/cairo-arabic-800.woff2);font-weight:800}
+@font-face{font-family:Inter;src:url(fonts/inter-latin-600.woff2);font-weight:600}
+@font-face{font-family:Inter;src:url(fonts/inter-latin-700.woff2);font-weight:700}
+@font-face{font-family:Inter;src:url(fonts/inter-latin-800.woff2);font-weight:800}
+*{box-sizing:border-box;margin:0}
+html,body{background:#07120C}
+#c{position:relative;overflow:hidden;color:#F2F7F3;font-family:Inter,Cairo,sans-serif;
+  background:radial-gradient(90% 45% at 85% 0%,#14532D 0%,rgba(20,83,45,0) 70%),radial-gradient(80% 40% at 0% 100%,#0B3B24 0%,rgba(11,59,36,0) 70%),#07120C}
+#c[dir=rtl]{font-family:Cairo,Inter,sans-serif}
+.glow{position:absolute;border-radius:50%;background:#22C55E;filter:blur(160px);opacity:.16}
+.head{position:absolute;left:0;right:0;text-align:center;padding:0 6%}
+.eb{display:inline-flex;align-items:center;gap:.4em;font-weight:800;color:#04210F;background:#22C55E;border-radius:999px;padding:.15em .8em}
+.t{font-weight:800;line-height:1.12;letter-spacing:-.01em}
+.t b{color:#4ADE80}
+.s{color:#A9B8AF;font-weight:700;line-height:1.4}
+.dev{position:absolute;left:50%;transform:translateX(-50%);background:linear-gradient(145deg,#33403a,#0b0f0d 35%,#1d2621);box-shadow:0 0 0 3px rgba(255,255,255,.08),0 80px 160px -40px #000,0 0 220px -40px rgba(34,197,94,.35)}
+.scr{position:relative;overflow:hidden;background:#0B110E}
+.sb{display:flex;justify-content:space-between;align-items:center;font-family:Inter;font-weight:700;color:#F2F7F3;direction:ltr}
+.scr img{display:block;width:100%}
+.isl{position:absolute;left:50%;transform:translateX(-50%);background:#000;border-radius:999px}
+</style></head>
+<body><div id="c"></div>
+<script>
+window.render = (o) => {
+  // o: {w,h,dir,eb,title,sub,img,kind:'phone'|'tablet',headTop,titleSize,subSize,devW,devTop}
+  const c = document.getElementById('c');
+  c.style.width = o.w + 'px'; c.style.height = o.h + 'px'; c.dir = o.dir;
+  const isPhone = o.kind === 'phone';
+  const r = o.devW / 1000;                         // scale unit
+  const bezel = (isPhone ? 30 : 34) * r;
+  const radius = (isPhone ? 150 : 90) * r;
+  const sbH = (isPhone ? 120 : 64) * r;
+  c.innerHTML = `
+   <div class="glow" style="width:${o.w*0.7}px;height:${o.w*0.7}px;left:${o.w*0.15}px;top:${o.devTop + o.w*0.2}px"></div>
+   <div class="head" style="top:${o.headTop}px">
+     <div class="eb" style="font-size:${o.subSize*0.82}px">${o.eb}</div>
+     <div class="t" style="font-size:${o.titleSize}px;margin-top:${o.titleSize*0.28}px">${o.title}</div>
+     <div class="s" style="font-size:${o.subSize}px;margin-top:${o.titleSize*0.22}px">${o.sub}</div>
+   </div>
+   <div class="dev" style="top:${o.devTop}px;width:${o.devW}px;padding:${bezel}px;border-radius:${radius + bezel}px">
+     <div class="scr" style="border-radius:${radius}px">
+       <div class="sb" style="height:${sbH}px;padding:0 ${isPhone ? 90*r : 40*r}px;font-size:${(isPhone?44:26)*r}px"><span>9:41</span><span>●●●● ▮</span></div>
+       ${isPhone ? `<div class="isl" style="top:${28*r}px;width:${300*r}px;height:${85*r}px"></div>` : ''}
+       <img src="${o.img}">
+     </div>
+   </div>`;
+  return new Promise(res => { const im = c.querySelector('img'); const go = () => {
+    const head = c.querySelector('.head'); const dev = c.querySelector('.dev');
+    const top = Math.max(o.devTop, head.offsetTop + head.offsetHeight + o.titleSize * 0.55);
+    const avail = o.h - top - o.titleSize * 0.45;
+    let k = Math.min(1, avail / dev.offsetHeight);
+    dev.style.top = top + 'px'; dev.style.transformOrigin = '50% 0'; dev.style.transform = `translateX(-50%) scale(${k})`;
+    res(); }; if (im.complete) go(); else im.onload = go; });
+};
+</script></body></html>
