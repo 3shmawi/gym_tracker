@@ -25,6 +25,18 @@ abstract final class AppUi {
   /// solid surfaces instead and skips the shader preload.
   static const lite = bool.fromEnvironment('GLASS_LITE');
 
+  static bool _forcedLite = false;
+
+  /// Plain surfaces for the whole run, decided at start: Google's test
+  /// devices (`TestDevice.isTestLab`), emulators that crash on the glass
+  /// shaders. Call before [initialize].
+  static void forceLite() => _forcedLite = true;
+
+  @visibleForTesting
+  static void debugResetLite() => _forcedLite = false;
+
+  static bool get _lite => lite || _forcedLite;
+
   /// Cards sit in scrolling lists, so they always use the lightweight
   /// shader. Premium (the iOS default) captures the screen behind every
   /// card; with a list of cards that used too much memory and iOS killed
@@ -47,7 +59,7 @@ abstract final class AppUi {
     thickness: glassThickness,
   );
 
-  static Future<void> initialize() => lite
+  static Future<void> initialize() => _lite
       ? LiquidGlassWidgets.initialize(warmUpMode: GlassWarmUpMode.never)
       : LiquidGlassWidgets.initialize();
 
@@ -63,7 +75,7 @@ abstract final class AppUi {
             : GlassQuality.standard,
       ),
     );
-    return lite ? testWrap(glass) : glass;
+    return _lite ? testWrap(glass) : glass;
   }
 
   /// Tests (and accessibility checks) run with solid surfaces: the most
@@ -76,7 +88,7 @@ abstract final class AppUi {
   /// Lite draws no shader, no blur, no blurred shadow and no screen
   /// capture, so it stays cheap even in software rendering.
   static bool isLite(BuildContext context) =>
-      lite || GlassAccessibilityData.of(context).reduceTransparency;
+      _lite || GlassAccessibilityData.of(context).reduceTransparency;
 }
 
 /// Glass needs something behind it: a soft gradient from the brand color.

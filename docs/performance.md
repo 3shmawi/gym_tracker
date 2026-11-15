@@ -204,6 +204,33 @@ TestFlight / Play internal builds made after 2026-11-04 (above), or
 `git checkout origin/main -- lib` and `--name before` for the old code).
 Add the numbers here with the phone model, OS version and build mode.
 
+## Google's test devices (2026-11-15)
+**What Sentry showed.** The crash at the top of Sentry, `GYM_TRACKER-8`
+(`SIGSEGV`, 244 events, "199 users"), came only from Google's test devices,
+and so did every `PostgrestException 504` issue. Every event shared one
+Android build, `QKR1.191246.002`: an x86_64 emulator with 2 cores and a
+288×448 screen, booted minutes earlier, in the US. Each one reports a
+real phone's name (`OnePlus8Pro`, …). These are Firebase Test Lab, which
+runs Google Play's pre-launch report on every release. Real phones sent
+2 errors that week, both "no network".
+
+**What the app does there.** It detects these devices the documented way:
+the system setting `firebase.test.lab` is `"true"` (Firebase Test Lab
+docs, read 2026-11-15; Play: "The pre-launch report is powered by
+Firebase Test Lab"). The check is `TestDevice.detect()` at start, through
+the `azm/device` channel in `MainActivity`. On those devices:
+- **No Sentry.** Sentry is not started, so there are no native crash
+  reports either: its auto-init provider is removed, so the native SDK
+  starts only with `SentryFlutter.init`.
+- **No analytics.**
+- **Plain surfaces (`AppUi.forceLite()`).** The emulators often have no
+  real GPU, and the glass shaders are the likely crash.
+
+**Outages are not bugs.** Anywhere, `Monitoring` (and Sentry's
+`beforeSend`) drops errors that mean no network, a timeout, or a server or
+gateway that answered 502/503/504 (`isOutage`): the app already shows
+offline or retries. A 500 or anything unexpected is still reported.
+
 ## Move games (pose model)
 Spec: `docs/designs/move_games.md` §9. Budget: the camera at ≈ 640×480, at
 most 15 frames/s sent to the model (frames arriving while it is busy are

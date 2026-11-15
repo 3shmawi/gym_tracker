@@ -47,6 +47,20 @@ sealed class AppFailure implements Exception {
   };
 }
 
+/// Not a bug: no network, a timeout, or a server (or the gateway in front of
+/// it) that is down for a moment (HTTP 502, 503, 504). Not sent to
+/// monitoring: the app shows offline or tries again.
+bool isOutage(Object error) {
+  if (error is PostgrestException) {
+    return const {'502', '503', '504'}.contains(error.code);
+  }
+  if (error is FunctionException) {
+    return const {502, 503, 504}.contains(error.status);
+  }
+  final failure = AppFailure.from(error);
+  return failure is NetworkFailure || failure is TimeoutFailure;
+}
+
 /// No internet or the host can't be reached.
 final class NetworkFailure extends AppFailure {
   const new([super.cause]);
