@@ -54,11 +54,22 @@ jobs:
           ls store/android/*/images/featureGraphic.png >/dev/null 2>&1 && images=false
           notes=true
           ls store/android/*/changelogs/default.txt >/dev/null 2>&1 && notes=false
+          # A track can hold several releases (completed, draft...): supply
+          # then needs the version code. Take the newest on the track.
+          code=$(fastlane run google_play_track_version_codes \
+              package_name:"com.mohager.azm" track:"$PLAY_TRACK" json_key:"$RUNNER_TEMP/play.json" \
+            | sed 's/\x1b\[[0-9;]*m//g' | grep -o 'Result: \[[0-9, ]*\]' | grep -o '[0-9]\+' | sort -n | tail -n 1)
+          if [ -z "$code" ]; then
+            echo "::error::No release on the $PLAY_TRACK track: upload a build first (release.yml)."
+            exit 1
+          fi
+          echo "Store listing for version code $code on $PLAY_TRACK"
           fastlane supply \
             --package_name "com.mohager.azm" \
             --json_key "$RUNNER_TEMP/play.json" \
             --metadata_path store/android \
             --track "$PLAY_TRACK" \
+            --version_code "$code" \
             --skip_upload_apk true --skip_upload_aab true \
             --skip_upload_changelogs "$notes" \
             --skip_upload_images "$images" \
@@ -78,6 +89,11 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          # App Review contact: Apple refuses review notes without all four.
+          REVIEW_FIRST_NAME: ${{ secrets.APP_REVIEW_FIRST_NAME }}
+          REVIEW_LAST_NAME: ${{ secrets.APP_REVIEW_LAST_NAME }}
+          REVIEW_EMAIL: ${{ secrets.APP_REVIEW_EMAIL }}
+          REVIEW_PHONE: ${{ secrets.APP_REVIEW_PHONE }}
         run: |
           printf '%s' "$ASC_KEY_P8_BASE64" | base64 --decode > "$RUNNER_TEMP/asc.p8"
           ./scripts/mask_secrets.sh "$RUNNER_TEMP/asc.p8"
@@ -86,9 +102,17 @@ jobs:
           shots=true
           ls store/ios/screenshots/*/*.png >/dev/null 2>&1 && shots=false
           # deliver asks "Do you want to setup deliver?" when it finds no
-          # Deliverfile and no ./metadata folder, and crashes in CI. An empty
-          # Deliverfile answers it; every option is passed below.
-          : > Deliverfile
+          # Deliverfile and no ./metadata folder, and crashes in CI, so one is
+          # always written. It carries the App Review contact (read from the
+          # environment, never written out); the notes come from
+          # store/ios/review_information/notes.txt.
+          if [ -n "$REVIEW_FIRST_NAME" ] && [ -n "$REVIEW_LAST_NAME" ] && [ -n "$REVIEW_EMAIL" ] && [ -n "$REVIEW_PHONE" ]; then
+            echo 'app_review_information(first_name: ENV["REVIEW_FIRST_NAME"], last_name: ENV["REVIEW_LAST_NAME"], email_address: ENV["REVIEW_EMAIL"], phone_number: ENV["REVIEW_PHONE"])' > Deliverfile
+          else
+            echo "::warning::APP_REVIEW_* secrets not set: review notes skipped, App Review Information stays as it is in App Store Connect."
+            : > Deliverfile
+            rm -rf store/ios/review_information
+          fi
           fastlane deliver \
             --api_key_path "$RUNNER_TEMP/asc.json" \
             --app_identifier "com.mohager.azm" \
