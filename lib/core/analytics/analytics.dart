@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:gym_tracker/core/config/app_flavor.dart';
 import 'package:gym_tracker/core/config/env.dart';
+import 'package:gym_tracker/core/device/test_device.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 
 /// Product analytics (PostHog). Every call is a no-op until
@@ -15,6 +16,11 @@ abstract final class Analytics {
   static bool get isEnabled => _enabled;
 
   static Future<void> init() async {
+    // Google's test devices tap through every release: not people.
+    if (TestDevice.isTestLab) {
+      debugPrint('Analytics off: a Google test device');
+      return;
+    }
     final problem = configProblem(Env.posthogApiKey, Env.posthogHost);
     if (problem != null) {
       // Says why the dashboard stays empty; never prints the key itself.

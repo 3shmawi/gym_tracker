@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/core/network/app_failure.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -78,6 +81,37 @@ void main() {
       );
       expect(failure, isA<ServerFailure>());
       expect(failure.isRetryable, isTrue);
+    });
+  });
+
+  group('isOutage: not a bug, not reported', () {
+    test('no network, a timeout, a gateway or server that is down', () {
+      for (final e in <Object>[
+        const SocketException('no route'),
+        TimeoutException('slow'),
+        AuthRetryableFetchException(message: 'Failed host lookup'),
+        const PostgrestException(message: '', code: '504'),
+        const PostgrestException(message: '', code: '503'),
+        const PostgrestException(message: '', code: '502'),
+        const FunctionException(status: 503),
+        const NetworkFailure(),
+      ]) {
+        expect(isOutage(e), isTrue, reason: '$e');
+      }
+    });
+
+    test('everything else is still reported', () {
+      for (final e in <Object>[
+        const PostgrestException(message: 'boom', code: '500'),
+        const PostgrestException(message: 'denied', code: '42501'),
+        const PostgrestException(message: 'plan_changed', code: 'P0001'),
+        const FunctionException(status: 500),
+        const FormatException('bad'),
+        StateError('bug'),
+        ArgumentError('bug'),
+      ]) {
+        expect(isOutage(e), isFalse, reason: '$e');
+      }
     });
   });
 }

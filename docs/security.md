@@ -655,6 +655,18 @@ restore brought their trainees' workouts into the captain's history
 - **Tests:** `restore_rows_test.dart` (the request carries the person) and
   `restore_gym_history_test.dart` (hostile stored positions).
 
+### Google's test devices and outages (2026-11-15)
+- **The channel.** `azm/device` (`MainActivity`) answers one question,
+  `isTestLab`, from the system setting `firebase.test.lab`. It reads no
+  other data and takes no input.
+- **On a Google test device:** no Sentry (and so no native crash reports),
+  no analytics, and plain surfaces.
+- **Outages.** `Monitoring.captureException` and Sentry's `beforeSend`
+  drop network, timeout and 502/503/504 errors (`isOutage`), so the errors
+  that reach Sentry are real bugs.
+- **Tests:** `test/core/device/test_device_test.dart` and
+  `test/core/network/app_failure_test.dart` ("isOutage").
+
 ## If a key leaks (log, chat, commit)
 1. **Revoke or rotate it first**, then clean up. Logs can be copied in the
    minutes they are public.

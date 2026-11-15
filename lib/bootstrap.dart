@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:gym_tracker/core/analytics/analytics.dart';
 import 'package:gym_tracker/core/backend/backend.dart';
+import 'package:gym_tracker/core/device/test_device.dart';
 import 'package:gym_tracker/core/di/dependencies.dart';
 import 'package:gym_tracker/core/monitoring/monitoring.dart';
 import 'package:gym_tracker/core/router/app_router.dart';
@@ -23,6 +24,10 @@ Future<void> bootstrap(Widget Function() builder) async {
   // Sentry's binding, not WidgetsFlutterBinding: with the plain one Sentry
   // switches off frame tracking (slow / frozen frames per screen).
   Monitoring.ensureBinding();
+  // Before monitoring and analytics: Google's test devices send neither,
+  // and draw plain surfaces (their emulators crash on the glass shaders).
+  await TestDevice.detect();
+  if (TestDevice.isTestLab) AppUi.forceLite();
   // Before the router exists: unsafe links are dropped first.
   LinkGuard.install();
   AppFonts.registerLicenses();
