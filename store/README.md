@@ -56,3 +56,9 @@ Console; fastlane does not upload it.
 
 ## Privacy forms
 What to answer in Google Play **Data safety** and Apple **App Privacy**: [`privacy_forms.md`](privacy_forms.md).
+
+## Play Console App content
+The answers for Play Console → App content (privacy policy, app access, ads,
+content rating, target audience, data safety, government, financial
+features, health, category and contact): [`play_app_content.md`](play_app_content.md).
+These forms have no API, so they are filled by hand.
