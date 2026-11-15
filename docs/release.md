@@ -245,12 +245,20 @@ deliver reads the version's App Review Information while uploading, and
 crashes with "No data" when a version has none (run 3, Nov 2026); with the
 notes, it creates it. Contact name, phone and email are filled in App Store
 Connect, not in the repo.
-The Android job commits the edit with `--changes_not_sent_for_review true`:
-sending listing changes for review needs the "Release apps to production"
-permission, which the Play service account doesn't have on purpose (least
-privilege), and Google refused the commit with "The caller does not have
-permission" (run 2). After the job, open Play Console → **Publishing
-overview** → **Send changes for review**.
+The Android job commits the edit with `--changes_not_sent_for_review true`
+(changes wait in Play Console → **Publishing overview** → **Send changes for
+review**), so the service account needs no production permission.
+**Play service account permissions** for Azm (and the staging app), checked
+2026-11-15 with Store listing:
+- Release apps to testing tracks; Manage testing tracks and edit tester lists
+  (release.yml / staging.yml uploads).
+- **Manage store presence** (texts, images).
+- **Edit and delete draft apps**: needed while the app is a draft (never
+  published to production). Without it the listing commit fails with "The
+  caller does not have permission" (runs 2 and 3); with it, it passed. It
+  can't publish anything. Re-check after the first production release
+  whether Store presence alone is enough, then drop it.
+- Not needed: Admin, Release to production, financial data.
 
 ## Store requirements (check each year)
 | Store | Requirement | Where it's handled |
