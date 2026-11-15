@@ -56,7 +56,8 @@ jobs:
             --skip_upload_apk true --skip_upload_aab true \
             --skip_upload_changelogs true \
             --skip_upload_images "$images" \
-            --skip_upload_screenshots "$shots"
+            --skip_upload_screenshots "$shots" \
+            --changes_not_sent_for_review true
 
   ios:
     needs: check

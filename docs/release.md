@@ -240,6 +240,12 @@ one (and without a `./metadata` folder) deliver asks "Do you want to setup
 deliver?" and crashes in CI (runs 1 and 2, Nov 2026). It also passes
 `--ignore_language_directory_validation`, because `store/ios/` holds the
 `screenshots/` folder next to the locale folders.
+The Android job commits the edit with `--changes_not_sent_for_review true`:
+sending listing changes for review needs the "Release apps to production"
+permission, which the Play service account doesn't have on purpose (least
+privilege), and Google refused the commit with "The caller does not have
+permission" (run 2). After the job, open Play Console → **Publishing
+overview** → **Send changes for review**.
 
 ## Store requirements (check each year)
 | Store | Requirement | Where it's handled |
