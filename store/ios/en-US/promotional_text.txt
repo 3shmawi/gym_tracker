@@ -1,1 +1,1 @@
-Gym workout tracker: next session, last weight, quick logging
+Your next workout is ready with last time's weights and what to lift today. Log every set in one tap, rest with a timer that rings, and watch your lifts go up.

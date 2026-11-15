@@ -1,7 +1,44 @@
-Azm — Gym workout tracker: next session, last weight, quick logging
+Azm remembers your training so you don't have to. Open the app at the gym and your next workout is waiting, with what you lifted last time and what to lift today.
 
-• Feature one: what it does for you
-• Feature two: what it does for you
-• Works in Arabic and English, light and dark mode
+YOUR NEXT WORKOUT, READY
+• The day of your plan that comes next ("Day 2 of 5"), with every exercise
+• Last time's sets next to each exercise
+• A weight for today: ↑ increase, → keep, ↓ decrease, or first time
+• Skipped a day? The same workout waits for you; the plan moves on only when you finish
 
-Privacy first: we only collect what the app needs. Privacy policy: https://azmm.pages.dev/privacy
+LOG IN ONE TAP
+• Weight and reps are already filled in: tap Log and keep training
+• Rest timer with +15 s and skip; it rings even when the phone is locked
+• Supersets: A then B with no rest between
+• Tap a set to edit or delete it; everything is saved after every tap
+
+SEE YOUR PROGRESS
+• A summary when you finish: volume, sets and new records
+• Your level grows from beginner to intermediate to pro
+• Progress for every exercise in your plan
+
+PLANS THAT FIT YOU
+• Start with a ready plan: full body 3 days, upper/lower 4 days or a 5-day split
+• Or build your own: days, exercises, sets, reps, rest and weight steps
+
+LEARN THE RIGHT FORM
+• An exercise library with a drawing and steps for each exercise, in Arabic and English
+• How-to videos that keep playing in a small window while you train
+
+MOVE GAMES
+• Your front camera counts your push-ups, and every good rep builds the Stack tower
+• Counting happens on your phone: no recording, no photos
+• No camera? Use the manual counter
+
+TRAIN WITH YOUR GYM
+• Join your gym by scanning your captain's QR code or typing the code
+• Your captain can set your plan and follow your progress from the Azm dashboard
+• The app takes your gym's colours and logo
+
+YOUR HISTORY IS SAFE
+• Your whole history stays on your phone, and works offline
+• Turn on backup to get everything back on a new phone
+
+Arabic and English, light and dark mode, and big-text friendly.
+
+Privacy first: we only collect what the app needs, and the camera never leaves your phone. Privacy policy: https://azmm.pages.dev/privacy

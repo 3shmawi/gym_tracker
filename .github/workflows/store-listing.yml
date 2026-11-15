@@ -47,13 +47,15 @@ jobs:
           ./scripts/mask_secrets.sh "$RUNNER_TEMP/play.json"
           shots=true
           ls store/android/*/images/phoneScreenshots/*.png >/dev/null 2>&1 && shots=false
+          images=true
+          ls store/android/*/images/featureGraphic.png >/dev/null 2>&1 && images=false
           fastlane supply \
             --package_name "com.mohager.azm" \
             --json_key "$RUNNER_TEMP/play.json" \
             --metadata_path store/android \
             --skip_upload_apk true --skip_upload_aab true \
             --skip_upload_changelogs true \
-            --skip_upload_images true \
+            --skip_upload_images "$images" \
             --skip_upload_screenshots "$shots"
 
   ios:
