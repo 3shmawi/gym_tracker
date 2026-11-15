@@ -60,5 +60,8 @@ What to answer in Google Play **Data safety** and Apple **App Privacy**: [`priva
 ## Play Console App content
 The answers for Play Console → App content (privacy policy, app access, ads,
 content rating, target audience, data safety, government, financial
-features, health, category and contact): [`play_app_content.md`](play_app_content.md).
-These forms have no API, so they are filled by hand.
+features, health, category and contact) live in
+[`play_app_content.json`](play_app_content.json). These forms have no API:
+open `store/tools/app_content.html` (copy button per answer, ✓ per step).
+From disk the browser asks for the JSON file; or serve the folder
+(`python3 -m http.server -d store`, then `/tools/app_content.html`).

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Play App content</title>
+<style>
+:root{--bg:#F4F7F5;--card:#FFFFFF;--line:#D9E2DC;--t1:#0E1712;--t2:#56645C;--accent:#15803D;--accent-bg:#DCFCE7;--warn:#B45309;--warn-bg:#FEF3C7;--box:#F1F5F2}
+@media (prefers-color-scheme:dark){:root{--bg:#0B0F0D;--card:#121915;--line:#1F2A24;--t1:#E8EFEA;--t2:#9AA8A0;--accent:#4ADE80;--accent-bg:#14532D;--warn:#FBBF24;--warn-bg:#422006;--box:#0E1411}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--t1);font:15px/1.6 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;padding:24px 16px 80px}
+main{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+h1{margin:0;font-size:24px}
+.muted{color:var(--t2);font-size:13px}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;min-width:200px;flex:1}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+.card h2{margin:0;font-size:18px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.card h2 small{font-weight:400;color:var(--t2);font-size:13px}
+.card.done h2::after{content:"✓";color:var(--accent);margin-inline-start:auto}
+.item{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0}
+.item input{width:20px;height:20px;margin-top:3px;accent-color:var(--accent)}
+.q{font-weight:600}
+.q small{display:block;font-weight:400;color:var(--t2);font-size:12px}
+.row{display:flex;gap:8px;align-items:stretch;margin-top:6px}
+.ans{flex:1;background:var(--box);border:1px solid var(--line);border-radius:10px;padding:8px 12px;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}
+.ans.todo{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
+.tag{font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px;margin-inline-start:6px;vertical-align:middle}
+.tag.choose{background:var(--accent-bg);color:var(--accent)}
+.tag.paste{background:var(--box);color:var(--t2);border:1px solid var(--line)}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--t1);padding:0 14px;min-height:40px;min-width:72px}
+button.ok{background:var(--accent);color:#04210F;border-color:var(--accent)}
+ul.notes{margin:10px 0 0;padding-inline-start:20px;color:var(--t2);font-size:13px}
+#load{display:none;text-align:center;padding:32px;border:2px dashed var(--line);border-radius:16px}
+#load.drag{border-color:var(--accent)}
+.warnbox{background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:10px 14px;display:none}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div><h1 id="title">Play Console · محتوى التطبيق</h1><div class="muted" id="meta"></div></div>
+    <div class="bar" title="done"><i id="prog"></i></div>
+    <button id="reset" type="button">ابدأ من الأول</button>
+  </header>
+  <div class="warnbox" id="todos"></div>
+  <div id="load">
+    <p>المتصفح منع فتح الملف تلقائي. اختار <code>store/play_app_content.json</code> أو اسحبه هنا.</p>
+    <input type="file" id="pick" accept=".json,application/json">
+  </div>
+  <div id="list"></div>
+</main>
+<script>
+// Data: ../play_app_content.json (one source of truth). Opened from disk,
+// browsers block reading it, so the page also takes the file by picker/drop.
+const $ = (s) => document.querySelector(s);
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+const isTodo = (s) => /TODO|<[A-Z_]+>/.test(s);
+let data = null;
+let key = '';
+
+function render() {
+  key = 'appcontent:' + data.app;
+  const done = store.get(key) || {};
+  $('#title').textContent = `${data.app} · محتوى التطبيق في Play Console`;
+  $('#meta').textContent = `آخر مراجعة ${data.checked} · كل إجابة: اختار (choose) أو انسخ والصق (paste)`;
+  const list = $('#list');
+  list.innerHTML = '';
+  let todos = 0;
+  for (const s of data.sections) {
+    const card = document.createElement('section');
+    card.className = 'card';
+    card.innerHTML = `<h2>${s.title_ar}<small>${s.title}</small></h2>`;
+    s.items.forEach((it, i) => {
+      const id = `${s.id}.${i}`;
+      const todo = isTodo(it.a);
+      if (todo) todos++;
+      const row = document.createElement('div');
+      row.className = 'item';
+      row.innerHTML = `
+        <input type="checkbox" aria-label="done">
+        <div>
+          <div class="q">${it.q_ar || it.q}<span class="tag ${it.choice ? 'choose' : 'paste'}">${it.choice ? 'اختار' : 'انسخ'}</span><small dir="ltr">${it.q}</small></div>
+          <div class="row"><div class="ans${todo ? ' todo' : ''}" dir="auto"></div><button type="button">نسخ</button></div>
+        </div>`;
+      row.querySelector('.ans').textContent = it.a;
+      const box = row.querySelector('input');
+      box.checked = !!done[id];
+      box.onchange = () => { done[id] = box.checked; store.set(key, done); progress(); };
+      const btn = row.querySelector('button');
+      btn.onclick = async () => {
+        try { await navigator.clipboard.writeText(it.a); }
+        catch { const t = document.createElement('textarea'); t.value = it.a; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+        btn.textContent = 'اتنسخ ✓'; btn.classList.add('ok');
+        setTimeout(() => { btn.textContent = 'نسخ'; btn.classList.remove('ok'); }, 1500);
+      };
+      card.appendChild(row);
+    });
+    if (s.notes && s.notes.length) {
+      const ul = document.createElement('ul');
+      ul.className = 'notes';
+      for (const n of s.notes) { const li = document.createElement('li'); li.dir = 'auto'; li.textContent = n; ul.appendChild(li); }
+      card.appendChild(ul);
+    }
+    list.appendChild(card);
+  }
+  const w = $('#todos');
+  w.style.display = todos ? 'block' : 'none';
+  w.textContent = todos ? `فيه ${todos} إجابة لسه محتاجة تكمّلها (باللون الأصفر): TODO يتملا في play_app_content.json، و<...> تبدّله وانت بتلصق.` : '';
+  progress();
+}
+
+function progress() {
+  const done = store.get(key) || {};
+  let all = 0, ok = 0;
+  document.querySelectorAll('.card').forEach((card, si) => {
+    const s = data.sections[si];
+    const n = s.items.filter((_, i) => done[`${s.id}.${i}`]).length;
+    all += s.items.length; ok += n;
+    card.classList.toggle('done', n === s.items.length);
+  });
+  $('#prog').style.width = (all ? (100 * ok / all) : 0) + '%';
+}
+
+$('#reset').onclick = () => { store.set(key, {}); render(); };
+function load(text) { data = JSON.parse(text); $('#load').style.display = 'none'; render(); }
+$('#pick').onchange = (e) => e.target.files[0]?.text().then(load);
+const drop = $('#load');
+drop.ondragover = (e) => { e.preventDefault(); drop.classList.add('drag'); };
+drop.ondragleave = () => drop.classList.remove('drag');
+drop.ondrop = (e) => { e.preventDefault(); e.dataTransfer.files[0]?.text().then(load); };
+fetch('../play_app_content.json').then((r) => r.ok ? r.text() : Promise.reject()).then(load)
+  .catch(() => { $('#load').style.display = 'block'; });
+</script>
+</body>
+</html>
