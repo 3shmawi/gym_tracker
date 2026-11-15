@@ -240,6 +240,16 @@ class _CameraRoundPageState extends ConsumerState<CameraRoundPage>
     ),
   );
 
+  /// A new round on this screen. The round's controller is kept per launch:
+  /// opening the same route again kept the finished one (the results came
+  /// back and nothing started), so it is thrown away and started afresh.
+  void _playAgain() {
+    ref.invalidate(cameraRoundControllerProvider(widget.launch));
+    unawaited(
+      _c.start(language: Localizations.maybeLocaleOf(context)?.languageCode),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(cameraRoundControllerProvider(widget.launch));
@@ -258,10 +268,7 @@ class _CameraRoundPageState extends ConsumerState<CameraRoundPage>
       onEnd: _c.end,
       onManual: _manual,
       onSave: () => unawaited(_c.save()),
-      onPlayAgain: () => context.pushReplacement(
-        AppRoutes.movePlay(exercise.id),
-        extra: widget.launch,
-      ),
+      onPlayAgain: _playAgain,
       onDone: () => _leave(context),
       onOpenSettings: () => unawaited(AppSettings.openAppSettings()),
       onOpenProgress: () => unawaited(
@@ -325,9 +332,9 @@ class _ManualCounterPageState extends ConsumerState<ManualCounterPage>
       onResume: _c.resume,
       onEnd: _c.end,
       onSave: () => unawaited(_c.save()),
-      onPlayAgain: () => context.pushReplacement(
-        AppRoutes.moveCount(exercise.id, round: widget.launch.kind.id),
-      ),
+      // A new round here (the same launch would keep the finished one).
+      onPlayAgain: () =>
+          ref.invalidate(manualRoundControllerProvider(widget.launch)),
       onDone: () => _leave(context),
       onOpenProgress: () => unawaited(
         context.push<void>(

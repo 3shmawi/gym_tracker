@@ -39,13 +39,17 @@ class ManualRoundController extends Notifier<ManualRoundState>
   DateTime get _now => ref.read(moveClockProvider)();
 
   @override
-  ManualRoundState build() => ManualRoundState(
-    round: RoundState(
-      exercise: launch.exercise,
-      kind: launch.kind,
-      mode: RoundMode.manual,
-    ),
-  );
+  ManualRoundState build() {
+    // "Play again" runs build() again on this instance: start over.
+    _finishing = false;
+    return ManualRoundState(
+      round: RoundState(
+        exercise: launch.exercise,
+        kind: launch.kind,
+        mode: RoundMode.manual,
+      ),
+    );
+  }
 
   void start() {
     if (state.round.phase != RoundPhase.ready) return;
