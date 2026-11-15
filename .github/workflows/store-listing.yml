@@ -56,7 +56,8 @@ jobs:
             --skip_upload_apk true --skip_upload_aab true \
             --skip_upload_changelogs true \
             --skip_upload_images "$images" \
-            --skip_upload_screenshots "$shots"
+            --skip_upload_screenshots "$shots" \
+            --changes_not_sent_for_review true
 
   ios:
     needs: check
@@ -78,11 +79,16 @@ jobs:
             '{key_id: $id, issuer_id: $issuer, key: $key, in_house: false}' > "$RUNNER_TEMP/asc.json"
           shots=true
           ls store/ios/screenshots/*/*.png >/dev/null 2>&1 && shots=false
+          # deliver asks "Do you want to setup deliver?" when it finds no
+          # Deliverfile and no ./metadata folder, and crashes in CI. An empty
+          # Deliverfile answers it; every option is passed below.
+          : > Deliverfile
           fastlane deliver \
             --api_key_path "$RUNNER_TEMP/asc.json" \
             --app_identifier "com.mohager.azm" \
             --metadata_path store/ios \
             --screenshots_path store/ios/screenshots \
+            --ignore_language_directory_validation true \
             --skip_binary_upload true \
             --skip_screenshots "$shots" \
             --overwrite_screenshots true \
