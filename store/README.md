@@ -13,6 +13,7 @@ Store uses `store/ios/<locale>/` — fastlane `supply` / `deliver` layouts.
 | ios `keywords.txt` | 100 chars, comma-separated |
 | ios `promotional_text.txt` | 170 chars |
 | ios `description.txt` | 4000 chars |
+| ios `review_information/notes.txt` | App Review notes (how to try the app); required, see docs/release.md |
 
 `test/store/listing_test.dart` fails if a limit is exceeded or a placeholder
 ("Feature one", "keyword1", "اكتب هنا") is still there when you run the

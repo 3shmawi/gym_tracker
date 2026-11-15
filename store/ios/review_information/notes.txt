@@ -1,0 +1,7 @@
+No account is needed. On the first screen tap "Train on my own", then "Pick a ready plan", pick any plan and tap "Start workout" to log sets.
+
+Joining a gym is optional and needs an invite code that a gym's captain creates in the Azm web dashboard.
+
+Move games use the front camera only to count push-ups: the pose model runs on the phone, and no video or photo is recorded or sent. Without the camera, the manual counter works the same.
+
+Backup is optional; it signs in with a code sent by email.
