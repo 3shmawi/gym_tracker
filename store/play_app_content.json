@@ -8,7 +8,11 @@
       "title": "Privacy policy",
       "title_ar": "إعداد سياسة الخصوصية",
       "items": [
-        { "q": "Privacy policy URL", "q_ar": "عنوان URL لسياسة الخصوصية", "a": "https://azmm.pages.dev/privacy" }
+        {
+          "q": "Privacy policy URL",
+          "q_ar": "عنوان URL لسياسة الخصوصية",
+          "a": "https://azmm.pages.dev/privacy"
+        }
       ]
     },
     {
@@ -16,9 +20,22 @@
       "title": "App access",
       "title_ar": "تفاصيل تسجيل الدخول",
       "items": [
-        { "q": "Access", "q_ar": "إمكانية الوصول", "a": "All or some functionality in my app is restricted", "choice": true },
-        { "q": "Instruction name", "q_ar": "اسم التعليمات", "a": "Join a gym (optional)" },
-        { "q": "Any other information", "q_ar": "أي معلومات أخرى", "a": "No account is needed: on the first screen tap \"Train on my own\", then \"Pick a ready plan\". To try gym features, tap \"I have a code. Type it here\" and enter this invite code: <CODE>" }
+        {
+          "q": "Access",
+          "q_ar": "إمكانية الوصول",
+          "a": "All or some functionality in my app is restricted",
+          "choice": true
+        },
+        {
+          "q": "Instruction name",
+          "q_ar": "اسم التعليمات",
+          "a": "Join a gym (optional)"
+        },
+        {
+          "q": "Any other information",
+          "q_ar": "أي معلومات أخرى",
+          "a": "No account is needed: on the first screen tap \"Train on my own\", then \"Pick a ready plan\". To try gym features, tap \"I have a code. Type it here\" and enter this invite code: <CODE>"
+        }
       ],
       "notes": [
         "Replace <CODE>: create a test gym in the captain dashboard (https://azmm-dash.pages.dev), add a trainee and copy the code. A code works once: make a new one for each review and keep the test gym.",
@@ -30,56 +47,187 @@
       "title": "Ads",
       "title_ar": "الإعلانات",
       "items": [
-        { "q": "Does your app contain ads?", "q_ar": "هل يحتوي تطبيقك على إعلانات؟", "a": "No, my app does not contain ads", "choice": true },
-        { "q": "Advertising ID", "q_ar": "المعرّف الإعلاني", "a": "No", "choice": true }
+        {
+          "q": "Does your app contain ads?",
+          "q_ar": "هل يحتوي تطبيقك على إعلانات؟",
+          "a": "No, my app does not contain ads",
+          "choice": true
+        },
+        {
+          "q": "Advertising ID",
+          "q_ar": "المعرّف الإعلاني",
+          "a": "No",
+          "choice": true
+        }
       ],
-      "notes": ["No ad SDK in the app. Check once that the merged manifest has no android.permission.AD_ID."]
+      "notes": [
+        "No ad SDK in the app. Check once that the merged manifest has no android.permission.AD_ID."
+      ]
     },
     {
       "id": "content_rating",
       "title": "Content rating",
       "title_ar": "تقييم المحتوى",
       "items": [
-        { "q": "Email", "q_ar": "البريد الإلكتروني", "a": "mohager.dev@gmail.com" },
-        { "q": "Category", "q_ar": "الفئة", "a": "All other app types", "choice": true },
-        { "q": "Violence, fear, sexuality, gambling, language, controlled substances, crude humour", "q_ar": "العنف والخوف والجنس والقمار واللغة والمواد الخاضعة للرقابة والفكاهة البذيئة", "a": "No (every question)", "choice": true },
-        { "q": "Users can interact or exchange content", "q_ar": "يمكن للمستخدمين التفاعل أو تبادل المحتوى", "a": "No", "choice": true },
-        { "q": "Shares the user's location", "q_ar": "يشارك الموقع الجغرافي للمستخدم", "a": "No", "choice": true },
-        { "q": "Digital purchases", "q_ar": "عمليات شراء رقمية", "a": "No", "choice": true },
-        { "q": "Unrestricted internet access", "q_ar": "وصول غير مقيد إلى الإنترنت", "a": "No", "choice": true }
+        {
+          "q": "Email",
+          "q_ar": "البريد الإلكتروني",
+          "a": "mohager.dev@gmail.com"
+        },
+        {
+          "q": "Category",
+          "q_ar": "الفئة",
+          "a": "All other app types",
+          "choice": true
+        },
+        {
+          "q": "Violence, fear, sexuality, gambling, language, controlled substances, crude humour",
+          "q_ar": "العنف والخوف والجنس والقمار واللغة والمواد الخاضعة للرقابة والفكاهة البذيئة",
+          "a": "No (every question)",
+          "choice": true
+        },
+        {
+          "q": "Users can interact or exchange content",
+          "q_ar": "يمكن للمستخدمين التفاعل أو تبادل المحتوى",
+          "a": "No",
+          "choice": true
+        },
+        {
+          "q": "Shares the user's location",
+          "q_ar": "يشارك الموقع الجغرافي للمستخدم",
+          "a": "No",
+          "choice": true
+        },
+        {
+          "q": "Digital purchases",
+          "q_ar": "عمليات شراء رقمية",
+          "a": "No",
+          "choice": true
+        },
+        {
+          "q": "Unrestricted internet access",
+          "q_ar": "وصول غير مقيد إلى الإنترنت",
+          "a": "No",
+          "choice": true
+        }
       ],
-      "notes": ["No chat or posts: a captain sees only their own gym's members' training. How-to videos are YouTube videos the app or the gym picked, not a browser. Expected rating: Everyone / PEGI 3 / IARC 3+."]
+      "notes": [
+        "No chat or posts: a captain sees only their own gym's members' training. How-to videos are YouTube videos the app or the gym picked, not a browser. Expected rating: Everyone / PEGI 3 / IARC 3+."
+      ]
     },
     {
       "id": "target_audience",
       "title": "Target audience",
       "title_ar": "الجمهور المستهدف",
       "items": [
-        { "q": "Age groups", "q_ar": "الفئات العمرية", "a": "18 and over", "choice": true },
-        { "q": "Appeals to children", "q_ar": "جاذب للأطفال", "a": "No", "choice": true }
+        {
+          "q": "Age groups",
+          "q_ar": "الفئات العمرية",
+          "a": "18 and over",
+          "choice": true
+        },
+        {
+          "q": "Appeals to children",
+          "q_ar": "جاذب للأطفال",
+          "a": "No",
+          "choice": true
+        }
       ],
-      "notes": ["Owner's choice: 13–17 can be added later; under 13 brings Google's Families policy."]
+      "notes": [
+        "Owner's choice: 13–17 can be added later; under 13 brings Google's Families policy."
+      ]
     },
     {
       "id": "data_safety",
       "title": "Data safety",
       "title_ar": "أمان البيانات",
       "items": [
-        { "q": "Does your app collect or share any of the required user data types?", "q_ar": "هل يجمع تطبيقك أو يشارك أيًا من أنواع بيانات المستخدمين المطلوبة؟", "a": "Yes", "choice": true },
-        { "q": "Is all of the user data collected by your app encrypted in transit?", "q_ar": "هل يتم تشفير جميع بيانات المستخدمين أثناء نقلها؟", "a": "Yes", "choice": true },
-        { "q": "Do you provide a way for users to request that their data is deleted?", "q_ar": "هل توفّر طريقة لطلب حذف البيانات؟", "a": "Yes", "choice": true },
-        { "q": "Delete account URL", "q_ar": "رابط حذف الحساب", "a": "https://azmm.pages.dev/delete-account" },
-        { "q": "Personal info → Name", "q_ar": "المعلومات الشخصية ← الاسم", "a": "Collected · not shared · not ephemeral · optional · App functionality, Account management", "choice": true },
-        { "q": "Personal info → Email address", "q_ar": "المعلومات الشخصية ← عنوان البريد الإلكتروني", "a": "Collected · not shared · not ephemeral · optional · Account management", "choice": true },
-        { "q": "Personal info → User IDs", "q_ar": "المعلومات الشخصية ← أرقام تعريف المستخدمين", "a": "Collected · not shared · not ephemeral · optional · App functionality, Account management", "choice": true },
-        { "q": "Health and fitness → Fitness info", "q_ar": "الصحة واللياقة البدنية ← معلومات اللياقة البدنية", "a": "Collected · not shared · not ephemeral · optional · App functionality", "choice": true },
-        { "q": "App activity → App interactions", "q_ar": "النشاط في التطبيق ← التفاعلات مع التطبيق", "a": "Collected · not shared · not ephemeral · required · Analytics", "choice": true },
-        { "q": "App activity → In-app search history", "q_ar": "النشاط في التطبيق ← سجلّ البحث داخل التطبيق", "a": "Collected · not shared · ephemeral · optional · App functionality", "choice": true },
-        { "q": "App info and performance → Crash logs", "q_ar": "معلومات التطبيق وأداؤه ← سجلّات الأعطال", "a": "Collected · not shared · not ephemeral · required · Analytics", "choice": true },
-        { "q": "App info and performance → Diagnostics", "q_ar": "معلومات التطبيق وأداؤه ← بيانات التشخيص", "a": "Collected · not shared · not ephemeral · required · Analytics", "choice": true },
-        { "q": "Device or other IDs → Device or other IDs", "q_ar": "الجهاز أو معرّفات أخرى ← معرّفات الجهاز أو غيرها", "a": "Collected · not shared · not ephemeral · required · Analytics, Fraud prevention, security, and compliance", "choice": true }
+        {
+          "q": "Does your app collect or share any of the required user data types?",
+          "q_ar": "هل يجمع تطبيقك أو يشارك أيًا من أنواع بيانات المستخدمين المطلوبة؟",
+          "a": "Yes",
+          "choice": true
+        },
+        {
+          "q": "Is all of the user data collected by your app encrypted in transit?",
+          "q_ar": "هل يتم تشفير جميع بيانات المستخدمين أثناء نقلها؟",
+          "a": "Yes",
+          "choice": true
+        },
+        {
+          "q": "Which methods of account creation does your app support?",
+          "q_ar": "ما هي طريقة إنشاء الحساب التي يوفّرها تطبيقك؟",
+          "a": "Username and other authentication + Other",
+          "choice": true
+        },
+        {
+          "q": "Do you provide a way for users to request that their data is deleted?",
+          "q_ar": "هل توفّر طريقة لطلب حذف البيانات؟",
+          "a": "Yes",
+          "choice": true
+        },
+        {
+          "q": "Delete account URL",
+          "q_ar": "رابط حذف الحساب",
+          "a": "https://azmm.pages.dev/delete-account"
+        },
+        {
+          "q": "Personal info → Name",
+          "q_ar": "المعلومات الشخصية ← الاسم",
+          "a": "Collected · not shared · not ephemeral · optional · App functionality, Account management",
+          "choice": true
+        },
+        {
+          "q": "Personal info → Email address",
+          "q_ar": "المعلومات الشخصية ← عنوان البريد الإلكتروني",
+          "a": "Collected · not shared · not ephemeral · optional · Account management",
+          "choice": true
+        },
+        {
+          "q": "Personal info → User IDs",
+          "q_ar": "المعلومات الشخصية ← أرقام تعريف المستخدمين",
+          "a": "Collected · not shared · not ephemeral · optional · App functionality, Account management",
+          "choice": true
+        },
+        {
+          "q": "Health and fitness → Fitness info",
+          "q_ar": "الصحة واللياقة البدنية ← معلومات اللياقة البدنية",
+          "a": "Collected · not shared · not ephemeral · optional · App functionality",
+          "choice": true
+        },
+        {
+          "q": "App activity → App interactions",
+          "q_ar": "النشاط في التطبيق ← التفاعلات مع التطبيق",
+          "a": "Collected · not shared · not ephemeral · required · Analytics",
+          "choice": true
+        },
+        {
+          "q": "App activity → In-app search history",
+          "q_ar": "النشاط في التطبيق ← سجلّ البحث داخل التطبيق",
+          "a": "Collected · not shared · ephemeral · optional · App functionality",
+          "choice": true
+        },
+        {
+          "q": "App info and performance → Crash logs",
+          "q_ar": "معلومات التطبيق وأداؤه ← سجلّات الأعطال",
+          "a": "Collected · not shared · not ephemeral · required · Analytics",
+          "choice": true
+        },
+        {
+          "q": "App info and performance → Diagnostics",
+          "q_ar": "معلومات التطبيق وأداؤه ← بيانات التشخيص",
+          "a": "Collected · not shared · not ephemeral · required · Analytics",
+          "choice": true
+        },
+        {
+          "q": "Device or other IDs → Device or other IDs",
+          "q_ar": "الجهاز أو معرّفات أخرى ← معرّفات الجهاز أو غيرها",
+          "a": "Collected · not shared · not ephemeral · required · Analytics, Fraud prevention, security, and compliance",
+          "choice": true
+        }
       ],
       "notes": [
+        "Account creation: an email with a one-time sign-in code (Supabase signInWithOtp/verifyOTP, no password) is \"Username and other authentication\"; joining a gym with its invite code (an account with no username) is \"Other\". No password, no OAuth (Google/Apple sign-in).",
         "Full reasoning: store/privacy_forms.md → Google Play: Data safety.",
         "Name, user IDs: gym members. Email and fitness info: gym members, and solo members who turn backup on.",
         "Before submitting: PostHog → Project settings → Discard client IP data, and Sentry → Security & Privacy → Prevent storing of IP addresses. If either stays off, also declare Location → Approximate location (Analytics).",
@@ -91,7 +239,12 @@
       "title": "Government apps",
       "title_ar": "التطبيقات الحكومية",
       "items": [
-        { "q": "Is your app developed by or on behalf of a government?", "q_ar": "هل تم تطوير تطبيقك من قِبل جهة حكومية أو لصالحها؟", "a": "No", "choice": true }
+        {
+          "q": "Is your app developed by or on behalf of a government?",
+          "q_ar": "هل تم تطوير تطبيقك من قِبل جهة حكومية أو لصالحها؟",
+          "a": "No",
+          "choice": true
+        }
       ]
     },
     {
@@ -99,7 +252,12 @@
       "title": "Financial features",
       "title_ar": "الميزات المالية",
       "items": [
-        { "q": "Financial features", "q_ar": "الميزات المالية", "a": "My app doesn't provide any financial features", "choice": true }
+        {
+          "q": "Financial features",
+          "q_ar": "الميزات المالية",
+          "a": "My app doesn't provide any financial features",
+          "choice": true
+        }
       ]
     },
     {
@@ -107,21 +265,48 @@
       "title": "Health",
       "title_ar": "صحة",
       "items": [
-        { "q": "Health features", "q_ar": "الميزات الصحية", "a": "Activity and fitness", "choice": true }
+        {
+          "q": "Health features",
+          "q_ar": "الميزات الصحية",
+          "a": "Activity and fitness",
+          "choice": true
+        }
       ],
-      "notes": ["Workout logging and rep counting only: not a medical device, no health records, no disease management."]
+      "notes": [
+        "Workout logging and rep counting only: not a medical device, no health records, no disease management."
+      ]
     },
     {
       "id": "category_contact",
       "title": "App category and contact details",
       "title_ar": "اختيار فئة التطبيق وتقديم تفاصيل الاتصال",
       "items": [
-        { "q": "App or game", "q_ar": "تطبيق أم لعبة", "a": "App", "choice": true },
-        { "q": "Category", "q_ar": "الفئة", "a": "Health & Fitness", "choice": true },
-        { "q": "Email address", "q_ar": "عنوان البريد الإلكتروني", "a": "mohager.dev@gmail.com" },
-        { "q": "Website", "q_ar": "الموقع الإلكتروني", "a": "https://azmm.pages.dev" }
+        {
+          "q": "App or game",
+          "q_ar": "تطبيق أم لعبة",
+          "a": "App",
+          "choice": true
+        },
+        {
+          "q": "Category",
+          "q_ar": "الفئة",
+          "a": "Health & Fitness",
+          "choice": true
+        },
+        {
+          "q": "Email address",
+          "q_ar": "عنوان البريد الإلكتروني",
+          "a": "mohager.dev@gmail.com"
+        },
+        {
+          "q": "Website",
+          "q_ar": "الموقع الإلكتروني",
+          "a": "https://azmm.pages.dev"
+        }
       ],
-      "notes": ["Phone is optional: leave it empty. Tags: Fitness, Workout tracker, Gym (the closest Play offers)."]
+      "notes": [
+        "Phone is optional: leave it empty. Tags: Fitness, Workout tracker, Gym (the closest Play offers)."
+      ]
     }
   ]
 }
