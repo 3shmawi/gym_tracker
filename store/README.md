@@ -13,6 +13,7 @@ Store uses `store/ios/<locale>/` — fastlane `supply` / `deliver` layouts.
 | ios `keywords.txt` | 100 chars, comma-separated |
 | ios `promotional_text.txt` | 170 chars |
 | ios `description.txt` | 4000 chars |
+| ios `copyright.txt` | App Store "Copyright", one line: `<year> <owner>` (no ©) |
 | ios `review_information/notes.txt` | App Review notes (how to try the app); required, see docs/release.md |
 
 `test/store/listing_test.dart` fails if a limit is exceeded or a placeholder
@@ -55,3 +56,9 @@ Console; fastlane does not upload it.
 
 ## Privacy forms
 What to answer in Google Play **Data safety** and Apple **App Privacy**: [`privacy_forms.md`](privacy_forms.md).
+
+## Play Console App content
+The answers for Play Console → App content (privacy policy, app access, ads,
+content rating, target audience, data safety, government, financial
+features, health, category and contact): [`play_app_content.md`](play_app_content.md).
+These forms have no API, so they are filled by hand.
