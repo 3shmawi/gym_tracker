@@ -436,6 +436,19 @@ buckets (`MoveAnalytics`). The pose check sends none.
   `round_controllers_test.dart`, the view test, and the golden
   `move_placement_zoom`.
 
+## Play again (fixed 2026-11-15)
+*Play again* on the results starts a new round on the same screen. It
+invalidates the round's controller and starts it again.
+- **Before.** It opened the same route with the same `MoveLaunch`, and the
+  controller is kept per launch, so the finished round (its results) came
+  back and nothing started.
+- **Fields reset in `build()`.** Riverpod runs `build()` again on the same
+  notifier instance, so both controllers reset every field of the last
+  round there. A `_finishing` left `true` kept the second round's results
+  from ever showing.
+- **Tests:** `move_e2e_test.dart`, "play again after a camera round" and
+  "after counting by hand", each to a full second round.
+
 ## Demo & post
 <!-- The video is recorded on demand (the `demo` label). -->
 **Hook (first 2 seconds):** a glass tower rising one block per push-up,

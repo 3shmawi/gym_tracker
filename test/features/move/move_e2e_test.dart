@@ -38,7 +38,7 @@ void main() {
 
   tearDown(FeatureFlags.overrides.clear);
 
-  testWidgets('home → Move → 10 push-ups → saved → history', (tester) async {
+  Future<void> pumpApp(WidgetTester tester) async {
     tester.view
       ..physicalSize = const Size(1125, 2436)
       ..devicePixelRatio = 3;
@@ -63,6 +63,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+  }
+
+  testWidgets('home → Move → 10 push-ups → saved → history', (tester) async {
+    await pumpApp(tester);
 
     await moveFlow(tester);
 
@@ -74,5 +78,72 @@ void main() {
     expect(round.dayId, WorkoutSession.moveDayId);
     expect(round.sets.single.exerciseId, 'push_ups');
     expect(round.sets.single.reps, 10);
+  });
+
+  Future<void> tap(WidgetTester tester, Finder finder) async {
+    await tester.ensureVisible(finder.first);
+    await tester.pumpAndSettle();
+    await tester.tap(finder.hitTestable().first);
+    await tester.pumpAndSettle();
+  }
+
+  // "Play again" opened the same route with the same launch: the round's
+  // controller (keyed by the launch) was never thrown away, so the results
+  // came back and nothing started (owner's report, 2026-11-15).
+  testWidgets('play again after a camera round starts a new round', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await tap(tester, find.byKey(const Key('home_menu_button')));
+    await tap(tester, find.byKey(const Key('home_move_button')));
+    await tap(tester, find.byKey(const Key('move_round_r10')));
+    await tap(tester, find.byKey(const Key('move_hub_camera')));
+    // The tip and "why the camera" show only until they were seen once.
+    for (
+      var i = 0;
+      i < 2 && find.byKey(const Key('move_setup_next')).evaluate().isNotEmpty;
+      i++
+    ) {
+      await tap(tester, find.byKey(const Key('move_setup_next')));
+    }
+    await waitFor(tester, find.byKey(const Key('move_results_again')));
+    await tester.pumpAndSettle();
+
+    await tap(tester, find.byKey(const Key('move_results_again')));
+    expect(find.byKey(const Key('move_results_again')), findsNothing);
+    // A new camera, placement, 3-2-1 and a whole new round.
+    await waitFor(tester, find.byKey(const Key('move_countdown')));
+    await waitFor(tester, find.byKey(const Key('move_results_save')));
+    await tester.pumpAndSettle();
+    expect(find.text('10'), findsWidgets);
+  });
+
+  testWidgets('play again after counting by hand starts a new round', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await tap(tester, find.byKey(const Key('home_menu_button')));
+    await tap(tester, find.byKey(const Key('home_move_button')));
+    await tap(tester, find.byKey(const Key('move_round_r10')));
+    await tap(tester, find.byKey(const Key('move_hub_manual')));
+    await tap(tester, find.byKey(const Key('move_manual_start')));
+    await wait(tester, const Duration(seconds: 4));
+    for (var i = 0; i < 10; i++) {
+      await tester.tap(find.byKey(const Key('move_manual_tap')));
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+    await waitFor(tester, find.byKey(const Key('move_results_again')));
+    await tester.pumpAndSettle();
+
+    await tap(tester, find.byKey(const Key('move_results_again')));
+    expect(find.byKey(const Key('move_results_again')), findsNothing);
+    // A whole second round, to its results.
+    await tap(tester, find.byKey(const Key('move_manual_start')));
+    await wait(tester, const Duration(seconds: 4));
+    for (var i = 0; i < 10; i++) {
+      await tester.tap(find.byKey(const Key('move_manual_tap')));
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+    await waitFor(tester, find.byKey(const Key('move_results_save')));
   });
 }
