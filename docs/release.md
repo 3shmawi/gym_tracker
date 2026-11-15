@@ -240,7 +240,7 @@ one (and without a `./metadata` folder) deliver asks "Do you want to setup
 deliver?" and crashes in CI (runs 1 and 2, Nov 2026). It also passes
 `--ignore_language_directory_validation`, because `store/ios/` holds the
 `screenshots/` folder next to the locale folders.
-`store/ios/review_information/notes.txt` (the App Review notes) must exist:
+`store/ios/review_information/notes.txt` (the App Review notes) must exist, and the `APP_REVIEW_*` secrets (contact name, email, phone) set: once a version has App Review Information, Apple refuses an update without the contact (run 5, Nov 2026).
 deliver reads the version's App Review Information while uploading, and
 crashes with "No data" when a version has none (run 3, Nov 2026); with the
 notes, it creates it. Contact name, phone and email are filled in App Store
@@ -251,8 +251,10 @@ review**), so the service account needs no production permission.
 **What's new** (both stores, Arabic and English) is uploaded by Store listing
 from `store/ios/<locale>/release_notes.txt` and
 `store/android/<locale>/changelogs/default.txt`; on Play it goes on the
-latest release of `PLAY_TRACK` (default `internal`), so run Store listing
-after the release build is on Play (store/README.md → "What's new").
+latest release of `PLAY_TRACK` (default `internal`); the job reads that
+release's version code first (`google_play_track_version_codes`), because a
+track can hold several releases (run 5: "More than one release found"). Run
+Store listing after the release build is on Play (store/README.md → "What's new").
 **Play service account permissions** for Azm (and the staging app), checked
 2026-11-15 with Store listing:
 - Release apps to testing tracks; Manage testing tracks and edit tester lists
@@ -395,6 +397,7 @@ doesn't stop the run halfway; re-running the script is always safe.
 | `APPLE_TEAM_ID` | Team ID |
 | `ENV_PROD_JSON` | contents of `env/prod.json` (re-upload after changing a key; the release run warns about empty keys — `scripts/check_env.sh`) |
 | `KIT_SYNC_TOKEN` | optional, see "Kit sync" below |
+| `APP_REVIEW_FIRST_NAME`, `APP_REVIEW_LAST_NAME`, `APP_REVIEW_EMAIL`, `APP_REVIEW_PHONE` | App Review contact for Store listing (phone as `+<country> …`); without them the review notes aren't uploaded |
 
 A store whose secrets are missing is skipped (with a warning), not failed.
 iOS signing imports your .p12 and lets App Store Connect create/refresh the
