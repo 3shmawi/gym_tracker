@@ -1,1 +1,1 @@
-keyword1,keyword2,keyword3
+workout,tracker,weightlifting,strength,routine,split,rest timer,sets,reps,progress,fitness,coach

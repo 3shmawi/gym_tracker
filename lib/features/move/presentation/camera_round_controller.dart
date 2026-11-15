@@ -190,6 +190,18 @@ class CameraRoundController extends Notifier<CameraRoundState>
 
   @override
   CameraRoundState build() {
+    // "Play again" invalidates this provider: Riverpod runs build() again on
+    // the same instance, so every field of the last round starts over here.
+    // A `_finishing` left true kept the next round's results from showing.
+    _source = null;
+    _frames = null;
+    _status = null;
+    _detector = null;
+    _placement.reset();
+    _judgedSince = null;
+    _slowSince = null;
+    _finishing = false;
+    _voiceAsked = false;
     _awake = ref.read(screenAwakeProvider);
     _rules = MoveExercises.gameFor(launch.exercise);
     final sounds = _sounds = ref.read(moveSoundsFactoryProvider)();
