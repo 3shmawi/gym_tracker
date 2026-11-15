@@ -161,6 +161,11 @@
           "choice": true
         },
         {
+          "q": "Other: describe the account creation method",
+          "q_ar": "أخرى: قدِّم وصفًا لطريقة إنشاء الحساب",
+          "a": "A member joins their gym by scanning the gym's QR code or typing the invite code their gym gives them. This creates an account with no username or password, used only to link the member's training to that gym. An account is optional: the app works fully without one."
+        },
+        {
           "q": "Do you provide a way for users to request that their data is deleted?",
           "q_ar": "هل توفّر طريقة لطلب حذف البيانات؟",
           "a": "Yes",
