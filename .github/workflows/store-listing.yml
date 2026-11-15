@@ -42,6 +42,9 @@ jobs:
       - name: Upload to Google Play
         env:
           PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          # "What's new" goes on the latest release of the track release.yml
+          # uploads to (supply edits that release's notes; it needs one).
+          PLAY_TRACK: ${{ vars.PLAY_TRACK || 'internal' }}
         run: |
           printf '%s' "$PLAY_JSON" > "$RUNNER_TEMP/play.json"
           ./scripts/mask_secrets.sh "$RUNNER_TEMP/play.json"
@@ -49,12 +52,15 @@ jobs:
           ls store/android/*/images/phoneScreenshots/*.png >/dev/null 2>&1 && shots=false
           images=true
           ls store/android/*/images/featureGraphic.png >/dev/null 2>&1 && images=false
+          notes=true
+          ls store/android/*/changelogs/default.txt >/dev/null 2>&1 && notes=false
           fastlane supply \
             --package_name "com.mohager.azm" \
             --json_key "$RUNNER_TEMP/play.json" \
             --metadata_path store/android \
+            --track "$PLAY_TRACK" \
             --skip_upload_apk true --skip_upload_aab true \
-            --skip_upload_changelogs true \
+            --skip_upload_changelogs "$notes" \
             --skip_upload_images "$images" \
             --skip_upload_screenshots "$shots" \
             --changes_not_sent_for_review true

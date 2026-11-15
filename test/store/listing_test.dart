@@ -15,6 +15,8 @@ void main() {
     'keywords.txt': 100,
     'promotional_text.txt': 170,
     'description.txt': 4000,
+    'release_notes.txt': 4000,
+    'default.txt': 500,
   };
   const placeholders = ['Feature one', 'keyword1', 'اكتب هنا', 'كلمة1'];
   final releasing = Platform.environment['STORE_LISTING_RELEASE'] == 'true';
