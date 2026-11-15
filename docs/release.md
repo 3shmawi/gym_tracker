@@ -248,6 +248,11 @@ Connect, not in the repo.
 The Android job commits the edit with `--changes_not_sent_for_review true`
 (changes wait in Play Console → **Publishing overview** → **Send changes for
 review**), so the service account needs no production permission.
+**What's new** (both stores, Arabic and English) is uploaded by Store listing
+from `store/ios/<locale>/release_notes.txt` and
+`store/android/<locale>/changelogs/default.txt`; on Play it goes on the
+latest release of `PLAY_TRACK` (default `internal`), so run Store listing
+after the release build is on Play (store/README.md → "What's new").
 **Play service account permissions** for Azm (and the staging app), checked
 2026-11-15 with Store listing:
 - Release apps to testing tracks; Manage testing tracks and edit tester lists

@@ -13,6 +13,8 @@ Store uses `store/ios/<locale>/` — fastlane `supply` / `deliver` layouts.
 | ios `keywords.txt` | 100 chars, comma-separated |
 | ios `promotional_text.txt` | 170 chars |
 | ios `description.txt` | 4000 chars |
+| ios `release_notes.txt` ("What's New") | 4000 chars |
+| android `changelogs/default.txt` ("What's new") | 500 chars |
 | ios `copyright.txt` | App Store "Copyright", one line: `<year> <owner>` (no ©) |
 | ios `review_information/notes.txt` | App Review notes (how to try the app); required, see docs/release.md |
 
@@ -65,3 +67,13 @@ features, health, category and contact) live in
 open `store/tools/app_content.html` (copy button per answer, ✓ per step).
 From disk the browser asks for the JSON file; or serve the folder
 (`python3 -m http.server -d store`, then `/tools/app_content.html`).
+
+## What's new
+`store/ios/<locale>/release_notes.txt` (App Store "What's New in This Version")
+and `store/android/<locale>/changelogs/default.txt` (Play "What's new") are
+uploaded by **Store listing**, in Arabic and English. Update both before
+each store release. On Play the notes go on the latest release of the track
+release.yml uploads to (`PLAY_TRACK`, default `internal`), replacing the
+English notes release.yml wrote from the commits; run Store listing after the
+release build is on Play. Apple shows no "What's New" for an app's first
+version.
