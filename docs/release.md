@@ -235,6 +235,11 @@ throwaway anonymous user: `POST` without a token → `401`.
 ## Store listing
 Texts in `store/`, uploaded by Actions → **Store listing** (fastlane
 supply/deliver) — see `store/README.md`.
+The iOS job writes an empty `Deliverfile` before `fastlane deliver`: without
+one (and without a `./metadata` folder) deliver asks "Do you want to setup
+deliver?" and crashes in CI (runs 1 and 2, Nov 2026). It also passes
+`--ignore_language_directory_validation`, because `store/ios/` holds the
+`screenshots/` folder next to the locale folders.
 
 ## Store requirements (check each year)
 | Store | Requirement | Where it's handled |
