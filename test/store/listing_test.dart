@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -43,4 +44,31 @@ void main() {
     ];
     expect(unfinished, releasing ? isEmpty : anything);
   }, skip: releasing ? false : 'only checked by the Store listing workflow');
+
+  test('the Play App content answers are complete', () {
+    final file = File('store/play_app_content.json');
+    if (!file.existsSync()) return;
+    final data = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+    final sections = (data['sections'] as List<dynamic>)
+        .cast<Map<String, dynamic>>();
+    expect(sections, isNotEmpty);
+    final problems = <String>[];
+    for (final section in sections) {
+      for (final key in ['id', 'title', 'title_ar', 'items']) {
+        if (section[key] == null) problems.add('${section['id']}: no $key');
+      }
+      for (final item
+          in (section['items'] as List<dynamic>).cast<Map<String, dynamic>>()) {
+        final answer = item['a'] as String? ?? '';
+        if (answer.trim().isEmpty) {
+          problems.add('${section['id']}: "${item['q']}" has no answer');
+        }
+        // An unfinished answer says so; <CODE>-style values are typed in.
+        if (releasing && answer.contains('TODO')) {
+          problems.add('${section['id']}: "${item['q']}" is a TODO');
+        }
+      }
+    }
+    expect(problems, isEmpty);
+  });
 }
