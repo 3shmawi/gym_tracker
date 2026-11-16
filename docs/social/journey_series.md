@@ -5,17 +5,16 @@ Status: **approved by the owner on 2026-11-16** (as planned; handle
 the AI coding agent gets one line, in episode 11). Rendered with
 `tool/journey_video/` (scenes and timings: `tool/journey_video/episodes.js`).
 Facts come from `docs/social/journey_timeline.md`; every beat names its
-source. A beat marked **[needs owner]** stays out until the owner answers:
-- 01 · beat 1 (when and why the idea came): not answered, so the video
-  shows only the product line from `CLAUDE.md`.
-- 10 · beat 4 (live on the stores?): not answered, so the video says
-  «جاهز للستور» and nothing about being live.
+source. Two facts are not in the repo and come from the owner (answered
+2026-11-16, recorded in the timeline under "Answers from the owner"): where
+the idea came from (episode 01) and that the app is live on both stores
+(episodes 10 and 11).
 
 ## Durations (as rendered)
 | # | Episode | Length |
 |---|---|---|
 | 00 | Trailer | 35 s |
-| 01 | اليوم صفر | 36.5 s |
+| 01 | اليوم صفر | 41 s |
 | 02 | أول شاشة | 41 s |
 | 03 | الموبايل الحقيقي | 37.5 s |
 | 04 | من لوحدك لجيم | 33.5 s |
@@ -24,7 +23,7 @@ source. A beat marked **[needs owner]** stays out until the owner answers:
 | 07 | متخسرش تمرينك | 37.5 s |
 | 08 | الكاميرا بتعدّ | 37 s |
 | 09 | الجودة | 36 s |
-| 10 | على الستور | 36.5 s |
+| 10 | على الستور | 37 s |
 | 11 | وصلنا لحد فين | 35 s |
 
 ## Format (all episodes)
@@ -72,15 +71,15 @@ evening), trailer on the Saturday before.
 - **Tags:** `#عزم_من_الصفر #IndieDev`
 
 ## 01 · اليوم صفر
-- **Hook:** «فكرة وفولدر فاضي.. وبعد يوم: 310 ملف.»
+- **Hook:** «كل مرة: "يا كوتش، ألعب بكام؟"»
 - **Beats:**
-  1. The idea and why **[needs owner]** (open question 1).
-  2. 31 Oct: bootstrap from flutter-project-kit, 310 files (`247391e`).
+  1. The idea: many people at the gym asked the coach for their weight every time, so: a system the coach controls (the owner, 2026-11-16).
+  2. 31 Oct, the first step: the trainee's next workout and last weight; bootstrap from flutter-project-kit, 310 files, 11,178 lines (`247391e`, `CLAUDE.md`).
   3. The stack as a diagram: Flutter · Supabase · Riverpod · Sentry · PostHog · عربي + إنجليزي (`docs/decisions/0001-initial-stack.md`).
   4. «القاعدة: كل حاجة بتتكتب في الدوكس قبل الكود» (`CLAUDE.md`).
 - **CTA:** «الحلقة الجاية: أول شاشة.»
-- **AR:** اليوم صفر. فكرة، وقرار في نفس اليوم على كل الأدوات: Flutter وSupabase وعربي وإنجليزي من أول يوم.
-- **EN:** Day zero: an idea, and the whole stack decided on day one. Flutter, Supabase, Arabic and English from the start.
+- **AR:** كل مرة في الجيم كنت بسأل الكوتش: ألعب بكام؟ وكذا حد كان زيي. فقلت أعمل نظام الكوتش يتحكم فيه، وبعدين بقى لكذا جيم في نفس الوقت. اليوم صفر: فولدر فاضي، وكل الأدوات اتقررت من أول يوم.
+- **EN:** Every time at the gym I asked the coach what weight to use, and so did plenty of others. So I set out to build a system the coach controls, and it grew to serve several gyms at once. Day zero: an empty folder, and the whole stack decided on day one.
 - **Tags:** `#Supabase #Riverpod`
 
 ## 02 · أول شاشة
@@ -188,10 +187,10 @@ evening), trailer on the Saturday before.
   1. Store texts and screenshots in Arabic and English, made from the real screens (#116, `store/README.md`).
   2. Uploads from GitHub Actions (#119–#124).
   3. Three ready plans for someone starting alone (#107).
-  4. Status on the stores **[needs owner]** (open question 2).
+  4. «ونزل.. على App Store و Google Play» (the owner, 2026-11-16).
 - **CTA:** «آخر حلقة: وصلنا لحد فين.»
-- **AR:** صفحة الستور نفسها بتتكتب في الريبو وبتترفع لوحدها، بالعربي والإنجليزي.
-- **EN:** Even the store listing lives in the repo and uploads itself, in Arabic and English.
+- **AR:** صفحة الستور نفسها بتتكتب في الريبو وبتترفع لوحدها، بالعربي والإنجليزي. وعزم نزل على App Store و Google Play.
+- **EN:** Even the store listing lives in the repo and uploads itself, in Arabic and English. And Azm is live on the App Store and Google Play.
 - **Tags:** `#AppStore #GooglePlay`
 
 ## 11 · وصلنا لحد فين
@@ -201,7 +200,7 @@ evening), trailer on the Saturday before.
   2. Counters: 7 features · 20 pages · 659 strings × 2 languages · 72 releases.
   3. «مع AI coding agent.. وكل سطر عدّى على تستات» (the `Co-Authored-By` lines in `git log`).
   4. The last 8 s of the brand promo (`docs/brand/promo_video/`, 95–103 s): logo, «جيمك.. في جيب كل متدرب», azmm.pages.dev.
-- **CTA:** «جرّبه، وقولّي أبني إيه بعد كده.»
-- **AR:** 16 يوم، 130 commit، 117 PR، 72 إصدار. ده عزم النهارده. قولّي في الكومنتات: أبني إيه بعد كده؟
-- **EN:** 16 days, 130 commits, 117 PRs, 72 releases. This is Azm today. Tell me in the comments what I should build next.
+- **CTA:** «نزّله، وقولّي أبني إيه بعد كده.»
+- **AR:** 16 يوم، 130 commit، 117 PR، 72 إصدار. ده عزم النهارده، على App Store و Google Play. نزّله، وقولّي في الكومنتات: أبني إيه بعد كده؟
+- **EN:** 16 days, 130 commits, 117 PRs, 72 releases. This is Azm today, on the App Store and Google Play. Download it, and tell me in the comments what I should build next.
 - **Tags:** `#عزم_من_الصفر #IndieDev`

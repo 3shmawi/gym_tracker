@@ -29,11 +29,12 @@ window.EPISODES = [
   },
   {
     id: '01', n: 1, title: 'اليوم صفر', dates: '31 أكتوبر', hue: -6, seed: 11, key: 0,
-    coverTitle: 'اليوم *صفر*', coverSub: 'فولدر فاضي.. وبعد يوم 310 ملف', coverImg: 'assets/g/next_workout_no_plan.jpg',
+    coverTitle: '"يا كوتش.. *ألعب بكام؟*"', coverSub: 'منين جت فكرة عزم', coverImg: 'assets/g/next_workout_no_plan.jpg',
     cta: 'الحلقة الجاية: *أول شاشة*',
     scenes: [
-      { type: 'hook', d: 4, kicker: '31 أكتوبر 2026', text: 'فولدر فاضي.. وبعد يوم: *310 ملف.*' },        // 247391e: 310 files
-      { type: 'say', d: 4.5, kicker: 'الفكرة', text: 'تمرينك الجاي، *آخر وزن شِلته*، وتسجيل بسرعة.' },   // CLAUDE.md product line
+      { type: 'hook', d: 4, kicker: 'في الجيم', text: 'كل مرة: *"يا كوتش، ألعب بكام؟"*' },                   // the owner, 2026-11-16 (journey_timeline.md → stop 0)
+      { type: 'say', d: 4.5, text: 'وكذا حد زيي.. فقلت: *نظام الكوتش يتحكم فيه.*' },                       // the owner, 2026-11-16
+      { type: 'say', d: 4.5, kicker: '31 أكتوبر 2026', text: 'أول خطوة: تمرينك الجاي، *وآخر وزن شِلته.*' },  // 247391e; CLAUDE.md product line
       { type: 'counters', d: 5, caption: 'أول commit', items: [{ n: 310, label: 'ملف' }, { n: 11178, label: 'سطر' }] }, // 247391e --stat
       { type: 'chips', d: 6, caption: 'الأدوات اتقررت *من أول يوم*', items: ['Flutter', 'Supabase', 'Riverpod', 'Sentry', 'PostHog', 'go_router', 'عربي + English', 'GitHub Actions'] }, // docs/decisions/0001-initial-stack.md
       { type: 'diagram', d: 6, caption: 'كل feature *3 طبقات*', nodes: [                                  // CLAUDE.md → Feature layers
@@ -77,7 +78,7 @@ window.EPISODES = [
     cta: 'الحلقة الجاية: *اتعلّم التمرين صح*',
     scenes: [
       { type: 'hook', d: 4.5, text: 'الكابتن عايز يعرف المتدرب شال كام.. *من غير ما يسأله.*' },            // docs/decisions/gym_accounts.md
-      { type: 'chips', d: 6, caption: 'القرارات *قبل الكود*', items: ['اللي لوحده يفضل من غير حساب', 'الكابتن يضيف المتدرب', 'QR لمرة واحدة · 7 أيام', 'كود 6 حروف تحت الـ QR', 'التمرين ملك صاحبه'] }, // gym_accounts.md §1
+      { type: 'chips', d: 6, caption: 'القرارات *قبل الكود*', items: ['اللي لوحده يفضل من غير حساب', 'الكابتن يضيف المتدرب', 'QR لمرة واحدة · 7 أيام', 'كود 6 حروف تحت الـ QR', 'متدرب في كذا جيم', 'التمرين ملك صاحبه'] }, // gym_accounts.md §1
       { type: 'diagram', d: 6, nodes: [                                                                       // gym_accounts.md §1, #20 #21 #27
         { t: 'الكابتن يطبع كارت QR' }, { t: 'المتدرب يعمل scan' }, { t: 'اللينك يفتح التطبيق' }, { t: 'جوّه الجيم', kind: 'good' }] },
       { type: 'code', d: 6, caption: 'باج: *الكود كان بيضيع* من اللينك', file: 'website/_redirects', lines: ['- /join/*  /join.html  200', '+ /join/*  /join  200'], note: 'الاستضافة كانت بتحوّل .html وبتشيل الكود (308)' }, // ae2f316 (#60)
@@ -164,7 +165,7 @@ window.EPISODES = [
   },
   {
     id: '10', n: 10, title: 'على الستور', dates: '14 ← 16 نوفمبر', hue: -5, seed: 20, key: 7,
-    coverTitle: 'صفحة الستور.. *كود*', coverSub: 'عربي وإنجليزي، من الريبو', coverImg: 'assets/store/7.jpg',
+    coverTitle: 'صفحة الستور.. *كود*', coverSub: 'ونزل على App Store و Google Play', coverImg: 'assets/store/7.jpg',
     cta: 'آخر حلقة: *وصلنا لحد فين*',
     scenes: [
       { type: 'hook', d: 4, text: 'حتى صفحة الستور.. *كود.*' },                                              // store/README.md
@@ -173,13 +174,13 @@ window.EPISODES = [
       { type: 'diagram', d: 6, nodes: [                                                                       // store/README.md, #119–#124
         { t: 'تعديل نص في الريبو' }, { t: 'PR' }, { t: 'تشغيل Store listing', d: 'GitHub Actions' }, { t: 'الستور اتحدّث', kind: 'good' }] },
       { type: 'shot', d: 5, caption: 'أول مرة؟ *3 خطط جاهزة*', img: 'assets/g/next_workout_no_plan.jpg' }, // #107
-      { type: 'say', d: 4, text: 'كده *جاهز للستور.*' },
+      { type: 'say', d: 4.5, text: 'ونزل.. *على App Store و Google Play.*' },                             // the owner, 2026-11-16
     ],
   },
   {
     id: '11', n: 11, title: 'وصلنا لحد فين', dates: '16 نوفمبر', hue: 0, seed: 21, key: 0,
     coverTitle: 'وصلنا *لحد فين*', coverSub: '16 يوم · 117 PR · 72 إصدار', coverImg: 'assets/store/5.jpg',
-    cta: 'جرّبه، *وقولّي أبني إيه بعد كده*',
+    cta: 'نزّله، *وقولّي أبني إيه بعد كده*',
     scenes: [
       { type: 'hook', d: 4, text: 'من فولدر فاضي.. *لده.*' },
       { type: 'timeline', d: 6.5, caption: 'الرحلة كلها', countLabel: 'PR في 16 يوم' },
