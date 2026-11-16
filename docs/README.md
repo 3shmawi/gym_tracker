@@ -10,6 +10,7 @@ Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 - [Performance](performance.md) — scroll performance test, glass vs lite, numbers before/after
 - [Decisions](decisions/) — why the stack looks the way it does; [gym accounts](decisions/gym_accounts.md) (accepted; backend and app built, captain tools and dashboard not yet); [videos outside the app](decisions/video_outside_app.md) (accepted: no PiP or background play, pause on leaving)
 - [Promo video](brand/promo_video/README.md) — the motion-graphics video of all features for gym owners and captains (source + build script)
+- [Build in public](social/journey_series.md) — the «من الصفر لحد النهارده» series: [timeline with sources](social/journey_timeline.md), episode plan and captions, renderer in `tool/journey_video/`
 - [Designs](designs/) — approved specs for big features, reviewed with EGM
   ([getting started](getting_started.md) → "Design reviews")
 
