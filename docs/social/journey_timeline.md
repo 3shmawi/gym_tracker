@@ -39,7 +39,9 @@ source · visuals available. "Store shot n" = `store/android/ar/images/phoneScre
   architecture, Riverpod, Supabase, Sentry, PostHog (no Firebase), go_router,
   Arabic + English (RTL), GitHub Actions on a public repo.
 - **Source:** `247391e`, `docs/decisions/0001-initial-stack.md`.
-- **Gap:** the "Why" section of 0001 is empty → open question 1.
+- **The idea (from the owner, 2026-11-16):** at the gym, they kept asking the
+  coach what weight to use, and so did many others, so: a system the coach
+  controls. It then grew to several gyms at the same time (stop 3).
 - **Visuals:** the stack table, the folder tree from `CLAUDE.md`.
 
 ### 1 · 2026-11-01: design system + the first feature
@@ -145,10 +147,11 @@ source · visuals available. "Store shot n" = `store/android/ar/images/phoneScre
 - **Visuals:** all 8 store shots; `store/android/*/images/featureGraphic.png`;
   `docs/brand/promo_video/`.
 
-## Open questions (for the owner; not used in videos until answered)
-1. When and why did the idea of Azm come up? (0001 → "Why" is empty.)
-2. Is the app live on the App Store / Google Play now, or in review?
-3. Should the series say that the code was written with an AI coding agent?
-   (The commits carry `Co-Authored-By` lines for one.)
-4. Names in the video: which name/handle to show? (Commit authors and
-   e-mails are not shown.)
+## Answers from the owner (2026-11-16)
+Facts that are not in the repo; the videos use them as the owner's words.
+1. **The idea:** at the gym, they kept asking the coach what weight to use,
+   and many others did the same; so a system the coach controls, which then
+   grew to several gyms at the same time.
+2. **Stores:** the app is live on the App Store and Google Play.
+3. **AI coding agent:** mentioned once, lightly (episode 11).
+4. **Name on screen:** Mohager. Commit authors and e-mails are not shown.
