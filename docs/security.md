@@ -74,7 +74,9 @@ holds a one-time code, so it only **displays** it:
 
 ## 2. CI `security` job
 - **gitleaks** — scans the whole git history for committed secrets.
-- **OSV-Scanner** — checks `pubspec.lock` against known vulnerabilities.
+- **OSV-Scanner** — checks `pubspec.lock` and `dashboard/package-lock.json`
+  against known vulnerabilities (accepted advisories: `dashboard/osv-scanner.toml`,
+  section "Captain dashboard" → "Accepted advisories").
 - **zizmor** — audits `.github/workflows/`: actions pinned to a commit,
   read-only tokens unless a job needs more, no credentials left after
   checkout, no untrusted text run as shell code, no risky triggers.
@@ -501,8 +503,26 @@ Pages headers and Git integration. Feature doc:
   `dashboard/`, no inline script/style, no third-party hosts).
 - **Dependencies.** The CI `security` job's OSV-Scanner scans
   `dashboard/package-lock.json` next to `pubspec.lock`, and the `dashboard` job
-  runs `npm audit --audit-level=low`. Vulnerable packages are fixed or
-  upgraded (e.g. vitest 4.1.12, `minimatch` overridden to 11.0.3), not ignored.
+  runs `node scripts/audit.mjs` (`npm audit` at low and above). Vulnerable
+  packages are fixed or upgraded (e.g. vitest 4.1.12, `minimatch` overridden
+  to 11.0.3), not ignored.
+- **Accepted advisories** (only when no fixed release exists). An advisory
+  can be accepted for a short time in `dashboard/osv-scanner.toml`
+  (`[[IgnoredVulns]]` with an `id`, a `reason` and an `ignoreUntil` date
+  about 30 days ahead). OSV-Scanner reads it because it sits next to the
+  lockfile (OSV-Scanner 2.7.0 docs, "Configuration", checked 2026-11-18), and
+  `scripts/audit.mjs` reads the same file, so both checks agree. The audit
+  script fails on any other advisory, on an entry with no reason or date, and
+  on the date itself; it also says when an entry no longer matches anything,
+  so it can be removed. `dashboard/test/audit.test.ts` covers these rules.
+  On the date: if a fix shipped, upgrade and remove the entry; if not,
+  re-read the advisory and renew it with a new reason and date.
+  Current entries:
+  - `GHSA-fc5q-39xc-vjpf` (picomatch ReDoS, until 2026-12-18): no fixed
+    release (every version through 4.0.7; fix in `micromatch/picomatch` PR 194,
+    unmerged on 2026-11-18). Dev-only (vite, vitest, tinyglobby,
+    `@prefresh/vite`), not in the built dashboard, and it matches only globs
+    from our own config files, never user input.
 
 ### Move games: camera and on-device pose model (PR 1, 2026-11-12)
 Spec: `docs/designs/move_games.md` §11. Checked in the built release APK

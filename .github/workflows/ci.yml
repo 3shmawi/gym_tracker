@@ -191,8 +191,10 @@ jobs:
       - name: Install packages (lockfile only)
         run: npm ci --no-audit --no-fund
 
+      # npm audit at low and above; only advisories listed with a reason and
+      # an expiry date in osv-scanner.toml (shared with OSV-Scanner) pass.
       - name: Known vulnerabilities (npm audit)
-        run: npm audit --audit-level=low
+        run: node scripts/audit.mjs
 
       - name: Typecheck
         run: npm run typecheck
