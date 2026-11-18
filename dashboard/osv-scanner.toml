@@ -1,0 +1,12 @@
+# Known vulnerabilities we accept for a short time, for dashboard/package-lock.json.
+# Read by OSV-Scanner (CI security job; OSV-Scanner 2.7.0 docs, "Configuration",
+# checked 2026-11-18: a config next to the lockfile applies to it) and by
+# scripts/audit.mjs (the npm audit step). Every entry needs a reason and an
+# ignoreUntil date at most ~30 days ahead; on that date both checks fail again
+# and the entry must be re-checked: removed once a fix ships, or renewed with
+# a new reason. docs/security.md → "Captain dashboard" → "Accepted advisories".
+
+[[IgnoredVulns]]
+id = "GHSA-fc5q-39xc-vjpf"
+ignoreUntil = 2026-12-18
+reason = "picomatch ReDoS (CVE-2026-112366) via attacker-supplied extglob patterns. No fixed release on 2026-11-18 (all versions through 4.0.7, the latest; fix in micromatch/picomatch PR 194, unmerged). Dev-only here (vite, vitest, tinyglobby, @prefresh/vite), not in the built dashboard, and it only reads globs from our own config files."
