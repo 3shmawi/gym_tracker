@@ -242,9 +242,11 @@ label changes. Before each submission:
    Notes: `DEMO GYM CODE: <code>` (step 3 above), the QR image as an
    attachment, and `SCREEN RECORDING: <link>`. A later Store listing run
    overwrites the Notes, so add them again after it.
-4. Turn the `move_games_debug` flag off for `prod` before submitting: it shows
-   Settings → *Pose check (testing)*, and a testing screen in a store build is
-   a Guideline 2.2 rejection.
+4. No tester screen may show in the store build (Guideline 2.2). The pose
+   check (Settings → *Pose check (testing)*) is already hidden in prod builds
+   by code (`moveCheckAllowed` checks the flavor), whatever
+   `move_games_debug` says. The flag's prod condition is at 0 % anyway
+   (2026-11-18), so neither safeguard depends on the other.
 
 #### Account deletion (store requirement)
 `delete-account` is the server half of Profile → Delete account (app step).
