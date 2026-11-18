@@ -236,13 +236,18 @@ label changes. Before each submission:
    video, a Move game, join the demo gym with its code, *My account* →
    *Delete account*. Account deletion must be in it: joining creates an
    account.
-2. Upload it somewhere a reviewer can open without signing in (an unlisted
-   video or a shared file link), never in the repo.
-3. Run **Store listing**, then in App Store Connect add at the end of the
-   Notes: `DEMO GYM CODE: <code>` (step 3 above), the QR image as an
-   attachment, and `SCREEN RECORDING: <link>`. A later Store listing run
-   overwrites the Notes, so add them again after it.
-4. No tester screen may show in the store build (Guideline 2.2). The pose
+2. Run **Store listing** (it uploads the notes only when the `APP_REVIEW_*`
+   secrets are set; without them it logs a warning and leaves the Notes as
+   they are, so paste `notes.txt` by hand). Then in App Store Connect →
+   App Review Information:
+   - **Attachment:** the recording (the notes say it is attached). Never
+     put it in the repo. If App Store Connect refuses the file, upload it
+     somewhere a reviewer can open without signing in (an unlisted video or a
+     shared link) and change the notes' sentence to point at the link.
+   - **Notes:** add `DEMO GYM CODE: <code>` (step 3 above) at the end.
+   A later Store listing run overwrites the Notes, so add the code again
+   after it.
+3. No tester screen may show in the store build (Guideline 2.2). The pose
    check (Settings → *Pose check (testing)*) is already hidden in prod builds
    by code (`moveCheckAllowed` checks the flavor), whatever
    `move_games_debug` says. The flag's prod condition is at 0 % anyway

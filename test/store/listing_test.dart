@@ -18,7 +18,7 @@ void main() {
     'release_notes.txt': 4000,
     'default.txt': 500,
     // App Store Connect → App Review Information → Notes. Leave ~600 for
-    // the demo code and the recording link, pasted in App Store Connect.
+    // the demo code (and a link, if the recording cannot be attached).
     'notes.txt': 3400,
   };
   const placeholders = ['Feature one', 'keyword1', 'اكتب هنا', 'كلمة1'];
