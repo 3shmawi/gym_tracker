@@ -1,7 +1,31 @@
-No account is needed. On the first screen tap "Train on my own", then "Pick a ready plan", pick any plan and tap "Start workout" to log sets.
+1. SCREEN RECORDING
+Recorded on a physical iPhone running the latest iOS. It starts at app launch and shows: training on your own (pick a ready plan, start a workout, log sets, rest timer, finish and see the summary), the exercise library and a how-to video, a Move game, joining the demo gym with the code below, My account, and deleting the account. The link is at the end of these notes.
 
-Joining a gym is optional and needs an invite code that a gym's captain creates in the Azm web dashboard.
+2. PURPOSE AND AUDIENCE
+Azm is a workout logger for people who train in a gym, beginners to advanced, in Arabic and English. Most people forget what they lifted last time or keep it in paper notes. Azm opens on the next workout of their plan with last time's sets and a suggested weight for today, and logging a set takes one tap. Gyms can invite their members, so a coach ("captain") can set a member's plan and see their progress.
 
-Move games use the front camera only to count push-ups: the pose model runs on the phone, and no video or photo is recorded or sent. Without the camera, the manual counter works the same.
+3. HOW TO USE IT
+No account is needed for the main features.
+- Train on your own: first screen → "Train on my own" → "Pick a ready plan" → pick any plan → "Start workout" → tap "Log" for each set → "Finish workout".
+- Exercise library and how-to videos: open any exercise in the workout or the plan.
+- Move games: the Move card on the Today screen. The front camera counts push-ups. Pose detection runs on the phone (Google ML Kit); nothing is recorded or uploaded. A manual counter works without the camera.
+- Join a gym (creates an account with no email or password): first screen → "Join your gym" → "I have a code. Type it here" → type the demo code below (or scan the QR). This joins "Azm Demo Gym" as a member. Demo data is reset every night.
+- Account deletion: Settings → "My account" → "Delete account" → "Delete my account for good". The account, its memberships and its server data are deleted. Web page: https://azmm.pages.dev/delete-account.html
+- Backup (optional): Settings → "Back up my training" signs in with a 6-digit code sent to any email address you own; no password. Delete it the same way, from "My account".
+There is no user-generated content shared between users: no feed, chat or public profiles. Only a gym's owner and coaches see the workouts of that gym's members. There are no purchases, subscriptions or ads.
 
-Backup is optional; it signs in with a code sent by email.
+4. EXTERNAL SERVICES
+- Supabase: database, anonymous and email sign-in, server functions (accounts, gyms, backup)
+- Cloudflare: Turnstile bot protection when joining a gym or signing in; Pages hosts the website and the join links
+- Cloudinary: serves exercise pictures
+- YouTube: how-to videos, played in YouTube's embedded player
+- Google ML Kit: on-device pose detection for Move games (no data leaves the phone)
+- Sentry: crash reports
+- PostHog: usage analytics without personal data, and feature flags
+No payment processor and no AI or chat service.
+
+5. REGIONS
+The app works the same in every region. The only difference is language: Arabic (right to left) or English, from the phone's language or Settings.
+
+6. REGULATED CONTENT
+Not applicable. Azm is not a medical device and gives no medical advice. Exercise drawings come from Everkinetic and wger (CC BY-SA, credited in the app). Videos are public YouTube videos played in YouTube's own player under the YouTube API Terms.

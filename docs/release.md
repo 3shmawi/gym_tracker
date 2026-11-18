@@ -224,6 +224,28 @@ doc §8; re-read both consoles' pages before submitting).
    `pg_cron` is not enabled and does nothing. This also schedules the purge of
    invite attempts older than 30 days.
 
+#### App Review notes and screen recording (Guideline 2.1)
+The first submission (Nov 2026) came back with **Guideline 2.1 – Information
+Needed**: Apple wants six answers in App Review → Notes.
+`store/ios/review_information/notes.txt` holds five of them (purpose and
+audience, how to use, external services, regions, regulated content) and
+describes the recording. Keep it accurate when a feature, service or menu
+label changes. Before each submission:
+1. Record the screen on a **physical iPhone on the latest iOS**, starting
+   from launching the app: solo plan → workout → log → finish, library and a
+   video, a Move game, join the demo gym with its code, *My account* →
+   *Delete account*. Account deletion must be in it: joining creates an
+   account.
+2. Upload it somewhere a reviewer can open without signing in (an unlisted
+   video or a shared file link), never in the repo.
+3. Run **Store listing**, then in App Store Connect add at the end of the
+   Notes: `DEMO GYM CODE: <code>` (step 3 above), the QR image as an
+   attachment, and `SCREEN RECORDING: <link>`. A later Store listing run
+   overwrites the Notes, so add them again after it.
+4. Turn the `move_games_debug` flag off for `prod` before submitting: it shows
+   Settings → *Pose check (testing)*, and a testing screen in a store build is
+   a Guideline 2.2 rejection.
+
 #### Account deletion (store requirement)
 `delete-account` is the server half of Profile → Delete account (app step).
 It hard-deletes the auth user (`auth.admin.deleteUser(id, false)`,

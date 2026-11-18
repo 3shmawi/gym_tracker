@@ -16,7 +16,7 @@ Store uses `store/ios/<locale>/` — fastlane `supply` / `deliver` layouts.
 | ios `release_notes.txt` ("What's New") | 4000 chars |
 | android `changelogs/default.txt` ("What's new") | 500 chars |
 | ios `copyright.txt` | App Store "Copyright", one line: `<year> <owner>` (no ©) |
-| ios `review_information/notes.txt` | App Review notes (how to try the app); required, see docs/release.md |
+| ios `review_information/notes.txt` | 3400 chars (Apple: 4000; the rest is for the demo code and video link added in App Store Connect). App Review notes: the six answers Apple asked for under Guideline 2.1 (recording, purpose, how to use, services, regions, regulated content); required, see docs/release.md |
 
 `test/store/listing_test.dart` fails if a limit is exceeded or a placeholder
 ("Feature one", "keyword1", "اكتب هنا") is still there when you run the
