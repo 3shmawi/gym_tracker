@@ -1,5 +1,6 @@
 1. SCREEN RECORDING
-Recorded on a physical iPhone running the latest iOS. It starts at app launch and shows: training on your own (pick a ready plan, start a workout, log sets, rest timer, finish and see the summary), the exercise library and a how-to video, a Move game, joining the demo gym with the code below, My account, and deleting the account. The video is attached to this submission (App Review Information → Attachment).
+https://www.youtube.com/watch?v=EXF7FFCqyTw
+Recorded on a physical iPhone 13 running iOS 27. It starts at app launch and shows: training on your own (pick a ready plan, start a workout, log sets, rest timer, finish and see the summary), the exercise library and a how-to video, a Move game, joining the demo gym with the code below, My account, and deleting the account.
 
 2. PURPOSE AND AUDIENCE
 Azm is a workout logger for people who train in a gym, beginners to advanced, in Arabic and English. Most people forget what they lifted last time or keep it in paper notes. Azm opens on the next workout of their plan with last time's sets and a suggested weight for today, and logging a set takes one tap. Gyms can invite their members, so a coach ("captain") can set a member's plan and see their progress.

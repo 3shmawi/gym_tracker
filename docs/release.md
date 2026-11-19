@@ -240,10 +240,12 @@ label changes. Before each submission:
    secrets are set; without them it logs a warning and leaves the Notes as
    they are, so paste `notes.txt` by hand). Then in App Store Connect →
    App Review Information:
-   - **Attachment:** the recording (the notes say it is attached). Never
-     put it in the repo. If App Store Connect refuses the file, upload it
-     somewhere a reviewer can open without signing in (an unlisted video or a
-     shared link) and change the notes' sentence to point at the link.
+   - **Recording:** the notes start with its YouTube link (the 2026-11-19
+     recording: iPhone 13, iOS 27). Keep that video online (unlisted or
+     public) until the app is approved. For a new recording, update the
+     link, phone and iOS version in `notes.txt` (the iOS version must be the
+     latest release), and also attach the file here. Never put the video
+     in the repo.
    - **Notes:** add `DEMO GYM CODE: <code>` (step 3 above) at the end.
    A later Store listing run overwrites the Notes, so add the code again
    after it.
