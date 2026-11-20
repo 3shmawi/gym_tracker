@@ -153,25 +153,26 @@ class _Live extends StatelessWidget {
           Expanded(
             child: AppCameraBackdrop(
               dimmed: refused,
+              // The hint is above the dim: readable when refused too.
+              overlay: PositionedDirectional(
+                start: AppDimens.sm2,
+                end: AppDimens.sm2,
+                bottom: AppDimens.sm2,
+                child: AppCard(
+                  child: Text(
+                    l10n.scanHint,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.body.copyWith(
+                      color: palette.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
                   ?camera,
                   Center(child: AppViewfinder(refused: refused)),
-                  PositionedDirectional(
-                    start: AppDimens.sm2,
-                    end: AppDimens.sm2,
-                    bottom: AppDimens.sm2,
-                    child: AppCard(
-                      child: Text(
-                        l10n.scanHint,
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.body.copyWith(
-                          color: palette.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),

@@ -23,6 +23,9 @@ abstract final class AppColors {
   static const cameraCenter = Color(0xFF2B3A33);
   static const cameraEdge = Color(0xFF0B100D);
 
+  /// Darkens the camera picture behind a pause sheet or a refusal.
+  static const cameraDim = Color(0xBB000000);
+
   /// Lines and their outline drawn over the camera backdrop (Move games'
   /// body and joint dots): the backdrop is always dark, in both themes.
   static const cameraInk = Color(0xFFF2F7F3);
