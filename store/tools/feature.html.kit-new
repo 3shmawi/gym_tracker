@@ -1,0 +1,32 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{margin:0;box-sizing:border-box}
+#c{width:1024px;height:500px;position:relative;overflow:hidden;color:#F2F5F3;font-family:Latin,Arabic,sans-serif;
+ background:radial-gradient(70% 90% at 80% 10%,color-mix(in srgb,var(--brand) 50%,#050807) 0%,transparent 70%),
+   radial-gradient(60% 80% at 0% 100%,color-mix(in srgb,var(--brand) 25%,#050807) 0%,transparent 70%),
+   color-mix(in srgb,var(--brand) 12%,#050807)}
+#c[dir=rtl]{font-family:Arabic,Latin,sans-serif}
+.txt{position:absolute;top:0;bottom:0;width:470px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+.w{font-weight:700;font-size:92px;line-height:1}
+.tg{font-weight:700;font-size:40px;line-height:1.2}
+.tg b{color:color-mix(in srgb,var(--brand) 70%,#fff)}
+.s{font-weight:600;font-size:21px;color:#A9B5AE}
+.ph{position:absolute;width:210px;border-radius:34px;padding:8px;background:linear-gradient(145deg,#3a3f3c,#0b0d0c 40%,#1f2421);box-shadow:0 30px 60px -10px #000,0 0 80px -20px color-mix(in srgb,var(--brand) 50%,transparent)}
+.ph img{width:100%;display:block;border-radius:27px}
+</style></head><body><div id="c"></div><script>
+window.setup = (o) => {
+  const face = (fam, folder) => `@font-face{font-family:${fam};font-weight:100 900;src:${
+    [700, 600, 500, 400].map(w => `url(../../assets/fonts/${folder}/${folder}-${w}.ttf)`).join(',')}}`;
+  const st = document.createElement('style');
+  st.textContent = face('Latin', o.latin) + face('Arabic', o.arabic);
+  document.head.appendChild(st);
+  document.getElementById('c').style.setProperty('--brand', o.brand);
+};
+// Google Play: keep the key elements away from the edges and don't repeat the icon.
+window.render = (o) => { const c = document.getElementById('c'); c.dir = o.dir; const rtl = o.dir === 'rtl';
+  const side = rtl ? 'right' : 'left', other = rtl ? 'left' : 'right';
+  c.innerHTML = `<div class="txt" style="${side}:60px">
+<div class="w">${o.word}</div><div class="tg">${o.tag}</div><div class="s">${o.sub}</div></div>
+<div class="ph" style="${other}:250px;top:70px;transform:rotate(${rtl ? 6 : -6}deg)"><img src="${o.a}"></div>
+<div class="ph" style="${other}:60px;top:40px;transform:rotate(${rtl ? -4 : 4}deg)"><img src="${o.b}"></div>`;
+  return Promise.all([...c.querySelectorAll('img')].map(i => i.complete ? 1 : new Promise(r => { i.onload = r; i.onerror = r; }))); };
+</script></body></html>

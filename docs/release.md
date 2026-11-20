@@ -57,6 +57,46 @@ version + changelog (from the release's commits, or your text in English and
 Arabic) to `app_versions` in Supabase; the in-app dialog does the rest.
 Needs the `SUPABASE_SECRET_KEY` secret.
 
+## Social posts
+`.github/workflows/social.yml` announces updates on LinkedIn, the Facebook
+Page and YouTube through
+[3shmawi/social-publisher](https://github.com/3shmawi/social-publisher)
+(its README has the step-by-step setup for each platform). A version is
+written per platform in English and Arabic, you approve, then each platform
+posts on its own; one failing doesn't stop the others.
+
+- **Who writes:** Claude, on your Claude Pro/Max plan, when the
+  `CLAUDE_CODE_OAUTH_TOKEN` secret is set (run `claude setup-token` once a
+  year; no API credit needed). Without it, fixed templates write the posts
+  from `store/android/<lang>/changelogs/default.txt` (keep it filled in for
+  each release, in both languages) and the `SOCIAL_HASHTAGS` variable
+  (default `Flutter,MobileApps`).
+
+- **When:** after every store release (GitHub Actions: `release.yml` starts
+  it, since a release created by the workflow's token starts no other
+  workflow; Codemagic: the `v*` tag it pushes), when you publish a GitHub
+  Release by hand, every two weeks with the changes since the last post, or
+  Actions → **Social posts** → Run workflow.
+- **Turn it on:** create the environment **`social`** (Settings →
+  Environments) with yourself as required reviewer, add the secrets (table
+  below), set the repo variable `SOCIAL_ENABLED=true`, then run it by hand
+  with `dry_run` ticked and read the posts in the job summary.
+- **Go live:** set `SOCIAL_LIVE=true`. Release and schedule runs then stop at
+  **Approve posts**; approve once the version is live in the stores
+  (approval waits up to 30 days). Until then they're dry runs.
+- **Never twice:** posted updates are tagged `social/posted/<tag>/<platform>`;
+  `force` posts again. Internal-only updates (chore, ci, refactor…) and notes
+  containing `[skip social]` are skipped.
+- **Video:** a `*.mp4` release asset or `marketing/videos/v<version>.mp4`
+  (e.g. the Demo video output) goes to YouTube and Facebook; none → YouTube is
+  skipped. YouTube keeps API uploads private until the Google Cloud project
+  passes YouTube's audit; then set `SOCIAL_YOUTUBE_AUDITED=true` and
+  `SOCIAL_YOUTUBE_PRIVACY=public`.
+- **Optional variables:** `APP_STORE_URL` (once the app is on the App
+  Store), `PLAY_STORE_URL`, `SOCIAL_WEBSITE_URL`, `SOCIAL_LANGUAGES`
+  (default `en,ar`), `SOCIAL_LINKEDIN_AS` (`person`, `organization`,
+  default `both`), `SOCIAL_PLATFORMS` (default `facebook,linkedin,youtube`).
+
 ## Staging builds
 Push to `develop` → `staging.yml`:
 - **Android** — signed APK attached to a `staging-…` pre-release (last 3
@@ -264,6 +304,7 @@ must hand over or empty the gym first. After the deploy, smoke test with a
 throwaway anonymous user: `POST` without a token → `401`.
 
 ## Store listing
+<<<<<<< yours
 Texts in `store/`, uploaded by Actions → **Store listing** (fastlane
 supply/deliver) — see `store/README.md`.
 The iOS job writes an empty `Deliverfile` before `fastlane deliver`: without
@@ -297,6 +338,49 @@ Store listing after the release build is on Play (store/README.md → "What's ne
   can't publish anything. Re-check after the first production release
   whether Store presence alone is enough, then drop it.
 - Not needed: Admin, Release to production, financial data.
+=======
+Texts and images in `store/`, uploaded by Actions → **Store listing**
+(fastlane supply/deliver) — see `store/README.md`.
+- **iOS:** the job writes a `Deliverfile` before `fastlane deliver`.
+  Without one (and without a `./metadata` folder) deliver asks "Do you want
+  to setup deliver?" and crashes in CI. It also passes
+  `--ignore_language_directory_validation`, because `store/ios/` holds the
+  `screenshots/` folder next to the locale folders.
+  `store/ios/review_information/notes.txt` (App Review notes) must be
+  filled: deliver reads the version's App Review Information while
+  uploading and crashes with "No data" when the version has none; with the
+  notes it creates it. Once a version has App Review Information, Apple
+  refuses an update without the contact (name, email, phone), so the
+  `Deliverfile` sends it from the `APP_REVIEW_*` secrets (read from the
+  environment, never written to disk). Without those secrets the notes are
+  skipped with a warning and the contact stays as set in App Store Connect.
+- **Android:** the edit is saved with `--changes_not_sent_for_review true`
+  (changes wait in Play Console → **Publishing overview** → **Send changes
+  for review**), so the service account needs no production permission.
+  The Play images (feature graphic, icon, tablet screenshots) are uploaded
+  when `featureGraphic.png` exists.
+- **What's new:** `store/ios/<locale>/release_notes.txt` and
+  `store/android/<locale>/changelogs/default.txt` are uploaded too; on Play
+  they go on the latest release of `PLAY_TRACK` (default `internal`). A
+  track can hold several releases ("More than one release found"), so the
+  job first reads the newest version code there
+  (`google_play_track_version_codes`) and passes it to supply; it fails with
+  a clear error when the track is empty. Run Store listing after the release
+  build is on Play. On the App Store, What's new is skipped for the app's
+  first version (Apple has no field for it on 1.0).
+- **Play service account permissions** (Play Console → Users and
+  permissions → the service account → App permissions, for the app and the
+  `.stg` app), found with Azm's Store listing on 2026-11-15:
+  - Release apps to testing tracks; Manage testing tracks and edit tester
+    lists (the release and staging uploads).
+  - **Manage store presence** (texts, images).
+  - **Edit and delete draft apps**: needed while the app is still a draft
+    (never published to production); without it the listing commit fails
+    with "The caller does not have permission". It can't publish anything.
+    After the first production release, check whether Store presence alone
+    is enough and drop it.
+  - Not needed: Admin, Release to production, financial data.
+>>>>>>> kit a50ee3f
 
 ## Store requirements (check each year)
 | Store | Requirement | Where it's handled |
@@ -429,6 +513,14 @@ doesn't stop the run halfway; re-running the script is always safe.
 | `ENV_PROD_JSON` | contents of `env/prod.json` (re-upload after changing a key; the release run warns about empty keys — `scripts/check_env.sh`) |
 | `KIT_SYNC_TOKEN` | optional, see "Kit sync" below |
 | `APP_REVIEW_FIRST_NAME`, `APP_REVIEW_LAST_NAME`, `APP_REVIEW_EMAIL`, `APP_REVIEW_PHONE` | App Review contact for Store listing (phone as `+<country> …`); without them the review notes aren't uploaded |
+<<<<<<< yours
+=======
+| `CLAUDE_CODE_OAUTH_TOKEN` | Social posts: Claude writes them on your Pro/Max plan (`claude setup-token`, valid a year); without it, templates write them |
+| `FB_PAGE_ID`, `FB_PAGE_TOKEN` | Social posts: Facebook Page (long-lived Page token) |
+| `LINKEDIN_TOKEN`, `LINKEDIN_AUTHOR_URN`, `LINKEDIN_ORG_URN` | Social posts: LinkedIn as you and/or the company page |
+| `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `LINKEDIN_REFRESH_TOKEN` | Social posts: LinkedIn token expiry check and automatic refresh (optional) |
+| `YT_CLIENT_ID`, `YT_CLIENT_SECRET`, `YT_REFRESH_TOKEN` | Social posts: YouTube upload |
+>>>>>>> kit a50ee3f
 
 A store whose secrets are missing is skipped (with a warning), not failed.
 iOS signing imports your .p12 and lets App Store Connect create/refresh the

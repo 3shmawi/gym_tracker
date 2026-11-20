@@ -1,0 +1,67 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{background:#000}
+#c{position:relative;overflow:hidden;color:#F2F5F3;font-family:Latin,Arabic,sans-serif;
+  background:radial-gradient(90% 45% at 85% 0%,color-mix(in srgb,var(--brand) 45%,#050807) 0%,transparent 70%),
+    radial-gradient(80% 40% at 0% 100%,color-mix(in srgb,var(--brand) 28%,#050807) 0%,transparent 70%),
+    color-mix(in srgb,var(--brand) 8%,#050807)}
+#c[dir=rtl]{font-family:Arabic,Latin,sans-serif}
+.glow{position:absolute;border-radius:50%;background:var(--brand);filter:blur(160px);opacity:.16}
+.head{position:absolute;left:0;right:0;text-align:center;padding:0 6%}
+.eb{display:inline-flex;align-items:center;font-weight:700;color:var(--on-brand);background:var(--brand);border-radius:999px;padding:.15em .8em}
+.t{font-weight:700;line-height:1.12;letter-spacing:-.01em}
+.t b{color:color-mix(in srgb,var(--brand) 70%,#fff)}
+.s{color:#A9B5AE;font-weight:600;line-height:1.4}
+.dev{position:absolute;left:50%;transform:translateX(-50%);background:linear-gradient(145deg,#3a3f3c,#0b0d0c 35%,#1f2421);box-shadow:0 0 0 3px rgba(255,255,255,.08),0 80px 160px -40px #000,0 0 220px -40px color-mix(in srgb,var(--brand) 40%,transparent)}
+.scr{position:relative;overflow:hidden;background:#0B0E0C}
+.sb{display:flex;justify-content:space-between;align-items:center;font-family:Latin,sans-serif;font-weight:700;color:#F2F5F3;direction:ltr}
+.scr img{display:block;width:100%}
+.isl{position:absolute;left:50%;transform:translateX(-50%);background:#000;border-radius:999px}
+</style></head>
+<body><div id="c"></div>
+<script>
+// Fonts come from the app (assets/fonts), so the images use the app's own type.
+window.setup = (o) => {
+  const face = (fam, folder) => `@font-face{font-family:${fam};font-weight:100 900;src:${
+    [700, 600, 500, 400].map(w => `url(../../assets/fonts/${folder}/${folder}-${w}.ttf)`).join(',')}}`;
+  const st = document.createElement('style');
+  st.textContent = face('Latin', o.latin) + face('Arabic', o.arabic);
+  document.head.appendChild(st);
+  const c = document.getElementById('c');
+  c.style.setProperty('--brand', o.brand);
+  c.style.setProperty('--on-brand', o.onBrand);
+};
+window.render = (o) => {
+  const c = document.getElementById('c');
+  c.style.width = o.w + 'px'; c.style.height = o.h + 'px'; c.dir = o.dir;
+  const isPhone = o.kind === 'phone';
+  const r = o.devW / 1000;
+  const bezel = (isPhone ? 30 : 34) * r;
+  const radius = (isPhone ? 150 : 90) * r;
+  const sbH = (isPhone ? 120 : 64) * r;
+  c.innerHTML = `
+   <div class="glow" style="width:${o.w*0.7}px;height:${o.w*0.7}px;left:${o.w*0.15}px;top:${o.devTop + o.w*0.2}px"></div>
+   <div class="head" style="top:${o.headTop}px">
+     <div class="eb" style="font-size:${o.subSize*0.82}px">${o.eb}</div>
+     <div class="t" style="font-size:${o.titleSize}px;margin-top:${o.titleSize*0.28}px">${o.title}</div>
+     <div class="s" style="font-size:${o.subSize}px;margin-top:${o.titleSize*0.22}px">${o.sub}</div>
+   </div>
+   <div class="dev" style="top:${o.devTop}px;width:${o.devW}px;padding:${bezel}px;border-radius:${radius + bezel}px">
+     <div class="scr" style="border-radius:${radius}px">
+       <div class="sb" style="height:${sbH}px;padding:0 ${isPhone ? 90*r : 40*r}px;font-size:${(isPhone?44:26)*r}px"><span>9:41</span><span>●●●● ▮</span></div>
+       ${isPhone ? `<div class="isl" style="top:${28*r}px;width:${300*r}px;height:${85*r}px"></div>` : ''}
+       <img src="${o.img}">
+     </div>
+   </div>`;
+  // The device sits under the headline and is scaled down to fit the canvas.
+  return new Promise(res => { const im = c.querySelector('img'); const go = () => {
+    const head = c.querySelector('.head'); const dev = c.querySelector('.dev');
+    const top = Math.max(o.devTop, head.offsetTop + head.offsetHeight + o.titleSize * 0.55);
+    const k = Math.min(1, (o.h - top - o.titleSize * 0.45) / dev.offsetHeight);
+    dev.style.top = top + 'px'; dev.style.transformOrigin = '50% 0';
+    dev.style.transform = `translateX(-50%) scale(${k})`;
+    res(); }; if (im.complete) go(); else { im.onload = go; im.onerror = () => res(`missing ${o.img}`); } });
+};
+</script></body></html>

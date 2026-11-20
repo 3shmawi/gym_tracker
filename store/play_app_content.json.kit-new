@@ -1,0 +1,89 @@
+{
+  "_about": "Answers for Play Console → Policy and programs → App content (محتوى التطبيق). These forms have no API: open store/tools/app_content.html to copy each answer. The agent fills every TODO from the code (only what the prod app does today) before the first release, and updates this file when the app starts collecting new data or adds ads, sign-in, payments or health features.",
+  "app": "Azm",
+  "checked": "TODO: date",
+  "sections": [
+    {
+      "id": "privacy_policy", "title": "Privacy policy", "title_ar": "إعداد سياسة الخصوصية",
+      "items": [
+        { "q": "Privacy policy URL", "q_ar": "عنوان URL لسياسة الخصوصية", "a": "https://azmm.pages.dev/privacy" }
+      ]
+    },
+    {
+      "id": "app_access", "title": "App access", "title_ar": "تفاصيل تسجيل الدخول",
+      "items": [
+        { "q": "Access", "q_ar": "إمكانية الوصول", "a": "TODO: All functionality is available without special access / All or some functionality in my app is restricted", "choice": true },
+        { "q": "Any other information", "q_ar": "أي معلومات أخرى", "a": "TODO: what the reviewer taps first, and the demo account or code (use <CODE> for a value typed in at review time)" }
+      ],
+      "notes": ["Make sure the demo access still works before each review."]
+    },
+    {
+      "id": "ads", "title": "Ads", "title_ar": "الإعلانات",
+      "items": [
+        { "q": "Does your app contain ads?", "q_ar": "هل يحتوي تطبيقك على إعلانات؟", "a": "TODO: No, my app does not contain ads (the kit adds no ad SDK)", "choice": true },
+        { "q": "Advertising ID", "q_ar": "المعرّف الإعلاني", "a": "TODO: No, unless an SDK adds android.permission.AD_ID to the merged manifest", "choice": true }
+      ]
+    },
+    {
+      "id": "content_rating", "title": "Content rating", "title_ar": "تقييم المحتوى",
+      "items": [
+        { "q": "Email", "q_ar": "البريد الإلكتروني", "a": "mohager.dev@gmail.com" },
+        { "q": "Category", "q_ar": "الفئة", "a": "TODO: All other app types (Game for games)", "choice": true },
+        { "q": "Violence, fear, sexuality, gambling, language, controlled substances, crude humour", "q_ar": "العنف والخوف والجنس والقمار واللغة والمواد الخاضعة للرقابة والفكاهة البذيئة", "a": "TODO: No (every question), unless the app shows any of it", "choice": true },
+        { "q": "Users can interact or exchange content", "q_ar": "يمكن للمستخدمين التفاعل أو تبادل المحتوى", "a": "TODO", "choice": true },
+        { "q": "Shares the user's location", "q_ar": "يشارك الموقع الجغرافي للمستخدم", "a": "TODO", "choice": true },
+        { "q": "Digital purchases", "q_ar": "عمليات شراء رقمية", "a": "TODO", "choice": true },
+        { "q": "Unrestricted internet access", "q_ar": "وصول غير مقيد إلى الإنترنت", "a": "TODO", "choice": true }
+      ]
+    },
+    {
+      "id": "target_audience", "title": "Target audience", "title_ar": "الجمهور المستهدف",
+      "items": [
+        { "q": "Age groups", "q_ar": "الفئات العمرية", "a": "TODO: owner's decision (under 13 brings Google's Families policy)", "choice": true },
+        { "q": "Appeals to children", "q_ar": "جاذب للأطفال", "a": "TODO", "choice": true }
+      ]
+    },
+    {
+      "id": "data_safety", "title": "Data safety", "title_ar": "أمان البيانات",
+      "items": [
+        { "q": "Does your app collect or share any of the required user data types?", "q_ar": "هل يجمع تطبيقك أو يشارك أيًا من أنواع بيانات المستخدمين المطلوبة؟", "a": "TODO", "choice": true },
+        { "q": "Is all of the user data collected by your app encrypted in transit?", "q_ar": "هل يتم تشفير جميع بيانات المستخدمين أثناء نقلها؟", "a": "TODO: Yes (everything goes over HTTPS)", "choice": true },
+        { "q": "Do you provide a way for users to request that their data is deleted?", "q_ar": "هل توفّر طريقة لطلب حذف البيانات؟", "a": "TODO: Yes when the app has accounts", "choice": true },
+        { "q": "Delete account URL", "q_ar": "رابط حذف الحساب", "a": "https://azmm.pages.dev/delete-account" },
+        { "q": "TODO: Category → data type (one item per type that leaves the phone)", "q_ar": "TODO: الفئة ← نوع البيانات", "a": "TODO: Collected · shared? · ephemeral? · required/optional · purposes", "choice": true }
+      ],
+      "notes": [
+        "List everything that leaves the phone (backend, analytics, monitoring, every SDK) from the code and each SDK's own data-disclosure page.",
+        "Check the analytics and monitoring dashboards for IP or location settings first (PostHog Discard client IP data, Sentry Prevent storing of IP addresses); if they stay on, declare approximate location too."
+      ]
+    },
+    {
+      "id": "government", "title": "Government apps", "title_ar": "التطبيقات الحكومية",
+      "items": [
+        { "q": "Is your app developed by or on behalf of a government?", "q_ar": "هل تم تطوير تطبيقك من قِبل جهة حكومية أو لصالحها؟", "a": "TODO: No, unless it is", "choice": true }
+      ]
+    },
+    {
+      "id": "financial_features", "title": "Financial features", "title_ar": "الميزات المالية",
+      "items": [
+        { "q": "Financial features", "q_ar": "الميزات المالية", "a": "TODO: My app doesn't provide any financial features, unless it does", "choice": true }
+      ]
+    },
+    {
+      "id": "health", "title": "Health", "title_ar": "صحة",
+      "items": [
+        { "q": "Health features", "q_ar": "الميزات الصحية", "a": "TODO: the health features it has (for example Activity and fitness), or none", "choice": true }
+      ]
+    },
+    {
+      "id": "category_contact", "title": "App category and contact details", "title_ar": "اختيار فئة التطبيق وتقديم تفاصيل الاتصال",
+      "items": [
+        { "q": "App or game", "q_ar": "تطبيق أم لعبة", "a": "TODO", "choice": true },
+        { "q": "Category", "q_ar": "الفئة", "a": "TODO", "choice": true },
+        { "q": "Email address", "q_ar": "عنوان البريد الإلكتروني", "a": "mohager.dev@gmail.com" },
+        { "q": "Website", "q_ar": "الموقع الإلكتروني", "a": "https://azmm.pages.dev" }
+      ],
+      "notes": ["Phone is optional."]
+    }
+  ]
+}

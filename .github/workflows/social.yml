@@ -1,0 +1,82 @@
+# Announces updates on LinkedIn, the Facebook Page and YouTube, with
+# 3shmawi/social-publisher (its README has the one-time setup):
+# Claude (on your Claude plan, CLAUDE_CODE_OAUTH_TOKEN) or, without that
+# token, fixed templates write the posts in English and Arabic; you approve them in the
+# `social` environment, then each platform posts on its own.
+#
+#   · a store release: release.yml starts this run (GitHub Actions); with
+#     Codemagic, its v* tag push does
+#   · a GitHub Release you publish by hand
+#   · every two weeks: changes since the last post (weekly cron, odd ISO weeks skipped)
+#   · Actions → Social posts → Run workflow (dry run by default)
+#
+# Off until you set the repo variable SOCIAL_ENABLED=true; automatic runs then
+# stay dry runs until SOCIAL_LIVE=true. Live runs wait for your approval,
+# so approve once the stores have published the version. docs/release.md → "Social posts".
+name: Social posts
+
+on:
+  release:
+    types: [published]
+  push:
+    tags: ['v*']   # Codemagic pushes a version tag (no GitHub Release)
+  schedule:
+    - cron: '23 8 * * 2'   # Tuesdays 08:23 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Only generate and show the posts
+        type: boolean
+        default: true
+      release_tag:
+        description: 'Release tag (empty = latest release, "changes" = commits since the last post)'
+        type: string
+        default: ''
+      force:
+        description: Post again even if this update was already posted
+        type: boolean
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: social-posts
+  cancel-in-progress: false
+
+jobs:
+  social:
+    if: github.event_name == 'workflow_dispatch' || vars.SOCIAL_ENABLED == 'true'
+    permissions:
+      contents: write   # tags social/posted/* and social/last-post ("don't post twice")
+      actions: read     # checks that the `social` environment requires approval
+    uses: 3shmawi/social-publisher/.github/workflows/publish.yml@859e12eb04505736b9be9e41be718987db0c1b6f # v1.1.0
+    with:
+      app_name: >-
+        Azm
+      about: >-
+        Gym workout tracker: next session, last weight, quick logging
+      play_store_url: ${{ vars.PLAY_STORE_URL || 'https://play.google.com/store/apps/details?id=com.mohager.azm' }}
+      app_store_url: ${{ vars.APP_STORE_URL }}
+      website_url: ${{ vars.SOCIAL_WEBSITE_URL || 'https://azmm.pages.dev' }}
+      languages: ${{ vars.SOCIAL_LANGUAGES || 'en,ar' }}
+      linkedin_as: ${{ vars.SOCIAL_LINKEDIN_AS || 'both' }}
+      platforms: ${{ vars.SOCIAL_PLATFORMS || 'facebook,linkedin,youtube' }}
+      hashtags: ${{ vars.SOCIAL_HASHTAGS || 'Flutter,MobileApps' }}
+      youtube_privacy: ${{ vars.SOCIAL_YOUTUBE_PRIVACY || 'private' }}
+      youtube_audited: ${{ vars.SOCIAL_YOUTUBE_AUDITED == 'true' }}
+      release_tag: ${{ inputs.release_tag || '' }}
+      force: ${{ inputs.force || false }}
+      dry_run: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) || (github.event_name != 'workflow_dispatch' && vars.SOCIAL_LIVE != 'true') }}
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+      FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
+      LINKEDIN_TOKEN: ${{ secrets.LINKEDIN_TOKEN }}
+      LINKEDIN_AUTHOR_URN: ${{ secrets.LINKEDIN_AUTHOR_URN }}
+      LINKEDIN_ORG_URN: ${{ secrets.LINKEDIN_ORG_URN }}
+      LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
+      LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+      LINKEDIN_REFRESH_TOKEN: ${{ secrets.LINKEDIN_REFRESH_TOKEN }}
+      YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+      YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+      YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}

@@ -1,0 +1,56 @@
+{
+  "_help": "Store images for both stores. Fill every text (no TODO left), list the screens from test/store/store_screens.dart in the order the stores should show them (the first three are what App Store search shows), then see store/README.md -> Screenshots.",
+  "brand": "#22C55E",
+  "fonts": {
+    "latin": "Inter",
+    "arabic": "Cairo"
+  },
+  "feature": {
+    "screens": [
+      "home",
+      "home"
+    ],
+    "en": {
+      "word": "Azm",
+      "tag": "TODO: one line,<br><b>what the app does</b>",
+      "sub": "TODO: three short benefits · separated · by dots"
+    },
+    "ar": {
+      "word": "Azm",
+      "tag": "TODO: سطر واحد<br><b>التطبيق بيعمل إيه</b>",
+      "sub": "TODO: تلات مزايا قصيرة · بينهم · نقط"
+    }
+  },
+  "shots": [
+    {
+      "screen": "home",
+      "en": {
+        "eb": "TODO",
+        "title": "TODO: two short lines,<br><b>second one in the brand colour</b>",
+        "sub": "TODO: one short line"
+      },
+      "ar": {
+        "eb": "TODO",
+        "title": "TODO: سطرين قصيرين<br><b>التاني بلون البراند</b>",
+        "sub": "TODO: سطر قصير"
+      }
+    }
+  ],
+  "hero": {
+    "_help": "App Store Header and Search results images (node hero.js): four screens from store_screens.dart (the first two also go in the search image), the app name and one short phrase per language.",
+    "screens": [
+      "home",
+      "home",
+      "home",
+      "home"
+    ],
+    "en": {
+      "word": "Azm",
+      "tag": "TODO: one short phrase, <b>the brand part</b>"
+    },
+    "ar": {
+      "word": "Azm",
+      "tag": "TODO: جملة قصيرة <b>بلون البراند</b>"
+    }
+  }
+}

@@ -74,7 +74,30 @@ flutter gen-l10n                     # after editing lib/l10n/*.arb
 ./scripts/new_feature.sh <name>      # scaffold a feature + its doc
 ```
 
-## 5. Design reviews (Elephant-Goldfish Model)
+## 5. Let an agent run the app (Dart MCP server)
+The official [Dart & Flutter plugin](https://github.com/flutter/agent-plugins)
+(Dart MCP server, skills) is pinned in `.claude/settings.json` (checked
+2026-11-16: plugin 1.0.7, docs.flutter.dev/ai/mcp-server). It needs Dart 3.9+
+on your `PATH` (the project's Flutter has it).
+
+- **Claude Code on your Mac**: trust the folder and accept the plugin prompt,
+  or `claude plugin marketplace add flutter/agent-plugins && claude plugin install dart-flutter@dart-flutter`.
+- **Devices**: Xcode with an iOS Simulator for iOS; Android Studio with an
+  emulator (Device Manager → create one) for Android.
+- **Run**: ask the agent to test on a device, or run it yourself:
+  ```bash
+  ./scripts/agent_run.sh ios          # or: android, a device id; env optional
+  ./scripts/agent_run.sh status
+  ./scripts/agent_run.sh shot ios     # build/agent/ios.png
+  ./scripts/agent_run.sh stop
+  ```
+  The agent connects the MCP server to the printed DTD URI and taps, types,
+  takes screenshots, reads runtime errors and hot reloads (CLAUDE.md →
+  "Running the app as an agent"). Both platforms can run at once.
+- **Cloud sessions** have no simulator or emulator: agents there use
+  `flutter test` and widget screenshots instead.
+
+## 6. Design reviews (Elephant-Goldfish Model)
 Big features get a written spec reviewed by fresh AI reviewers before any
 code (rules in `CLAUDE.md`). The
 [EGM plugin](https://github.com/google/elephant-goldfish-model) is pinned in
