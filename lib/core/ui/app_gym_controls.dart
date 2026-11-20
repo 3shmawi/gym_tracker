@@ -501,11 +501,15 @@ class AppViewfinder extends StatelessWidget {
 
 /// What is behind the viewfinder when there is no live picture (tests, a
 /// screen that shows a refusal): the design's dark green glow, rounded 32.
+///
+/// [dimmed] darkens [child] (the picture); [overlay] is drawn above the
+/// dim, at full brightness and tappable (a pause sheet, a message).
 class AppCameraBackdrop extends StatelessWidget {
-  const new({this.dimmed = false, this.child, super.key});
+  const new({this.dimmed = false, this.child, this.overlay, super.key});
 
   final bool dimmed;
   final Widget? child;
+  final Widget? overlay;
 
   @override
   Widget build(BuildContext context) {
@@ -524,7 +528,11 @@ class AppCameraBackdrop extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             ?child,
-            if (dimmed) const ColoredBox(color: Color(0xBB000000)),
+            if (dimmed)
+              const IgnorePointer(
+                child: ColoredBox(color: AppColors.cameraDim),
+              ),
+            ?overlay,
           ],
         ),
       ),

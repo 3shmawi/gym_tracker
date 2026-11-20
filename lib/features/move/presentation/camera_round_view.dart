@@ -196,6 +196,7 @@ class _Camera extends StatelessWidget {
       label: context.l10n.moveCameraLabel,
       child: AppCameraBackdrop(
         dimmed: dimmed,
+        overlay: overlay,
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -205,7 +206,6 @@ class _Camera extends StatelessWidget {
             ExcludeSemantics(
               child: _Pose(frame: state.frame, drawBody: preview == null),
             ),
-            ?overlay,
           ],
         ),
       ),

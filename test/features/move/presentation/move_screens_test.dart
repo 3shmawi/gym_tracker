@@ -120,6 +120,9 @@ CameraRoundView camera(
   VoidCallback? onToggleSound,
   VoidCallback? onZoomOut,
   VoidCallback? onZoomIn,
+  VoidCallback? onResume,
+  VoidCallback? onEnd,
+  VoidCallback? onManual,
 }) => CameraRoundView(
   state: state,
   onToggleSound: onToggleSound ?? () {},
@@ -129,9 +132,9 @@ CameraRoundView camera(
   exerciseName: 'Push-ups',
   onClose: () {},
   onPause: () {},
-  onResume: () {},
-  onEnd: () {},
-  onManual: () {},
+  onResume: onResume ?? () {},
+  onEnd: onEnd ?? () {},
+  onManual: onManual ?? () {},
   onSave: () {},
   onPlayAgain: () {},
   onDone: () {},
@@ -459,6 +462,29 @@ void main() {
       expect(find.text(l10nEn.moveComeBack), findsOneWidget);
       expect(find.byKey(const Key('move_resume')), findsNothing);
       expect(find.byKey(const Key('move_switch_manual')), findsOneWidget);
+    });
+
+    testWidgets('paused: the sheet buttons take taps above the dim', (
+      tester,
+    ) async {
+      final taps = <String>[];
+      for (final reason in [PauseReason.tap, PauseReason.bodyLost]) {
+        await tester.pumpApp(
+          camera(
+            cam(r: round(RoundPhase.paused, reps: 5, pause: reason)),
+            onResume: () => taps.add('resume'),
+            onEnd: () => taps.add('end'),
+            onManual: () => taps.add('manual'),
+          ),
+        );
+        for (final key in ['move_resume', 'move_switch_manual', 'move_end']) {
+          final button = find.byKey(Key(key));
+          if (button.evaluate().isEmpty) continue;
+          await tester.ensureVisible(button);
+          await tester.tap(button);
+        }
+      }
+      expect(taps, ['resume', 'manual', 'end', 'manual', 'end']);
     });
 
     testWidgets('refused: Settings or count by hand, never a dead end', (
