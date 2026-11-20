@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:gym_tracker/core/adaptive/adaptive.dart';
@@ -425,4 +427,80 @@ class _LiteIconButton extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// Opens a bottom sheet of frosted glass with a grab handle; [builder]'s
+/// content scrolls when it's taller than the screen allows. Drag it down or
+/// tap outside to close. Returns what the sheet pops with.
+Future<T?> showAppSheet<T>(
+  BuildContext context, {
+  required WidgetBuilder builder,
+}) => showModalBottomSheet<T>(
+  context: context,
+  isScrollControlled: true,
+  useSafeArea: true,
+  backgroundColor: Colors.transparent,
+  elevation: 0,
+  constraints: BoxConstraints(
+    maxHeight: MediaQuery.sizeOf(context).height * AppDimens.sheetMaxShare,
+  ),
+  builder: (sheet) => AppSheet(child: builder(sheet)),
+);
+
+/// The glass and grab handle of [showAppSheet]. Lite mode: a solid
+/// surface, no blur.
+class AppSheet extends StatelessWidget {
+  const AppSheet({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final lite = AppUi.isLite(context);
+    final radius = Radius.circular(AppDimens.radiusLg);
+    final content = DecoratedBox(
+      decoration: BoxDecoration(
+        color: lite
+            ? scheme.surfaceContainerHigh
+            : scheme.surface.withValues(alpha: 0.72),
+        border: Border(top: BorderSide(color: scheme.outlineVariant)),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: EdgeInsetsDirectional.symmetric(vertical: AppDimens.sm),
+              child: Center(
+                child: Container(
+                  width: AppDimens.grabWidth,
+                  height: AppDimens.grabHeight,
+                  decoration: BoxDecoration(
+                    color: scheme.onSurfaceVariant.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(AppDimens.grabHeight),
+                  ),
+                ),
+              ),
+            ),
+            Flexible(child: child),
+          ],
+        ),
+      ),
+    );
+    return ClipRRect(
+      borderRadius: BorderRadius.vertical(top: radius),
+      child: lite
+          ? content
+          : BackdropFilter(
+              filter: ImageFilter.blur(
+                sigmaX: AppDimens.sheetBlur,
+                sigmaY: AppDimens.sheetBlur,
+              ),
+              child: content,
+            ),
+    );
+  }
 }

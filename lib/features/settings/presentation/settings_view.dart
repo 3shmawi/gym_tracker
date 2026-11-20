@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
+<<<<<<< yours
+=======
+import 'package:gym_tracker/features/settings/domain/entities/app_settings.dart';
+import 'package:gym_tracker/core/adaptive/adaptive.dart';
+>>>>>>> kit a50ee3f
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/features/settings/domain/entities/app_settings.dart';
 import 'package:gym_tracker/features/settings/presentation/widgets/settings_tiles.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 
-/// Language, theme and app version settings. Pure UI: state comes in,
-/// changes go out through callbacks, so it works with any state-management
-/// choice.
+/// Language, theme and About. Pure UI: state comes in, changes go out
+/// through callbacks, so it works with any state-management choice.
+///
+/// Groups of compact rows on cards, each group's name above it (the iOS
+/// settings layout): a row shows its current value at the end and opens a
+/// sheet to pick; closing the sheet changes nothing.
 class SettingsView extends StatelessWidget {
   const new({
     required this.settings,
     required this.onLocaleChanged,
     required this.onThemeModeChanged,
+<<<<<<< yours
     this.onOpenPlan,
     this.backup,
     this.onOpenAccount,
@@ -21,6 +30,11 @@ class SettingsView extends StatelessWidget {
     this.onOpenPrivacy,
     this.onOpenTerms,
     this.onOpenMoveCheck,
+=======
+    this.onOpenPrivacy,
+    this.onOpenTerms,
+    this.onOpenLicenses,
+>>>>>>> kit a50ee3f
     super.key,
   });
 
@@ -28,6 +42,7 @@ class SettingsView extends StatelessWidget {
   final ValueChanged<Locale?> onLocaleChanged;
   final ValueChanged<ThemeMode> onThemeModeChanged;
 
+<<<<<<< yours
   /// Opens the plan editor; the Workout section is hidden while null.
   final VoidCallback? onOpenPlan;
 
@@ -51,17 +66,33 @@ class SettingsView extends StatelessWidget {
   /// The pose check for testers (null in prod builds and with the
   /// `move_games_debug` flag off).
   final VoidCallback? onOpenMoveCheck;
+=======
+  /// The privacy policy and terms on the website; each row is hidden while
+  /// its callback is null.
+  final VoidCallback? onOpenPrivacy;
+  final VoidCallback? onOpenTerms;
+
+  /// Flutter's licenses page (fonts, packages); hidden while null.
+  final VoidCallback? onOpenLicenses;
+>>>>>>> kit a50ee3f
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+<<<<<<< yours
     final languageCode = settings.locale?.languageCode;
+=======
+>>>>>>> kit a50ee3f
     final languages = <(String, Locale?)>[
       (l10n.settingsLanguageSystem, null),
       (l10n.languageEnglish, const Locale('en')),
       (l10n.languageArabic, const Locale('ar')),
     ];
+<<<<<<< yours
     final languageIndex = switch (languageCode) {
+=======
+    final languageIndex = switch (settings.locale?.languageCode) {
+>>>>>>> kit a50ee3f
       'en' => 1,
       'ar' => 2,
       _ => 0,
@@ -73,8 +104,11 @@ class SettingsView extends StatelessWidget {
     };
     return AppScaffold(
       title: l10n.settingsTitle,
+<<<<<<< yours
       // Grouped cards of compact rows, the value at the end (design board
       // 4: the familiar iOS settings layout, readable on glass).
+=======
+>>>>>>> kit a50ee3f
       body: ListView(
         padding: EdgeInsetsDirectional.fromSTEB(
           AppDimens.md,
@@ -83,6 +117,7 @@ class SettingsView extends StatelessWidget {
           AppDimens.xl,
         ),
         children: [
+<<<<<<< yours
           if (onOpenPlan != null) ...[
             SettingsSectionHeader(l10n.settingsWorkout),
             SettingsGroup(
@@ -187,6 +222,70 @@ class SettingsView extends StatelessWidget {
                   icon: Icons.accessibility_new_rounded,
                   onTap: onOpenMoveCheck,
                 ),
+=======
+          SettingsSectionHeader(l10n.settingsAppearance),
+          SettingsGroup(
+            children: [
+              SettingsRow(
+                key: const Key('settings_language'),
+                label: l10n.settingsLanguage,
+                icon: AdaptiveIcons.language(context),
+                value: languages[languageIndex].$1,
+                onTap: () async {
+                  final picked = await showSettingsChoice(
+                    context,
+                    title: l10n.settingsLanguage,
+                    choices: [for (final l in languages) l.$1],
+                    selected: languageIndex,
+                  );
+                  if (picked != null) onLocaleChanged(languages[picked].$2);
+                },
+              ),
+              SettingsRow(
+                key: const Key('settings_theme'),
+                label: l10n.settingsTheme,
+                icon: AdaptiveIcons.theme(context),
+                value: themeLabel(settings.themeMode),
+                onTap: () async {
+                  final picked = await showSettingsChoice(
+                    context,
+                    title: l10n.settingsTheme,
+                    choices: [for (final m in ThemeMode.values) themeLabel(m)],
+                    selected: settings.themeMode.index,
+                  );
+                  if (picked != null) {
+                    onThemeModeChanged(ThemeMode.values[picked]);
+                  }
+                },
+              ),
+            ],
+          ),
+          SettingsSectionHeader(l10n.settingsAbout),
+          SettingsGroup(
+            children: [
+              const SettingsVersionTile(),
+              if (onOpenPrivacy != null)
+                SettingsRow(
+                  key: const Key('settings_privacy'),
+                  label: l10n.settingsPrivacy,
+                  icon: AdaptiveIcons.privacy(context),
+                  onTap: onOpenPrivacy,
+                ),
+              if (onOpenTerms != null)
+                SettingsRow(
+                  key: const Key('settings_terms'),
+                  label: l10n.settingsTerms,
+                  icon: AdaptiveIcons.terms(context),
+                  onTap: onOpenTerms,
+                ),
+              if (onOpenLicenses != null)
+                SettingsRow(
+                  key: const Key('settings_licenses'),
+                  label: l10n.settingsLicenses,
+                  icon: AdaptiveIcons.licenses(context),
+                  onTap: onOpenLicenses,
+                ),
+>>>>>>> kit a50ee3f
             ],
           ),
         ],

@@ -19,31 +19,72 @@ void main() {
     );
   });
 
+  Widget view({
+    AppSettings settings = const AppSettings(),
+    ValueChanged<Locale?>? onLocaleChanged,
+    ValueChanged<ThemeMode>? onThemeModeChanged,
+    VoidCallback? onOpenPrivacy,
+    VoidCallback? onOpenTerms,
+    VoidCallback? onOpenLicenses,
+  }) => SettingsView(
+    settings: settings,
+    onLocaleChanged: onLocaleChanged ?? (_) {},
+    onThemeModeChanged: onThemeModeChanged ?? (_) {},
+    onOpenPrivacy: onOpenPrivacy,
+    onOpenTerms: onOpenTerms,
+    onOpenLicenses: onOpenLicenses,
+  );
+
   group(SettingsView, () {
-    testWidgets('shows the app version and build number', (tester) async {
-      await tester.pumpApp(
-        SettingsView(
-          settings: const AppSettings(),
-          onLocaleChanged: (_) {},
-          onThemeModeChanged: (_) {},
-        ),
-      );
+    testWidgets('shows the app version and build number, left to right', (
+      tester,
+    ) async {
+      await tester.pumpApp(view());
       await tester.pumpAndSettle();
 
       expect(find.text('1.2.3 (45)'), findsOneWidget);
+      final value = tester.widget<Text>(
+        find.byKey(const Key('settings_version')),
+      );
+      expect(value.textDirection, TextDirection.ltr);
     });
 
-    testWidgets('reports theme and language choices', (tester) async {
-      ThemeMode? themeMode;
-      Locale? locale;
+    testWidgets('rows show the current choices', (tester) async {
       await tester.pumpApp(
-        SettingsView(
-          settings: const AppSettings(),
+        view(
+          settings: const AppSettings(
+            locale: Locale('en'),
+            themeMode: ThemeMode.dark,
+          ),
+        ),
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('settings_language')),
+          matching: find.text(l10nEn.languageEnglish),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('settings_theme')),
+          matching: find.text(l10nEn.settingsThemeDark),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('picks a language and a theme from the sheet', (tester) async {
+      Locale? locale = const Locale('x');
+      ThemeMode? themeMode;
+      await tester.pumpApp(
+        view(
           onLocaleChanged: (value) => locale = value,
           onThemeModeChanged: (value) => themeMode = value,
         ),
       );
 
+<<<<<<< yours
       // Each row shows its value and opens a sheet to pick (board 4).
       expect(find.text(l10nEn.settingsThemeSystem), findsOneWidget);
       await tester.tap(find.byKey(const Key('settings_theme')));
@@ -54,11 +95,23 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text(l10nEn.languageArabic));
       await tester.pumpAndSettle();
-
-      expect(themeMode, ThemeMode.dark);
+=======
+      await tester.tap(find.byKey(const Key('settings_language')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('settings_choice_2')));
+      await tester.pumpAndSettle();
       expect(locale, const Locale('ar'));
+      expect(find.byKey(const Key('settings_choice_2')), findsNothing);
+>>>>>>> kit a50ee3f
+
+      await tester.tap(find.byKey(const Key('settings_theme')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('settings_choice_2')));
+      await tester.pumpAndSettle();
+      expect(themeMode, ThemeMode.dark);
     });
 
+<<<<<<< yours
     testWidgets('closing a choice sheet changes nothing', (tester) async {
       var changes = 0;
       await tester.pumpApp(
@@ -232,25 +285,49 @@ void main() {
     });
 
     testWidgets('meets accessibility guidelines', (tester) async {
-      await tester.pumpApp(
-        SettingsView(
-          settings: const AppSettings(),
-          onLocaleChanged: (_) {},
-          onThemeModeChanged: (_) {},
-        ),
-      );
-      await tester.expectAccessible();
+=======
+    testWidgets('closing the sheet changes nothing', (tester) async {
+      var calls = 0;
+      await tester.pumpApp(view(onLocaleChanged: (_) => calls++));
+
+      await tester.tap(find.byKey(const Key('settings_language')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('settings_choice_1')), findsOneWidget);
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('settings_choice_1')), findsNothing);
+      expect(calls, 0);
     });
 
-    testWidgets('marks the current choices as selected', (tester) async {
+    testWidgets('the sheet marks the current choice', (tester) async {
+>>>>>>> kit a50ee3f
       await tester.pumpApp(
-        SettingsView(
-          settings: const AppSettings(themeMode: ThemeMode.light),
-          onLocaleChanged: (_) {},
-          onThemeModeChanged: (_) {},
+        view(settings: const AppSettings(themeMode: ThemeMode.light)),
+      );
+      await tester.tap(find.byKey(const Key('settings_theme')));
+      await tester.pumpAndSettle();
+
+      bool selected(int i) => tester
+          .getSemantics(find.byKey(Key('settings_choice_$i')))
+          .flagsCollection
+          .isSelected
+          .toBoolOrNull()!;
+      expect(selected(1), isTrue);
+      expect(selected(2), isFalse);
+    });
+
+    testWidgets('opens the privacy policy, terms and licenses', (tester) async {
+      final opened = <String>[];
+      await tester.pumpApp(
+        view(
+          onOpenPrivacy: () => opened.add('privacy'),
+          onOpenTerms: () => opened.add('terms'),
+          onOpenLicenses: () => opened.add('licenses'),
         ),
       );
 
+<<<<<<< yours
       await tester.tap(find.byKey(const Key('settings_theme')));
       await tester.pumpAndSettle();
       final light = tester.widget<AppChoiceRow>(
@@ -258,9 +335,36 @@ void main() {
       );
       final dark = tester.widget<AppChoiceRow>(
         find.widgetWithText(AppChoiceRow, l10nEn.settingsThemeDark),
+=======
+      await tester.tap(find.text(l10nEn.settingsPrivacy));
+      await tester.tap(find.text(l10nEn.settingsTerms));
+      await tester.tap(find.text(l10nEn.settingsLicenses));
+      expect(opened, ['privacy', 'terms', 'licenses']);
+    });
+
+    testWidgets('hides the About links without callbacks', (tester) async {
+      await tester.pumpApp(view());
+      expect(find.byKey(const Key('settings_privacy')), findsNothing);
+      expect(find.byKey(const Key('settings_terms')), findsNothing);
+      expect(find.byKey(const Key('settings_licenses')), findsNothing);
+    });
+
+    testWidgets('meets accessibility guidelines', (tester) async {
+      await tester.pumpApp(
+        view(onOpenPrivacy: () {}, onOpenTerms: () {}, onOpenLicenses: () {}),
+>>>>>>> kit a50ee3f
       );
-      expect(light.selected, isTrue);
-      expect(dark.selected, isFalse);
+      await tester.pumpAndSettle();
+      await tester.expectAccessible();
+    });
+
+    testWidgets('the choice sheet meets accessibility guidelines', (
+      tester,
+    ) async {
+      await tester.pumpApp(view());
+      await tester.tap(find.byKey(const Key('settings_language')));
+      await tester.pumpAndSettle();
+      await tester.expectAccessible();
     });
   });
 

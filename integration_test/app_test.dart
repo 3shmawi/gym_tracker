@@ -61,6 +61,7 @@ Future<void> openHomeMenu(WidgetTester tester) async {
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
+<<<<<<< yours
   testWidgets('first launch: pick the 5-day plan and see the next workout', (
     tester,
   ) async {
@@ -116,6 +117,11 @@ void main() {
     tester,
   ) async {
     await freshInstall(tester);
+=======
+  testWidgets('starts on home, opens settings and switches the language', (
+    tester,
+  ) async {
+>>>>>>> kit a50ee3f
     await app.main();
     await tester.pumpAndSettle();
     await beat(tester, 1500);
@@ -931,6 +937,7 @@ void main() {
     await tester.pumpAndSettle();
     await beat(tester, 1200);
     expect(find.byType(SettingsView), findsOneWidget);
+<<<<<<< yours
     expect(find.byKey(const Key('workout_pill')), findsOneWidget);
 
     // One tap starts day 1 from here.
@@ -955,6 +962,20 @@ void main() {
     expect(find.byType(ExerciseGuideView), findsNothing);
     await tester.tap(find.byKey(const Key('log_set_button')));
     await tester.pumpAndSettle();
+=======
+    await beat(tester);
+
+    // Language: the row opens a sheet; Arabic turns the app right-to-left.
+    await tester.tap(find.byKey(const Key('settings_language')));
+    await tester.pumpAndSettle();
+    await beat(tester);
+    await tester.tap(find.byKey(const Key('settings_choice_2')));
+    await tester.pumpAndSettle();
+    expect(
+      Directionality.of(tester.element(find.byType(SettingsView))),
+      TextDirection.rtl,
+    );
+>>>>>>> kit a50ee3f
     await beat(tester, 1500);
   });
 }

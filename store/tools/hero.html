@@ -1,0 +1,37 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{margin:0;box-sizing:border-box}
+#c{position:relative;overflow:hidden;color:#F2F5F3;font-family:Latin,Arabic,sans-serif;
+ background:radial-gradient(60% 70% at 70% 30%,color-mix(in srgb,var(--brand) 50%,#050807) 0%,transparent 70%),
+   radial-gradient(60% 70% at 15% 90%,color-mix(in srgb,var(--brand) 25%,#050807) 0%,transparent 70%),
+   color-mix(in srgb,var(--brand) 8%,#050807)}
+#c[dir=rtl]{font-family:Arabic,Latin,sans-serif}
+.ph{position:absolute;border-radius:9%/4.2%;padding:1.6%;background:linear-gradient(145deg,#3a3f3c,#0b0d0c 40%,#1f2421);box-shadow:0 60px 120px -20px #000,0 0 160px -30px color-mix(in srgb,var(--brand) 55%,transparent)}
+.ph img{width:100%;display:block;border-radius:8%/3.7%}
+.safe{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.w{font-weight:700;line-height:1}
+.tg{font-weight:700;line-height:1.15}
+.tg b{color:color-mix(in srgb,var(--brand) 70%,#fff)}
+</style></head><body><div id="c"></div><script>
+window.setup = (o) => {
+  const face = (fam, folder) => `@font-face{font-family:${fam};font-weight:100 900;src:${
+    [700, 600, 500, 400].map(w => `url(../../assets/fonts/${folder}/${folder}-${w}.ttf)`).join(',')}}`;
+  const st = document.createElement('style');
+  st.textContent = face('Latin', o.latin) + face('Arabic', o.arabic);
+  document.head.appendChild(st);
+  document.getElementById('c').style.setProperty('--brand', o.brand);
+};
+// Key text inside Apple's art safe area; phones either inside it (search
+// results) or in the outer area as atmosphere (header).
+window.render = (o) => {
+  const c = document.getElementById('c');
+  c.style.width = o.w + 'px'; c.style.height = o.h + 'px'; c.dir = o.dir;
+  const t = o.text;
+  let html = '';
+  for (const p of o.phones) html += `<div class="ph" style="left:${p.x}px;top:${p.y}px;width:${p.w}px;transform:rotate(${p.r}deg)"><img src="${p.img}"></div>`;
+  html += `<div class="safe" style="left:${t.x}px;top:${t.y}px;width:${t.w}px;height:${t.h}px">
+    <div class="w" style="font-size:${o.ws}px">${o.word}</div>
+    <div class="tg" style="font-size:${o.ts}px;margin-top:${o.ts * 0.3}px">${o.tag}</div></div>`;
+  c.innerHTML = html;
+  return Promise.all([...c.querySelectorAll('img')].map(i => i.complete ? 1 : new Promise(r => { i.onload = r; i.onerror = r; })));
+};
+</script></body></html>

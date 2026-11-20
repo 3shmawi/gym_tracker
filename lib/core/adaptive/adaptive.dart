@@ -73,4 +73,39 @@ abstract final class AdaptiveIcons {
 
   static IconData back(BuildContext context) =>
       context.isCupertino ? CupertinoIcons.back : Icons.arrow_back;
+
+  /// "Opens something" chevron at a row's end. Mirrors in RTL (points to
+  /// the end edge in Arabic too), like iOS; `CupertinoIcons.forward`
+  /// itself doesn't mirror.
+  static IconData forward(BuildContext context) =>
+      context.isCupertino ? _cupertinoForward : Icons.chevron_right;
+
+  static const IconData _cupertinoForward = IconData(
+    0xf3d1,
+    fontFamily: CupertinoIcons.iconFont,
+    fontPackage: CupertinoIcons.iconFontPackage,
+    matchTextDirection: true,
+  );
+
+  // Settings rows: SF Symbols' look on iOS, Material outlines on Android.
+  static IconData language(BuildContext context) =>
+      context.isCupertino ? CupertinoIcons.globe : Icons.translate;
+
+  static IconData theme(BuildContext context) => context.isCupertino
+      ? CupertinoIcons.circle_lefthalf_fill
+      : Icons.contrast;
+
+  static IconData privacy(BuildContext context) => context.isCupertino
+      ? CupertinoIcons.hand_raised
+      : Icons.privacy_tip_outlined;
+
+  static IconData terms(BuildContext context) =>
+      context.isCupertino ? CupertinoIcons.doc_text : Icons.gavel_outlined;
+
+  static IconData licenses(BuildContext context) => context.isCupertino
+      ? CupertinoIcons.doc_on_doc
+      : Icons.description_outlined;
+
+  static IconData info(BuildContext context) =>
+      context.isCupertino ? CupertinoIcons.info_circle : Icons.info_outline;
 }

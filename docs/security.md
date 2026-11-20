@@ -8,6 +8,7 @@ Security is tested, not assumed. Three layers run on every pull request.
 | `secrets_test.dart` | private keys, Supabase secret/service-role keys, AWS/Stripe/GitHub/Google keys or hard-coded keystore passwords in `lib/`, `android/`, `ios/`, `website/`, `supabase/`, `env/`; non-empty `env/example.json`; `.gitignore` missing env/signing entries |
 | `platform_config_test.dart` | camera permission without `required=false`, any other sensor/storage/location permission, a missing or untranslated `NSCameraUsageDescription`, `ar` missing from the iOS regions, cleartext HTTP, debuggable releases, the `azm://` scheme and an https App Link that is not exactly `azmm.pages.dev/join/` (Android + iOS entitlements, both flavors), extra exported Android activities, disabled iOS App Transport Security; notifications: only `SCHEDULE_EXACT_ALARM` (no `USE_EXACT_ALARM`, full-screen intent or boot receiver), the receiver not exported, the icon kept from R8, the iOS delegate set |
 | `workflow_secrets_test.dart` | secrets pasted into CI scripts, a key written to a file without `scripts/mask_secrets.sh`, `set -x`, actions not pinned to a commit |
+<<<<<<< yours
 | `well_known_test.dart` | `.well-known` files holding anything but app ids, package names and SHA-256 fingerprints (no secrets); wrong paths (only `/join/*`) or hosts; missing `application/json` headers; website, store texts, docs and app pointing to a host other than `azmm.pages.dev` (or still to the old one) |
 | `join_page_test.dart` | `website/join.html` using `innerHTML`/`document.write`/`eval`/navigation from the address, inline script or style, a third party or tracker, a store link different from the home page, a missing `/join/*` rewrite or `no-store` header, a `?c=` link |
 | `supabase_backend_test.dart` | a table without RLS or without its pgTAP file, a table that keeps `anon`/`authenticated` grants, a `security definer` function without a fixed `search_path` or open to `anon`, a literal (non-random) Vault secret in a migration, a plain `code` column on `invites`, the Edge Function logging request data / reading secrets / losing JWT verification or pinned dependencies, invite PDFs or function `.env` files not git-ignored |
@@ -71,6 +72,10 @@ holds a one-time code, so it only **displays** it:
   apps are signed by the same team and are never public.
 - `website/_headers` sets a strict CSP (no inline script/style, no framing,
   no third parties besides Google Fonts), nosniff and HSTS on every page.
+=======
+| `deep_link_test.dart` | crafted/unknown deep links crashing the app or reaching unexpected screens; open redirects via query parameters |
+| `agent_driver_test.dart` | the Flutter Driver extension (agents tapping the app, `test_driver/agent_app.dart`) reaching a store build: nothing under `lib/` may import `flutter_driver` |
+>>>>>>> kit a50ee3f
 
 ## 2. CI `security` job
 - **gitleaks** — scans the whole git history for committed secrets.

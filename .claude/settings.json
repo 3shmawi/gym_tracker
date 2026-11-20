@@ -6,9 +6,17 @@
         "repo": "google/elephant-goldfish-model",
         "ref": "v0.1.1"
       }
+    },
+    "dart-flutter": {
+      "source": {
+        "source": "github",
+        "repo": "flutter/agent-plugins",
+        "ref": "e5a88d2be19cbf7ba1ef974375e5846492aca2ac"
+      }
     }
   },
   "enabledPlugins": {
-    "egm@egm": true
+    "egm@egm": true,
+    "dart-flutter@dart-flutter": true
   }
 }

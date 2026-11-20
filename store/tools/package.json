@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "description": "Renders the store screenshots and feature graphic (store/README.md -> Screenshots).",
+  "scripts": { "build": "node make.js" },
+  "devDependencies": { "playwright": "1.65.0" }
+}
