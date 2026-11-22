@@ -596,13 +596,17 @@ back to the same set → log it.
 
 ## Home menu (UX pass)
 The home bar has one button, **Menu** (`home_menu_button`). It opens a sheet
-(`home_menu_sheet.dart`, built on `showAppSheet`) with big rows: *Gym or solo*
-(people with a gym account), *Join your gym* (people training alone, so the
-way into a gym is one tap from home, not hidden in Settings), *Your plan*
-(when there is one), *Progress* and *Settings*. Each row keeps its old key
-(`home_plan_button`, ...). To add a destination, add one `HomeMenuEntry` in
-`NextWorkoutView._menuEntries`. A side drawer can later render the same
-entries. Tests: `home_menu_sheet_test.dart`, `next_workout_view_test.dart`,
+(`home_menu_sheet.dart`, built on `showAppSheet`) with two cards of rows,
+styled like Settings (2026-11-22): a green-tinted icon tile, the name, a short
+line saying what is there, and a chevron (at least 56 high, a hairline between
+rows; screen readers hear the name and the line). First card, training:
+*Your plan* (when there is one), *Progress*, *Move*. Second card
+(`HomeMenuEntry.secondary`): *Gym or solo* (people with a gym account) or
+*Join your gym* (people training alone, so the way into a gym is one tap from
+home), and *Settings*. Each row keeps its old key (`home_plan_button`, ...).
+To add a destination, add one `HomeMenuEntry` (with its `detail`) in
+`NextWorkoutView._menuEntries`. Tests: `home_menu_sheet_test.dart` (with
+`screensUiTests` for the solo and gym menus), `next_workout_view_test.dart`,
 `gym_flows_test.dart`, the integration tests (`openHomeMenu`).
 
 ## The phone's database
