@@ -8,11 +8,27 @@ enum RoundKind {
   s30('s30', time: Duration(seconds: 30)),
   s60('s60', time: Duration(seconds: 60)),
   r10('r10', target: 10),
-  r20('r20', target: 20);
+  r20('r20', target: 20),
 
-  new(this.id, {this.time, this.target});
+  /// Holds (plank, docs/designs/plank_hold.md): the "reps" are seconds held.
+  h30('h30', target: 30, hold: true),
+  h45('h45', target: 45, hold: true),
+  h60('h60', target: 60, hold: true),
+
+  /// "As long as you can": ends on End, after [maxBreak] out of form, or at
+  /// [maxRound].
+  hMax('hmax', hold: true);
+
+  new(this.id, {this.time, this.target, this.hold = false});
 
   final String id;
+
+  /// A hold: [RoundState.reps] are seconds held.
+  final bool hold;
+
+  /// "As long as you can" ends when form stays broken this long (they're
+  /// down).
+  static const maxBreak = Duration(seconds: 5);
 
   /// A timed round ends at this time.
   final Duration? time;
@@ -108,8 +124,9 @@ class RoundState {
   }
 
   /// What the round's clock shows: the time left for a timed round, the
-  /// time so far for a target round.
+  /// time so far for a target round, the seconds held for a hold.
   Duration clock(DateTime now) {
+    if (kind.hold) return Duration(seconds: reps);
     final time = kind.time;
     if (time == null) return elapsed(now);
     final left = time - elapsed(now);
@@ -179,6 +196,24 @@ class RoundState {
           startedAt: () => startedAt ?? ends,
         );
       case RoundPhase.running:
+        // Holding without a camera: the seconds held are the running time.
+        if (kind.hold && mode == RoundMode.manual) {
+          final held = elapsed(now).inSeconds;
+          final target = kind.target;
+          if (target != null && held >= target) {
+            final since = runningSince;
+            final at = since == null
+                ? now
+                : since.add(Duration(seconds: target) - banked);
+            return _copy(reps: target)._finish(at);
+          }
+          if (held != reps) {
+            final next = _copy(reps: held);
+            return elapsed(now) >= RoundKind.maxRound
+                ? next._finish(now)
+                : next;
+          }
+        }
         final time = kind.time ?? RoundKind.maxRound;
         if (elapsed(now) >= time) {
           final since = runningSince;

@@ -2,10 +2,14 @@ import 'package:gym_tracker/features/move/domain/entities/rep_event.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
 import 'package:gym_tracker/l10n/l10n.dart';
 
-/// "30 s", "10 reps"…
+/// "30 s", "10 reps", "As long as you can"…
 String roundLabel(AppLocalizations l10n, RoundKind k) => switch (k) {
   RoundKind.s30 || RoundKind.s60 => l10n.moveRoundSeconds(k.time!.inSeconds),
   RoundKind.r10 || RoundKind.r20 => l10n.moveRoundReps(k.target!),
+  RoundKind.h30 ||
+  RoundKind.h45 ||
+  RoundKind.h60 => l10n.moveRoundSeconds(k.target!),
+  RoundKind.hMax => l10n.moveRoundMax,
 };
 
 /// A hint, in words (spoken by the screen reader too).

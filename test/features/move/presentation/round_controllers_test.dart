@@ -68,6 +68,12 @@ class FakeMoveVoice implements MoveVoice {
   @override
   void count(int count) => said.add(count);
 
+  /// Hints spoken (docs/designs/plank_hold.md §6).
+  final hints = <String>[];
+
+  @override
+  void say(String text) => hints.add(text);
+
   @override
   Future<void> dispose() async => disposed = true;
 }

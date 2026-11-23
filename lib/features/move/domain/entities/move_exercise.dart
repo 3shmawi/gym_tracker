@@ -2,7 +2,11 @@
 /// route) and never reused; [catalogExerciseId] is the library exercise a
 /// round is saved as.
 enum MoveExerciseId {
-  pushUps('push_ups', catalogExerciseId: 'push_ups');
+  pushUps('push_ups', catalogExerciseId: 'push_ups'),
+
+  /// A hold: the "reps" are seconds held with a straight body
+  /// (docs/designs/plank_hold.md).
+  plank('plank', catalogExerciseId: 'plank');
 
   new(this.id, {required this.catalogExerciseId});
 

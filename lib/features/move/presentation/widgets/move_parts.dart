@@ -61,16 +61,21 @@ class RoundHud extends StatelessWidget {
   }
 }
 
-/// The big rep count, announced to screen readers.
+/// The big rep count, announced to screen readers. For a hold ([hold]):
+/// the seconds held, and the target if there is one ("of 30 s").
 class RepsCounter extends StatelessWidget {
-  const new({required this.reps, super.key});
+  const new({required this.reps, this.hold = false, this.target, super.key});
 
   final int reps;
+  final bool hold;
+  final int? target;
 
   @override
   Widget build(BuildContext context) => Semantics(
-    liveRegion: true,
-    label: context.l10n.moveRepsSoFar(reps),
+    liveRegion: !hold,
+    label: hold
+        ? context.l10n.moveHeldSoFar(reps)
+        : context.l10n.moveRepsSoFar(reps),
     excludeSemantics: true,
     child: Column(
       mainAxisSize: MainAxisSize.min,
@@ -83,7 +88,11 @@ class RepsCounter extends StatelessWidget {
           ),
         ),
         Text(
-          context.l10n.moveRepsUnit,
+          switch ((hold, target)) {
+            (true, final t?) => context.l10n.moveHeldOf(t),
+            (true, null) => context.l10n.moveHeldUnit,
+            (false, _) => context.l10n.moveRepsUnit,
+          },
           style: AppTextStyles.label.copyWith(
             color: context.palette.textSecondary,
           ),
@@ -158,8 +167,12 @@ class PausedSheet extends StatelessWidget {
     required this.onEnd,
     this.onManual,
     this.bodyLost = false,
+    this.hold = false,
     super.key,
   });
+
+  /// A hold: [reps] are seconds held.
+  final bool hold;
 
   final int reps;
   final Duration clock;
@@ -194,7 +207,9 @@ class PausedSheet extends StatelessWidget {
                 ),
               ),
               Text(
-                l10n.movePausedBody(reps, clockLabel(clock)),
+                hold
+                    ? l10n.movePausedHold(clockLabel(clock))
+                    : l10n.movePausedBody(reps, clockLabel(clock)),
                 style: AppTextStyles.body.copyWith(
                   color: palette.textSecondary,
                 ),

@@ -154,6 +154,7 @@ class CameraRoundView extends StatelessWidget {
             dimmed: true,
             overlay: PausedSheet(
               reps: round.reps,
+              hold: round.kind.hold,
               clock: round.clock(now),
               bodyLost: round.pauseReason == PauseReason.bodyLost,
               onResume: onResume,
@@ -445,7 +446,13 @@ class _Running extends StatelessWidget {
                   ),
                 ),
               ),
-              Expanded(child: RepsCounter(reps: round.reps)),
+              Expanded(
+                child: RepsCounter(
+                  reps: round.reps,
+                  hold: round.kind.hold,
+                  target: round.kind.target,
+                ),
+              ),
               SizedBox(width: AppDimens.scaled(72)),
             ],
           ),
@@ -468,24 +475,26 @@ class _Running extends StatelessWidget {
               ],
             ),
           ),
-          Center(
-            child: SizedBox(
-              width: AppDimens.scaled(200),
-              child: Semantics(
-                label: l10n.moveDepth,
-                value: '${(state.rep.depth * 100).round()}%',
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(AppDimens.radiusSm),
-                  child: LinearProgressIndicator(
-                    value: state.rep.depth,
-                    minHeight: AppDimens.sm,
-                    color: palette.brand,
-                    backgroundColor: palette.fillSubtle,
+          // A hold has no depth: the clock and the tower say it all.
+          if (!round.kind.hold)
+            Center(
+              child: SizedBox(
+                width: AppDimens.scaled(200),
+                child: Semantics(
+                  label: l10n.moveDepth,
+                  value: '${(state.rep.depth * 100).round()}%',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+                    child: LinearProgressIndicator(
+                      value: state.rep.depth,
+                      minHeight: AppDimens.sm,
+                      color: palette.brand,
+                      backgroundColor: palette.fillSubtle,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

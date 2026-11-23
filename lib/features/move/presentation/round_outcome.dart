@@ -6,6 +6,7 @@ import 'package:gym_tracker/core/network/result.dart';
 import 'package:gym_tracker/features/move/domain/entities/move_sound_mode.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
 import 'package:gym_tracker/features/move/domain/move_analytics.dart';
+import 'package:gym_tracker/features/move/domain/move_exercises.dart';
 import 'package:gym_tracker/features/move/presentation/move_providers.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
 import 'package:meta/meta.dart';
@@ -45,9 +46,12 @@ mixin RoundEnding {
     required String ended,
     double? fps,
   }) async {
-    final best = await ref
-        .read(moveLocalRepositoryProvider)
-        .offerBest(result.exercise, result.kind, result.reps);
+    // A hold with a target always ends at it: no best to keep.
+    final best = MoveExercises.keepsBest(result.kind)
+        ? await ref
+              .read(moveLocalRepositoryProvider)
+              .offerBest(result.exercise, result.kind, result.reps)
+        : const Success(false);
     unawaited(
       Analytics.capture('move_game_finished', {
         'exercise': result.exercise.id,

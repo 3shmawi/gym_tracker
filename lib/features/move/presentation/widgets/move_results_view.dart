@@ -37,6 +37,7 @@ class MoveResultsView extends StatelessWidget {
     final r = outcome.result;
     final saved = outcome.save == SaveState.saved;
     final camera = r.mode == RoundMode.camera;
+    final hold = r.kind.hold;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -60,13 +61,22 @@ class MoveResultsView extends StatelessWidget {
                       ),
                     Semantics(
                       liveRegion: true,
-                      label: l10n.moveRepsDone(r.reps, exerciseName),
+                      label: hold
+                          ? l10n.moveHeldDone(
+                              clockLabel(Duration(seconds: r.reps)),
+                              exerciseName,
+                            )
+                          : l10n.moveRepsDone(r.reps, exerciseName),
                       excludeSemantics: true,
                       child: Column(
                         children: [
                           Text(
-                            '${r.reps}',
+                            hold
+                                ? clockLabel(Duration(seconds: r.reps))
+                                : '${r.reps}',
                             key: const Key('move_results_reps'),
+                            // A clock ("0:45") reads left to right.
+                            textDirection: hold ? TextDirection.ltr : null,
                             style: AppTextStyles.numHero.copyWith(
                               color: palette.textPrimary,
                             ),
@@ -85,9 +95,9 @@ class MoveResultsView extends StatelessWidget {
                       spacing: AppDimens.sm,
                       runSpacing: AppDimens.sm,
                       children: [
-                        if (camera)
+                        if (camera && !hold)
                           _Kpi(value: '${r.steady}', label: l10n.moveSteady),
-                        if (camera)
+                        if (camera && !hold)
                           _Kpi(
                             value: '${r.halfReps}',
                             label: l10n.moveHalfReps,

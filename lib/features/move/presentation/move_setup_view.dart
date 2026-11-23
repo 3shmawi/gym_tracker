@@ -53,11 +53,16 @@ class MoveSetupView extends StatelessWidget {
             style: AppTextStyles.headline.copyWith(color: palette.textPrimary),
           ),
         ),
-        for (final (i, line) in [
-          l10n.moveTip1,
-          l10n.moveTip2,
-          l10n.moveTip3,
-        ].indexed)
+        // The plank's own tip (docs/designs/plank_hold.md); push-ups' else.
+        for (final (i, line)
+            in (exercise.id == 'plank'
+                    ? [
+                        l10n.moveTipPlank1,
+                        l10n.moveTipPlank2,
+                        l10n.moveTipPlank3,
+                      ]
+                    : [l10n.moveTip1, l10n.moveTip2, l10n.moveTip3])
+                .indexed)
           _Line(number: i + 1, text: line),
       ],
       MoveSetupStep.why => <Widget>[
