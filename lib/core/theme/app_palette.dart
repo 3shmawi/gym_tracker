@@ -108,6 +108,12 @@ class AppPalette extends ThemeExtension<AppPalette> {
   /// A soft [brand] fill behind content (done sets, a selected choice).
   Color get brandTint => brand.withValues(alpha: 0.2);
 
+  /// Text on a solid [trendDown] fill (Move games' big hints, read from
+  /// 2 m): dark on the dark theme's amber, light on the light theme's brown.
+  Color get onTrendDown => trendDown.computeLuminance() > 0.4
+      ? AppColors.lightText1
+      : AppColors.darkText1;
+
   @override
   AppPalette copyWith({
     Color? background,

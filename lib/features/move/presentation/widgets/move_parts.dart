@@ -102,24 +102,62 @@ class RepsCounter extends StatelessWidget {
   );
 }
 
-/// One hint at a time, spoken by the screen reader.
+/// One hint or notice at a time, large enough to read from the floor 2 m
+/// away (docs/designs/plank_hold.md §6): full width, display-size bold text
+/// on a solid fill, a large icon. Announced by the screen reader.
 class HintChip extends StatelessWidget {
   const new({required this.text, super.key});
 
   final String text;
 
+  /// Contrast of the text on its fill, at least (checked by a test).
+  static const minContrast = 7.0;
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.all(AppDimens.sm),
-    child: Semantics(
-      liveRegion: true,
-      child: AppBanner(
-        icon: Icons.info_outline,
-        text: text,
-        tone: AppBannerTone.warning,
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    return Padding(
+      padding: EdgeInsets.all(AppDimens.xs),
+      child: Semantics(
+        liveRegion: true,
+        label: text,
+        excludeSemantics: true,
+        child: DecoratedBox(
+          key: const Key('move_callout'),
+          decoration: BoxDecoration(
+            color: palette.trendDown,
+            borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+          ),
+          child: Padding(
+            padding: EdgeInsetsDirectional.symmetric(
+              horizontal: AppDimens.sm2,
+              vertical: AppDimens.sm,
+            ),
+            child: Row(
+              spacing: AppDimens.sm2,
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  size: AppDimens.scaled(40),
+                  color: palette.onTrendDown,
+                ),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: AppTextStyles.display.copyWith(
+                      color: palette.onTrendDown,
+                      fontWeight: FontWeight.w800,
+                      height: 1.15,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// A placement check: green when done.

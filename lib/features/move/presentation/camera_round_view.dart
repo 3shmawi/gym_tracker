@@ -456,15 +456,18 @@ class _Running extends StatelessWidget {
               SizedBox(width: AppDimens.scaled(72)),
             ],
           ),
-          Expanded(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                if (game case final StackState stack)
-                  StackGameView(state: stack),
-                if (chip != null)
-                  Align(
-                    alignment: AlignmentDirectional.topCenter,
+          // The hint sits above the tower, never over it: the tower gives
+          // up its height while the hint shows.
+          // At most half of the space left: on a small screen with large
+          // text, the whole callout scales down instead of being cut.
+          if (chip != null)
+            Flexible(
+              child: LayoutBuilder(
+                builder: (context, box) => FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.topCenter,
+                  child: SizedBox(
+                    width: box.maxWidth,
                     child: HintChip(
                       key: notice == null
                           ? null
@@ -472,8 +475,13 @@ class _Running extends StatelessWidget {
                       text: chip,
                     ),
                   ),
-              ],
+                ),
+              ),
             ),
+          Expanded(
+            child: game is StackState
+                ? StackGameView(state: game)
+                : const SizedBox.shrink(),
           ),
           // A hold has no depth: the clock and the tower say it all.
           if (!round.kind.hold)
