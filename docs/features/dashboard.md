@@ -49,7 +49,7 @@ Everything is pinned to an exact version in `dashboard/package.json` and
 | `eslint` 10.13.0, `typescript-eslint` 8.72.0, `@eslint/js` 10.0.1 | | lint |
 | `vitest` | **4.1.12** | the first version that fixes GHSA-82fw-gwwq-j7x9 and GHSA-qxg6-89mg-rqv8 |
 | `jsdom` | 30.1.3 | DOM for unit tests |
-| `@playwright/test` 1.65.0, `@axe-core/playwright` 4.14.0 | | browser tests, accessibility; the CI image `mcr.microsoft.com/playwright:v1.65.0-noble` must be the same version |
+| `@playwright/test` 1.65.1, `@axe-core/playwright` 4.14.0 | | browser tests, accessibility; the CI image `mcr.microsoft.com/playwright:v1.65.1-noble` must be the same version (digest read from `mcr.microsoft.com/v2/playwright/manifests/v1.65.1-noble` on 2026-11-23). Dependabot bumps the package alone: bump the image in its PR, or every e2e test fails at browser launch |
 | `minimatch` | **11.0.3** (npm `overrides`) | fixes GHSA-g3hv-75wg-m249 in a transitive dependency |
 
 Lockfile note: `package-lock.json` was generated with **npm 11.21.1**,
