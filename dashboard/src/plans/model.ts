@@ -2,7 +2,8 @@
 // workout_plan.dart) and the server checks it (private.plan_problem, migrations
 // 0007 + 0016 + 0024). The dashboard must only ever send a body the app accepts.
 
-export type Unit = 'kg' | 'plate' | 'reps';
+/** `seconds`: a hold such as a plank (migration 0025); set by the member in the app. */
+export type Unit = 'kg' | 'plate' | 'reps' | 'seconds';
 
 export interface PlanName {
   readonly ar: string;
@@ -143,8 +144,8 @@ export function parsePlan(body: unknown): Plan | null {
       const exName = readName(e.name);
       if (!exName || typeof e.id !== 'string' || !isInt(e.sets) || !isInt(e.reps) || !isInt(e.rest)) return null;
       if (typeof e.step !== 'number' || !Number.isFinite(e.step) || typeof e.superset !== 'boolean') return null;
-      if ('unit' in e && e.unit !== 'kg' && e.unit !== 'plate' && e.unit !== 'reps') return null;
-      const unit: Unit = e.unit === 'plate' || e.unit === 'reps' ? e.unit : 'kg';
+      if ('unit' in e && e.unit !== 'kg' && e.unit !== 'plate' && e.unit !== 'reps' && e.unit !== 'seconds') return null;
+      const unit: Unit = e.unit === 'plate' || e.unit === 'reps' || e.unit === 'seconds' ? e.unit : 'kg';
       if ('top' in e && !isInt(e.top)) return null;
       const top = isInt(e.top) ? { top: e.top } : {};
       exercises.push({ id: e.id, name: exName, sets: e.sets, reps: e.reps, rest: e.rest, step: e.step, superset: e.superset, unit, ...top });

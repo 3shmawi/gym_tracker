@@ -31,8 +31,9 @@ class LocalizedName {
 }
 
 /// How an exercise is logged (field test 2026-11-03). Stored in the plan as
-/// `unit` (`kg`, `plate`, `reps`); missing = [kg], so plans saved before
-/// keep working (migration 0016 allows the key on gym plans).
+/// `unit` (`kg`, `plate`, `reps`, `seconds`); missing = [kg], so plans saved
+/// before keep working (migrations 0016 and 0025 allow the key on gym
+/// plans).
 enum ExerciseUnit {
   /// Weight in kg (the default).
   kg,
@@ -41,7 +42,14 @@ enum ExerciseUnit {
   plate,
 
   /// Reps only (body weight, abs): no weight is asked.
-  reps;
+  reps,
+
+  /// A hold (plank), in seconds: no weight; a set's `reps` are the seconds
+  /// (docs/designs/plank_hold.md).
+  seconds;
+
+  /// A weight (kg) or a plate number is logged with each set.
+  bool get hasWeight => this == kg || this == plate;
 
   /// [kg] for anything missing or unknown.
   static ExerciseUnit parse(Object? value) =>
@@ -104,7 +112,7 @@ class Exercise {
   double get step => switch (unit) {
     ExerciseUnit.kg => weightStep,
     ExerciseUnit.plate => 1,
-    ExerciseUnit.reps => 0,
+    ExerciseUnit.reps || ExerciseUnit.seconds => 0,
   };
 
   Exercise copyWith({

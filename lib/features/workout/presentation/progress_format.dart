@@ -33,7 +33,7 @@ abstract final class ProgressFormat {
     return (l10n.progressSame, AppTone.keep);
   }
 
-  /// "52.5 kg", "plate 7", or "Reps only" (no weight to show).
+  /// "52.5 kg", "plate 7", or "Reps only" / "Hold" (no weight to show).
   static String kg(
     AppLocalizations l10n,
     double weight, [
@@ -42,5 +42,6 @@ abstract final class ProgressFormat {
     ExerciseUnit.kg => l10n.weightKg(WorkoutFormat.weight(weight)),
     ExerciseUnit.plate => l10n.weightPlate(WorkoutFormat.weight(weight)),
     ExerciseUnit.reps => l10n.planUnitReps,
+    ExerciseUnit.seconds => l10n.planUnitSeconds,
   };
 }

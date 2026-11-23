@@ -34,6 +34,9 @@ class GetLevel {
   /// reps in all (docs/designs/move_games.md §8, decision 4).
   static const moveRepsForLevel = 20;
 
+  /// The Move exercise whose reps count toward the level.
+  static const pushUpsId = 'push_ups';
+
   static int _addReps(int sum, LoggedSet set) =>
       sum + (set.reps > 0 ? set.reps : 0);
 
@@ -64,7 +67,11 @@ class GetLevel {
       final local = s.finishedAt.toLocal();
       if (s.isMove) {
         final day = DateTime(local.year, local.month, local.day);
-        moveReps[day] = (moveReps[day] ?? 0) + s.sets.fold(0, _addReps);
+        // Push-up reps only: plank seconds are not reps
+        // (docs/designs/plank_hold.md).
+        moveReps[day] =
+            (moveReps[day] ?? 0) +
+            s.sets.where((x) => x.exerciseId == pushUpsId).fold(0, _addReps);
         continue;
       }
       final week = _week(local);

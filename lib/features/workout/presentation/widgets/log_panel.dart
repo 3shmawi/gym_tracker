@@ -25,6 +25,9 @@ class SetSteppers extends StatelessWidget {
   final int reps;
   final double weightStep;
   final ExerciseUnit unit;
+
+  /// A hold's stepper moves this many seconds.
+  static const secondsStep = 5;
   final ValueChanged<double> onWeight;
   final ValueChanged<int> onReps;
 
@@ -36,7 +39,7 @@ class SetSteppers extends StatelessWidget {
     return Column(
       spacing: AppDimens.sm,
       children: [
-        if (unit != ExerciseUnit.reps)
+        if (unit.hasWeight)
           AppStepper(
             key: const Key('weight_stepper'),
             value: WorkoutFormat.weight(weight),
@@ -54,15 +57,31 @@ class SetSteppers extends StatelessWidget {
                 ? null
                 : () => onWeight(weight + weightStep),
           ),
-        AppStepper(
-          key: const Key('reps_stepper'),
-          value: '$reps',
-          unit: l10n.unitReps,
-          decrementLabel: l10n.workoutRemoveRep,
-          incrementLabel: l10n.workoutAddRep,
-          onDecrement: reps <= 0 ? null : () => onReps(reps - 1),
-          onIncrement: reps >= 999 ? null : () => onReps(reps + 1),
-        ),
+        if (unit == ExerciseUnit.seconds)
+          // A hold: seconds in steps of 5 (docs/designs/plank_hold.md).
+          AppStepper(
+            key: const Key('reps_stepper'),
+            value: '$reps',
+            unit: l10n.unitSeconds,
+            decrementLabel: l10n.workoutRemoveSeconds(secondsStep),
+            incrementLabel: l10n.workoutAddSeconds(secondsStep),
+            onDecrement: reps <= 0
+                ? null
+                : () => onReps((reps - secondsStep).clamp(0, 999)),
+            onIncrement: reps >= 999
+                ? null
+                : () => onReps((reps + secondsStep).clamp(0, 999)),
+          )
+        else
+          AppStepper(
+            key: const Key('reps_stepper'),
+            value: '$reps',
+            unit: l10n.unitReps,
+            decrementLabel: l10n.workoutRemoveRep,
+            incrementLabel: l10n.workoutAddRep,
+            onDecrement: reps <= 0 ? null : () => onReps(reps - 1),
+            onIncrement: reps >= 999 ? null : () => onReps(reps + 1),
+          ),
       ],
     );
   }
@@ -148,11 +167,13 @@ class _LogPanelState extends State<LogPanel> {
         AppPrimaryButton(
           key: const Key('log_set_button'),
           icon: Icons.check,
-          label: widget.unit == ExerciseUnit.reps
-              ? l10n.workoutLogReps(_reps)
-              : l10n.workoutLog(
-                  WorkoutFormat.weightTimesReps(_weight, _reps, widget.unit),
-                ),
+          label: switch (widget.unit) {
+            ExerciseUnit.reps => l10n.workoutLogReps(_reps),
+            ExerciseUnit.seconds => l10n.workoutLogSeconds(_reps),
+            ExerciseUnit.kg || ExerciseUnit.plate => l10n.workoutLog(
+              WorkoutFormat.weightTimesReps(_weight, _reps, widget.unit),
+            ),
+          },
           onPressed: () => widget.onLog(_weight, _reps),
         ),
         if (widget.partnerName != null)

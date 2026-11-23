@@ -14,39 +14,51 @@ abstract final class WorkoutFormat {
     return fixed.replaceFirst(RegExp(r'\.?0+$'), '');
   }
 
-  /// The load in [unit]: kg "52.5", a plate "#7", reps only "" (none).
+  /// The load in [unit]: kg "52.5", a plate "#7", reps only and seconds ""
+  /// (none).
   static String amount(double value, [ExerciseUnit unit = ExerciseUnit.kg]) =>
       switch (unit) {
         ExerciseUnit.kg => weight(value),
         ExerciseUnit.plate => '#${weight(value)}',
-        ExerciseUnit.reps => '',
+        ExerciseUnit.reps || ExerciseUnit.seconds => '',
       };
 
-  /// One set: "52.5×12", "#7×12", or reps only "12".
+  /// A hold as a clock, the same in both languages: 30 → "0:30", 75 →
+  /// "1:15".
+  static String hold(int seconds) {
+    final s = seconds < 0 ? 0 : seconds;
+    return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
+  }
+
+  /// A set's count without a weight: reps "12", seconds "0:30".
+  static String _count(int reps, ExerciseUnit unit) =>
+      unit == ExerciseUnit.seconds ? hold(reps) : '$reps';
+
+  /// One set: "52.5×12", "#7×12", reps only "12", seconds "0:30".
   static String set(
     double value,
     int reps, [
     ExerciseUnit unit = ExerciseUnit.kg,
-  ]) => unit == ExerciseUnit.reps ? '$reps' : '${amount(value, unit)}×$reps';
+  ]) => unit.hasWeight ? '${amount(value, unit)}×$reps' : _count(reps, unit);
 
   /// Last time's sets, as short as it stays clear:
   /// - same weight and reps: "50×12 ×3"
   /// - same weight: "22.5×12, 12, 11"
   /// - otherwise: "30×12, 50×10".
-  /// Plates read "#7×12 ×3"; reps only "12 ×3" or "12, 12, 10".
+  /// Plates read "#7×12 ×3"; reps only "12 ×3" or "12, 12, 10"; seconds
+  /// "0:30 ×3" or "0:45, 0:40".
   static String sets(
     List<LoggedSet> sets, [
     ExerciseUnit unit = ExerciseUnit.kg,
   ]) {
     if (sets.isEmpty) return '';
     final first = sets.first;
-    if (unit == ExerciseUnit.reps) {
+    if (!unit.hasWeight) {
+      final one = _count(first.reps, unit);
       if (sets.every((s) => s.reps == first.reps)) {
-        return sets.length == 1
-            ? '${first.reps}'
-            : '${first.reps} ×${sets.length}';
+        return sets.length == 1 ? one : '$one ×${sets.length}';
       }
-      return sets.map((s) => s.reps).join(', ');
+      return sets.map((s) => _count(s.reps, unit)).join(', ');
     }
     String w(double value) => amount(value, unit);
     final sameWeight = sets.every((s) => s.weight == first.weight);
@@ -62,13 +74,13 @@ abstract final class WorkoutFormat {
   }
 
   /// "52.5 × 12", isolated so it reads the same inside Arabic text.
-  /// Plates: "#7 × 12"; reps only: "12".
+  /// Plates: "#7 × 12"; reps only: "12"; seconds "0:30".
   static String weightTimesReps(
     double kg,
     int reps, [
     ExerciseUnit unit = ExerciseUnit.kg,
   ]) =>
-      ltr(unit == ExerciseUnit.reps ? '$reps' : '${amount(kg, unit)} × $reps');
+      ltr(unit.hasWeight ? '${amount(kg, unit)} × $reps' : _count(reps, unit));
 
   /// "3×12": sets × reps; "2×6–10" with a rep range.
   static String target(int sets, int reps, [int? top]) =>
