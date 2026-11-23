@@ -15,6 +15,7 @@ class ExerciseCalls {
   final targets = <Map<String, Object>>[];
   final renamed = <LocalizedName>[];
   final supersets = <bool>[];
+  final ranges = <int?>[];
   int deletes = 0;
   int backs = 0;
   int retries = 0;
@@ -45,6 +46,7 @@ Widget view(
           'unit': ?unit,
         }),
     onSetSuperset: c.supersets.add,
+    onSetRange: c.ranges.add,
     onDelete: () => c.deletes++,
   );
 }
@@ -218,6 +220,8 @@ void main() {
         ),
       );
       expect(find.text('After the pair'), findsOneWidget);
+      await tester.ensureVisible(find.byKey(const Key('plan_target_rest')));
+      await tester.pumpAndSettle();
       await tester.tap(find.bySemanticsLabel('15 seconds more'));
       expect(calls.targets, isEmpty);
       await tapKey(tester, const Key('plan_superset_switch'));
@@ -262,6 +266,8 @@ void main() {
       );
       expect(find.byKey(const Key('plan_rename_exercise')), findsNothing);
       expect(find.byKey(const Key('plan_delete_exercise')), findsNothing);
+      await tester.ensureVisible(find.byKey(const Key('plan_target_sets')));
+      await tester.pumpAndSettle();
       await tester.tap(find.bySemanticsLabel('One set more'));
       await tapKey(tester, const Key('plan_step_5.0'));
       expect(calls.targets, isEmpty);
@@ -326,7 +332,74 @@ void main() {
     });
   });
 
+  group('rep range', () {
+    testWidgets('off: the switch turns it on with the reps + 4', (
+      tester,
+    ) async {
+      final calls = ExerciseCalls();
+      await tester.pumpApp(
+        view(
+          const AsyncData(planState),
+          dayId: 'day-1',
+          exerciseId: 'flat_db_press',
+          calls: calls,
+        ),
+      );
+      expect(find.byKey(const Key('plan_target_top')), findsNothing);
+      expect(find.text('Reps'), findsOneWidget);
+      await tapKey(tester, const Key('plan_rep_range_switch'));
+      expect(calls.ranges, [16]);
+    });
+
+    testWidgets('on: "Reps from", "Up to" steps the top, off clears it', (
+      tester,
+    ) async {
+      final calls = ExerciseCalls();
+      await tester.pumpApp(
+        view(
+          AsyncData(rangeState),
+          dayId: 'day-1',
+          exerciseId: 'flat_db_press',
+          calls: calls,
+        ),
+      );
+      expect(find.text('Reps from'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('plan_target_top')),
+          matching: find.text('10'),
+        ),
+        findsOneWidget,
+      );
+      await tester.ensureVisible(find.byKey(const Key('plan_target_top')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('Top of the range: one rep more'));
+      await tester.tap(find.bySemanticsLabel('Top of the range: one rep less'));
+      await tapKey(tester, const Key('plan_rep_range_switch'));
+      expect(calls.ranges, [11, 9, null]);
+    });
+
+    testWidgets('locked day: the switch is off-limits', (tester) async {
+      final calls = ExerciseCalls();
+      await tester.pumpApp(
+        view(
+          const AsyncData(lockedState),
+          dayId: 'day-1',
+          exerciseId: 'flat_db_press',
+          calls: calls,
+        ),
+      );
+      await tapKey(tester, const Key('plan_rep_range_switch'));
+      expect(calls.ranges, isEmpty);
+    });
+  });
+
   screensUiTests({
+    'plan_exercise_range': () => view(
+      AsyncData(rangeState),
+      dayId: 'day-1',
+      exerciseId: 'flat_db_press',
+    ),
     'plan_exercise': () => view(const AsyncData(planState)),
     'plan_exercise_superset': () =>
         view(const AsyncData(planState), exerciseId: 'alternating_db_curl'),

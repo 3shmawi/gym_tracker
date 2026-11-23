@@ -39,7 +39,11 @@ class ExercisePreviewRow extends StatelessWidget {
     final suggestion = preview.suggestion;
     final meta = [
       WorkoutFormat.ltr(
-        WorkoutFormat.target(exercise.targetSets, exercise.targetReps),
+        WorkoutFormat.target(
+          exercise.targetSets,
+          exercise.targetReps,
+          exercise.repsTop,
+        ),
       ),
       if (preview.lastSets.isNotEmpty)
         l10n.exerciseLast(

@@ -113,6 +113,10 @@ String? validatePlan(WorkoutPlan plan) {
           e.targetReps > PlanLimits.maxReps) {
         return 'reps out of range';
       }
+      if (e.repsTop case final top?
+          when top < e.targetReps || top > PlanLimits.maxReps) {
+        return 'top out of range';
+      }
       if (e.restSeconds < PlanLimits.minRest ||
           e.restSeconds > PlanLimits.maxRest) {
         return 'rest out of range';

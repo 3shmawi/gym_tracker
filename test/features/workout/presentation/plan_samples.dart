@@ -87,3 +87,23 @@ class _SheetHostState extends State<SheetHost> {
   @override
   Widget build(BuildContext context) => widget.background;
 }
+
+/// The 5-day template with day 1's Flat Dumbbell Press on a rep range
+/// (2 sets, 6–10: sets to failure, docs/designs/rep_ranges.md).
+final rangeState = PlanEditorState(
+  plan: WorkoutPlan(
+    days: [
+      for (final d in PlanTemplates.fiveDaySplit.days)
+        d.copyWith(
+          exercises: [
+            for (final e in d.exercises)
+              if (d.id == 'day-1' && e.id == 'flat_db_press')
+                e.copyWith(targetSets: 2, targetReps: 6).withRange(10)
+              else
+                e,
+          ],
+        ),
+    ],
+  ),
+  nextDayId: 'day-1',
+);

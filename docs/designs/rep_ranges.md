@@ -169,6 +169,12 @@ staging app builds come from `develop`. The server refuses unknown keys.
    harmless.
 2. **PR B**: the app. Reading, suggesting and the editor ship together.
 
+**As shipped (2026-11-23):** both steps went into one PR to `main`
+(3shmawi/gym_tracker#134). The owner confirmed the staging app uses the
+production Supabase project, and nothing reaches `develop` before `main`, so
+the only gap the split protected against doesn't exist: merging to `main`
+applies 0024 within minutes, while the app needs days of store review.
+
 Older app versions read `top` and ignore it (`2×6`, old rule). Only the
 member sets a range, on the new version; an older version on a second device
 that saves the plan would drop it. Accepted and documented; no force update.

@@ -262,6 +262,19 @@ class PlanEditorController extends AsyncNotifier<PlanEditorState> {
     targetsOnly: true,
   );
 
+  /// Turns the rep range on (top), changes its top, or off (null).
+  Future<PlanEditError?> setRange(
+    String dayId,
+    String exerciseId, {
+    required int? top,
+  }) => _apply(
+    (plan, locked) =>
+        _edit.setRange(plan, dayId, exerciseId, top: top, lockedDayId: locked),
+    'plan_targets_changed',
+    properties: {'field': 'range', 'on': top != null},
+    targetsOnly: true,
+  );
+
   Future<PlanEditError?> _apply(
     WorkoutPlan Function(WorkoutPlan plan, String? lockedDayId) edit,
     String event, {

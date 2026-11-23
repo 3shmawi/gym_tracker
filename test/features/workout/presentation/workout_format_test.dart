@@ -37,6 +37,7 @@ void main() {
 
   test('target is sets×reps', () {
     expect(WorkoutFormat.target(3, 12), '3×12');
+    expect(WorkoutFormat.target(2, 6, 10), '2×6–10');
   });
 
   test('ltr isolates numbers for Arabic text', () {

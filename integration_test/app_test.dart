@@ -50,6 +50,7 @@ import '../test/helpers/plan_sync_fakes.dart';
 import 'flows/build_plan_flow.dart';
 import 'flows/gym_pictures_flow.dart';
 import 'flows/move_flow.dart';
+import 'flows/rep_range_flow.dart';
 import 'helpers/demo.dart';
 
 /// The home bar's one menu button, then the row.
@@ -122,6 +123,19 @@ void main() {
 
     await buildPlanFlow(tester);
     expect(find.byType(ActiveWorkoutView), findsOneWidget);
+    await beat(tester, 2000);
+  });
+
+  testWidgets('sets to failure: a 6–10 range, two sets, keep the weight', (
+    tester,
+  ) async {
+    await freshInstall(tester);
+    await app.main();
+    useFakeRestAlarm();
+    await tester.pumpAndSettle();
+    await beat(tester, 1500);
+
+    await repRangeFlow(tester);
     await beat(tester, 2000);
   });
 

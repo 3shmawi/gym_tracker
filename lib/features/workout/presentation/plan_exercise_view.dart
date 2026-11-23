@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +11,7 @@ import 'package:gym_tracker/core/ui/app_ui.dart';
 import 'package:gym_tracker/core/widgets/state_views.dart';
 import 'package:gym_tracker/features/gym/domain/entities/gym_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
+import 'package:gym_tracker/features/workout/domain/usecases/edit_plan.dart';
 import 'package:gym_tracker/features/workout/domain/usecases/plan_rules.dart';
 import 'package:gym_tracker/features/workout/presentation/plan_editor_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/widgets/plan_widgets.dart';
@@ -31,6 +33,7 @@ class PlanExerciseView extends StatelessWidget {
     required this.onSetSuperset,
     required this.onDelete,
     this.onOpenGuide,
+    this.onSetRange,
     super.key,
   });
 
@@ -50,6 +53,9 @@ class PlanExerciseView extends StatelessWidget {
   })
   onSetTargets;
   final ValueChanged<bool> onSetSuperset;
+
+  /// The rep range's top; null turns the range off.
+  final ValueChanged<int?>? onSetRange;
 
   /// Called after the member confirmed.
   final VoidCallback onDelete;
@@ -267,7 +273,7 @@ class _Editor extends StatelessWidget {
               Divider(height: 1, color: palette.fillSubtle),
               _TargetRow(
                 key: const Key('plan_target_reps'),
-                label: l10n.planReps,
+                label: e.hasRange ? l10n.planRepsFrom : l10n.planReps,
                 hint: l10n.planRepsHint,
                 value: '${e.targetReps}',
                 unit: '',
@@ -278,6 +284,41 @@ class _Editor extends StatelessWidget {
                     : null,
                 onIncrement: edit && e.targetReps < PlanLimits.maxReps
                     ? () => view.onSetTargets(reps: e.targetReps + 1)
+                    : null,
+              ),
+              if (e.repsTop case final top?) ...[
+                Divider(height: 1, color: palette.fillSubtle),
+                _TargetRow(
+                  key: const Key('plan_target_top'),
+                  label: l10n.planRepsUpTo,
+                  hint: l10n.planRepsHint,
+                  value: '$top',
+                  unit: '',
+                  decrementLabel: l10n.planRepsUpToLess,
+                  incrementLabel: l10n.planRepsUpToMore,
+                  onDecrement: edit && top > e.targetReps
+                      ? () => view.onSetRange?.call(top - 1)
+                      : null,
+                  onIncrement: edit && top < PlanLimits.maxReps
+                      ? () => view.onSetRange?.call(top + 1)
+                      : null,
+                ),
+              ],
+              Divider(height: 1, color: palette.fillSubtle),
+              AppSwitchRow(
+                key: const Key('plan_rep_range_switch'),
+                label: l10n.planRepRange,
+                detail: l10n.planRepRangeHelp,
+                value: e.hasRange,
+                onChanged: edit && view.onSetRange != null
+                    ? (on) => view.onSetRange!(
+                        on
+                            ? math.min(
+                                e.targetReps + EditPlan.defaultRangeWidth,
+                                PlanLimits.maxReps,
+                              )
+                            : null,
+                      )
                     : null,
               ),
               Divider(height: 1, color: palette.fillSubtle),

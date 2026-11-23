@@ -369,6 +369,7 @@ class _WorkoutState extends State<_Workout> {
       setNumber: cursor.setNumber,
       totalSets: exercise.targetSets,
       targetReps: exercise.targetReps,
+      repsTop: exercise.repsTop,
       weight: cursor.weight,
       reps: cursor.reps,
       weightStep: exercise.step,

@@ -60,6 +60,7 @@ class Exercise {
     this.weightStep = 2.5,
     this.supersetWithNext = false,
     this.unit = ExerciseUnit.kg,
+    this.repsTop,
   });
   factory fromJson(Map<String, Object?> json) => Exercise(
     id: json['id']! as String,
@@ -70,6 +71,8 @@ class Exercise {
     weightStep: (json['step']! as num).toDouble(),
     supersetWithNext: json['superset']! as bool,
     unit: ExerciseUnit.parse(json['unit']),
+    // A wrong type throws, like a bad 'reps' (docs/designs/rep_ranges.md).
+    repsTop: json['top'] as int?,
   );
 
   /// Stable id, used to find this exercise's history. Never reused for
@@ -88,6 +91,13 @@ class Exercise {
 
   /// How its sets are logged.
   final ExerciseUnit unit;
+
+  /// Top of a rep range ("6–10"); null = the fixed target [targetReps].
+  /// With a range, [targetReps] is its bottom and the weight follows double
+  /// progression (`SuggestWeight`). Stored as `top` (migration 0024).
+  final int? repsTop;
+
+  bool get hasRange => repsTop != null;
 
   /// The step the weight stepper and the suggestion use: [weightStep] in
   /// kg, one plate on a stack, none for reps only.
@@ -114,6 +124,21 @@ class Exercise {
     weightStep: weightStep ?? this.weightStep,
     supersetWithNext: supersetWithNext ?? this.supersetWithNext,
     unit: unit ?? this.unit,
+    repsTop: repsTop,
+  );
+
+  /// The same exercise with the rep range [top]; null removes the range
+  /// ([copyWith] can't, since its null means "unchanged").
+  Exercise withRange(int? top) => Exercise(
+    id: id,
+    name: name,
+    targetSets: targetSets,
+    targetReps: targetReps,
+    restSeconds: restSeconds,
+    weightStep: weightStep,
+    supersetWithNext: supersetWithNext,
+    unit: unit,
+    repsTop: top,
   );
 
   Map<String, Object?> toJson() => {
@@ -126,6 +151,8 @@ class Exercise {
     'superset': supersetWithNext,
     // Only when not kg: a kg plan is exactly what it was before 0016.
     if (unit != ExerciseUnit.kg) 'unit': unit.name,
+    // Only for a range: other plans are what they were before 0024.
+    'top': ?repsTop,
   };
 
   @override
@@ -138,7 +165,8 @@ class Exercise {
       other.restSeconds == restSeconds &&
       other.weightStep == weightStep &&
       other.supersetWithNext == supersetWithNext &&
-      other.unit == unit;
+      other.unit == unit &&
+      other.repsTop == repsTop;
 
   @override
   int get hashCode => Object.hash(
@@ -150,6 +178,7 @@ class Exercise {
     weightStep,
     supersetWithNext,
     unit,
+    repsTop,
   );
 }
 
