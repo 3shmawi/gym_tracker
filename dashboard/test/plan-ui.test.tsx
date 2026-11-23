@@ -71,6 +71,18 @@ describe('PlanPage state', () => {
     expect(host.textContent).toContain(en('plan.saved', { name: 'Ahmed' }));
   });
 
+  it('a rep range set in the app is shown and kept when the captain saves', async () => {
+    const abs = { id: 'abs', name: { ar: 'بطن', en: 'Abs' }, sets: 3, reps: 6, top: 10, rest: 90, step: 5, superset: false, unit: 'kg' as const };
+    const ranged: Plan = { days: [{ id: 'day-1', name: { ar: 'صدر', en: 'Chest' }, exercises: [abs] }] };
+    const s = setup({ get: vi.fn(() => Promise.resolve(ok(stored(ranged, 2)))) });
+    await mount(s);
+    expect(host.textContent).toContain(en('plan.repsUpTo', { top: 10 }));
+    await setNumber(en('plan.setsFor', { name: 'Abs' }), '2');
+    await act(() => { button(en('plan.save')).click(); });
+    await flush();
+    expect(s.plans.save).toHaveBeenCalledWith(id(1), 2, expect.objectContaining({ days: [expect.objectContaining({ exercises: [expect.objectContaining({ sets: 2, reps: 6, top: 10 })] })] }));
+  });
+
   it('a conflict shows both sides and loads the newest; nothing is saved', async () => {
     const theirs: Plan = { days: [{ ...plan.days[0], id: 'day-1', name: { ar: 'صدر', en: 'Push' }, exercises: plan.days[0]?.exercises ?? [] }] };
     const get = vi.fn().mockResolvedValueOnce(ok(stored(plan, 2))).mockResolvedValue(ok(stored(theirs, 3)));

@@ -142,20 +142,32 @@ export interface Targets {
   readonly rest?: number;
   readonly step?: number;
   readonly unit?: Unit;
+  /** Top of the rep range; null removes the range (Reset to a template without one). */
+  readonly top?: number | null;
 }
 
-/** Changes the targets given; numbers are clamped, a weight step outside (0, 50] is refused. */
+/**
+ * Changes the targets given; numbers are clamped, a weight step outside (0, 50] is refused.
+ * A rep range stays valid: its top is never below the reps.
+ */
 export function setTargets(plan: Plan, dayId: string, exerciseId: string, t: Targets): EditResult {
   if (t.step !== undefined && (!Number.isFinite(t.step) || t.step <= 0 || t.step > LIMITS.maxWeightStep)) return refuse('not_found');
-  for (const v of [t.sets, t.reps, t.rest]) if (v !== undefined && !Number.isFinite(v)) return refuse('not_found');
-  return updateExercise(plan, dayId, exerciseId, (e) => ({
-    ...e,
-    sets: t.sets === undefined ? e.sets : clamp(t.sets, LIMITS.minSets, LIMITS.maxSets),
-    reps: t.reps === undefined ? e.reps : clamp(t.reps, LIMITS.minReps, LIMITS.maxReps),
-    rest: t.rest === undefined ? e.rest : clamp(t.rest, LIMITS.minRest, LIMITS.maxRest),
-    step: t.step ?? e.step,
-    unit: t.unit ?? e.unit,
-  }));
+  for (const v of [t.sets, t.reps, t.rest, t.top]) if (v !== undefined && v !== null && !Number.isFinite(v)) return refuse('not_found');
+  return updateExercise(plan, dayId, exerciseId, (e) => {
+    const { top: oldTop, ...rest } = e;
+    const reps = t.reps === undefined ? e.reps : clamp(t.reps, LIMITS.minReps, LIMITS.maxReps);
+    const wanted = t.top === undefined ? oldTop : t.top;
+    const top = wanted === null || wanted === undefined ? {} : { top: clamp(Math.max(wanted, reps), LIMITS.minReps, LIMITS.maxReps) };
+    return {
+      ...rest,
+      sets: t.sets === undefined ? e.sets : clamp(t.sets, LIMITS.minSets, LIMITS.maxSets),
+      reps,
+      rest: t.rest === undefined ? e.rest : clamp(t.rest, LIMITS.minRest, LIMITS.maxRest),
+      step: t.step ?? e.step,
+      unit: t.unit ?? e.unit,
+      ...top,
+    };
+  });
 }
 
 /** A plan with one empty day, for a member who has none yet. */

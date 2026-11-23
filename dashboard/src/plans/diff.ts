@@ -13,11 +13,11 @@ export type Change =
   | { readonly kind: 'exercises_reordered'; readonly day: PlanName }
   | { readonly kind: 'targets_changed'; readonly day: PlanName; readonly exercise: PlanName; readonly fields: readonly TargetField[] };
 
-export type TargetField = 'sets' | 'reps' | 'rest' | 'step' | 'unit' | 'superset';
+export type TargetField = 'sets' | 'reps' | 'top' | 'rest' | 'step' | 'unit' | 'superset';
 
 const sameName = (a: PlanName, b: PlanName) => a.ar === b.ar && a.en === b.en;
 
-const FIELDS: readonly TargetField[] = ['sets', 'reps', 'rest', 'step', 'unit', 'superset'];
+const FIELDS: readonly TargetField[] = ['sets', 'reps', 'top', 'rest', 'step', 'unit', 'superset'];
 function changedFields(a: PlanExercise, b: PlanExercise): TargetField[] {
   return FIELDS.filter((f) => a[f] !== b[f]);
 }

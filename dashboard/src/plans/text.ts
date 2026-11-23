@@ -46,6 +46,7 @@ export const nameIn = (lang: I18n['lang'], name: PlanName): string => (lang === 
 const FIELD_KEY: Record<TargetField, MessageKey> = {
   sets: 'diff.f.sets',
   reps: 'diff.f.reps',
+  top: 'diff.f.top',
   rest: 'diff.f.rest',
   step: 'diff.f.step',
   unit: 'diff.f.unit',

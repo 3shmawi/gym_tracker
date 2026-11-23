@@ -97,6 +97,8 @@ export function PlanDayView({ day, index, dayCount, editable, covers, cloudName,
         </td>
         <td>
           <NumberCell value={e.reps} min={LIMITS.minReps} max={LIMITS.maxReps} step={1} label={t('plan.repsFor', { name })} disabled={!editable} onCommit={(v) => { onTargets(e.id, { reps: v }); }} />
+          {/* A rep range set by the member in the app: shown, not edited here (docs/designs/rep_ranges.md). */}
+          {e.top !== undefined && <span class="cap">{t('plan.repsUpTo', { top: e.top })}</span>}
         </td>
         <td>
           {e.superset ? (

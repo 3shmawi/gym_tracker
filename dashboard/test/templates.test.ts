@@ -122,6 +122,16 @@ describe('differences from the template', () => {
     expect(templateChanges(plan, template)).toHaveLength(2);
   });
 
+  it('a rep range is a difference; Reset copies or removes it', () => {
+    const ranged = ok(copyTargets(template, 'day-1', 'flat_db_press', ex('flat_db_press', { reps: 6, top: 10 })));
+    const d = targetDiffs(ranged, template).get(exerciseKey('day-1', 'flat_db_press'));
+    if (!d) throw new Error('no diff');
+    expect(d.fields).toEqual(['reps', 'top']);
+    const back = ok(resetToTemplate(ranged, d));
+    expect(targetDiffs(back, template).size).toBe(0);
+    expect(back.days[0]?.exercises.find((e) => e.id === 'flat_db_press')).not.toHaveProperty('top');
+  });
+
   it('Reset puts one exercise back; the others stay', () => {
     let plan = ok(copyTargets(template, 'day-1', 'incline_machine_press', ex('incline_machine_press', { sets: 4, unit: 'plate' })));
     plan = ok(copyTargets(plan, 'day-1', 'pec_deck', ex('pec_deck', { reps: 15 })));

@@ -108,6 +108,13 @@ Status: slice 3 started (rest notification), plus levels.
   It does not depend on the pill being on screen: on home (no pill) a rest
   that runs out still rings.
 
+## Rep ranges (in progress)
+Spec: [designs/rep_ranges.md](../designs/rep_ranges.md) (approved 2026-11-23).
+A plan exercise can have a rep range (`top`, "6–10") with double
+progression, for sets to failure. Step 1, done: the server (migration 0024)
+and the captain's dashboard read and keep `top`. Step 2, next: the app
+(model, editor, suggestion, dock pre-fill).
+
 ## Rules
 - **Days have stable ids** (`WorkoutDay.id`). Finished workouts, the workout
   in progress and the chosen day store the day's **id**, not its position,

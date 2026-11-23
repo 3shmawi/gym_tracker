@@ -7,7 +7,7 @@ import type { Plan, PlanExercise } from './model';
 // that: Reset one exercise to the template, and carry one exercise's targets
 // to another member's plan ("apply a change to everyone on this template").
 
-const TARGETS: readonly TargetField[] = ['sets', 'reps', 'rest', 'step', 'unit', 'superset'];
+const TARGETS: readonly TargetField[] = ['sets', 'reps', 'top', 'rest', 'step', 'unit', 'superset'];
 
 export const exerciseKey = (dayId: string, exerciseId: string) => `${dayId}/${exerciseId}`;
 
@@ -44,7 +44,7 @@ export function templateChanges(plan: Plan, template: Plan): Change[] {
 
 /** Sets one exercise's targets to `source`'s (Reset uses the template's). */
 export function copyTargets(plan: Plan, dayId: string, exerciseId: string, source: PlanExercise): EditResult {
-  const r = setTargets(plan, dayId, exerciseId, { sets: source.sets, reps: source.reps, rest: source.rest, step: source.step, unit: source.unit });
+  const r = setTargets(plan, dayId, exerciseId, { sets: source.sets, reps: source.reps, top: source.top ?? null, rest: source.rest, step: source.step, unit: source.unit });
   return r.ok ? setSuperset(r.plan, dayId, exerciseId, source.superset) : r;
 }
 
