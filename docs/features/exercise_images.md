@@ -14,13 +14,14 @@ placeholder (hatched tile with a dumbbell), at the same size.
   pictures' attributions are listed there.
 
 ## Coverage (checked 2026-11-10)
-All 42 exercises have a picture (5 free-weight exercises added 2026-11-22 after a
+All 43 exercises have a picture (Plank added 2026-11-23, Everkinetic `0113`
+Side Plank as a substitute, licence re-read that day; 5 free-weight exercises added 2026-11-22 after a
 coach changed a member's plan: `flat_barbell_press` `0042`, `incline_db_press`
 `0061`, `barbell_row` `0026`, `pull_ups` `0087`, `alternating_cable_row` `0025`, all
 Everkinetic `-tension`, `LICENSE.md` at commit `446bb9a` re-read that day;
 Push-ups added 2026-11-12 for Move games,
 Everkinetic `0077-tension`, licence re-read that day; 13 added 2026-11-10 for the new days 4 and 5,
-all Everkinetic, licence re-read that day). **9 are substitutes**: no free drawing of the
+all Everkinetic, licence re-read that day). **10 are substitutes**: no free drawing of the
 exercise itself exists, so the picture shows a similar exercise for the same
 muscle (`substitute: true` and a `substituteNote` in the manifest):
 
@@ -35,10 +36,11 @@ muscle (`substitute: true` and a `substituteNote` in the manifest):
 | `face_pull` | bent-over lateral cable raise (rear shoulder; no free face-pull drawing) |
 | `barbell_row` | bent-over barbell row with an underhand grip (same row, grip reversed) |
 | `alternating_cable_row` | seated cable row with both hands (same row, not one arm at a time) |
+| `plank` | side plank on one hand (same hold for the core, on the side) |
 
 Replace a substitute when a real drawing is found (remove its `substitute`
 fields). The test `pictures of a similar exercise are marked, with a note`
-lists the nine ids: change it with this table.
+lists the ten ids: change it with this table.
 
 ## Where the pictures come from
 Line drawings by **Everkinetic** (Greg Priday), from

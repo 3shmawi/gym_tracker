@@ -665,6 +665,8 @@
   "moveSave": "احفظ في تمريني",
   "moveSaveWhat": "{exercise} · مجموعة واحدة {reps} عدّة",
   "moveSaved": "اتحفظت في تمرينك: {exercise} · {reps} عدّة",
+  "moveSaveWhatHold": "{exercise} · ثبات واحد {time}",
+  "moveSavedHold": "اتحفظت في تمرينك: {exercise} · {time}",
   "moveSaveFailed": "معرفناش نحفظ. جرّب تاني.",
   "moveSeeProgress": "شوف التقدّم",
   "movePlayAgain": "جولة كمان",

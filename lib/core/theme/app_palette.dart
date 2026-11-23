@@ -112,7 +112,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
   /// 2 m): dark on the dark theme's amber, light on the light theme's brown.
   Color get onTrendDown => trendDown.computeLuminance() > 0.4
       ? AppColors.lightText1
-      : AppColors.darkText1;
+      : AppColors.onWarning;
 
   @override
   AppPalette copyWith({

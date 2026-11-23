@@ -461,7 +461,9 @@ and `EditPlan` (`edit_plan.dart`), and `planProblem()` returns
   characters removed; one language fills the other; sets 1–10, reps 1–100,
   rest 0–600 s (inputs step 15), weight step > 0 and ≤ 50 (choices 0.5, 1,
   1.25, 2, 2.5, 5; another stored value shows as its own choice); `unit`
-  `kg` / `plate` / `reps`, written only when not kg; `top` (a rep range set
+  `kg` / `plate` / `reps` / `seconds` (a hold, migration 0025: read and
+  kept, not offered in the picker, so a captain can't give it to a member
+  on an app that reads it as kg), written only when not kg; `top` (a rep range set
   by the member in the app, migration 0024: an integer from `reps` to 100,
   `reps` is then the bottom) **read and kept, not edited here**: the reps cell
   shows "up to 10", a captain's save writes it back unchanged, raising reps
@@ -485,7 +487,7 @@ and `EditPlan` (`edit_plan.dart`), and `planProblem()` returns
 - A stored body the dashboard can't read strictly is **not editable** (so it
   is never re-sent changed); the member still sees it in the app.
 
-### Contracts used (migrations 0007, 0016 and 0024; nothing new)
+### Contracts used (migrations 0007, 0016, 0024 and 0025; nothing new)
 | What | How | Rule |
 |---|---|---|
 | Read a plan | `plans` (`body, version, updated_by, updated_at`, `membership_id = eq.<id>`) | "read plans of my membership or my gym" (`private.can_read_plan` → `i_manage_role`: owners anyone, captains trainees) |

@@ -134,6 +134,17 @@ field test 2026-11-22: a coach set "2 sets to failure, no fixed reps").
 - Demo: `integration_test/flows/rep_range_flow.dart` (also run without a
   device by `test/features/workout/rep_range_e2e_test.dart`).
 
+## Seconds (holds)
+`ExerciseUnit.seconds` (*Seconds (hold)* in "Logged by", 2026-11-23,
+[designs/plank_hold.md](../designs/plank_hold.md)): a set's reps are the
+seconds, weight 0. Shown as a clock (`0:30`, `0:45 ×3`) the same in both
+languages; the dock has one stepper (±5 s) and "Log 30 s"; progress shows
+"Hold" like reps-only shows "Reps only". `ExerciseUnit.hasWeight` (kg,
+plate) decides where a weight shows. The server accepts the unit from
+migration 0025; the captain's dashboard shows and keeps it but doesn't
+offer it. Older apps read it as kg. The library's **Plank** uses it, and
+Move games' plank rounds save to it.
+
 ## Rules
 - **Days have stable ids** (`WorkoutDay.id`). Finished workouts, the workout
   in progress and the chosen day store the day's **id**, not its position,

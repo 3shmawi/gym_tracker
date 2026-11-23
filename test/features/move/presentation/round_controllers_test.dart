@@ -24,6 +24,7 @@ import 'package:gym_tracker/features/workout/presentation/next_workout_controlle
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/fake_pose_source.dart';
+import '../helpers/plank_frames.dart';
 import '../helpers/synthetic_pose.dart';
 
 class FakeScreenAwake implements ScreenAwake {
@@ -65,14 +66,24 @@ class FakeMoveVoice implements MoveVoice {
     return available;
   }
 
+  /// When each count or hint was said (set by the test bed).
+  DateTime Function()? clock;
+  final log = <(Object, DateTime)>[];
+
   @override
-  void count(int count) => said.add(count);
+  void count(int count) {
+    said.add(count);
+    if (clock case final c?) log.add((count, c()));
+  }
 
   /// Hints spoken (docs/designs/plank_hold.md §6).
   final hints = <String>[];
 
   @override
-  void say(String text) => hints.add(text);
+  void say(String text) {
+    hints.add(text);
+    if (clock case final c?) log.add((text, c()));
+  }
 
   @override
   Future<void> dispose() async => disposed = true;
@@ -112,6 +123,7 @@ class Bed {
       ],
     );
     addTearDown(c.dispose);
+    speaker.clock = () => bed.now;
     return bed = Bed._(c, cam, local, repo, awake, sounds, speaker);
   }
 
@@ -671,6 +683,161 @@ void main() {
       bed.container.dispose();
       await pumpEventQueue();
       expect(bed.voice.disposed, isTrue);
+    });
+  });
+
+  group('plank (docs/designs/plank_hold.md)', () {
+    late Bed bed;
+    const s1 = Duration(seconds: 1);
+
+    CameraRoundController controllerFor(MoveLaunch l) {
+      bed.container.listen(cameraRoundControllerProvider(l), (_, _) {});
+      return bed.container.read(cameraRoundControllerProvider(l).notifier);
+    }
+
+    CameraRoundState stateOf(MoveLaunch l) =>
+        bed.container.read(cameraRoundControllerProvider(l));
+
+    void play(CameraRoundController c, List<PoseFrame> frames) {
+      final base = bed.now;
+      for (final f in frames) {
+        bed.now = base.add(f.at);
+        bed.source.emit(
+          PoseFrame(at: f.at, joints: f.joints, aspect: f.aspect),
+        );
+        c.tick();
+      }
+    }
+
+    test(
+      '30 s: held seconds while running, ends at 30, saved as seconds',
+      () async {
+        bed = await Bed.make();
+        const l = MoveLaunch(MoveExerciseId.plank, RoundKind.h30);
+        final c = controllerFor(l);
+        await c.start(language: 'en', hintText: (k) => k.name);
+        play(c, plankFrames([(s1 * 45, 0)]));
+        await pumpEventQueue();
+        final st = stateOf(l);
+        expect(st.round.phase, RoundPhase.finished);
+        expect(st.round.reps, 30, reason: 'placement and 3-2-1 not counted');
+        expect((st.game! as StackState).floors, hasLength(6));
+        final outcome = st.outcome!;
+        expect(outcome.newBest, isFalse, reason: 'targets keep no best');
+        await c.save();
+        final set = (await bed.history()).single.sets.single;
+        expect((set.exerciseId, set.reps, set.weight), ('plank', 30, 0.0));
+      },
+    );
+
+    test(
+      'as long as you can: ends 5 s after dropping out of the plank',
+      () async {
+        bed = await Bed.make();
+        const l = MoveLaunch(MoveExerciseId.plank, RoundKind.hMax);
+        final c = controllerFor(l);
+        await c.start();
+        play(c, plankFrames([(s1 * 20, 0), (s1 * 7, 0.15)]));
+        await pumpEventQueue();
+        final st = stateOf(l);
+        expect(st.round.phase, RoundPhase.finished);
+        expect(st.round.reps, inInclusiveRange(12, 16));
+        expect(st.outcome!.newBest, isTrue, reason: 'the first best');
+        expect(bed.local.bests.values, contains(st.round.reps));
+      },
+    );
+
+    test('a short break does not end "as long as you can"', () async {
+      bed = await Bed.make();
+      const l = MoveLaunch(MoveExerciseId.plank, RoundKind.hMax);
+      final c = controllerFor(l);
+      await c.start();
+      play(c, plankFrames([(s1 * 15, 0), (s1 * 3, 0.15), (s1 * 6, 0)]));
+      expect(stateOf(l).round.phase, RoundPhase.running);
+    });
+
+    test(
+      'voice: every 5 s and 3-2-1 before the target, not every second',
+      () async {
+        bed = await Bed.make(voice: true);
+        const l = MoveLaunch(MoveExerciseId.plank, RoundKind.h30);
+        final c = controllerFor(l);
+        await c.start(language: 'en', hintText: (k) => k.name);
+        await pumpEventQueue();
+        play(c, plankFrames([(s1 * 45, 0)]));
+        expect(bed.voice.said, [5, 10, 15, 20, 25, 3, 2, 1, 30]);
+        expect(bed.voice.hints, isEmpty);
+      },
+    );
+
+    test('a hint is said once; counts stay quiet while it is said', () async {
+      bed = await Bed.make(voice: true);
+      const l = MoveLaunch(MoveExerciseId.plank, RoundKind.hMax);
+      final c = controllerFor(l);
+      await c.start(language: 'en', hintText: (k) => 'say ${k.name}');
+      await pumpEventQueue();
+      play(
+        c,
+        plankFrames([
+          (s1 * 14, 0),
+          (s1, 0.15),
+          (s1 * 2, 0),
+          (s1, 0.15),
+          (s1 * 8, 0),
+        ]),
+      );
+      expect(bed.voice.hints, ['say straightBody'], reason: 'not again in 6 s');
+      final hintAt = bed.voice.log.firstWhere((e) => e.$1 is String).$2;
+      for (final (what, at) in bed.voice.log) {
+        if (what is int && !at.isBefore(hintAt)) {
+          expect(
+            at.difference(hintAt),
+            greaterThanOrEqualTo(CameraRoundController.hintQuiet),
+            reason: 'count $what during the hint',
+          );
+        }
+      }
+    });
+
+    test('tones mode: no hint is said', () async {
+      bed = await Bed.make();
+      const l = MoveLaunch(MoveExerciseId.plank, RoundKind.hMax);
+      final c = controllerFor(l);
+      await c.start(language: 'en', hintText: (k) => k.name);
+      play(c, plankFrames([(s1 * 12, 0), (s1 * 2, 0.15), (s1 * 4, 0)]));
+      expect(bed.voice.hints, isEmpty);
+    });
+
+    test('push-ups: a hint is said in voice mode too', () async {
+      bed = await Bed.make(voice: true);
+      final c = controllerFor(launch);
+      await c.start(language: 'en', hintText: (k) => 'say ${k.name}');
+      await pumpEventQueue();
+      // Too far: the body is small in the picture.
+      play(c, const SynthSet(lead: Duration(seconds: 4), scale: 0.4).frames());
+      expect(bed.voice.hints, contains('say moveCloser'));
+    });
+
+    test('without the camera: a stopwatch, ends at the target', () async {
+      bed = await Bed.make();
+      const l = MoveLaunch(MoveExerciseId.plank, RoundKind.h45);
+      bed.container.listen(manualRoundControllerProvider(l), (_, _) {});
+      final c = bed.container.read(manualRoundControllerProvider(l).notifier);
+      ManualRoundState st() =>
+          bed.container.read(manualRoundControllerProvider(l));
+      c.start();
+      bed.now = bed.now.add(RoundState.countdown);
+      c.tick();
+      bed.now = bed.now.add(const Duration(seconds: 20));
+      c.tick();
+      expect(st().round.reps, 20);
+      bed.now = bed.now.add(const Duration(seconds: 30));
+      c.tick();
+      await pumpEventQueue();
+      expect(st().round.phase, RoundPhase.finished);
+      expect(st().outcome!.result.reps, 45);
+      await c.save();
+      expect((await bed.history()).single.sets.single.reps, 45);
     });
   });
 

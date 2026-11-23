@@ -38,6 +38,9 @@ library had only the machine versions): `flat_barbell_press` (بار مستوي)
 Picked from the library, they keep these ids, so their history stays matched
 when they are added to another day later.
 
+`plank` (بلانك, 2026-11-23) is logged in **seconds** (3 × 30 s); Move
+games' plank rounds save to it (docs/designs/plank_hold.md).
+
 ## Stable ids: why history stays matched
 History is matched to an exercise by id. The catalog is seeded with **every
 exercise of `PlanTemplates`, same id, names and targets**

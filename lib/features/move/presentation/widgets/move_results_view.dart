@@ -38,6 +38,7 @@ class MoveResultsView extends StatelessWidget {
     final saved = outcome.save == SaveState.saved;
     final camera = r.mode == RoundMode.camera;
     final hold = r.kind.hold;
+    final held = clockLabel(Duration(seconds: r.reps));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -123,7 +124,9 @@ class MoveResultsView extends StatelessWidget {
                 AppBanner(
                   key: const Key('move_results_saved'),
                   icon: Icons.check_circle,
-                  text: l10n.moveSaved(exerciseName, r.reps),
+                  text: hold
+                      ? l10n.moveSavedHold(exerciseName, held)
+                      : l10n.moveSaved(exerciseName, r.reps),
                 )
               else if (outcome.save == SaveState.failed)
                 AppBanner(
@@ -163,7 +166,9 @@ class MoveResultsView extends StatelessWidget {
                   ),
                 if (outcome.canSave && !saved)
                   Text(
-                    l10n.moveSaveWhat(exerciseName, r.reps),
+                    hold
+                        ? l10n.moveSaveWhatHold(exerciseName, held)
+                        : l10n.moveSaveWhat(exerciseName, r.reps),
                     textAlign: TextAlign.center,
                     style: AppTextStyles.caption.copyWith(
                       color: palette.textSecondary,
