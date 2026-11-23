@@ -13,12 +13,21 @@ class HomeMenuEntry {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.detail,
+    this.secondary = false,
   });
 
   final Key key;
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+
+  /// A short line under the label saying what is there.
+  final String? detail;
+
+  /// Account and app rows (gym, settings): in the second card, under the
+  /// training rows.
+  final bool secondary;
 }
 
 /// Opens the home menu: where you train, your plan, progress, settings (and
@@ -34,6 +43,8 @@ Future<void> showHomeMenu(BuildContext context, List<HomeMenuEntry> entries) =>
               key: e.key,
               icon: e.icon,
               label: e.label,
+              detail: e.detail,
+              secondary: e.secondary,
               onTap: () {
                 Navigator.of(sheet).pop();
                 e.onTap();
@@ -43,7 +54,9 @@ Future<void> showHomeMenu(BuildContext context, List<HomeMenuEntry> entries) =>
       ),
     );
 
-/// A short list of big rows (at least 56 high). Pure UI.
+/// Two cards of rows like Settings: training (plan, progress, Move) first,
+/// then the gym and settings. Each row: a tinted icon tile, the name, a
+/// short detail line and a chevron; at least 56 high. Pure UI.
 class HomeMenuSheet extends StatelessWidget {
   const new({required this.entries, super.key});
 
@@ -53,6 +66,16 @@ class HomeMenuSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final palette = context.palette;
+    final groups = [
+      [
+        for (final e in entries)
+          if (!e.secondary) e,
+      ],
+      [
+        for (final e in entries)
+          if (e.secondary) e,
+      ],
+    ].where((g) => g.isNotEmpty);
     return SingleChildScrollView(
       padding: EdgeInsetsDirectional.fromSTEB(
         AppDimens.md,
@@ -63,6 +86,7 @@ class HomeMenuSheet extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
+        spacing: AppDimens.sm2,
         children: [
           Semantics(
             header: true,
@@ -74,44 +98,105 @@ class HomeMenuSheet extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: AppDimens.sm),
-          for (final e in entries)
-            Semantics(
-              button: true,
-              label: e.label,
-              excludeSemantics: true,
-              child: InkWell(
-                key: e.key,
-                borderRadius: BorderRadius.circular(AppDimens.scaled(16)),
-                onTap: e.onTap,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: AppDimens.minTouchTarget + AppDimens.sm,
-                  ),
-                  child: Padding(
-                    padding: EdgeInsetsDirectional.symmetric(
-                      horizontal: AppDimens.sm,
-                      vertical: AppDimens.sm,
-                    ),
-                    child: Row(
-                      spacing: AppDimens.md,
-                      children: [
-                        Icon(e.icon, color: palette.textSecondary),
-                        Expanded(
-                          child: Text(
-                            e.label,
-                            style: AppTextStyles.body.copyWith(
-                              color: palette.textPrimary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+          for (final group in groups)
+            AppCard(
+              padding: EdgeInsetsDirectional.symmetric(
+                horizontal: AppDimens.sm2,
+                vertical: AppDimens.xs,
+              ),
+              child: Column(
+                children: [
+                  for (final (i, e) in group.indexed)
+                    _MenuRow(entry: e, divider: i < group.length - 1),
+                ],
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _MenuRow extends StatelessWidget {
+  const new({required this.entry, required this.divider});
+
+  final HomeMenuEntry entry;
+  final bool divider;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final scheme = Theme.of(context).colorScheme;
+    final tile = AppDimens.scaled(40);
+    final detail = entry.detail;
+    return Semantics(
+      button: true,
+      label: detail == null ? entry.label : '${entry.label}, $detail',
+      excludeSemantics: true,
+      child: InkWell(
+        key: entry.key,
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+        onTap: entry.onTap,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            border: divider
+                ? Border(bottom: BorderSide(color: palette.fillSubtle))
+                : null,
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: AppDimens.targetLog),
+            child: Padding(
+              padding: EdgeInsetsDirectional.symmetric(vertical: AppDimens.sm),
+              child: Row(
+                spacing: AppDimens.sm2,
+                children: [
+                  Container(
+                    width: tile,
+                    height: tile,
+                    decoration: BoxDecoration(
+                      color: palette.brandTint,
+                      borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                    ),
+                    child: Icon(
+                      entry.icon,
+                      size: AppDimens.iconMd,
+                      color: scheme.primary,
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          entry.label,
+                          style: AppTextStyles.body.copyWith(
+                            color: palette.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (detail != null)
+                          Text(
+                            detail,
+                            style: AppTextStyles.caption.copyWith(
+                              color: palette.textSecondary,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  // chevron_right mirrors itself in RTL: it points to the
+                  // end edge in both languages.
+                  Icon(
+                    Icons.chevron_right,
+                    size: AppDimens.iconMd,
+                    color: palette.textTertiary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

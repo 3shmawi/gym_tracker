@@ -6,7 +6,7 @@ id, names in Arabic and English, a muscle group, the equipment it needs and
 members); captains work in the dashboard (decision doc §20).
 
 Design: https://claude.ai/artifact/26EDAr572B4Qr8eBLB4D75 (top row, approved
-Nov 2026). Pictures: all 23 exercises have a drawing (4 are drawings of a similar
+Nov 2026). Pictures: every exercise has a drawing (some are drawings of a similar
 exercise; `docs/features/exercise_images.md`). A gym's captain can choose
 other pictures (several per exercise, from the shared picture library); the
 exercise screen then shows them first: `docs/features/gym_exercise_images.md`.
@@ -29,6 +29,14 @@ exercise screen then shows them first: `docs/features/gym_exercise_images.md`.
   (`PlanPermissions.editStructure`); without it the picker says the captain
   manages the exercises. Reading an exercise is always allowed. Same rules as
   the editor (locked day, full day, `save_plan` for gyms).
+
+## Exercises beyond the templates
+Added 2026-11-22 (field test: a coach moved a member to free weights, and the
+library had only the machine versions): `flat_barbell_press` (بار مستوي),
+`incline_db_press` (دمبل عالي), `barbell_row` (بار ضهر منحني), `pull_ups`
+(عقلة, reps only), `alternating_cable_row` (سحب أرضي تبادل, machine plate).
+Picked from the library, they keep these ids, so their history stays matched
+when they are added to another day later.
 
 ## Stable ids: why history stays matched
 History is matched to an exercise by id. The catalog is seeded with **every

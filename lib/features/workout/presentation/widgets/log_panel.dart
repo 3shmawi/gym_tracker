@@ -79,6 +79,7 @@ class LogPanel extends StatefulWidget {
     required this.reps,
     required this.weightStep,
     required this.onLog,
+    this.repsTop,
     this.partnerName,
     this.unit = ExerciseUnit.kg,
     super.key,
@@ -87,6 +88,9 @@ class LogPanel extends StatefulWidget {
   final int setNumber;
   final int totalSets;
   final int targetReps;
+
+  /// Top of the exercise's rep range: the header says "Aim 6–10".
+  final int? repsTop;
   final double weight;
   final int reps;
   final double weightStep;
@@ -121,7 +125,12 @@ class _LogPanelState extends State<LogPanel> {
               ),
             ),
             Text(
-              l10n.workoutTarget(widget.targetReps),
+              switch (widget.repsTop) {
+                final top? => l10n.workoutTargetRange(
+                  WorkoutFormat.ltr('${widget.targetReps}–$top'),
+                ),
+                null => l10n.workoutTarget(widget.targetReps),
+              },
               style: AppTextStyles.caption.copyWith(
                 color: palette.textSecondary,
               ),

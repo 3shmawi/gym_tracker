@@ -1,6 +1,6 @@
 // A member's plan, as the app stores it (lib/features/workout/domain/entities/
 // workout_plan.dart) and the server checks it (private.plan_problem, migrations
-// 0007 + 0016). The dashboard must only ever send a body the app accepts.
+// 0007 + 0016 + 0024). The dashboard must only ever send a body the app accepts.
 
 export type Unit = 'kg' | 'plate' | 'reps';
 
@@ -21,6 +21,12 @@ export interface PlanExercise {
   /** Done together with the next exercise (the last one of a day never is). */
   readonly superset: boolean;
   readonly unit: Unit;
+  /**
+   * Top of a rep range (`reps` is then its bottom); absent = a fixed target.
+   * Set by the member in the app (docs/designs/rep_ranges.md); the dashboard
+   * only reads and keeps it.
+   */
+  readonly top?: number;
 }
 
 export interface PlanDay {
@@ -132,14 +138,16 @@ export function parsePlan(body: unknown): Plan | null {
     const exercises: PlanExercise[] = [];
     for (const e of d.exercises as unknown[]) {
       if (!isObject(e)) return null;
-      const keys = Object.keys(e).filter((k) => k !== 'unit');
+      const keys = Object.keys(e).filter((k) => k !== 'unit' && k !== 'top');
       if (!sameKeys(Object.fromEntries(keys.map((k) => [k, 1])), ['id', 'name', 'reps', 'rest', 'sets', 'step', 'superset'])) return null;
       const exName = readName(e.name);
       if (!exName || typeof e.id !== 'string' || !isInt(e.sets) || !isInt(e.reps) || !isInt(e.rest)) return null;
       if (typeof e.step !== 'number' || !Number.isFinite(e.step) || typeof e.superset !== 'boolean') return null;
       if ('unit' in e && e.unit !== 'kg' && e.unit !== 'plate' && e.unit !== 'reps') return null;
       const unit: Unit = e.unit === 'plate' || e.unit === 'reps' ? e.unit : 'kg';
-      exercises.push({ id: e.id, name: exName, sets: e.sets, reps: e.reps, rest: e.rest, step: e.step, superset: e.superset, unit });
+      if ('top' in e && !isInt(e.top)) return null;
+      const top = isInt(e.top) ? { top: e.top } : {};
+      exercises.push({ id: e.id, name: exName, sets: e.sets, reps: e.reps, rest: e.rest, step: e.step, superset: e.superset, unit, ...top });
     }
     days.push({ id: d.id, name, exercises });
   }
@@ -147,7 +155,7 @@ export function parsePlan(body: unknown): Plan | null {
   return planProblem(plan) === null ? plan : null;
 }
 
-/** The JSON body exactly as the app writes it (`unit` only when not kg). */
+/** The JSON body exactly as the app writes it (`unit` only when not kg, `top` only for a range). */
 export function toBody(plan: Plan): { days: unknown[] } {
   return {
     days: plan.days.map((d) => ({
@@ -162,6 +170,7 @@ export function toBody(plan: Plan): { days: unknown[] } {
         step: e.step,
         superset: e.superset,
         ...(e.unit === 'kg' ? {} : { unit: e.unit }),
+        ...(e.top === undefined ? {} : { top: e.top }),
       })),
     })),
   };
@@ -202,6 +211,7 @@ export function planProblem(plan: Plan): string | null {
       if (!isValidName(e.name)) return 'bad exercise name';
       if (!isInt(e.sets) || e.sets < LIMITS.minSets || e.sets > LIMITS.maxSets) return 'sets out of range';
       if (!isInt(e.reps) || e.reps < LIMITS.minReps || e.reps > LIMITS.maxReps) return 'reps out of range';
+      if (e.top !== undefined && (!isInt(e.top) || e.top < e.reps || e.top > LIMITS.maxReps)) return 'top out of range';
       if (!isInt(e.rest) || e.rest < LIMITS.minRest || e.rest > LIMITS.maxRest) return 'rest out of range';
       if (!Number.isFinite(e.step) || e.step <= 0 || e.step > LIMITS.maxWeightStep) return 'step out of range';
     }

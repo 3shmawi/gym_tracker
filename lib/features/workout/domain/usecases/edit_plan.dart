@@ -194,7 +194,8 @@ class EditPlan {
   );
 
   /// Changes the targets given; each is clamped to [PlanLimits]. A weight
-  /// step that isn't a finite number above 0 is refused.
+  /// step that isn't a finite number above 0 is refused. A rep range stays
+  /// valid: raising the reps above its top raises the top with them.
   WorkoutPlan setTargets(
     WorkoutPlan plan,
     String dayId,
@@ -212,20 +213,40 @@ class EditPlan {
             weightStep > PlanLimits.maxWeightStep)) {
       throw const PlanEditException(PlanEditError.notFound);
     }
-    return _updateExercise(
-      plan,
-      dayId,
-      exerciseId,
-      lockedDayId,
-      (e) => e.copyWith(
+    return _updateExercise(plan, dayId, exerciseId, lockedDayId, (e) {
+      final changed = e.copyWith(
         targetSets: sets?.clamp(PlanLimits.minSets, PlanLimits.maxSets),
         targetReps: reps?.clamp(PlanLimits.minReps, PlanLimits.maxReps),
         restSeconds: restSeconds?.clamp(PlanLimits.minRest, PlanLimits.maxRest),
         weightStep: weightStep,
         unit: unit,
-      ),
-    );
+      );
+      final top = changed.repsTop;
+      return top != null && top < changed.targetReps
+          ? changed.withRange(changed.targetReps)
+          : changed;
+    });
   }
+
+  /// The default top when a range is turned on: the current reps + 4
+  /// (12 → 12–16; owner's choice, docs/designs/rep_ranges.md).
+  static const defaultRangeWidth = 4;
+
+  /// Sets the top of the exercise's rep range, clamped to
+  /// `[reps, PlanLimits.maxReps]`; null removes the range.
+  WorkoutPlan setRange(
+    WorkoutPlan plan,
+    String dayId,
+    String exerciseId, {
+    required int? top,
+    String? lockedDayId,
+  }) => _updateExercise(
+    plan,
+    dayId,
+    exerciseId,
+    lockedDayId,
+    (e) => e.withRange(top?.clamp(e.targetReps, PlanLimits.maxReps)),
+  );
 
   static void _checkName(LocalizedName name) {
     if (!PlanNames.isValid(name)) {

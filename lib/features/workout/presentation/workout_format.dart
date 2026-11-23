@@ -70,6 +70,7 @@ abstract final class WorkoutFormat {
   ]) =>
       ltr(unit == ExerciseUnit.reps ? '$reps' : '${amount(kg, unit)} × $reps');
 
-  /// "3×12": sets × reps.
-  static String target(int sets, int reps) => '$sets×$reps';
+  /// "3×12": sets × reps; "2×6–10" with a rep range.
+  static String target(int sets, int reps, [int? top]) =>
+      top == null ? '$sets×$reps' : '$sets×$reps–$top';
 }

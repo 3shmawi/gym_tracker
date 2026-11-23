@@ -172,7 +172,7 @@ class PlanDayView extends StatelessWidget {
 /// first of a superset pair has no rest of its own.
 String planExerciseDetail(AppLocalizations l10n, Exercise e) {
   final target = WorkoutFormat.ltr(
-    WorkoutFormat.target(e.targetSets, e.targetReps),
+    WorkoutFormat.target(e.targetSets, e.targetReps, e.repsTop),
   );
   if (e.unit != ExerciseUnit.kg) {
     final unit = e.unit == ExerciseUnit.plate

@@ -17,7 +17,7 @@ Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 ## Features
 - [App update gate](features/app_update.md)
 - [Settings (language & theme)](features/settings.md)
-- [Workout (plan, plan editor, next workout, weight suggestions, levels)](features/workout.md)
+- [Workout (plan, plan editor, next workout, weight suggestions, levels)](features/workout.md) (rep ranges spec: [designs/rep_ranges.md](designs/rep_ranges.md))
 - [Splash and loading animation](features/splash_and_loading.md)
 - [Join a gym by link or code](features/gym_join.md) (web page `/join/<code>` + the app's enter-code screen)
 - [Gym accounts — backend](features/gym_accounts_backend.md) (tables, RLS, `redeem_invite`, QR cards)

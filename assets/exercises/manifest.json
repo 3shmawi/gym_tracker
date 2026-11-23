@@ -682,6 +682,100 @@
       "modified": true,
       "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
       "attribution": "\"Push Up: Body Weight\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
+    },
+    {
+      "exercise": "flat_barbell_press",
+      "file": "assets/exercises/flat_barbell_press.webp",
+      "thumb": "assets/exercises/flat_barbell_press_thumb.webp",
+      "title": "Bench Press: Barbell",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0042/0042-tension.png",
+      "sourceFile": "src/exercises/0042/0042-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-22",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Bench Press: Barbell\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
+    },
+    {
+      "exercise": "incline_db_press",
+      "file": "assets/exercises/incline_db_press.webp",
+      "thumb": "assets/exercises/incline_db_press_thumb.webp",
+      "title": "Bench Press: Dumbbell (Incline)",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0061/0061-tension.png",
+      "sourceFile": "src/exercises/0061/0061-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-22",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Bench Press: Dumbbell (Incline)\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
+    },
+    {
+      "exercise": "barbell_row",
+      "file": "assets/exercises/barbell_row.webp",
+      "thumb": "assets/exercises/barbell_row_thumb.webp",
+      "title": "Reverse Grips Bent Over Barbell Rows",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0026/0026-tension.png",
+      "sourceFile": "src/exercises/0026/0026-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-22",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Reverse Grips Bent Over Barbell Rows\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized.",
+      "substitute": true,
+      "substituteNote": "The picture shows a bent-over barbell row with an underhand grip (same row, the grip is reversed)."
+    },
+    {
+      "exercise": "pull_ups",
+      "file": "assets/exercises/pull_ups.webp",
+      "thumb": "assets/exercises/pull_ups_thumb.webp",
+      "title": "Pull Ups",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0087/0087-tension.png",
+      "sourceFile": "src/exercises/0087/0087-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-22",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Pull Ups\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized."
+    },
+    {
+      "exercise": "alternating_cable_row",
+      "file": "assets/exercises/alternating_cable_row.webp",
+      "thumb": "assets/exercises/alternating_cable_row_thumb.webp",
+      "title": "Seated Cable Rows",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0025/0025-tension.png",
+      "sourceFile": "src/exercises/0025/0025-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-22",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Seated Cable Rows\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized.",
+      "substitute": true,
+      "substituteNote": "The picture shows a seated cable row with both hands (same row, not one arm at a time)."
     }
   ]
 }

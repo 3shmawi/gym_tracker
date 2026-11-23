@@ -101,6 +101,40 @@ describe('the plan body', () => {
     expect(planProblem(typical)).toBeNull();
   });
 
+  it('a rep range (top, migration 0024): read, kept on save, checked like the server', () => {
+    const withRange = (top: unknown) => {
+      const b = structuredClone(toBody(plan())) as any;
+      b.days[0].exercises[0].top = top;
+      return b;
+    };
+    const p = parsePlan(withRange(16));
+    expect(p?.days[0]?.exercises[0]?.top).toBe(16);
+    // Kept exactly when the captain saves; absent when there is no range.
+    expect(JSON.stringify(toBody(p as Plan).days[0])).toContain('"superset":false,"top":16}');
+    expect(JSON.stringify(toBody(plan()))).not.toContain('"top"');
+    // What the server refuses, the dashboard refuses to read.
+    for (const bad of [11, 101, 12.5, '16', true, null, '16; drop table plans; --']) {
+      expect(parsePlan(withRange(bad)), String(bad)).toBeNull();
+    }
+    expect(parsePlan(withRange(12))?.days[0]?.exercises[0]?.top).toBe(12);
+    const d = day0(plan());
+    expect(planProblem({ days: [{ ...d, exercises: [ex('a', { top: 11 })] }] })).toBe('top out of range');
+    expect(planProblem({ days: [{ ...d, exercises: [ex('a', { top: 101 })] }] })).toBe('top out of range');
+    expect(planProblem({ days: [{ ...d, exercises: [ex('a', { top: 16 })] }] })).toBeNull();
+  });
+
+  it('editing reps keeps a rep range valid; null clears it', () => {
+    const ranged: Plan = { days: [{ ...day0(plan()), exercises: [ex('a', { reps: 6, top: 10 })] }] };
+    const one = (p: Plan) => day0(p).exercises[0];
+    expect(one(ok(edit.setTargets(ranged, 'day-1', 'a', { sets: 2 })))).toMatchObject({ reps: 6, top: 10 });
+    expect(one(ok(edit.setTargets(ranged, 'day-1', 'a', { reps: 12 })))).toMatchObject({ reps: 12, top: 12 });
+    expect(one(ok(edit.setTargets(ranged, 'day-1', 'a', { reps: 8 })))).toMatchObject({ reps: 8, top: 10 });
+    expect(one(ok(edit.setTargets(ranged, 'day-1', 'a', { top: null })))).not.toHaveProperty('top');
+    expect(one(ok(edit.setTargets(ranged, 'day-1', 'a', { top: 500 })))).toMatchObject({ top: 100 });
+    expect(edit.setTargets(ranged, 'day-1', 'a', { top: Number.NaN }).ok).toBe(false);
+    expect(one(ok(edit.setTargets(plan(), 'day-1', 'flat_db_press', { reps: 8 })))).not.toHaveProperty('top');
+  });
+
   it('new ids are time-based, never reused, and accepted by the tables', () => {
     const taken = planIds(plan());
     const a = newPlanId('ex', taken, 1_762_800_000_000);

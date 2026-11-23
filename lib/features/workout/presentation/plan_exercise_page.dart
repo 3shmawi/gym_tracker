@@ -38,6 +38,8 @@ class PlanExercisePage extends ConsumerWidget {
           unit: unit,
         ),
       ),
+      onSetRange: (top) =>
+          unawaited(controller.setRange(dayId, exerciseId, top: top)),
       onSetSuperset: (on) =>
           unawaited(controller.setSuperset(dayId, exerciseId, withNext: on)),
       onOpenGuide: ref.read(exerciseLibraryProvider).byId(exerciseId) == null

@@ -41,4 +41,9 @@ export const LIBRARY: readonly LibraryExercise[] = [
   {"id":"preacher_curl","ar":"تكوير على جهاز الحصان","en":"Preacher Curl","muscle":"arms","libraryVideo":false,"sets":3,"reps":12,"rest":90,"step":2.5},
   {"id":"db_overhead_extension","ar":"دمبل زوجي تراي","en":"Two-Hand DB Overhead Extension","muscle":"arms","libraryVideo":false,"sets":3,"reps":12,"rest":90,"step":2.5},
   {"id":"push_ups","ar":"ضغط","en":"Push-ups","muscle":"chest","libraryVideo":false,"sets":3,"reps":12,"rest":90,"step":2.5},
+  {"id":"flat_barbell_press","ar":"بار مستوي","en":"Flat Barbell Bench Press","muscle":"chest","libraryVideo":false,"sets":3,"reps":12,"rest":120,"step":2.5},
+  {"id":"incline_db_press","ar":"دمبل عالي","en":"Incline Dumbbell Press","muscle":"chest","libraryVideo":false,"sets":3,"reps":12,"rest":90,"step":2.5},
+  {"id":"barbell_row","ar":"بار ضهر منحني","en":"Bent-Over Barbell Row","muscle":"back","libraryVideo":false,"sets":3,"reps":12,"rest":120,"step":2.5},
+  {"id":"alternating_cable_row","ar":"سحب أرضي تبادل","en":"Alternating Seated Cable Row","muscle":"back","libraryVideo":false,"sets":3,"reps":12,"rest":90,"step":2.5},
+  {"id":"pull_ups","ar":"عقلة","en":"Pull-ups","muscle":"back","libraryVideo":false,"sets":3,"reps":8,"rest":120,"step":2.5},
 ];

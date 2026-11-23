@@ -113,7 +113,17 @@ void main() {
     final bench = saved.days.single.exercises.first;
     expect(bench.targetSets, 4);
     expect(bench.weightStep, 1.25);
+    expect(bench.repsTop, isNull);
     expect(state(c).nextDayId, dayId);
+
+    // A rep range is saved on the phone, and turned off again.
+    expect(await e.setRange(dayId, benchId, top: 16), isNull);
+    expect(_ok(await repo.loadPlan())!.days.single.exercises.first.repsTop, 16);
+    expect(await e.setRange(dayId, benchId, top: null), isNull);
+    expect(
+      _ok(await repo.loadPlan())!.days.single.exercises.first.repsTop,
+      isNull,
+    );
 
     final next = await c.read(nextWorkoutControllerProvider.future);
     expect(next!.day.name, _chest);

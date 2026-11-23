@@ -1,5 +1,7 @@
+import 'package:gym_tracker/features/workout/domain/entities/next_workout.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/domain/entities/workout_session.dart';
+import 'package:gym_tracker/features/workout/domain/usecases/working_sets.dart';
 import 'package:meta/meta.dart';
 
 /// The set to do now.
@@ -20,10 +22,15 @@ class SetCursor {
   /// 1-based.
   final int setNumber;
 
-  /// Prefilled: today's last set of this exercise; else last time's second
-  /// set (its first when there was one), a weight to adjust from rather
-  /// than the heaviest; else 0 (first time: the member picks).
+  /// Prefilled: today's last set of this exercise; else, for a rep range,
+  /// the suggested weight; else last time's second set (its first when
+  /// there was one), a weight to adjust from rather than the heaviest; else
+  /// 0 (first time: the member picks).
   final double weight;
+
+  /// Prefilled. Fixed target: today's last set, else the target. Rep range:
+  /// last time's working set of the same number at the same weight, else
+  /// the bottom of the range ([WorkoutFlow.rangeReps]).
   final int reps;
 
   /// Seconds of rest after logging this set; 0 inside a superset round
@@ -81,16 +88,42 @@ class WorkoutFlow {
     return done.length >= 2 ? done[1].weight : done.first.weight;
   }
 
+  /// The reps a rep-range set starts at (docs/designs/rep_ranges.md): what
+  /// the member did on this set last time, so beating it is one tap. Only
+  /// at the same weight: after a change (↑ or ↓, or the member moved the
+  /// weight) last time's reps don't apply and the set starts at the bottom
+  /// of the range. Failure sets drop (8, then 6), so set 2 reads last time's
+  /// set 2, not today's set 1. No such set, or no history: the bottom.
+  static int rangeReps(
+    Exercise exercise,
+    List<LoggedSet> lastTime, {
+    required int setNumber,
+    required double weight,
+  }) {
+    final working = workingSets(lastTime);
+    if (working.isEmpty ||
+        working.first.weight != weight ||
+        setNumber > working.length) {
+      return exercise.targetReps;
+    }
+    return working[setNumber - 1].reps;
+  }
+
   /// The next set to do, or null when every planned set is logged.
   ///
   /// [focus] (an `Exercise.id`) is the exercise the member picked to do
   /// now, out of order (alternating two machines, a busy bench): its next
   /// set comes first while it has sets left. Unknown or finished: ignored.
+  ///
+  /// [suggestions] (exercise id → the weight suggestion shown on Today,
+  /// from finished workouts only, so fixed during the workout) set a rep
+  /// range exercise's first weight.
   SetCursor? next(
     WorkoutDay day,
     List<LoggedSet> logged,
     Map<String, List<LoggedSet>> lastTime, {
     String? focus,
+    Map<String, WeightSuggestion> suggestions = const {},
   }) {
     final count = <String, int>{};
     for (final s in logged) {
@@ -115,13 +148,22 @@ class WorkoutFlow {
         for (final s in logged)
           if (s.exerciseId == exercise.id) s,
       ];
+      final last = lastTime[exercise.id] ?? const <LoggedSet>[];
+      final suggested = exercise.hasRange
+          ? suggestions[exercise.id]?.weight
+          : null;
+      final weight = today.isNotEmpty
+          ? today.last.weight
+          : suggested ?? startWeight(last);
       return SetCursor(
         exerciseIndex: index,
         setNumber: setNumber,
-        weight: today.isNotEmpty
-            ? today.last.weight
-            : startWeight(lastTime[exercise.id] ?? const []),
-        reps: today.isNotEmpty ? today.last.reps : exercise.targetReps,
+        weight: weight,
+        reps: exercise.hasRange
+            ? rangeReps(exercise, last, setNumber: setNumber, weight: weight)
+            : today.isNotEmpty
+            ? today.last.reps
+            : exercise.targetReps,
         restAfter: index == lastInRound ? exercise.restSeconds : 0,
         supersetPartner: group.length > 1
             ? group.firstWhere((i) => i != index)

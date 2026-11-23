@@ -870,5 +870,126 @@ abstract final class ExerciseCatalog {
         ),
       ],
     ),
+    // Free weights a coach asked for (field test 2026-11-22): the plan had
+    // only their machine versions.
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'flat_barbell_press',
+        name: LocalizedName(ar: 'بار مستوي', en: 'Flat Barbell Bench Press'),
+        restSeconds: 120,
+      ),
+      muscle: MuscleGroup.chest,
+      equipment: [Equipment.barbell, Equipment.bench],
+      steps: [
+        LocalizedName(
+          ar: 'اتمدد على البنش المستوي ورجلك على الأرض، وامسك البار أوسع شوية من كتفك.',
+          en: 'Lie on a flat bench, feet on the floor, and hold the bar a little wider than your shoulders.',
+        ),
+        LocalizedName(
+          ar: 'نزّل البار براحة لحد نص صدرك والكوع مايل لتحت شوية.',
+          en: 'Lower the bar slowly to the middle of your chest, elbows slightly tucked.',
+        ),
+        LocalizedName(
+          ar: 'ادفع لفوق لحد ما دراعاتك تتفرد. خلّي حد يسندك في الأوزان التقيلة.',
+          en: 'Press up until your arms are straight. Use a spotter for heavy sets.',
+        ),
+      ],
+    ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'incline_db_press',
+        name: LocalizedName(ar: 'دمبل عالي', en: 'Incline Dumbbell Press'),
+      ),
+      muscle: MuscleGroup.chest,
+      equipment: [Equipment.dumbbell, Equipment.bench],
+      steps: [
+        LocalizedName(
+          ar: 'اضبط البنش مايل لفوق، واقعد ودمبل في كل إيد عند أعلى صدرك.',
+          en: 'Set the bench to an incline and sit back with a dumbbell in each hand at your upper chest.',
+        ),
+        LocalizedName(
+          ar: 'ادفع الدمبلز لفوق لحد ما دراعاتك تتفرد من غير ما يخبطوا في بعض.',
+          en: 'Press the dumbbells up until your arms are straight, without knocking them together.',
+        ),
+        LocalizedName(
+          ar: 'نزّل براحة لحد ما تحس بشد في أعلى صدرك.',
+          en: 'Lower slowly until you feel a stretch in your upper chest.',
+        ),
+      ],
+    ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'barbell_row',
+        name: LocalizedName(ar: 'بار ضهر منحني', en: 'Bent-Over Barbell Row'),
+        restSeconds: 120,
+      ),
+      muscle: MuscleGroup.back,
+      equipment: [Equipment.barbell],
+      steps: [
+        LocalizedName(
+          ar: 'امسك البار وانحني لقدّام من وسطك وضهرك مفرود وركبك مثنية شوية.',
+          en: 'Hold the bar and hinge forward at the hips, back flat and knees slightly bent.',
+        ),
+        LocalizedName(
+          ar: 'اسحب البار لبطنك وشد لوح كتفك ورا.',
+          en: 'Pull the bar to your stomach and squeeze your shoulder blades together.',
+        ),
+        LocalizedName(
+          ar: 'نزّل براحة من غير ما ضهرك يتقوّس.',
+          en: 'Lower slowly without rounding your back.',
+        ),
+      ],
+    ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'alternating_cable_row',
+        name: LocalizedName(
+          ar: 'سحب أرضي تبادل',
+          en: 'Alternating Seated Cable Row',
+        ),
+        unit: ExerciseUnit.plate,
+      ),
+      muscle: MuscleGroup.back,
+      equipment: [Equipment.cable],
+      steps: [
+        LocalizedName(
+          ar: 'اقعد على الكرسي وامسك مقبض في كل إيد، وضهرك مفرود.',
+          en: 'Sit on the seat with a handle in each hand and your back straight.',
+        ),
+        LocalizedName(
+          ar: 'اسحب بإيد واحدة لحد جنب بطنك، وارجعها براحة.',
+          en: 'Pull one handle to the side of your stomach, then return it slowly.',
+        ),
+        LocalizedName(
+          ar: 'بدّل الإيد التانية، ومتلفّش جسمك وانت بتسحب.',
+          en: 'Switch to the other hand. Keep your body from twisting as you pull.',
+        ),
+      ],
+    ),
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'pull_ups',
+        name: LocalizedName(ar: 'عقلة', en: 'Pull-ups'),
+        unit: ExerciseUnit.reps,
+        targetReps: 8,
+        restSeconds: 120,
+      ),
+      muscle: MuscleGroup.back,
+      equipment: [Equipment.bodyweight],
+      steps: [
+        LocalizedName(
+          ar: 'اتعلّق في البار بمسكة أوسع شوية من كتفك، والكفوف لقدّام.',
+          en: 'Hang from the bar with a grip a little wider than your shoulders, palms forward.',
+        ),
+        LocalizedName(
+          ar: 'اطلع لحد ما دقنك تعدّي البار وانت بتشد كتفك لتحت.',
+          en: 'Pull up until your chin passes the bar, drawing your shoulders down.',
+        ),
+        LocalizedName(
+          ar: 'انزل براحة لحد ما دراعاتك تتفرد.',
+          en: 'Lower slowly until your arms are straight.',
+        ),
+      ],
+    ),
   ];
 }

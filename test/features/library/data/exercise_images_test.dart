@@ -121,6 +121,8 @@ void main() {
         'hammer_close_grip_row',
         'machine_shoulder_press',
         'face_pull',
+        'barbell_row',
+        'alternating_cable_row',
       });
       for (final i in manifest.images) {
         expect(i.substituteNote.isNotEmpty, i.substitute, reason: i.exercise);

@@ -136,6 +136,14 @@ Changes under `supabase/` merged to `main` → `supabase.yml` runs
 `SUPABASE_ACCESS_TOKEN` + `SUPABASE_DB_PASSWORD` (the project ref is read
 from `SUPABASE_URL`). PRs touching `supabase/` run the RLS tests first.
 
+**A new optional plan key ships server first.** `private.plan_problem`
+refuses keys it doesn't know, and only `main` deploys the migration (to the
+project in `ENV_PROD_JSON`), so the migration and the dashboard's reading of
+the key merge to `main` in their own PR **before** any app build that writes
+the key, staging included. If the staging app (`ENV_STAGING_JSON`) uses a
+separate Supabase project, apply the migration there by hand too. First
+used for rep ranges (0024, `top`; `docs/designs/rep_ranges.md`).
+
 ### Gym accounts (migrations 0005–0011, Edge Functions `redeem_invite` and `delete-account`)
 Facts checked 2026-11-02 against the Supabase docs on GitHub
 (`supabase/supabase` → `apps/docs/content/guides/functions/` and

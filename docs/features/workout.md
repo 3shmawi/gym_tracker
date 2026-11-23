@@ -108,6 +108,32 @@ Status: slice 3 started (rest notification), plus levels.
   It does not depend on the pill being on screen: on home (no pill) a rest
   that runs out still rings.
 
+## Rep ranges (sets to failure)
+Spec: [designs/rep_ranges.md](../designs/rep_ranges.md) (approved 2026-11-23;
+field test 2026-11-22: a coach set "2 sets to failure, no fixed reps").
+- **Editor**: under Reps, a **Rep range** switch. On → "Reps from" and an
+  "Up to" stepper; turning it on gives the reps + 4 (12 → 12–16,
+  `EditPlan.defaultRangeWidth`). `EditPlan.setRange` (null clears it);
+  raising the reps above the top raises the top. Same rights and lock as
+  reps. Stored as `top` (`Exercise.repsTop`), only when set; the server
+  accepts it from migration 0024, the captain's dashboard shows and keeps it
+  but can't edit it.
+- **Shown** as `2×6–10` on Today and in the plan; the dock says "Aim 6–10".
+- **Suggestion** (double progression, `SuggestWeight`): every working set at
+  the top, with at least the planned number of sets → ↑; the best working
+  set at or above the bottom → → same weight; all below the bottom → ↓.
+  Working sets = the sets at the heaviest weight (`workingSets`), so
+  warm-ups and lighter back-off sets don't count.
+- **Dock pre-fill**: the first set's weight is the suggestion's; the reps are
+  last time's working set of the same number (set 2 → last time's set 2,
+  since failure sets drop), or the bottom when the weight changed (↑, ↓, or
+  moved by hand) or there's no such set (`WorkoutFlow.rangeReps`).
+- Known limit: a warm-up logged in the app counts as one of the planned sets
+  (as for fixed targets).
+- Older app versions ignore `top` and use the fixed rule with the bottom.
+- Demo: `integration_test/flows/rep_range_flow.dart` (also run without a
+  device by `test/features/workout/rep_range_e2e_test.dart`).
+
 ## Rules
 - **Days have stable ids** (`WorkoutDay.id`). Finished workouts, the workout
   in progress and the chosen day store the day's **id**, not its position,
@@ -127,7 +153,8 @@ Status: slice 3 started (rest notification), plus levels.
   - average reps within 2 of the target → same weight (22.5×12, 12, 11 → 22.5 →);
   - otherwise → one step lighter, never below 0 (↓);
   - no sets → first time, no number.
-  Lighter warm-up sets don't count against the increase.
+  Lighter warm-up sets don't count against the increase. An exercise with a
+  rep range uses double progression instead (see "Rep ranges").
 
 - **Start weight** (`WorkoutFlow.startWeight`): an exercise's first set
   today starts at last time's *second* set (15, 20, 25 → 20; one set → that
@@ -463,7 +490,7 @@ Every event also carries `app` (`gym_tracker`) and `environment`
 | `plan_day_added` / `plan_day_renamed` / `plan_day_deleted` / `plan_day_moved` | A day changed | `days` (count after) |
 | `plan_exercise_added` / `plan_exercise_renamed` / `plan_exercise_deleted` / `plan_exercise_moved` | An exercise changed | `days`, and `source` (`library` / `custom`) on added |
 | `plan_superset_changed` | Superset switched | `on`, `days` |
-| `plan_targets_changed` | A target changed | `field` (`sets` / `reps` / `rest` / `weight_step`), `days` |
+| `plan_targets_changed` | A target changed | `field` (`sets` / `reps` / `rest` / `weight_step` / `unit` / `range`), `on` (for `range`: turned on or changed vs off), `days` |
 | `plan_change_refused` | The gym's rights refused an edit (safety net) | `kind` (`structure` / `targets`) |
 | `gym_plan_synced` | The gym's plan was replaced, or set aside for a workout in progress | `replaced`, `deferred` |
 | `gym_plan_updated_shown` | The "Your captain updated your plan" toast was shown | none |
@@ -565,6 +592,15 @@ None. (`active_workout` was removed when the workout screen shipped.)
 **Caption (Egyptian Arabic):** اختار خطتك مرة واحدة، وكل ما تفتح التطبيق هيقولك تمرين النهارده والوزن اللي تشيله. لو فوّت يوم، التمرين بيستناك.
 **Hashtags:** #flutter #buildinpublic #gym #fitness
 
+**Sets to failure (rep range):** build a plan → the barbell bench from the
+library → 2 sets, reps from 6, **Rep range** on (6–10), 5 kg steps → the day
+reads `2×6–10` → start → 35 kg, 8 reps (to failure), log → set 2 starts at
+35 × 6, log → finish → Today says **→ Keep** 35 kg.
+**Hook:** Your coach said "to failure". The app finally gets it.
+**Caption (English):** Training to failure in a rep range? Azm keeps the weight while your reps climb, and tells you to go heavier only when every set hits the top.
+**Caption (Egyptian Arabic):** بتلعب للفشل في مدى عدات؟ عزم بيخليك على نفس الوزن وإنت بتزوّد عدات، ويقولك تزوّد الوزن بس لما كل المجموعات توصل لآخر المدى.
+**Hashtags:** #flutter #buildinpublic #gym #fitness
+
 **Rest notification (fourth test):** start legs, log the squat, the rest
 starts; lock the phone → "Rest over · Barbell Back Squat · set 2" waits
 for 2:00; unlock → gone; +15 s moves it; skip removes it; close the
@@ -596,13 +632,17 @@ back to the same set → log it.
 
 ## Home menu (UX pass)
 The home bar has one button, **Menu** (`home_menu_button`). It opens a sheet
-(`home_menu_sheet.dart`, built on `showAppSheet`) with big rows: *Gym or solo*
-(people with a gym account), *Join your gym* (people training alone, so the
-way into a gym is one tap from home, not hidden in Settings), *Your plan*
-(when there is one), *Progress* and *Settings*. Each row keeps its old key
-(`home_plan_button`, ...). To add a destination, add one `HomeMenuEntry` in
-`NextWorkoutView._menuEntries`. A side drawer can later render the same
-entries. Tests: `home_menu_sheet_test.dart`, `next_workout_view_test.dart`,
+(`home_menu_sheet.dart`, built on `showAppSheet`) with two cards of rows,
+styled like Settings (2026-11-22): a green-tinted icon tile, the name, a short
+line saying what is there, and a chevron (at least 56 high, a hairline between
+rows; screen readers hear the name and the line). First card, training:
+*Your plan* (when there is one), *Progress*, *Move*. Second card
+(`HomeMenuEntry.secondary`): *Gym or solo* (people with a gym account) or
+*Join your gym* (people training alone, so the way into a gym is one tap from
+home), and *Settings*. Each row keeps its old key (`home_plan_button`, ...).
+To add a destination, add one `HomeMenuEntry` (with its `detail`) in
+`NextWorkoutView._menuEntries`. Tests: `home_menu_sheet_test.dart` (with
+`screensUiTests` for the solo and gym menus), `next_workout_view_test.dart`,
 `gym_flows_test.dart`, the integration tests (`openHomeMenu`).
 
 ## The phone's database

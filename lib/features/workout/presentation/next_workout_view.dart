@@ -102,6 +102,8 @@ class NextWorkoutView extends StatelessWidget {
         key: const Key('home_workspace_button'),
         icon: Icons.swap_horiz,
         label: l10n.homeMenuWorkspace,
+        detail: l10n.homeMenuWorkspaceDetail,
+        secondary: true,
         onTap: onOpenWorkspace!,
       )
     else if (onJoinGym != null)
@@ -109,6 +111,8 @@ class NextWorkoutView extends StatelessWidget {
         key: const Key('home_join_gym_button'),
         icon: Icons.qr_code_scanner,
         label: l10n.settingsJoinGym,
+        detail: l10n.homeMenuJoinGymDetail,
+        secondary: true,
         onTap: onJoinGym!,
       ),
     if (onOpenPlan != null && state.value != null)
@@ -116,6 +120,7 @@ class NextWorkoutView extends StatelessWidget {
         key: const Key('home_plan_button'),
         icon: Icons.format_list_bulleted,
         label: l10n.planTitle,
+        detail: l10n.homeMenuPlanDetail,
         onTap: onOpenPlan!,
       ),
     if (onOpenProgress != null)
@@ -123,6 +128,7 @@ class NextWorkoutView extends StatelessWidget {
         key: const Key('home_progress_button'),
         icon: Icons.show_chart,
         label: l10n.progressTitle,
+        detail: l10n.homeMenuProgressDetail,
         onTap: onOpenProgress!,
       ),
     if (onOpenMove != null)
@@ -130,12 +136,15 @@ class NextWorkoutView extends StatelessWidget {
         key: const Key('home_move_button'),
         icon: Icons.sports_gymnastics,
         label: l10n.homeMenuMove,
+        detail: l10n.homeMenuMoveDetail,
         onTap: () => onOpenMove!(fromCard: false),
       ),
     HomeMenuEntry(
       key: const Key('home_settings_button'),
       icon: AdaptiveIcons.settings(context),
       label: l10n.settingsTitle,
+      detail: l10n.homeMenuSettingsDetail,
+      secondary: true,
       onTap: onOpenSettings,
     ),
   ];
