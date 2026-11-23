@@ -304,6 +304,7 @@ jobs:
     name: Tag & GitHub release
     permissions:
       contents: write   # creates the tag and release
+      actions: write    # starts social.yml (a release made with this token starts no workflows)
     needs: [version, android, ios]
     if: >-
       always() && needs.version.outputs.release == 'true' &&
@@ -328,3 +329,20 @@ jobs:
           } >> "$RUNNER_TEMP/notes.md"
           gh release create "v$VERSION" --target "$GITHUB_SHA" \
             --title "v$VERSION ($BUILD)" --notes-file "$RUNNER_TEMP/notes.md"
+
+      # Social posts for this release (social.yml). GitHub doesn't start
+      # workflows for a release created with the job's token, so start it
+      # here. It waits for your approval in the `social` environment: approve
+      # once the stores have published the version.
+      - name: Start social posts
+        if: vars.SOCIAL_ENABLED == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+          SOCIAL_LIVE: ${{ vars.SOCIAL_LIVE }}
+        run: |
+          dry_run=true
+          [ "$SOCIAL_LIVE" = true ] && dry_run=false
+          gh workflow run social.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" \
+            -f release_tag="v$VERSION" -f dry_run="$dry_run" ||
+            echo "::warning::Couldn't start social.yml; run it by hand (Actions → Social posts, release_tag v$VERSION)."

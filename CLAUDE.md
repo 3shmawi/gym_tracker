@@ -261,6 +261,16 @@ reviewers read only the spec and the code, so they catch what you assumed.
   The build and install before the test is cut out: the video starts a
   second before the test does (`scripts/record_demo_ios.sh` →
   `compose_demo.sh`).
+- Releases are announced on Facebook, Instagram, LinkedIn, YouTube and
+  TikTok (inbox draft) by
+  `.github/workflows/social.yml` (3shmawi/social-publisher): Claude (or,
+  without a Claude token, templates filled from the store "What's new" text)
+  writes the posts, the owner approves them in the `social` environment.
+  Clear `feat:`/`fix:` PR titles and an up-to-date What's new make better posts. To keep
+  something out: `[skip social]` in the release notes, or (for the
+  two-weekly posts) the `skip-social` label on the PR. A release video goes
+  in `marketing/videos/v<version>.mp4` or as a `*.mp4` release asset
+  (docs/release.md → "Social posts").
 
 **Git & releases**
 - Conventional Commits (enforced by `.githooks/commit-msg`):
