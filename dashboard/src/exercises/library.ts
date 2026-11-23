@@ -46,4 +46,5 @@ export const LIBRARY: readonly LibraryExercise[] = [
   {"id":"barbell_row","ar":"بار ضهر منحني","en":"Bent-Over Barbell Row","muscle":"back","libraryVideo":false,"sets":3,"reps":12,"rest":120,"step":2.5},
   {"id":"alternating_cable_row","ar":"سحب أرضي تبادل","en":"Alternating Seated Cable Row","muscle":"back","libraryVideo":false,"sets":3,"reps":12,"rest":90,"step":2.5},
   {"id":"pull_ups","ar":"عقلة","en":"Pull-ups","muscle":"back","libraryVideo":false,"sets":3,"reps":8,"rest":120,"step":2.5},
+  {"id":"plank","ar":"بلانك","en":"Plank","muscle":"core","libraryVideo":false,"sets":3,"reps":30,"rest":60,"step":2.5},
 ];
