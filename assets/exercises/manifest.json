@@ -776,6 +776,26 @@
       "attribution": "\"Seated Cable Rows\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized.",
       "substitute": true,
       "substituteNote": "The picture shows a seated cable row with both hands (same row, not one arm at a time)."
+    },
+    {
+      "exercise": "plank",
+      "file": "assets/exercises/plank.webp",
+      "thumb": "assets/exercises/plank_thumb.webp",
+      "title": "Side Plank",
+      "sourceUrl": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/exercises/0113/0113-tension.png",
+      "sourceFile": "src/exercises/0113/0113-tension.png at commit 446bb9a of everkinetic/data",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "author": "Everkinetic (Greg Priday)",
+      "dateChecked": "2026-11-23",
+      "licenseEvidence": [
+        "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/LICENSE.md"
+      ],
+      "modified": true,
+      "modification": "Converted to a transparent mask (lines kept, paper removed), trimmed, resized to 640 and 160 px; the app tints it with the theme text colour.",
+      "attribution": "\"Side Plank\" by Everkinetic (Greg Priday), https://github.com/everkinetic/data, CC BY-SA 4.0. Changed: made transparent, resized.",
+      "substitute": true,
+      "substituteNote": "The picture shows a side plank on one hand (same hold for the core, but on the side, not face down)."
     }
   ]
 }

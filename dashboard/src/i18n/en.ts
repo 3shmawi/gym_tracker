@@ -422,6 +422,7 @@ export const en = {
   'plan.unitKg': 'Weight (kg)',
   'plan.unitPlate': 'Machine plate',
   'plan.unitReps': 'Reps only',
+  'plan.unitSeconds': 'Seconds (hold)',
   'plan.stepKg': '{step} kg',
   'plan.pairRest': 'After the pair',
   'plan.moreFor': 'More for {name}',

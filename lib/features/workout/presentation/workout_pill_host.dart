@@ -10,7 +10,6 @@ import 'package:gym_tracker/core/router/app_routes.dart';
 import 'package:gym_tracker/core/theme/app_dimens.dart';
 import 'package:gym_tracker/features/video/presentation/mini_player.dart';
 import 'package:gym_tracker/features/video/presentation/widgets/mini_player_view.dart';
-import 'package:gym_tracker/features/workout/domain/entities/workout_plan.dart';
 import 'package:gym_tracker/features/workout/presentation/active_workout_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/next_workout_controller.dart';
 import 'package:gym_tracker/features/workout/presentation/widgets/train_again_sheet.dart';
@@ -108,9 +107,9 @@ WorkoutPillData? workoutPillData({
       final exercise = active.day.exercises[cursor.exerciseIndex];
       return PillRestOver(
         nextSet: cursor.setNumber,
-        amount: exercise.unit == ExerciseUnit.reps
-            ? null
-            : WorkoutFormat.amount(cursor.weight, exercise.unit),
+        amount: exercise.unit.hasWeight
+            ? WorkoutFormat.amount(cursor.weight, exercise.unit)
+            : null,
       );
     }
     final index = cursor?.exerciseIndex;

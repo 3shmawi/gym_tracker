@@ -9,7 +9,7 @@ import 'package:gym_tracker/features/move/domain/repositories/move_voice.dart';
 ///
 /// - **On the phone only:** on Android only a voice that is installed and
 ///   needs no network is used ([pickVoice]); iOS voices are on the device.
-///   Only the number is ever spoken.
+///   Only the count and the round's hints (fixed app texts) are spoken.
 /// - **Music keeps playing:** Android takes no audio focus (`speak` without
 ///   `focus`); on iOS speech uses the app's ambient session (mixes with
 ///   music, the silent switch mutes it), like the game's tones.
@@ -80,6 +80,13 @@ class FlutterTtsMoveVoice implements MoveVoice {
   void count(int count) {
     if (!_ready || _disposed || count < 0 || count > 999) return;
     unawaited(_say('$count'));
+  }
+
+  @override
+  void say(String text) {
+    final t = text.trim();
+    if (!_ready || _disposed || t.isEmpty || t.length > 80) return;
+    unawaited(_say(t));
   }
 
   Future<void> _say(String text) async {

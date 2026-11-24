@@ -117,8 +117,7 @@ class ExercisePreviewRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               spacing: AppDimens.xs,
               children: [
-                if (suggestion.weight != null &&
-                    exercise.unit != ExerciseUnit.reps)
+                if (suggestion.weight != null && exercise.unit.hasWeight)
                   Text(
                     exercise.unit == ExerciseUnit.plate
                         ? l10n.weightPlate(

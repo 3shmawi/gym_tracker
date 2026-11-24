@@ -423,6 +423,7 @@ export const ar: Record<MessageKey, string> = {
   'plan.unitKg': 'وزن (كجم)',
   'plan.unitPlate': 'رقم البلاطة',
   'plan.unitReps': 'عدّات بس',
+  'plan.unitSeconds': 'ثواني (ثبات)',
   'plan.stepKg': '{step} كجم',
   'plan.pairRest': 'بعد الاتنين',
   'plan.moreFor': 'أكتر لـ {name}',

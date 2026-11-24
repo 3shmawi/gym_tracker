@@ -123,6 +123,7 @@ void main() {
         'face_pull',
         'barbell_row',
         'alternating_cable_row',
+        'plank',
       });
       for (final i in manifest.images) {
         expect(i.substituteNote.isNotEmpty, i.substitute, reason: i.exercise);

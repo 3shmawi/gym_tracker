@@ -50,6 +50,7 @@ import '../test/helpers/plan_sync_fakes.dart';
 import 'flows/build_plan_flow.dart';
 import 'flows/gym_pictures_flow.dart';
 import 'flows/move_flow.dart';
+import 'flows/plank_flow.dart';
 import 'flows/rep_range_flow.dart';
 import 'helpers/demo.dart';
 
@@ -915,6 +916,30 @@ void main() {
     await beat(tester);
 
     await moveFlow(tester);
+    await beat(tester, 2000);
+  });
+
+  testWidgets('Plank: 30 s held, a sag shows the big hint, saved', (
+    tester,
+  ) async {
+    await freshInstall(tester);
+    FeatureFlags.overrides[Flags.moveGames] = true;
+    addTearDown(FeatureFlags.overrides.clear);
+    await app.main();
+    // The simulator has no camera: the camera "sees" a recorded plank.
+    Dependencies.poseSource = demoPlankSource;
+    await tester.pumpAndSettle();
+    await beat(tester);
+
+    await tester.tap(find.byKey(const Key('use_template_button')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('template_split_5')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('template_split_5')));
+    await tester.pumpAndSettle();
+    await beat(tester);
+
+    await plankFlow(tester);
     await beat(tester, 2000);
   });
 

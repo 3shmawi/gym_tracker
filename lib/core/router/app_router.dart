@@ -19,7 +19,7 @@ import 'package:gym_tracker/features/gym/presentation/welcome_page.dart';
 import 'package:gym_tracker/features/library/presentation/exercise_guide_page.dart';
 import 'package:gym_tracker/features/library/presentation/library_page.dart';
 import 'package:gym_tracker/features/move/domain/entities/move_exercise.dart';
-import 'package:gym_tracker/features/move/domain/entities/round.dart';
+import 'package:gym_tracker/features/move/domain/move_exercises.dart';
 import 'package:gym_tracker/features/move/presentation/move_check_controller.dart';
 import 'package:gym_tracker/features/move/presentation/move_check_page.dart';
 import 'package:gym_tracker/features/move/presentation/move_pages.dart';
@@ -267,10 +267,18 @@ final appRouter = GoRouter(
           path: ':exercise',
           name: 'move_setup',
           redirect: _moveExerciseGate,
-          builder: (context, state) => MoveSetupPage(
-            exercise: MoveExerciseId.fromId(state.pathParameters['exercise'])!,
-            kind: RoundKind.fromId(state.uri.queryParameters['round']),
-          ),
+          builder: (context, state) {
+            final exercise = MoveExerciseId.fromId(
+              state.pathParameters['exercise'],
+            )!;
+            return MoveSetupPage(
+              exercise: exercise,
+              kind: MoveExercises.kindFor(
+                exercise,
+                state.uri.queryParameters['round'],
+              ),
+            );
+          },
           routes: [
             GoRoute(
               path: 'play',
@@ -293,12 +301,20 @@ final appRouter = GoRouter(
               path: 'count',
               name: 'move_count',
               redirect: _moveExerciseGate,
-              builder: (context, state) => ManualCounterPage(
-                launch: MoveLaunch(
-                  MoveExerciseId.fromId(state.pathParameters['exercise'])!,
-                  RoundKind.fromId(state.uri.queryParameters['round']),
-                ),
-              ),
+              builder: (context, state) {
+                final exercise = MoveExerciseId.fromId(
+                  state.pathParameters['exercise'],
+                )!;
+                return ManualCounterPage(
+                  launch: MoveLaunch(
+                    exercise,
+                    MoveExercises.kindFor(
+                      exercise,
+                      state.uri.queryParameters['round'],
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),
