@@ -1,0 +1,53 @@
+# Every day: how the posts made 7 days earlier did — views, likes,
+# comments and shares per platform — in the run's summary (Actions → Social
+# insights). Run it by hand with a release tag for one update. Off until
+# SOCIAL_ENABLED=true. docs/release.md → "Social posts".
+name: Social insights
+
+on:
+  schedule:
+    - cron: '17 7 * * *'   # daily 07:17 UTC
+  workflow_dispatch:
+    inputs:
+      key:
+        description: Report one update (e.g. v1.2.0) instead of the posts from 7 days ago
+        type: string
+        default: ''
+
+permissions: {}
+
+jobs:
+  insights:
+    if: github.event_name == 'workflow_dispatch' || vars.SOCIAL_ENABLED == 'true'
+    permissions:
+      contents: read   # the social/posted/* tags
+    uses: 3shmawi/social-publisher/.github/workflows/insights.yml@1c9800504f0b54438a42823951ac65c54d7296fc # v1.6.0
+    with:
+      key: ${{ inputs.key || '' }}
+      x_insights: ${{ vars.SOCIAL_X_INSIGHTS == 'true' }}   # X bills every read
+    secrets:
+      FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+      FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
+      IG_USER_ID: ${{ secrets.IG_USER_ID }}
+      LINKEDIN_TOKEN: ${{ secrets.LINKEDIN_TOKEN }}
+      LINKEDIN_AUTHOR_URN: ${{ secrets.LINKEDIN_AUTHOR_URN }}
+      LINKEDIN_ORG_URN: ${{ secrets.LINKEDIN_ORG_URN }}
+      LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
+      LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+      LINKEDIN_REFRESH_TOKEN: ${{ secrets.LINKEDIN_REFRESH_TOKEN }}
+      YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+      YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+      YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+      TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+      TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+      TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+      THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+      THREADS_TOKEN: ${{ secrets.THREADS_TOKEN }}
+      BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+      BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      X_API_KEY: ${{ secrets.X_API_KEY }}
+      X_API_SECRET: ${{ secrets.X_API_SECRET }}
+      X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+      X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}

@@ -14,21 +14,7 @@ Security is tested, not assumed. Three layers run on every pull request.
 | `exercise_image_library_test.dart` | the picture table losing RLS or gaining a write policy or a licence outside the commercial list (no NC/ND), a seed row without its reviewed commit, author or attribution, SQL smuggled into the seed data, the upload script printing or hard-coding the Cloudinary secret, reading the unreviewed source folders, or accepting a crafted public id, a banned licence, a duplicate, a missing file or a cloud name that is not a plain name; the workflow's upload job not manual or not in the `cloudinary` environment |
 | `deep_link_test.dart` | crafted/unknown deep links crashing the app or reaching unexpected screens; open redirects via query parameters; a tapped notification opens only `/workout` (its payload is never read); the gym account screens: flag off → home, signed out → `/welcome`, a link never joins, signs out or deletes, `/join/joined` cannot be faked, `scan`/`joined` are never codes |
 | `gym_account_app_test.dart` | the session outside secure storage, a secret besides the session and install id, a `print` in gym code, an analytics event or property beyond the agreed ones (codes, names, ids, emails), the scanner opening a URL or returning the camera image, `signInAnonymously` outside redeem (never at launch), the router joining/signing out/deleting |
-
-### Join page (`website/join.html`, `/join/<code>`)
-It is shown to people who scan an invite QR without the app, and its address
-holds a one-time code, so it only **displays** it:
-- Only the path is read (never query, hash or referrer), checked with
-  `^[A-HJKMNP-Z2-9]{6}$` after an ASCII-only check, written with `textContent`.
-  `join-code.js` is pure and tested in Node (`test/website/join_code.test.js`,
-  run in CI) against hostile addresses; `join_page_test.dart` bans
-  `innerHTML`, `document.write`, `eval`, `location =`, `fetch` and trackers.
-- No third-party request: Inter and Cairo are served from the site, so the CSP
-  `font-src` is `'self'` plus the existing Google Fonts host (other pages). The
-  page sends no referrer (`<meta name="referrer">`, `rel="noopener noreferrer"`
-  on store links), is `no-store` and `noindex`.
-- The app side: a link only pre-fills the field; joining needs the member's tap
-  (`joinSubmitProvider`), and the whole route is behind the `gym_join` flag.
+| `agent_driver_test.dart` | the Flutter Driver extension (agents tapping the app, `test_driver/agent_app.dart`) reaching a store build: nothing under `lib/` may import `flutter_driver` |
 
 ### Join page (`website/join.html`, `/join/<code>`)
 It is shown to people who scan an invite QR without the app, and its address
@@ -90,7 +76,7 @@ holds a one-time code, so it only **displays** it:
 
 ## 3. Rules for new code (also in CLAUDE.md)
 - New route → add hostile paths to `deep_link_test.dart`.
-- New table → RLS on + `supabase/tests/<table>_rls.test.sql`.
+- New table → RLS + `supabase/tests/<table>_rls.test.sql`.
 - New input → tests for empty, huge, injection-like and malformed values.
 - Auth → signed-out redirect tests + "user A can't touch user B's rows" RLS tests.
 - Notifications are local only (no push token, nothing sent). Ask for a

@@ -3,12 +3,13 @@
 Start with [`../CLAUDE.md`](../CLAUDE.md) (rules + stack), then:
 
 - [Design](design.md) — Claude Design links, tokens → code, screen checklist
-- [Getting started](getting_started.md) — run the app, env files, Supabase
+- [Getting started](getting_started.md) — run the app, env files
+- [Backend](backend.md) — Supabase: setup, credentials, deploys, rules
 - [Release & CI/CD](release.md) — how merging to `main` ships to the stores
 - [Deep links](deep_links.md)
 - [Security](security.md) — what is tested and how
 - [Performance](performance.md) — scroll performance test, glass vs lite, numbers before/after
-- [Decisions](decisions/) — why the stack looks the way it does; [gym accounts](decisions/gym_accounts.md) (accepted; backend and app built, captain tools and dashboard not yet); [videos outside the app](decisions/video_outside_app.md) (accepted: no PiP or background play, pause on leaving)
+- [Decisions](decisions/) — why the stack looks the way it does; [gym accounts](decisions/gym_accounts.md) (accepted; backend and app built, captain tools and dashboard not yet); [videos outside the app](decisions/video_outside_app.md) (accepted: no PiP or background play, pause on leaving); [kit sync Nov 2026](decisions/kit_sync_2026_11.md) (what came in from the kit, what was left out)
 - [Promo video](brand/promo_video/README.md) — the motion-graphics video of all features for gym owners and captains (source + build script)
 - [Build in public](social/journey_series.md) — the «من الصفر لحد النهارده» series: [timeline with sources](social/journey_timeline.md), episode plan and captions, renderer in `tool/journey_video/`
 - [Designs](designs/) — approved specs for big features, reviewed with EGM

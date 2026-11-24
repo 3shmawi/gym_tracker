@@ -1,9 +1,18 @@
 # After a version is live in the stores: tell users about it in the app.
 # Updates the app_versions row in Supabase → the in-app dialog appears
-# (optional: "Update / Later"; force: "Update" only). No app release needed.
+# (optional: a sheet with "Update / Later"; force: a full screen with
+# "Update" only). No app release needed.
+#
+# Daily, it also checks the stores (scripts/store_live.sh): once a version
+# is fully live on Google Play (production, not a staged rollout) and the
+# App Store, it announces it as an optional update with the store "What's
+# new" texts. Forced updates are always by hand. Repo variable
+# AUTO_ANNOUNCE=false turns the daily check off.
 name: Announce update
 
 on:
+  schedule:
+    - cron: '23 10 * * *'
   workflow_dispatch:
     inputs:
       type:
@@ -21,16 +30,20 @@ on:
         required: false
         type: string
       changelog_en:
-        description: What's new in English (empty = from the release's commits)
+        description: What's new in English (empty = the store text of that release, else its commits)
         required: false
         type: string
       changelog_ar:
-        description: What's new in Arabic (optional)
+        description: What's new in Arabic (empty = the store text of that release)
         required: false
         type: string
 
 permissions:
   contents: read
+
+concurrency:
+  group: announce-update
+  cancel-in-progress: false
 
 jobs:
   announce:
@@ -42,13 +55,77 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - name: Update app_versions in Supabase
+      - name: Play key (daily check)
+        if: github.event_name == 'schedule'
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          [ -n "$PLAY_JSON" ] || exit 0
+          umask 077
+          printf '%s' "$PLAY_JSON" > "$RUNNER_TEMP/play.json"
+          ./scripts/mask_secrets.sh "$RUNNER_TEMP/play.json"
+
+      - name: What to announce
+        id: decide
         env:
           ENV_PROD_JSON: ${{ secrets.ENV_PROD_JSON }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-          TYPE: ${{ inputs.type }}
-          PLATFORM: ${{ inputs.platform }}
-          VERSION: ${{ inputs.version }}
+          AUTO_ANNOUNCE: ${{ vars.AUTO_ANNOUNCE }}
+          ENABLE_ANDROID: ${{ vars.ENABLE_ANDROID }}
+          ENABLE_IOS: ${{ vars.ENABLE_IOS }}
+          APP_STORE_COUNTRY: ${{ vars.APP_STORE_COUNTRY }}
+        run: |
+          # By hand: announce what the inputs say.
+          if [ "$GITHUB_EVENT_NAME" != schedule ]; then
+            echo "announce=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$AUTO_ANNOUNCE" = false ]; then
+            echo "AUTO_ANNOUNCE=false — the daily check is off."
+            exit 0
+          fi
+          if [ -s "$RUNNER_TEMP/play.json" ]; then export PLAY_KEY_FILE="$RUNNER_TEMP/play.json"; fi
+          live=$(./scripts/store_live.sh)
+          rm -f "$RUNNER_TEMP/play.json"
+          if [ -z "$live" ]; then
+            echo "No version is live in every store yet."
+            exit 0
+          fi
+          if ! git rev-parse -q --verify "refs/tags/v$live" >/dev/null; then
+            echo "::warning::$live is live in the stores but there is no tag v$live — announce it by hand."
+            exit 0
+          fi
+
+          url=$(printf '%s' "$ENV_PROD_JSON" | jq -r '.SUPABASE_URL // empty')
+          if [ -z "$url" ] || [ -z "$SUPABASE_SECRET_KEY" ]; then
+            echo "::warning::$live is live, but announcing needs ENV_PROD_JSON (with SUPABASE_URL) and SUPABASE_SECRET_KEY — run tool/setup_secrets.sh."
+            exit 0
+          fi
+          echo "::add-mask::$SUPABASE_SECRET_KEY"
+          rows=$(curl -fsS "${url%/}/rest/v1/app_versions?select=platform,latest_version" \
+            -H "apikey: $SUPABASE_SECRET_KEY")
+          announced() { printf '%s' "$rows" | jq -r --arg p "$1" '.[]? | select(.platform == $p) | .latest_version // ""'; }
+          platform=$(./scripts/announce_plan.sh "$live" "$(announced android)" "$(announced ios)")
+          if [ -z "$platform" ]; then
+            echo "$live is already announced."
+            exit 0
+          fi
+          echo "$live is live in the stores → optional update ($platform)"
+          {
+            echo "announce=true"
+            echo "type=optional"
+            echo "platform=$platform"
+            echo "version=$live"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Update app_versions in Supabase
+        if: steps.decide.outputs.announce == 'true'
+        env:
+          ENV_PROD_JSON: ${{ secrets.ENV_PROD_JSON }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          TYPE: ${{ steps.decide.outputs.type || inputs.type }}
+          PLATFORM: ${{ steps.decide.outputs.platform || inputs.platform }}
+          VERSION: ${{ steps.decide.outputs.version || inputs.version }}
           CHANGELOG_EN: ${{ inputs.changelog_en }}
           CHANGELOG_AR: ${{ inputs.changelog_ar }}
         run: |
@@ -63,7 +140,8 @@ jobs:
           [ -n "$tag" ] || tag=$(git describe --tags --abbrev=0 --match 'v[0-9]*')
           version=${tag#v}
           git rev-parse "$tag" >/dev/null 2>&1 || { echo "::error::Tag $tag not found."; exit 1; }
-          [ -n "$CHANGELOG_EN" ] || CHANGELOG_EN=$(./scripts/release_notes.sh plain "$tag")
+          [ -n "$CHANGELOG_EN" ] || CHANGELOG_EN=$(./scripts/whats_new.sh "$tag" en)
+          [ -n "$CHANGELOG_AR" ] || CHANGELOG_AR=$(./scripts/whats_new.sh "$tag" ar)
 
           body=$(jq -n --arg v "$version" --arg en "$CHANGELOG_EN" --arg ar "$CHANGELOG_AR" --arg type "$TYPE" '
             {latest_version: $v, changelog_en: $en, changelog_ar: $ar, updated_at: (now | todate)}

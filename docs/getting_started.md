@@ -37,19 +37,11 @@ project name, `Analytics.appName`) and `environment` (the flavor:
 - Internal users: Settings → Project → *Filter out internal and test
   users* → add `environment = staging` to hide all test builds at once.
 
-## 2. Supabase
-After `tool/setup_secrets.sh` has uploaded the Supabase secrets, run Actions →
-**Supabase deploy** once (`gh workflow run supabase.yml`); later changes under
-`supabase/` deploy on every merge to `main`. By hand instead: run
-`supabase/migrations/0001_app_versions.sql` in Supabase → SQL editor (or
-`supabase db push`). Then fix the iOS `store_url` once the App Store id exists.
-
-**Keep-alive:** free Supabase projects pause after 7 days without activity.
-`.github/workflows/supabase-keepalive.yml` pings the `app_versions` table every
-3 days using `SUPABASE_URL` + `SUPABASE_PUBLISHABLE_KEY` from the
-`ENV_PROD_JSON` secret (Actions → *Supabase keep-alive* → Run workflow to test
-it). GitHub pauses scheduled workflows in repos with no commits for 60 days —
-re-enable it from the Actions tab if that happens.
+## 2. Backend (Supabase)
+Everything about the backend — what `tool/setup_secrets.sh` creates, the
+credentials CI needs, how `supabase/` deploys on merge, the access
+rules and their tests — is in [backend.md](backend.md). First time: run
+`tool/setup_secrets.sh`, then the backend's deploy workflow once.
 
 **Backend tests** (when you change `supabase/` or `scripts/make_invites/`):
 `supabase start && supabase test db` (pgTAP, needs Docker);
@@ -74,7 +66,30 @@ flutter gen-l10n                     # after editing lib/l10n/*.arb
 ./scripts/new_feature.sh <name>      # scaffold a feature + its doc
 ```
 
-## 5. Design reviews (Elephant-Goldfish Model)
+## 5. Let an agent run the app (Dart MCP server)
+The official [Dart & Flutter plugin](https://github.com/flutter/agent-plugins)
+(Dart MCP server, skills) is pinned in `.claude/settings.json` (checked
+2026-11-16: plugin 1.0.7, docs.flutter.dev/ai/mcp-server). It needs Dart 3.9+
+on your `PATH` (the project's Flutter has it).
+
+- **Claude Code on your Mac**: trust the folder and accept the plugin prompt,
+  or `claude plugin marketplace add flutter/agent-plugins && claude plugin install dart-flutter@dart-flutter`.
+- **Devices**: Xcode with an iOS Simulator for iOS; Android Studio with an
+  emulator (Device Manager → create one) for Android.
+- **Run**: ask the agent to test on a device, or run it yourself:
+  ```bash
+  ./scripts/agent_run.sh ios          # or: android, a device id; env optional
+  ./scripts/agent_run.sh status
+  ./scripts/agent_run.sh shot ios     # build/agent/ios.png
+  ./scripts/agent_run.sh stop
+  ```
+  The agent connects the MCP server to the printed DTD URI and taps, types,
+  takes screenshots, reads runtime errors and hot reloads (CLAUDE.md →
+  "Running the app as an agent"). Both platforms can run at once.
+- **Cloud sessions** have no simulator or emulator: agents there use
+  `flutter test` and widget screenshots instead.
+
+## 6. Design reviews (Elephant-Goldfish Model)
 Big features get a written spec reviewed by fresh AI reviewers before any
 code (rules in `CLAUDE.md`). The
 [EGM plugin](https://github.com/google/elephant-goldfish-model) is pinned in

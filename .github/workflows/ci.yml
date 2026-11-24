@@ -106,7 +106,9 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
-          if [ ! -f supabase/config.toml ]; then
+          if [ ! -d supabase ]; then
+            echo "No supabase/ folder — nothing to test."
+          elif [ ! -f supabase/config.toml ]; then
             echo "::notice::No supabase/config.toml — RLS tests skipped (run 'supabase init' once)."
           elif [ -z "$BASE_REF" ] || git diff --name-only "origin/$BASE_REF...HEAD" | grep -q '^supabase/'; then
             echo "present=true" >> "$GITHUB_OUTPUT"
