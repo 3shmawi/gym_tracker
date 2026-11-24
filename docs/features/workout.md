@@ -210,6 +210,10 @@ Move games' plank rounds save to it.
   - **Permission** is asked once, at the member's **first rest**, never at
     launch (Apple: ask "in a context that helps people understand why").
     Remembered in `rest_alarm.asked`; later rests don't ask again.
+  - **Plugin:** `flutter_local_notifications` 23 (2026-11-24; its changelog:
+    Flutter ≥ 3.44, Android `compileSdk` 37, AGP 9.1.1). The app sets
+    `compileSdk = 37` in `android/app/build.gradle.kts` (Flutter 3.47.8's
+    default is 36) and uses AGP 9.1.1 (`android/settings.gradle.kts`).
   - **Android 14+**: exact alarms ("Alarms & reminders") are off for new
     installs, and an inexact alarm can be 10 minutes to an hour late. So
     when notifications are allowed but exact alarms aren't, a sheet
