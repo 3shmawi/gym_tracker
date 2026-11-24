@@ -35,7 +35,7 @@ cat > "docs/features/$name.md" <<DOC
 ## Architecture
 - Layers / main files: \`lib/features/$name/\`
 - State: $STATE
-- Data sources: <!-- Supabase tables, APIs, local storage -->
+- Data sources: <!-- Supabase tables/collections, APIs, local storage -->
 - Routes / deep links: <!-- add to AppRoutes and docs/deep_links.md -->
 
 ## Analytics events

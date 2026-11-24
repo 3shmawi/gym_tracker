@@ -9,7 +9,7 @@ Date: 2026-10-31 · Status: accepted
 | State management | Riverpod (Notifier) |
 | Backend | Supabase |
 | Monitoring | Sentry |
-| Analytics & feature flags | PostHog (no Firebase) |
+| Analytics & feature flags | PostHog |
 | CI/CD | GitHub Actions (public repository) |
 | Routing / deep links | go_router |
 | Localization | Arabic + English, RTL |

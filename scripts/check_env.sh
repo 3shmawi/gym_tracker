@@ -24,7 +24,12 @@ fi
 
 value() { jq -r --arg k "$1" '.[$k] // "" | tostring' "$file"; }
 
-need=(SUPABASE_URL SUPABASE_PUBLISHABLE_KEY POSTHOG_API_KEY POSTHOG_HOST)
+need=(POSTHOG_API_KEY POSTHOG_HOST)
+if grep -q '^  cloud_firestore:' pubspec.yaml 2>/dev/null; then
+  need+=(FIREBASE_PROJECT_ID FIREBASE_MESSAGING_SENDER_ID FIREBASE_ANDROID_API_KEY FIREBASE_ANDROID_APP_ID FIREBASE_IOS_API_KEY FIREBASE_IOS_APP_ID)
+else
+  need+=(SUPABASE_URL SUPABASE_PUBLISHABLE_KEY)
+fi
 grep -q '^  sentry_flutter:' pubspec.yaml 2>/dev/null && need+=(SENTRY_DSN)
 grep -q '^  clarity_flutter:' pubspec.yaml 2>/dev/null && need+=(CLARITY_PROJECT_ID)
 

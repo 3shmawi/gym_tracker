@@ -3,7 +3,7 @@
 #   scripts/release_notes.sh [markdown|plain] [tag]
 #     markdown  grouped notes for the GitHub release (default)
 #     plain     ≤ 500 characters for Google Play "What's new" / the in-app
-#               update dialog
+#               update sheet
 #     tag       notes for that tag (since the tag before it); default: the
 #               commits not released yet (since the last tag)
 set -euo pipefail

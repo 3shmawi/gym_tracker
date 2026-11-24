@@ -45,13 +45,27 @@ git -C "$work/kit" log --format='  %h %s' "$KIT_COMMIT..$latest" | head -n 30
 answers="$work/answers.env"
 cp .project-kit.env "$answers"
 printf 'CREATE_REPO=no\nOUTPUT_DIR=%q\n' "$work/out" >> "$answers"
+dart_cmd() { if command -v fvm >/dev/null 2>&1 && [ -f .fvmrc ]; then fvm dart "$@"; else dart "$@"; fi; }
+# Same fixes and formatting as the project got (import order, constructor
+# syntax, …), so only real changes show up: dart fix needs the project's
+# packages, borrowed for the run.
+normalize() { # dir
+  local d=$1 f borrowed=()
+  for f in pubspec.yaml pubspec.lock analysis_options.yaml .dart_tool/package_config.json; do
+    [ -f "$f" ] && [ ! -e "$d/$f" ] && { mkdir -p "$d/$(dirname "$f")"; cp "$f" "$d/$f"; borrowed+=("$d/$f"); }
+  done
+  if [ -d lib/l10n/gen ] && [ ! -e "$d/lib/l10n/gen" ]; then
+    mkdir -p "$d/lib/l10n"; cp -R lib/l10n/gen "$d/lib/l10n/gen"; borrowed+=("$d/lib/l10n/gen")
+  fi
+  (cd "$d" && { dart_cmd fix --apply >/dev/null 2>&1 || true; dart_cmd format . >/dev/null 2>&1 || true; })
+  rm -rf ${borrowed[@]+"${borrowed[@]}"}
+  rmdir "$d/.dart_tool" 2>/dev/null || true
+}
 render() { # commit dir
   git -C "$work/kit" worktree add -q --detach "$work/src-$1" "$1"
   GEN_DATE="$GEN_DATE" FLUTTER_KIT_CONFIG=/dev/null \
     bash "$work/src-$1/new_project.sh" --answers "$answers" --render-only "$2" >/dev/null
-  # Same formatting as the project, so only real changes show up.
-  if command -v fvm >/dev/null 2>&1 && [ -f .fvmrc ]; then fvm dart format "$2" >/dev/null 2>&1 || true
-  elif command -v dart >/dev/null 2>&1; then dart format "$2" >/dev/null 2>&1 || true; fi
+  normalize "$2"
 }
 render "$KIT_COMMIT" "$work/base"
 render "$latest" "$work/new"

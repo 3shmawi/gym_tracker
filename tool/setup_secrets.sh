@@ -158,6 +158,25 @@ TIKTOK_CLIENT_KEY=
 TIKTOK_CLIENT_SECRET=
 TIKTOK_REFRESH_TOKEN=
 SOCIAL_SECRETS_TOKEN=
+# Opt-in platforms: fill them, then add the name to the repo variable
+# SOCIAL_PLATFORMS (e.g. facebook,instagram,linkedin,youtube,tiktok,threads).
+# Threads: npx tsx scripts/get-threads-token.ts in social-publisher (60-day
+# token). The weekly social-health.yml refreshes it and saves the new one
+# with SOCIAL_SECRETS_TOKEN, so like TikTok's: fill THREADS_TOKEN for the
+# FIRST upload only, then delete its value here.
+THREADS_USER_ID=
+THREADS_TOKEN=
+# Bluesky: Settings → Privacy and security → App passwords (not your password).
+BLUESKY_HANDLE=
+BLUESKY_APP_PASSWORD=
+# Telegram: a bot from @BotFather, admin of your channel; chat id @channel.
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+# X: pay-per-use API (each post is billed) — developer.x.com, Read and write.
+X_API_KEY=
+X_API_SECRET=
+X_ACCESS_TOKEN=
+X_ACCESS_SECRET=
 TEMPLATE
   echo "Created $SHARED -- fill it in, then run this again."
   exit 0
@@ -184,7 +203,7 @@ if [[ ! -f "$KEYSTORE" ]]; then
       -validity 10000 -alias "$KEY_ALIAS" -keystore "$KEYSTORE" \
       -storepass "$PASSWORD" -keypass "$PASSWORD" \
       -dname "${KEYSTORE_DNAME:-CN=Android Upload}" >/dev/null 2>&1
-    # Keep whatever app.env already holds (Supabase keys…); replace only the
+    # Keep whatever app.env already holds (backend keys…); replace only the
     # keystore lines, so filling app.env before the first run is safe.
     touch "$APP_ENV"
     grep -vE '^(ANDROID_KEY_ALIAS|ANDROID_STORE_PASSWORD|ANDROID_KEY_PASSWORD)=' "$APP_ENV" > "$APP_ENV.tmp" || true
@@ -197,10 +216,15 @@ fi
 # shellcheck disable=SC1090
 [[ -f "$APP_ENV" ]] && source "$APP_ENV"
 
+# Which backend this app was created with (.project-kit.env; projects made
+# before the option existed are Supabase).
+BACKEND=$( (. ./.project-kit.env 2>/dev/null; echo "${BACKEND:-supabase}") )
+KIT_PACKAGE_ID=$( (. ./.project-kit.env 2>/dev/null; echo "${PACKAGE_ID:-}") )
+
 # --- Supabase project: created once when env/prod.json has no SUPABASE_URL --
 # Needs SUPABASE_ADMIN_TOKEN + SUPABASE_ORG (shared.env, or app.env per app).
 # Fills env/prod.json and app.env, which are then read and uploaded below.
-if [[ -n "${SUPABASE_ADMIN_TOKEN:-}" ]]; then
+if [[ $BACKEND == supabase && -n "${SUPABASE_ADMIN_TOKEN:-}" ]]; then
   if [[ ! -f env/prod.json && -f env/example.json ]] && ! $DRY_RUN; then
     cp env/example.json env/prod.json
   fi
@@ -336,17 +360,19 @@ if ls env/*.json >/dev/null 2>&1; then
     echo "skip          PostHog check (python3 not installed)"
   fi
 fi
-# App config for the release build (Supabase/PostHog/Sentry keys).
+# App config for the release build (backend/PostHog/Sentry keys).
 # Names any key that is still empty (the app turns that service off).
 for f in env/prod.json env/staging.json; do
   [[ -f $f ]] && "$(dirname "$0")/../scripts/check_env.sh" "$f"
 done
 set_file  ENV_PROD_JSON                    "env/prod.json"
 set_file  ENV_STAGING_JSON                 "env/staging.json"
-# Supabase: announce updates (secret key) and deploy migrations/functions.
-set_value SUPABASE_SECRET_KEY              "${SUPABASE_SECRET_KEY:-}"
-set_value SUPABASE_ACCESS_TOKEN            "${SUPABASE_ACCESS_TOKEN:-}"
-set_value SUPABASE_DB_PASSWORD             "${SUPABASE_DB_PASSWORD:-}"
+if [[ $BACKEND == supabase ]]; then
+  # Supabase: announce updates (secret key) and deploy migrations/functions.
+  set_value SUPABASE_SECRET_KEY            "${SUPABASE_SECRET_KEY:-}"
+  set_value SUPABASE_ACCESS_TOKEN          "${SUPABASE_ACCESS_TOKEN:-}"
+  set_value SUPABASE_DB_PASSWORD           "${SUPABASE_DB_PASSWORD:-}"
+fi
 # Sentry symbol upload for obfuscated builds (only when the app uses Sentry).
 if grep -q '^sentry:' pubspec.yaml 2>/dev/null; then
   set_value SENTRY_AUTH_TOKEN              "${SENTRY_AUTH_TOKEN:-}"
@@ -362,7 +388,9 @@ TARGET=github
 for name in CLAUDE_CODE_OAUTH_TOKEN FB_PAGE_ID FB_PAGE_TOKEN IG_USER_ID LINKEDIN_TOKEN LINKEDIN_AUTHOR_URN \
   LINKEDIN_ORG_URN LINKEDIN_CLIENT_ID LINKEDIN_CLIENT_SECRET LINKEDIN_REFRESH_TOKEN \
   YT_CLIENT_ID YT_CLIENT_SECRET YT_REFRESH_TOKEN \
-  TIKTOK_CLIENT_KEY TIKTOK_CLIENT_SECRET TIKTOK_REFRESH_TOKEN SOCIAL_SECRETS_TOKEN; do
+  TIKTOK_CLIENT_KEY TIKTOK_CLIENT_SECRET TIKTOK_REFRESH_TOKEN SOCIAL_SECRETS_TOKEN \
+  THREADS_USER_ID THREADS_TOKEN BLUESKY_HANDLE BLUESKY_APP_PASSWORD TELEGRAM_BOT_TOKEN TELEGRAM_CHAT_ID \
+  X_API_KEY X_API_SECRET X_ACCESS_TOKEN X_ACCESS_SECRET; do
   set_value "$name" "${!name:-}"
 done
 TARGET=$SAVED_TARGET

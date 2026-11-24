@@ -52,10 +52,105 @@ A manual run (Actions → Release → Run workflow) can force patch/minor/major.
 4. **GitHub release** — tag `vX.Y.Z` with generated notes.
 
 ## After the stores approve
-Actions → **Announce update** → type `optional` or `force`. It writes the
-version + changelog (from the release's commits, or your text in English and
-Arabic) to `app_versions` in Supabase; the in-app dialog does the rest.
-Needs the `SUPABASE_SECRET_KEY` secret.
+**Optional updates announce themselves.** Every day **Announce update**
+checks the stores (`scripts/store_live.sh`): once a version is fully live
+on Google Play (production track, status *completed* — a staged rollout
+doesn't count) **and** on the App Store (Apple's public lookup), it writes
+it to `app_versions` as an optional update, with the store "What's new"
+texts of that release (`store/android/<locale>/changelogs/default.txt`;
+English falls back to the commits, Arabic to the English text). Only a
+version newer than what the app already announces is written, so a notice
+you made by hand is never overwritten. It needs `PLAY_SERVICE_ACCOUNT_JSON`
+(Codemagic apps: add it to the GitHub secrets too) plus the backend
+credentials; without them the run only warns. Repository variables:
+`AUTO_ANNOUNCE=false` turns it off, `APP_STORE_COUNTRY` (default `us`) is
+the storefront to look the app up in, `ENABLE_ANDROID` / `ENABLE_IOS=false`
+leave a store out. Apple's lookup can lag a few hours, so the notice may
+come a day after the release.
+
+**By hand / forced:** Actions → **Announce update** → type `optional` or
+`force`. A forced update is never automatic. It writes the version +
+"What's new" (your text, else the store texts of that release, else its
+commits) to `app_versions`; the app shows an optional update as a sheet
+("Update" / "Later") and a forced one as a full screen with "Update" only.
+Credentials: [backend.md](backend.md) → "CI credentials".
+
+## Social posts
+`.github/workflows/social.yml` announces updates on LinkedIn, the Facebook
+Page, Instagram, YouTube and TikTok — and, once you add them to
+`SOCIAL_PLATFORMS`, Threads, Bluesky, Telegram and X — through
+[3shmawi/social-publisher](https://github.com/3shmawi/social-publisher)
+(pinned to v1.6.0; its `docs/` have the step-by-step setup per platform). A version is
+written per platform in English and Arabic, you approve, then each platform
+posts on its own; one failing doesn't stop the others.
+
+- **Who writes:** Claude, on your Claude Pro/Max plan, when the
+  `CLAUDE_CODE_OAUTH_TOKEN` secret is set (run `claude setup-token` once a
+  year; no API credit needed). Without it, fixed templates write the posts
+  from `store/android/<lang>/changelogs/default.txt` (keep it filled in for
+  each release, in both languages) and the `SOCIAL_HASHTAGS` variable
+  (default `Flutter,MobileApps`).
+
+- **When:** after every store release (GitHub Actions: `release.yml` starts
+  it, since a release created by the workflow's token starts no other
+  workflow; Codemagic: the `v*` tag it pushes), when you publish a GitHub
+  Release by hand, every two weeks with the changes since the last post, or
+  Actions → **Social posts** → Run workflow.
+- **Turn it on:** create the environment **`social`** (Settings →
+  Environments) with yourself as required reviewer, add the secrets (table
+  below), set the repo variable `SOCIAL_ENABLED=true`, then run it by hand
+  with `dry_run` ticked and read the posts in the job summary.
+- **Go live:** set `SOCIAL_LIVE=true`. Release and schedule runs then stop at
+  **Approve posts**; approve once the version is live in the stores
+  (approval waits up to 30 days). Until then they're dry runs.
+- **Never twice:** posted updates are tagged `social/posted/<tag>/<platform>`;
+  `force` posts again. Internal-only updates (chore, ci, refactor…) and notes
+  containing `[skip social]` are skipped.
+- **Video:** a `*.mp4` release asset or `marketing/videos/v<version>.mp4`
+  (e.g. the Demo video output) goes to YouTube, Facebook, LinkedIn, Instagram
+  (a Reel) and TikTok; none → Instagram, YouTube and TikTok are skipped. YouTube keeps API uploads private until the Google Cloud project
+  passes YouTube's audit; then set `SOCIAL_YOUTUBE_AUDITED=true` and
+  `SOCIAL_YOUTUBE_PRIVACY=public`.
+- **Optional variables:** `APP_STORE_URL` (once the app is on the App
+  Store), `PLAY_STORE_URL`, `SOCIAL_WEBSITE_URL`, `SOCIAL_LANGUAGES`
+  (default `en,ar`), `SOCIAL_LINKEDIN_AS` (`person`, `organization`,
+  default `both`), `SOCIAL_PLATFORMS` (default `facebook,instagram,linkedin,youtube,tiktok`),
+  `SOCIAL_TIKTOK_TOKEN_REPOS` (below), `SOCIAL_X_LINKS` (`false` leaves
+  the link out of X posts — X bills a post with a link much more),
+  `SOCIAL_POST_AT` + `SOCIAL_POST_TIMEZONE` (post at e.g. `18:00`
+  `Africa/Cairo` after approval; `SOCIAL_POST_AT_OVERRIDES` like
+  `linkedin=09:00`), `APP_STORE_PROVIDER_TOKEN` (App Analytics campaign
+  tags on App Store links; other links get `utm_source=<platform>`
+  automatically), `SOCIAL_THREADS_TOKEN_REPOS`, `SOCIAL_X_INSIGHTS`.
+- **More platforms (opt-in):** Threads, Bluesky, Telegram (your channel,
+  through a bot) and X (pay-per-use API). Put their secrets in
+  `shared.env` (`tool/setup_secrets.sh` uploads them) and add the names to
+  `SOCIAL_PLATFORMS`, e.g. `facebook,instagram,linkedin,youtube,tiktok,threads,bluesky`.
+- **No video?** Release images (`*.png`/`*.jpg` assets, up to 10, or
+  `marketing/images/v<version>/`) become an Instagram image or carousel and
+  a LinkedIn image post; each image's alt text is its asset label (or a
+  `.txt` next to it). A video that a platform wouldn't take (HEVC, 120 fps,
+  odd size) is re-encoded automatically. YouTube also takes a `*thumb*`
+  image as the thumbnail and `*.en.srt` / `*.ar.srt` as captions.
+- **Weekly credential check:** `social-health.yml` checks every platform's
+  token on Mondays and keeps an issue (label `social-credentials`) open while
+  one would fail — fix it before the next release. It also refreshes the
+  Threads token.
+- **Insights:** `social-insights.yml` reports each post's views, likes,
+  comments and shares 7 days after it went out (Actions → Social insights →
+  the run summary). Instagram needs `instagram_manage_insights` on the Page
+  token; YouTube captions need a token made with the current
+  `get-youtube-token.ts`.
+- **TikTok:** the video lands in your TikTok **inbox as a draft**; open
+  TikTok, add a sound and the suggested caption (in the run summary), post.
+  TikTok replaces the refresh token on every run, and the workflow saves the
+  new one back to `TIKTOK_REFRESH_TOKEN` with `SOCIAL_SECRETS_TOKEN` (without
+  it the TikTok job is skipped). So put `TIKTOK_REFRESH_TOKEN` in
+  `shared.env` only for the first `tool/setup_secrets.sh`, then delete its
+  value there (an empty value doesn't overwrite the secret). Several apps on
+  one TikTok account: set `SOCIAL_TIKTOK_TOKEN_REPOS` to all of them
+  (`owner/app1,owner/app2`) in each, and give `SOCIAL_SECRETS_TOKEN` access to
+  all of them. Setup: social-publisher README → "3b. TikTok".
 
 ## Social posts
 `.github/workflows/social.yml` announces updates on LinkedIn, the Facebook
@@ -131,10 +226,9 @@ Without `PLAY_SERVICE_ACCOUNT_JSON` the Play step is skipped (APK only).
 `ENABLE_PLAY_STAGING=false` turns it off.
 
 ## Backend deploys
-Changes under `supabase/` merged to `main` → `supabase.yml` runs
-`supabase db push` (migrations) and deploys Edge Functions. Needs
-`SUPABASE_ACCESS_TOKEN` + `SUPABASE_DB_PASSWORD` (the project ref is read
-from `SUPABASE_URL`). PRs touching `supabase/` run the RLS tests first.
+Changes under `supabase/` merged to `main` are deployed by the backend's
+workflow; PRs touching it run the access-rules tests first. What is
+deployed and the secrets it needs: [backend.md](backend.md) → "Deploys".
 
 **A new optional plan key ships server first.** `private.plan_problem`
 refuses keys it doesn't know, and only `main` deploys the migration (to the
@@ -323,45 +417,54 @@ must hand over or empty the gym first. After the deploy, smoke test with a
 throwaway anonymous user: `POST` without a token → `401`.
 
 ## Store listing
-Texts in `store/`, uploaded by Actions → **Store listing** (fastlane
-supply/deliver) — see `store/README.md`.
-The iOS job writes an empty `Deliverfile` before `fastlane deliver`: without
-one (and without a `./metadata` folder) deliver asks "Do you want to setup
-deliver?" and crashes in CI (runs 1 and 2, Nov 2026). It also passes
-`--ignore_language_directory_validation`, because `store/ios/` holds the
-`screenshots/` folder next to the locale folders.
-`store/ios/review_information/notes.txt` (the App Review notes) must exist, and the `APP_REVIEW_*` secrets (contact name, email, phone) set: once a version has App Review Information, Apple refuses an update without the contact (run 5, Nov 2026).
-deliver reads the version's App Review Information while uploading, and
-crashes with "No data" when a version has none (run 3, Nov 2026); with the
-notes, it creates it. Contact name, phone and email are filled in App Store
-Connect, not in the repo.
-The Android job commits the edit with `--changes_not_sent_for_review true`
-(changes wait in Play Console → **Publishing overview** → **Send changes for
-review**), so the service account needs no production permission.
-**What's new** (both stores, Arabic and English) is uploaded by Store listing
-from `store/ios/<locale>/release_notes.txt` and
-`store/android/<locale>/changelogs/default.txt`; on Play it goes on the
-latest release of `PLAY_TRACK` (default `internal`); the job reads that
-release's version code first (`google_play_track_version_codes`), because a
-track can hold several releases (run 5: "More than one release found"). Run
-Store listing after the release build is on Play (store/README.md → "What's new").
-**Play service account permissions** for Azm (and the staging app), checked
-2026-11-15 with Store listing:
-- Release apps to testing tracks; Manage testing tracks and edit tester lists
-  (release.yml / staging.yml uploads).
-- **Manage store presence** (texts, images).
-- **Edit and delete draft apps**: needed while the app is a draft (never
-  published to production). Without it the listing commit fails with "The
-  caller does not have permission" (runs 2 and 3); with it, it passed. It
-  can't publish anything. Re-check after the first production release
-  whether Store presence alone is enough, then drop it.
-- Not needed: Admin, Release to production, financial data.
+Texts and images in `store/`, uploaded by Actions → **Store listing**
+(fastlane supply/deliver) — see `store/README.md`.
+- **iOS:** the job writes a `Deliverfile` before `fastlane deliver`.
+  Without one (and without a `./metadata` folder) deliver asks "Do you want
+  to setup deliver?" and crashes in CI. It also passes
+  `--ignore_language_directory_validation`, because `store/ios/` holds the
+  `screenshots/` folder next to the locale folders.
+  `store/ios/review_information/notes.txt` (App Review notes) must be
+  filled: deliver reads the version's App Review Information while
+  uploading and crashes with "No data" when the version has none; with the
+  notes it creates it. Once a version has App Review Information, Apple
+  refuses an update without the contact (name, email, phone), so the
+  `Deliverfile` sends it from the `APP_REVIEW_*` secrets (read from the
+  environment, never written to disk). Without those secrets the notes are
+  skipped with a warning and the contact stays as set in App Store Connect.
+- **Android:** the edit is saved with `--changes_not_sent_for_review true`
+  (changes wait in Play Console → **Publishing overview** → **Send changes
+  for review**), so the service account needs no production permission.
+  The Play images (feature graphic, icon, tablet screenshots) are uploaded
+  when `featureGraphic.png` exists.
+- **What's new:** `store/ios/<locale>/release_notes.txt` and
+  `store/android/<locale>/changelogs/default.txt` are uploaded too; on Play
+  they go on the latest release of `PLAY_TRACK` (default `internal`). A
+  track can hold several releases ("More than one release found"), so the
+  job first reads the newest version code there
+  (`google_play_track_version_codes`) and passes it to supply; it fails with
+  a clear error when the track is empty. Run Store listing after the release
+  build is on Play. On the App Store, What's new is skipped for the app's
+  first version (Apple has no field for it on 1.0).
+- **Play service account permissions** (Play Console → Users and
+  permissions → the service account → App permissions, for the app and the
+  `.stg` app), found with Azm's Store listing on 2026-11-15:
+  - Release apps to testing tracks; Manage testing tracks and edit tester
+    lists (the release and staging uploads).
+  - **Manage store presence** (texts, images).
+  - **Edit and delete draft apps**: needed while the app is still a draft
+    (never published to production); without it the listing commit fails
+    with "The caller does not have permission". It can't publish anything.
+    After the first production release, check whether Store presence alone
+    is enough and drop it.
+  - Not needed: Admin, Release to production, financial data.
 
 ## Store requirements (check each year)
 | Store | Requirement | Where it's handled |
 |---|---|---|
 | App Store | Built with **Xcode 26+** / iOS 26 SDK (since 28 Apr 2026) | iOS jobs pick the newest Xcode on the runner, or fail with a clear message |
 | Google Play | New apps and updates target **Android 16 (API 36)** (since 31 Aug 2026) | `targetSdk = flutter.targetSdkVersion` (36 in Flutter 3.47) |
+| App Store | **Privacy manifest** for the app and every SDK that collects data or uses a required-reason API | `ios/Runner/PrivacyInfo.xcprivacy` (in Runner's Resources; generated from the app's options — update it with App Store Connect → App Privacy when the app collects something new); SDKs ship their own. Check the merged report: Xcode → Archive → Generate Privacy Report |
 
 Both stores raise these every year (Apple in spring, Google in August).
 When a deadline is announced, update this table and the workflows in the

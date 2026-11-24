@@ -9,7 +9,7 @@ lcov=coverage/lcov.info
 [ -f "$lcov" ] || { echo "No $lcov — run: flutter test --coverage"; exit 1; }
 
 report=$(awk -v min="$min" '
-  /^SF:/ { file = substr($0, 4); skip = (file ~ /lib\/l10n\/gen\// || file ~ /\.(g|freezed)\.dart$/) }
+  /^SF:/ { file = substr($0, 4); skip = (file ~ /lib\/(l10n|core\/api)\/gen\// || file ~ /\.(g|freezed)\.dart$/) }
   /^LF:/ { if (!skip) { lf += substr($0, 4); files[file] = 1 } }
   /^LH:/ { if (!skip) lh += substr($0, 4) }
   END {
