@@ -9,6 +9,11 @@ abstract interface class MoveVoice {
   /// Says [count] ("7"), cutting off a count still being spoken.
   void count(int count);
 
+  /// Says a short hint ("Straighten your body"), cutting off whatever is
+  /// being spoken: a hint matters more than a count
+  /// (docs/designs/plank_hold.md §6).
+  void say(String text);
+
   Future<void> dispose();
 }
 
@@ -24,6 +29,9 @@ final class SilentMoveVoice implements MoveVoice {
 
   @override
   void count(int count) {}
+
+  @override
+  void say(String text) {}
 
   @override
   Future<void> dispose() async {}

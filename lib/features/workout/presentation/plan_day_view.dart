@@ -175,9 +175,11 @@ String planExerciseDetail(AppLocalizations l10n, Exercise e) {
     WorkoutFormat.target(e.targetSets, e.targetReps, e.repsTop),
   );
   if (e.unit != ExerciseUnit.kg) {
-    final unit = e.unit == ExerciseUnit.plate
-        ? l10n.planUnitPlate
-        : l10n.planUnitReps;
+    final unit = switch (e.unit) {
+      ExerciseUnit.plate => l10n.planUnitPlate,
+      ExerciseUnit.seconds => l10n.planUnitSeconds,
+      ExerciseUnit.kg || ExerciseUnit.reps => l10n.planUnitReps,
+    };
     return e.supersetWithNext
         ? l10n.planExerciseMetaSupersetUnit(target, unit)
         : l10n.planExerciseMetaUnit(

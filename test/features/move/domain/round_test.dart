@@ -26,7 +26,7 @@ void main() {
     test('ids are stable and unknown ids fall back to 60 s', () {
       expect(
         [for (final k in RoundKind.values) k.id],
-        ['s30', 's60', 'r10', 'r20'],
+        ['s30', 's60', 'r10', 'r20', 'h30', 'h45', 'h60', 'hmax'],
       );
       expect(RoundKind.fromId('r10'), RoundKind.r10);
       expect(RoundKind.fromId('x'), RoundKind.s60);

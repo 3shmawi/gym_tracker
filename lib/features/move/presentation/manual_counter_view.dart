@@ -105,7 +105,13 @@ class ManualCounterView extends StatelessWidget {
                       ),
                       SizedBox(height: AppDimens.sm),
                       Text(
-                        l10n.moveManualIntro(roundLabel(l10n, round.kind)),
+                        round.kind.hold
+                            ? l10n.moveManualHoldIntro(
+                                roundLabel(l10n, round.kind),
+                              )
+                            : l10n.moveManualIntro(
+                                roundLabel(l10n, round.kind),
+                              ),
                         style: AppTextStyles.body.copyWith(
                           color: palette.textSecondary,
                         ),
@@ -126,9 +132,49 @@ class ManualCounterView extends StatelessWidget {
             ),
             RoundPhase.paused => PausedSheet(
               reps: round.reps,
+              hold: round.kind.hold,
               clock: round.clock(now),
               onResume: onResume,
               onEnd: onEnd,
+            ),
+            RoundPhase.running ||
+            RoundPhase.finished when round.kind.hold => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: AppDimens.sm2,
+              children: [
+                // A stopwatch: the seconds held are the running time.
+                RoundHud(clock: round.clock(now), reps: round.reps),
+                RepsCounter(
+                  reps: round.reps,
+                  hold: true,
+                  target: round.kind.target,
+                ),
+                Expanded(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: palette.brandTint,
+                      borderRadius: BorderRadius.circular(
+                        AppDimens.radiusSheet,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        l10n.moveHoldNow,
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.title.copyWith(
+                          color: palette.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                AppSecondaryButton(
+                  key: const Key('move_manual_end'),
+                  label: l10n.moveEndRound,
+                  icon: Icons.stop,
+                  onPressed: onEnd,
+                ),
+              ],
             ),
             RoundPhase.running || RoundPhase.finished => Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

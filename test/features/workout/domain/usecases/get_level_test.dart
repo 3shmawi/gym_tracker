@@ -204,6 +204,22 @@ void main() {
       expect(getLevel(history, now: _endOf(0)).streakWeeks, 0);
     });
 
+    test('plank seconds are not reps (docs/designs/plank_hold.md)', () {
+      WorkoutSession plank(int seconds) => WorkoutSession(
+        dayId: WorkoutSession.moveDayId,
+        finishedAt: _week0.add(const Duration(days: 3, hours: 2)),
+        sets: [LoggedSet(exerciseId: 'plank', weight: 0, reps: seconds)],
+      );
+      // 15 push-ups + 59 s of plank: no Move workout that day.
+      final history = [..._week(0, 2), round(0, 3, 15), plank(59)];
+      expect(getLevel(history, now: _endOf(0)).streakWeeks, 0);
+      // A long plank alone isn't one either.
+      expect(
+        getLevel([..._week(0, 2), plank(120)], now: _endOf(0)).streakWeeks,
+        0,
+      );
+    });
+
     test('under 20 reps in a day does not count', () {
       final history = [..._week(0, 2), round(0, 3, 19)];
       expect(getLevel(history, now: _endOf(0)).streakWeeks, 0);

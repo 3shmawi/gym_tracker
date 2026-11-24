@@ -83,6 +83,17 @@ describe('PlanPage state', () => {
     expect(s.plans.save).toHaveBeenCalledWith(id(1), 2, expect.objectContaining({ days: [expect.objectContaining({ exercises: [expect.objectContaining({ sets: 2, reps: 6, top: 10 })] })] }));
   });
 
+  it('a seconds exercise shows its unit; other exercises are not offered seconds', async () => {
+    const plank = { id: 'plank', name: { ar: 'بلانك', en: 'Plank' }, sets: 3, reps: 30, rest: 60, step: 2.5, superset: false, unit: 'seconds' as const };
+    const abs = { id: 'abs', name: { ar: 'بطن', en: 'Abs' }, sets: 3, reps: 15, rest: 90, step: 5, superset: false, unit: 'kg' as const };
+    const p: Plan = { days: [{ id: 'day-1', name: { ar: 'صدر', en: 'Chest' }, exercises: [plank, abs] }] };
+    const s = setup({ get: vi.fn(() => Promise.resolve(ok(stored(p, 2)))) });
+    await mount(s);
+    const select = (name: string) => host.querySelector<HTMLSelectElement>(`select[aria-label="${en('plan.unitFor', { name })}"]`);
+    expect(select('Plank')?.value).toBe('seconds');
+    expect([...(select('Abs')?.options ?? [])].map((o) => o.value)).toEqual(['kg', 'plate', 'reps']);
+  });
+
   it('a conflict shows both sides and loads the newest; nothing is saved', async () => {
     const theirs: Plan = { days: [{ ...plan.days[0], id: 'day-1', name: { ar: 'صدر', en: 'Push' }, exercises: plan.days[0]?.exercises ?? [] }] };
     const get = vi.fn().mockResolvedValueOnce(ok(stored(plan, 2))).mockResolvedValue(ok(stored(theirs, 3)));

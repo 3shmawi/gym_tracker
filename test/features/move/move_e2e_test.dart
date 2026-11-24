@@ -19,6 +19,7 @@ import 'package:gym_tracker/l10n/l10n.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../integration_test/flows/move_flow.dart';
+import '../../../integration_test/flows/plank_flow.dart';
 
 /// The Move games demo from integration_test/app_test.dart, on the real
 /// router, controllers, detector and on-phone storage, without a device
@@ -78,6 +79,22 @@ void main() {
     expect(round.dayId, WorkoutSession.moveDayId);
     expect(round.sets.single.exerciseId, 'push_ups');
     expect(round.sets.single.reps, 10);
+  });
+
+  testWidgets('home → Move → Plank 30 s → a sag, the big hint → saved', (
+    tester,
+  ) async {
+    Dependencies.poseSource = demoPlankSource;
+    await pumpApp(tester);
+
+    await plankFlow(tester);
+
+    final saved = switch (await repo.loadHistory()) {
+      Success(:final value) => value,
+      Failed(:final failure) => throw failure,
+    };
+    final set = saved.single.sets.single;
+    expect((set.exerciseId, set.reps, set.weight), ('plank', 30, 0.0));
   });
 
   Future<void> tap(WidgetTester tester, Finder finder) async {

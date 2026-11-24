@@ -70,5 +70,9 @@ abstract final class AppColors {
   // Semantic, kept for existing callers: the light-theme values.
   static const Color success = lightUp;
   static const Color warning = lightDown;
+
+  /// Text on a solid [warning] fill: pure white for at least 7:1 (Move
+  /// games' big hints, docs/designs/plank_hold.md §6).
+  static const Color onWarning = Color(0xFFFFFFFF);
   static const Color error = lightError;
 }

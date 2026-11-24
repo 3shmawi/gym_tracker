@@ -48,6 +48,7 @@ abstract final class ExerciseImages {
     'machine_calf_raise',
     'machine_shoulder_press',
     'pec_deck',
+    'plank',
     'preacher_curl',
     'pull_ups',
     'push_ups',

@@ -61,16 +61,21 @@ class RoundHud extends StatelessWidget {
   }
 }
 
-/// The big rep count, announced to screen readers.
+/// The big rep count, announced to screen readers. For a hold ([hold]):
+/// the seconds held, and the target if there is one ("of 30 s").
 class RepsCounter extends StatelessWidget {
-  const new({required this.reps, super.key});
+  const new({required this.reps, this.hold = false, this.target, super.key});
 
   final int reps;
+  final bool hold;
+  final int? target;
 
   @override
   Widget build(BuildContext context) => Semantics(
-    liveRegion: true,
-    label: context.l10n.moveRepsSoFar(reps),
+    liveRegion: !hold,
+    label: hold
+        ? context.l10n.moveHeldSoFar(reps)
+        : context.l10n.moveRepsSoFar(reps),
     excludeSemantics: true,
     child: Column(
       mainAxisSize: MainAxisSize.min,
@@ -83,7 +88,11 @@ class RepsCounter extends StatelessWidget {
           ),
         ),
         Text(
-          context.l10n.moveRepsUnit,
+          switch ((hold, target)) {
+            (true, final t?) => context.l10n.moveHeldOf(t),
+            (true, null) => context.l10n.moveHeldUnit,
+            (false, _) => context.l10n.moveRepsUnit,
+          },
           style: AppTextStyles.label.copyWith(
             color: context.palette.textSecondary,
           ),
@@ -93,24 +102,62 @@ class RepsCounter extends StatelessWidget {
   );
 }
 
-/// One hint at a time, spoken by the screen reader.
+/// One hint or notice at a time, large enough to read from the floor 2 m
+/// away (docs/designs/plank_hold.md §6): full width, display-size bold text
+/// on a solid fill, a large icon. Announced by the screen reader.
 class HintChip extends StatelessWidget {
   const new({required this.text, super.key});
 
   final String text;
 
+  /// Contrast of the text on its fill, at least (checked by a test).
+  static const minContrast = 7.0;
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.all(AppDimens.sm),
-    child: Semantics(
-      liveRegion: true,
-      child: AppBanner(
-        icon: Icons.info_outline,
-        text: text,
-        tone: AppBannerTone.warning,
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    return Padding(
+      padding: EdgeInsets.all(AppDimens.xs),
+      child: Semantics(
+        liveRegion: true,
+        label: text,
+        excludeSemantics: true,
+        child: DecoratedBox(
+          key: const Key('move_callout'),
+          decoration: BoxDecoration(
+            color: palette.trendDown,
+            borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+          ),
+          child: Padding(
+            padding: EdgeInsetsDirectional.symmetric(
+              horizontal: AppDimens.sm2,
+              vertical: AppDimens.sm,
+            ),
+            child: Row(
+              spacing: AppDimens.sm2,
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  size: AppDimens.scaled(40),
+                  color: palette.onTrendDown,
+                ),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: AppTextStyles.display.copyWith(
+                      color: palette.onTrendDown,
+                      fontWeight: FontWeight.w800,
+                      height: 1.15,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// A placement check: green when done.
@@ -158,8 +205,12 @@ class PausedSheet extends StatelessWidget {
     required this.onEnd,
     this.onManual,
     this.bodyLost = false,
+    this.hold = false,
     super.key,
   });
+
+  /// A hold: [reps] are seconds held.
+  final bool hold;
 
   final int reps;
   final Duration clock;
@@ -194,7 +245,9 @@ class PausedSheet extends StatelessWidget {
                 ),
               ),
               Text(
-                l10n.movePausedBody(reps, clockLabel(clock)),
+                hold
+                    ? l10n.movePausedHold(clockLabel(clock))
+                    : l10n.movePausedBody(reps, clockLabel(clock)),
                 style: AppTextStyles.body.copyWith(
                   color: palette.textSecondary,
                 ),

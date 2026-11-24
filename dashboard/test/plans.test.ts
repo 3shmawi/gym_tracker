@@ -123,6 +123,19 @@ describe('the plan body', () => {
     expect(planProblem({ days: [{ ...d, exercises: [ex('a', { top: 16 })] }] })).toBeNull();
   });
 
+  it('the seconds unit (a plank, migration 0025): read and kept, never offered', () => {
+    const b = structuredClone(toBody(plan())) as any;
+    b.days[0].exercises[0].unit = 'seconds';
+    const p = parsePlan(b);
+    expect(p?.days[0]?.exercises[0]?.unit).toBe('seconds');
+    expect(JSON.stringify(toBody(p as Plan).days[0])).toContain('"unit":"seconds"');
+    for (const bad of ['SECONDS', 'sec', 1]) {
+      const c = structuredClone(b);
+      c.days[0].exercises[0].unit = bad;
+      expect(parsePlan(c), String(bad)).toBeNull();
+    }
+  });
+
   it('editing reps keeps a rep range valid; null clears it', () => {
     const ranged: Plan = { days: [{ ...day0(plan()), exercises: [ex('a', { reps: 6, top: 10 })] }] };
     const one = (p: Plan) => day0(p).exercises[0];

@@ -31,6 +31,9 @@ interface Props {
   readonly onReset?: (exerciseId: string) => void;
 }
 
+// Seconds is not offered: a captain could otherwise give it to a member on an
+// app that reads it as kg (docs/designs/plank_hold.md). A plan that has it
+// shows and keeps it.
 const UNITS: readonly Unit[] = ['kg', 'plate', 'reps'];
 
 function NumberCell({ value, min, max, step, label, disabled, onCommit }: { readonly value: number; readonly min: number; readonly max: number; readonly step: number; readonly label: string; readonly disabled: boolean; readonly onCommit: (v: number) => void }) {
@@ -63,7 +66,7 @@ export function PlanDayView({ day, index, dayCount, editable, covers, cloudName,
   const { t, lang } = useI18n();
   const dayName = nameIn(lang, day.name);
   const other = lang === 'ar' ? day.name.en : day.name.ar;
-  const unitLabel: Record<Unit, string> = { kg: t('plan.unitKg'), plate: t('plan.unitPlate'), reps: t('plan.unitReps') };
+  const unitLabel: Record<Unit, string> = { kg: t('plan.unitKg'), plate: t('plan.unitPlate'), reps: t('plan.unitReps'), seconds: t('plan.unitSeconds') };
   const stepLabel = (s: number) => t('plan.stepKg', { step: new Intl.NumberFormat(numberLocale(lang)).format(s) });
 
   const row = (e: PlanExercise, i: number) => {
@@ -120,7 +123,7 @@ export function PlanDayView({ day, index, dayCount, editable, covers, cloudName,
         </td>
         <td>
           <select class="in sel-in" aria-label={t('plan.unitFor', { name })} disabled={!editable} value={e.unit} onChange={(ev) => { onTargets(e.id, { unit: ev.currentTarget.value as Unit }); }}>
-            {UNITS.map((u) => (
+            {(e.unit === 'seconds' ? [...UNITS, 'seconds' as const] : UNITS).map((u) => (
               <option key={u} value={u}>{unitLabel[u]}</option>
             ))}
           </select>
