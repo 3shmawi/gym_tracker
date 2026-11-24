@@ -10,6 +10,7 @@ import 'package:gym_tracker/features/move/domain/entities/rep_state.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
 import 'package:gym_tracker/features/move/domain/games/game_rules.dart';
 import 'package:gym_tracker/features/move/domain/games/stack_rules.dart';
+import 'package:gym_tracker/features/move/domain/move_exercises.dart';
 import 'package:gym_tracker/features/move/domain/repositories/pose_source.dart';
 import 'package:gym_tracker/features/move/domain/usecases/placement.dart';
 import 'package:gym_tracker/features/move/presentation/camera_round_controller.dart';
@@ -30,6 +31,7 @@ import '../helpers/synthetic_pose.dart';
 final now = DateTime(2026, 11, 12, 18, 0, 20);
 final t0 = DateTime(2026, 11, 12, 18);
 final LibraryExercise pushUps = catalogEntryOf(MoveExerciseId.pushUps);
+final LibraryExercise plank = catalogEntryOf(MoveExerciseId.plank);
 
 PoseFrame frameAt(int ms, {SynthView view = SynthView.sideLeft}) =>
     SynthSet.reps(
@@ -42,9 +44,11 @@ RoundState round(
   RoundMode mode = RoundMode.camera,
   int reps = 0,
   PauseReason? pause,
+  MoveExerciseId exercise = MoveExerciseId.pushUps,
+  RoundKind kind = RoundKind.s60,
 }) => RoundState(
-  exercise: MoveExerciseId.pushUps,
-  kind: RoundKind.s60,
+  exercise: exercise,
+  kind: kind,
   mode: mode,
   phase: phase,
   reps: reps,
@@ -67,10 +71,12 @@ RoundOutcome outcome({
   RoundMode mode = RoundMode.camera,
   SaveState save = SaveState.idle,
   bool best = true,
+  MoveExerciseId exercise = MoveExerciseId.pushUps,
+  RoundKind kind = RoundKind.s60,
 }) => RoundOutcome(
   result: RoundResult(
-    exercise: MoveExerciseId.pushUps,
-    kind: RoundKind.s60,
+    exercise: exercise,
+    kind: kind,
     mode: mode,
     reps: reps,
     steady: 6,
@@ -195,9 +201,21 @@ MoveHubView hub({
   int? best,
   bool manualFirst = false,
   ValueChanged<RoundKind>? onKind,
+  ValueChanged<MoveExerciseId>? onExercise,
+  MoveExerciseId selected = MoveExerciseId.pushUps,
+  RoundKind kind = RoundKind.s60,
 }) => MoveHubView(
-  exercise: pushUps,
-  kind: RoundKind.s60,
+  exercise: selected == MoveExerciseId.plank ? plank : pushUps,
+  exercises: const [
+    (id: MoveExerciseId.pushUps, name: 'Push-ups'),
+    (id: MoveExerciseId.plank, name: 'Plank'),
+  ],
+  selected: selected,
+  kinds: MoveExercises.roundsFor(selected),
+  onExercise: onExercise ?? (_) {},
+  hold: kind.hold,
+  showBest: MoveExercises.keepsBest(kind),
+  kind: kind,
   best: best,
   manualFirst: manualFirst,
   onKind: onKind ?? (_) {},
@@ -658,6 +676,68 @@ void main() {
       cam(
         r: round(RoundPhase.finished, reps: 26),
         done: outcome(save: SaveState.saved, best: false),
+      ),
+    ),
+    // Plank (docs/designs/plank_hold.md).
+    'move_hub_plank': () =>
+        hub(selected: MoveExerciseId.plank, kind: RoundKind.hMax, best: 75),
+    'move_hub_plank_target': () =>
+        hub(selected: MoveExerciseId.plank, kind: RoundKind.h30),
+    'move_tip_plank': () => MoveSetupView(
+      step: MoveSetupStep.tip,
+      exercise: plank,
+      onNext: () {},
+      onManual: () {},
+    ),
+    'move_plank_running': () => camera(
+      cam(
+        r: round(
+          RoundPhase.running,
+          reps: 18,
+          exercise: MoveExerciseId.plank,
+          kind: RoundKind.h30,
+        ),
+        frame: frameAt(0),
+        game: tower(3),
+      ),
+    ),
+    'move_plank_hint': () => camera(
+      cam(
+        r: round(
+          RoundPhase.running,
+          reps: 41,
+          exercise: MoveExerciseId.plank,
+          kind: RoundKind.hMax,
+        ),
+        frame: frameAt(0),
+        game: tower(8),
+        hint: FormHintKind.straightBody,
+      ),
+    ),
+    'move_plank_results': () => camera(
+      cam(
+        r: round(
+          RoundPhase.finished,
+          reps: 75,
+          exercise: MoveExerciseId.plank,
+          kind: RoundKind.hMax,
+        ),
+        done: outcome(
+          reps: 75,
+          exercise: MoveExerciseId.plank,
+          kind: RoundKind.hMax,
+        ),
+      ),
+    ),
+    'move_plank_manual': () => manual(
+      ManualRoundState(
+        round: round(
+          RoundPhase.running,
+          mode: RoundMode.manual,
+          reps: 20,
+          exercise: MoveExerciseId.plank,
+          kind: RoundKind.h45,
+        ),
       ),
     ),
     'move_denied': () =>

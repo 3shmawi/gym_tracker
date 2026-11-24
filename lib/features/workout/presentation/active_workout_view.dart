@@ -462,7 +462,7 @@ class _ExerciseLine extends StatelessWidget {
                   color: palette.textSecondary,
                 ),
               )
-            else if (weight != null && exercise.unit != ExerciseUnit.reps)
+            else if (weight != null && exercise.unit.hasWeight)
               Text(
                 WorkoutFormat.ltr(WorkoutFormat.amount(weight, exercise.unit)),
                 style: AppTextStyles.label.copyWith(
@@ -728,6 +728,10 @@ class _CurrentExercise extends StatelessWidget {
                           set.reps,
                         ),
                         ExerciseUnit.reps => l10n.workoutSetDoneRepsLabel(
+                          n,
+                          set.reps,
+                        ),
+                        ExerciseUnit.seconds => l10n.workoutSetDoneSecondsLabel(
                           n,
                           set.reps,
                         ),

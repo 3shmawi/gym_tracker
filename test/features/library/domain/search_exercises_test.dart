@@ -47,7 +47,10 @@ void main() {
   });
 
   test('filters by muscle and by equipment, and together', () {
-    expect(search(all, muscle: MuscleGroup.core).map((e) => e.id), ['abs']);
+    expect(search(all, muscle: MuscleGroup.core).map((e) => e.id), [
+      'abs',
+      'plank',
+    ]);
     final cables = search(all, equipment: Equipment.cable);
     expect(cables, isNotEmpty);
     expect(cables.every((e) => e.equipment.contains(Equipment.cable)), isTrue);

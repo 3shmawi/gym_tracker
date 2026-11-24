@@ -71,6 +71,32 @@ camera leaves the phone; only the reps the member chooses to save are kept.
 
 Next: measure phones (iPhone and Android), real recordings.
 
+**PR 6: Plank and big hints** (spec: [`../designs/plank_hold.md`](../designs/plank_hold.md),
+approved 2026-11-23):
+- **Plank** (*بلانك*): the hub's exercise choice (push-ups / plank). Rounds
+  30, 45, 60 s and **As long as you can** (ends after 5 s out of the plank,
+  on *End*, or at the 2-minute cap of every round). The camera counts
+  **seconds held with a straight body** (`PlankDetector`: the push-up
+  detector's view, body and framing checks, plus a straight
+  shoulder–hip–ankle line and the body raised on forearms or hands). While
+  the body bends the clock stops; nothing held is lost. Every whole second
+  is a `RepCounted`, so `RoundState` counts it only while running.
+- The tower adds a block every **5 s** held (`HoldStackRules`); the voice
+  says every 5 s and the last 3 s of a target; a best is kept for *As long
+  as you can* only.
+- Without the camera: a stopwatch (`RoundState.tick` sets the seconds).
+- Saved as a set of the library's **Plank** in **seconds**
+  (`ExerciseUnit.seconds`, docs/features/workout.md → "Seconds"). Plank
+  seconds never count toward the level (push-up reps only).
+- **Big hints, every round:** a hint or notice is a full-width callout in
+  display-size bold text on a solid amber/brown fill (≥ 7:1, `onTrendDown`),
+  above the tower; on a small screen with large text it takes at most half
+  the space left and scales down whole. In voice mode a hint is **said out
+  loud** once (not again within 6 s), and counts that fall within 2.5 s
+  are skipped so it is heard (`CameraRoundController.hintRepeat` /
+  `hintQuiet`). In placement a hint shows the same way (the spec's "first
+  red check as a callout" was left out: the check list is right below).
+
 ## User flows
 **Camera round:** Today → *Move* card (or menu → *Move · rep games*) →
 pick a round (30 s, 60 s, 10 reps, 20 reps) → *Play with the camera* →
@@ -294,7 +320,7 @@ buckets (`MoveAnalytics`). The pose check sends none.
 | `move_camera_answered` | the camera was asked for (first time, or refused) | `result`: `granted`, `denied` |
 | `move_unsupported` | the camera can't be used | `reason`: `no_camera`, `model_failed`, `too_slow`; `fps_band` (`0_2`/`2_4`/`4_6`/`6_8`) with `too_slow` |
 | `move_game_started` | a round starts (after 3-2-1 or Start) | `exercise`, `game` (`stack` with the camera, `none` by hand), `mode` (`camera`/`manual`), `round`, `sound` (camera only: `voice`/`tones`/`off`, what actually plays) |
-| `move_game_finished` | a round ends | `exercise`, `game`, `mode`, `round`, `reps_bucket`, `duration_bucket`, `ended` (`completed`/`quit`), `fps_bucket` (camera only) |
+| `move_game_finished` | a round ends | `exercise` (`push_ups` / `plank`), `game`, `mode`, `round` (`s30`, `s60`, `r10`, `r20`, `h30`, `h45`, `h60`, `hmax`), `reps_bucket`, `duration_bucket`, `ended` (`completed`/`quit`), `fps_bucket` (camera only) |
 | `move_round_saved` | *Save to my training* | `exercise`, `mode` |
 | `move_zoom_changed` | − or + at placement | `direction` (`wider`/`closer`) |
 
@@ -465,3 +491,16 @@ rim. The round goes straight into your training log.
 بتتبعت)، نص العدّة والعدّة المستعجلة مابتضيفش حاجة، والبطيئة بتاخد إطار
 أخضر. والجولة بتتحفظ على طول في تمرينك.
 **Hashtags:** #flutter #flame #buildinpublic #fitness #pushups #عزم
+
+
+**Plank (second demo, `integration_test/flows/plank_flow.dart`):** home →
+Move → Plank → 30 s → the plank's tip → why the camera → placement → 3-2-1
+→ the seconds climb, a block every 5 s → the hips sag: the big "Keep your
+body in one straight line" → straight again → 0:30 → Save → history.
+**Hook:** "Your hips are sagging" in letters you can read from the floor.
+**Caption (English):** Plank with your phone on the floor: it counts only
+the seconds your body is straight, says it out loud when your hips sag,
+and builds the tower every 5 seconds.
+**Caption (Egyptian Arabic):** اعمل بلانك والموبايل على الأرض: بيعدّ بس
+الثواني وجسمك مفرود، ويقولك بصوت عالي لو وسطك نزل، وكل 5 ثواني دور
+جديد في البرج.

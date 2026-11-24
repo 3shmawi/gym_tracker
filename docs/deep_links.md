@@ -17,7 +17,7 @@ also a deep link.
 | `/settings` | Settings |
 | `/move/check` | The pose check, **testers only**: a non-prod build with the `move_games_debug` flag; otherwise home. Opening it never starts the camera (a tap does). Comes before `/move/<exercise>`, so "check" is never an exercise |
 | `/move[?from=card\|menu]` | Move games hub, behind the `move_games` flag (off: home). `from` is for analytics only; anything else is "link" |
-| `/move/<exercise>[?round=<id>]` | The form tip and "why the camera"; never starts the camera. An unknown exercise → `/move`; an unknown round → 60 s |
+| `/move/<exercise>[?round=<id>]` | `push_ups` or `plank`. The form tip and "why the camera"; never starts the camera. An unknown exercise → `/move`; an unknown round, or a round of the other exercise, → the exercise's default (push-ups 60 s, plank 30 s; `MoveExercises.kindFor`) |
 | `/move/<exercise>/play` | The camera round. **Only the app opens it** (it needs a `MoveLaunch` object a link can't carry): from a link it redirects to `/move/<exercise>`. Extra segments: not found |
 | `/move/<exercise>/count[?round=<id>]` | The manual counter (no camera): safe from a link; waits for *Start* |
 | `/welcome` | "How do you want to start?" (join a gym / train alone). Behind the `gym_join` flag |

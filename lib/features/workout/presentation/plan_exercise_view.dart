@@ -407,6 +407,7 @@ class _Editor extends StatelessWidget {
                     ExerciseUnit.kg => l10n.planUnitKg,
                     ExerciseUnit.plate => l10n.planUnitPlate,
                     ExerciseUnit.reps => l10n.planUnitReps,
+                    ExerciseUnit.seconds => l10n.planUnitSeconds,
                   },
                   selected: unit == e.unit,
                   onTap: () {

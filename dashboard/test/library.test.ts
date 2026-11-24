@@ -21,15 +21,16 @@ describe('the library copy', () => {
   it('has every exercise of the app (no entry missed by the parser)', () => {
     const ids = [...catalogDart.matchAll(/^\s+id: '([a-z][a-z0-9_]*)',$/gm)].map((m) => m[1]);
     expect(LIBRARY.map((e) => e.id)).toEqual(ids);
-    expect(LIBRARY.length).toBe(42);
+    expect(LIBRARY.length).toBe(43);
   });
 
   it('knows every library video', () => {
     const withVideo = [...videosDart.matchAll(/'([a-z][a-z0-9_]*)':\s*YouTubeVideoRef\(/g)].map((m) => m[1]).sort();
     expect(LIBRARY.filter((e) => e.libraryVideo).map((e) => e.id).sort()).toEqual(withVideo);
     // The 13 exercises added for days 4 and 5, Push-ups (Move games) and
-    // the 5 free-weight exercises (2026-11-22) have no library video yet.
-    expect(LIBRARY.filter((e) => !e.libraryVideo)).toHaveLength(19);
+    // the 5 free-weight exercises (2026-11-22) and Plank (2026-11-23) have no
+    // library video yet.
+    expect(LIBRARY.filter((e) => !e.libraryVideo)).toHaveLength(20);
   });
 
   it('has unique ids the database accepts, and both names', () => {

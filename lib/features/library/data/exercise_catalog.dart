@@ -991,5 +991,32 @@ abstract final class ExerciseCatalog {
         ),
       ],
     ),
+    // A hold, in seconds: Move games' plank round saves here
+    // (docs/designs/plank_hold.md).
+    LibraryExercise(
+      defaults: Exercise(
+        id: 'plank',
+        name: LocalizedName(ar: 'بلانك', en: 'Plank'),
+        targetReps: 30,
+        restSeconds: 60,
+        unit: ExerciseUnit.seconds,
+      ),
+      muscle: MuscleGroup.core,
+      equipment: [Equipment.bodyweight],
+      steps: [
+        LocalizedName(
+          ar: 'اسند على دراعاتك أو كفوفك تحت كتفك بالظبط، ورجلك مفرودة ورا.',
+          en: 'Rest on your forearms or hands, right under your shoulders, legs straight behind you.',
+        ),
+        LocalizedName(
+          ar: 'خلّي جسمك كله على خط واحد من راسك لكعبك: الوسط ما ينزلش وما يطلعش.',
+          en: 'Keep your body in one straight line from head to heels: hips neither sagging nor raised.',
+        ),
+        LocalizedName(
+          ar: 'شد بطنك واتنفس عادي، واثبت لحد الوقت المطلوب.',
+          en: 'Tighten your stomach, breathe normally, and hold for the time set.',
+        ),
+      ],
+    ),
   ];
 }

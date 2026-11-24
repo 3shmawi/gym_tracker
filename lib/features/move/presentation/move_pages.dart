@@ -12,6 +12,7 @@ import 'package:gym_tracker/features/library/data/exercise_catalog.dart';
 import 'package:gym_tracker/features/library/domain/entities/library_exercise.dart';
 import 'package:gym_tracker/features/move/domain/entities/move_exercise.dart';
 import 'package:gym_tracker/features/move/domain/entities/round.dart';
+import 'package:gym_tracker/features/move/domain/move_exercises.dart';
 import 'package:gym_tracker/features/move/presentation/app_lifecycle.dart';
 import 'package:gym_tracker/features/move/presentation/camera_round_controller.dart';
 import 'package:gym_tracker/features/move/presentation/camera_round_view.dart';
@@ -20,6 +21,8 @@ import 'package:gym_tracker/features/move/presentation/manual_round_controller.d
 import 'package:gym_tracker/features/move/presentation/move_hub_view.dart';
 import 'package:gym_tracker/features/move/presentation/move_providers.dart';
 import 'package:gym_tracker/features/move/presentation/move_setup_view.dart';
+import 'package:gym_tracker/features/move/presentation/move_words.dart';
+import 'package:gym_tracker/l10n/l10n.dart';
 
 /// The library entry a Move exercise is saved as (both names, picture).
 LibraryExercise catalogEntryOf(MoveExerciseId id) => ExerciseCatalog.all
@@ -49,8 +52,8 @@ class MoveHubPage extends ConsumerStatefulWidget {
 }
 
 class _MoveHubPageState extends ConsumerState<MoveHubPage> {
-  static const MoveExerciseId _exercise = MoveExerciseId.pushUps;
-  RoundKind _kind = RoundKind.fallback;
+  MoveExerciseId _exercise = MoveExerciseId.pushUps;
+  late RoundKind _kind = MoveExercises.defaultFor(_exercise);
   int? _best;
 
   @override
@@ -61,6 +64,10 @@ class _MoveHubPageState extends ConsumerState<MoveHubPage> {
   }
 
   Future<void> _loadBest() async {
+    if (!MoveExercises.keepsBest(_kind)) {
+      setState(() => _best = null);
+      return;
+    }
     final best = await ref
         .read(moveLocalRepositoryProvider)
         .best(_exercise, _kind);
@@ -71,6 +78,22 @@ class _MoveHubPageState extends ConsumerState<MoveHubPage> {
   @override
   Widget build(BuildContext context) => MoveHubView(
     exercise: catalogEntryOf(_exercise),
+    exercises: [
+      for (final e in MoveExerciseId.values) (id: e, name: _nameOf(context, e)),
+    ],
+    selected: _exercise,
+    kinds: MoveExercises.roundsFor(_exercise),
+    hold: _kind.hold,
+    showBest: MoveExercises.keepsBest(_kind),
+    onExercise: (e) {
+      if (e == _exercise) return;
+      setState(() {
+        _exercise = e;
+        _kind = MoveExercises.defaultFor(e);
+        _best = null;
+      });
+      unawaited(_loadBest());
+    },
     kind: _kind,
     best: _best,
     manualFirst: MediaQuery.accessibleNavigationOf(context),
@@ -202,14 +225,16 @@ class _CameraRoundPageState extends ConsumerState<CameraRoundPage>
   void initState() {
     super.initState();
     unawaited(
-      Future<void>.microtask(
-        () => mounted
-            ? _c.start(
-                // The spoken count follows the app's language.
-                language: Localizations.maybeLocaleOf(context)?.languageCode,
-              )
-            : null,
-      ),
+      Future<void>.microtask(() {
+        if (!mounted) return null;
+        // The spoken count and hints follow the app's language. The words
+        // are read now: the controller may outlive this context.
+        final l10n = context.l10n;
+        return _c.start(
+          language: Localizations.maybeLocaleOf(context)?.languageCode,
+          hintText: (k) => hintLabel(l10n, k),
+        );
+      }),
     );
     startTicking(() => _c.tick());
     _lifecycle = AppLifecycleListener(
@@ -245,8 +270,12 @@ class _CameraRoundPageState extends ConsumerState<CameraRoundPage>
   /// back and nothing started), so it is thrown away and started afresh.
   void _playAgain() {
     ref.invalidate(cameraRoundControllerProvider(widget.launch));
+    final l10n = context.l10n;
     unawaited(
-      _c.start(language: Localizations.maybeLocaleOf(context)?.languageCode),
+      _c.start(
+        language: Localizations.maybeLocaleOf(context)?.languageCode,
+        hintText: (k) => hintLabel(l10n, k),
+      ),
     );
   }
 

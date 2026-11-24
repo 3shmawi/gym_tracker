@@ -178,6 +178,21 @@ class CameraRoundController extends Notifier<CameraRoundState>
   DateTime? _slowSince;
   bool _finishing = false;
 
+  /// "As long as you can": when form broke (docs/designs/plank_hold.md §4).
+  DateTime? _brokenSince;
+
+  /// Spoken hints (§6): the words, when each hint was last said, and until
+  /// when counts stay quiet so the hint is heard.
+  String Function(FormHintKind kind)? _hintText;
+  final Map<FormHintKind, DateTime> _hintSaidAt = {};
+  DateTime? _quietUntil;
+
+  /// The same hint is not said again within this.
+  static const hintRepeat = Duration(seconds: 6);
+
+  /// Counts that fall this long after a hint starts are not spoken.
+  static const hintQuiet = Duration(milliseconds: 2500);
+
   DateTime get _now => ref.read(moveClockProvider)();
 
   /// Read once: the release after the screen closes can't use `ref`.
@@ -202,6 +217,9 @@ class CameraRoundController extends Notifier<CameraRoundState>
     _slowSince = null;
     _finishing = false;
     _voiceAsked = false;
+    _brokenSince = null;
+    _hintSaidAt.clear();
+    _quietUntil = null;
     _awake = ref.read(screenAwakeProvider);
     _rules = MoveExercises.gameFor(launch.exercise);
     final sounds = _sounds = ref.read(moveSoundsFactoryProvider)();
@@ -249,9 +267,14 @@ class CameraRoundController extends Notifier<CameraRoundState>
 
   /// Starts (or restarts) the camera. The screen calls it once it opens:
   /// only the app can open that screen, after the member's tap. [language]
-  /// is the app's ("ar", "en"), for the spoken count.
-  Future<void> start({String? language}) async {
+  /// is the app's ("ar", "en"), for the spoken count; [hintText] gives a
+  /// hint's words in that language, to say it out loud.
+  Future<void> start({
+    String? language,
+    String Function(FormHintKind kind)? hintText,
+  }) async {
     if (language != null) _language = language;
+    if (hintText != null) _hintText = hintText;
     if (_source != null || state.round.phase == RoundPhase.finished) return;
     final local = ref.read(moveLocalRepositoryProvider);
     final allowedBefore = switch (await local.cameraAllowedBefore()) {
@@ -374,6 +397,7 @@ class CameraRoundController extends Notifier<CameraRoundState>
       hint: hint == null ? null : () => hint,
     );
     final now = _now;
+    if (hint != null) _sayHint(hint, now);
     switch (state.stage) {
       case CameraStage.placement:
         final go = _placement.update(update, frame.at);
@@ -398,6 +422,9 @@ class CameraRoundController extends Notifier<CameraRoundState>
             final before = game.last?.seq;
             game = _rules.onEvent(game, e, now);
             if (game.last?.seq != before) _sound(game.last, round.reps + 1);
+            if (round.kind.hold && e is RepCounted) {
+              _sayHeld(round.reps + 1, round.kind.target, now);
+            }
           }
           round = round.onEvent(e, now);
           // Back in the picture after a body-lost pause: 3-2-1 again.
@@ -407,6 +434,7 @@ class CameraRoundController extends Notifier<CameraRoundState>
             round = round.startCountdown(now);
           }
         }
+        round = _endIfDown(round, update.state, now);
         next = next.copyWith(round: round, game: game);
       case CameraStage.starting || CameraStage.failed:
         break;
@@ -415,11 +443,59 @@ class CameraRoundController extends Notifier<CameraRoundState>
     _afterRound();
   }
 
-  /// A new block: [count] out loud, or a tone (another every fifth).
+  /// "As long as you can" ends once form stays broken [RoundKind.maxBreak]:
+  /// the member is down, and may be too far from the phone to tap End.
+  RoundState _endIfDown(RoundState round, RepState rep, DateTime now) {
+    if (round.kind != RoundKind.hMax || round.phase != RoundPhase.running) {
+      _brokenSince = null;
+      return round;
+    }
+    if (!rep.issues.contains(FormHintKind.straightBody)) {
+      _brokenSince = null;
+      return round;
+    }
+    final since = _brokenSince ??= now;
+    return now.difference(since) >= RoundKind.maxBreak ? round.end(now) : round;
+  }
+
+  /// A hold's count out loud: every 5 seconds ("5, 10…"), and the last 3 of
+  /// a target ("3, 2, 1"); never while a hint is being said.
+  void _sayHeld(int held, int? target, DateTime now) {
+    if (state.playing != MoveSoundMode.voice) return;
+    final left = target == null ? null : target - held;
+    final say = left != null && left >= 1 && left <= 3
+        ? left
+        : held % 5 == 0
+        ? held
+        : null;
+    if (say == null || _quiet(now)) return;
+    _voice.count(say);
+  }
+
+  bool _quiet(DateTime now) {
+    final until = _quietUntil;
+    return until != null && now.isBefore(until);
+  }
+
+  /// Says a hint (voice mode only), at most once in [hintRepeat]; counts
+  /// stay quiet for [hintQuiet] so it is heard.
+  void _sayHint(FormHintKind kind, DateTime now) {
+    final text = _hintText?.call(kind);
+    if (text == null || state.playing != MoveSoundMode.voice) return;
+    final last = _hintSaidAt[kind];
+    if (last != null && now.difference(last) < hintRepeat) return;
+    _hintSaidAt[kind] = now;
+    _quietUntil = now.add(hintQuiet);
+    _voice.say(text);
+  }
+
+  /// A new block: [count] out loud, or a tone (another every fifth). A
+  /// hold's count is spoken from the seconds instead ([_sayHeld]).
   void _sound(GameMoment? moment, int count) {
     if (moment == null || moment.kind != GameMomentKind.rep) return;
     switch (state.playing) {
       case MoveSoundMode.voice:
+        if (state.round.kind.hold || _quiet(_now)) return;
         _voice.count(count);
       case MoveSoundMode.tones:
         moment.milestone ? _sounds.milestone() : _sounds.rep();

@@ -40,6 +40,23 @@ void main() {
     expect(WorkoutFormat.target(2, 6, 10), '2×6–10');
   });
 
+  test('holds read as a clock in both languages (plank_hold.md)', () {
+    const sec = ExerciseUnit.seconds;
+    expect(WorkoutFormat.hold(30), '0:30');
+    expect(WorkoutFormat.hold(75), '1:15');
+    expect(WorkoutFormat.hold(-5), '0:00');
+    expect(WorkoutFormat.set(0, 45, sec), '0:45');
+    expect(WorkoutFormat.amount(0, sec), '');
+    LoggedSet h(int s) => LoggedSet(exerciseId: 'plank', weight: 0, reps: s);
+    expect(WorkoutFormat.sets([h(30), h(30), h(30)], sec), '0:30 ×3');
+    expect(WorkoutFormat.sets([h(45), h(40)], sec), '0:45, 0:40');
+    expect(WorkoutFormat.weightTimesReps(0, 60, sec), '\u20661:00\u2069');
+    expect(ExerciseUnit.seconds.hasWeight, isFalse);
+    expect(ExerciseUnit.reps.hasWeight, isFalse);
+    expect(ExerciseUnit.plate.hasWeight, isTrue);
+    expect(ExerciseUnit.parse('seconds'), ExerciseUnit.seconds);
+  });
+
   test('ltr isolates numbers for Arabic text', () {
     expect(WorkoutFormat.ltr('3×12'), '\u20663×12\u2069');
   });

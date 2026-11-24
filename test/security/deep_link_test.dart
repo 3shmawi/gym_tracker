@@ -22,6 +22,8 @@ import 'package:gym_tracker/features/gym/presentation/joined_view.dart';
 import 'package:gym_tracker/features/gym/presentation/profile_view.dart';
 import 'package:gym_tracker/features/gym/presentation/scanner_view.dart';
 import 'package:gym_tracker/features/gym/presentation/welcome_view.dart';
+import 'package:gym_tracker/features/move/domain/entities/move_exercise.dart';
+import 'package:gym_tracker/features/move/domain/entities/round.dart';
 import 'package:gym_tracker/features/move/domain/repositories/pose_source.dart';
 import 'package:gym_tracker/features/move/presentation/move_check_page.dart';
 import 'package:gym_tracker/features/move/presentation/move_pages.dart';
@@ -840,6 +842,9 @@ void main() {
         '/move/push_ups',
         '/move/push_ups/play',
         '/move/push_ups/count',
+        '/move/plank',
+        '/move/plank/play',
+        '/move/plank/count?round=hmax',
       ]) {
         appRouter.go(path);
         await tester.pumpAndSettle();
@@ -885,6 +890,44 @@ void main() {
         expect(tester.takeException(), isNull, reason: round);
         expect(find.byType(ManualCounterPage), findsOneWidget, reason: round);
       }
+      expect(made, 0);
+    });
+
+    testWidgets('plank links: never the camera; a round must be a hold', (
+      tester,
+    ) async {
+      FeatureFlags.overrides[Flags.moveGames] = true;
+      await pumpRouter(tester);
+      appRouter.go('/move/plank/play?round=hmax');
+      await tester.pumpAndSettle();
+      expect(find.byType(MoveSetupPage), findsOneWidget);
+      expect(find.byType(CameraRoundPage), findsNothing);
+      for (final (round, kind) in [
+        ('r10', RoundKind.h30), // a push-up round is not a plank round
+        ('hmax', RoundKind.hMax),
+        ('h60', RoundKind.h60),
+        ('%3Cscript%3E', RoundKind.h30),
+        ("'; drop table;--", RoundKind.h30),
+      ]) {
+        appRouter.go('/move/plank/count?round=$round');
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: round);
+        final page = tester.widget<ManualCounterPage>(
+          find.byType(ManualCounterPage),
+        );
+        expect(page.launch.kind, kind, reason: round);
+        expect(page.launch.exercise, MoveExerciseId.plank, reason: round);
+      }
+      // And no push-up round takes a hold.
+      appRouter.go('/move/push_ups/count?round=hmax');
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<ManualCounterPage>(find.byType(ManualCounterPage))
+            .launch
+            .kind,
+        RoundKind.s60,
+      );
       expect(made, 0);
     });
 

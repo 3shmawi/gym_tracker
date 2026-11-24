@@ -154,6 +154,7 @@ class CameraRoundView extends StatelessWidget {
             dimmed: true,
             overlay: PausedSheet(
               reps: round.reps,
+              hold: round.kind.hold,
               clock: round.clock(now),
               bodyLost: round.pauseReason == PauseReason.bodyLost,
               onResume: onResume,
@@ -445,19 +446,28 @@ class _Running extends StatelessWidget {
                   ),
                 ),
               ),
-              Expanded(child: RepsCounter(reps: round.reps)),
+              Expanded(
+                child: RepsCounter(
+                  reps: round.reps,
+                  hold: round.kind.hold,
+                  target: round.kind.target,
+                ),
+              ),
               SizedBox(width: AppDimens.scaled(72)),
             ],
           ),
-          Expanded(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                if (game case final StackState stack)
-                  StackGameView(state: stack),
-                if (chip != null)
-                  Align(
-                    alignment: AlignmentDirectional.topCenter,
+          // The hint sits above the tower, never over it: the tower gives
+          // up its height while the hint shows.
+          // At most half of the space left: on a small screen with large
+          // text, the whole callout scales down instead of being cut.
+          if (chip != null)
+            Flexible(
+              child: LayoutBuilder(
+                builder: (context, box) => FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.topCenter,
+                  child: SizedBox(
+                    width: box.maxWidth,
                     child: HintChip(
                       key: notice == null
                           ? null
@@ -465,27 +475,34 @@ class _Running extends StatelessWidget {
                       text: chip,
                     ),
                   ),
-              ],
+                ),
+              ),
             ),
+          Expanded(
+            child: game is StackState
+                ? StackGameView(state: game)
+                : const SizedBox.shrink(),
           ),
-          Center(
-            child: SizedBox(
-              width: AppDimens.scaled(200),
-              child: Semantics(
-                label: l10n.moveDepth,
-                value: '${(state.rep.depth * 100).round()}%',
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(AppDimens.radiusSm),
-                  child: LinearProgressIndicator(
-                    value: state.rep.depth,
-                    minHeight: AppDimens.sm,
-                    color: palette.brand,
-                    backgroundColor: palette.fillSubtle,
+          // A hold has no depth: the clock and the tower say it all.
+          if (!round.kind.hold)
+            Center(
+              child: SizedBox(
+                width: AppDimens.scaled(200),
+                child: Semantics(
+                  label: l10n.moveDepth,
+                  value: '${(state.rep.depth * 100).round()}%',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+                    child: LinearProgressIndicator(
+                      value: state.rep.depth,
+                      minHeight: AppDimens.sm,
+                      color: palette.brand,
+                      backgroundColor: palette.fillSubtle,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );
