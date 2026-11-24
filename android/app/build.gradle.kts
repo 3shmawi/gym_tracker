@@ -15,7 +15,9 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.mohager.azm"
-    compileSdk = flutter.compileSdkVersion
+    // flutter_local_notifications 23 needs compileSdk 37 (its changelog,
+    // 2026-11); Flutter 3.47.8's default is 36.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
